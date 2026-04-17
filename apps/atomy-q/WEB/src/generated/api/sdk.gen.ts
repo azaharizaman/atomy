@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AccountAddPaymentMethodData, AccountAddPaymentMethodResponses, AccountChangePasswordData, AccountChangePasswordResponses, AccountChangeSubscriptionData, AccountChangeSubscriptionResponses, AccountNotificationSettingsData, AccountNotificationSettingsResponses, AccountPaymentMethodsData, AccountPaymentMethodsResponses, AccountPreferencesData, AccountPreferencesResponses, AccountRemovePaymentMethodData, AccountRemovePaymentMethodResponses, AccountSetDefaultPaymentMethodData, AccountSetDefaultPaymentMethodResponses, AccountSubscriptionData, AccountSubscriptionPlansData, AccountSubscriptionPlansResponses, AccountSubscriptionResponses, AccountUpdateNotificationSettingsData, AccountUpdateNotificationSettingsResponses, AccountUpdatePreferencesData, AccountUpdatePreferencesResponses, ApprovalApproveData, ApprovalApproveErrors, ApprovalApproveResponses, ApprovalBulkApproveData, ApprovalBulkApproveResponses, ApprovalBulkReassignData, ApprovalBulkReassignResponses, ApprovalBulkRejectData, ApprovalBulkRejectResponses, ApprovalHistoryData, ApprovalHistoryResponses, ApprovalIndexData, ApprovalIndexResponses, ApprovalReassignData, ApprovalReassignResponses, ApprovalRejectData, ApprovalRejectErrors, ApprovalRejectResponses, ApprovalRequestEvidenceData, ApprovalRequestEvidenceResponses, ApprovalReturnData, ApprovalReturnResponses, ApprovalShowData, ApprovalShowErrors, ApprovalShowResponses, ApprovalSnoozeData, ApprovalSnoozeResponses, AuthDeviceTrustData, AuthDeviceTrustErrors, AuthForgotPasswordData, AuthForgotPasswordErrors, AuthForgotPasswordResponses, AuthLoginData, AuthLoginErrors, AuthLoginResponses, AuthLogoutData, AuthLogoutErrors, AuthMfaVerifyData, AuthMfaVerifyErrors, AuthRefreshData, AuthRefreshErrors, AuthRefreshResponses, AuthResetPasswordData, AuthResetPasswordErrors, AuthResetPasswordResponses, AuthSsoData, AuthSsoErrors, AuthSsoResponses, AwardDebriefData, AwardDebriefErrors, AwardDebriefResponses, AwardIndexData, AwardIndexResponses, AwardProtestData, AwardProtestErrors, AwardProtestResponses, AwardResolveProtestData, AwardResolveProtestErrors, AwardResolveProtestResponses, AwardSignoffData, AwardSignoffErrors, AwardSignoffResponses, AwardStoreData, AwardStoreErrors, AwardStoreResponses, AwardUpdateSplitData, AwardUpdateSplitErrors, AwardUpdateSplitResponses, ComparisonRunFinalData, ComparisonRunFinalErrors, ComparisonRunFinalResponses, ComparisonRunIndexData, ComparisonRunIndexResponses, ComparisonRunLockData, ComparisonRunLockErrors, ComparisonRunMatrixData, ComparisonRunMatrixErrors, ComparisonRunMatrixResponses, ComparisonRunPreviewData, ComparisonRunPreviewErrors, ComparisonRunPreviewResponses, ComparisonRunReadinessData, ComparisonRunReadinessErrors, ComparisonRunReadinessResponses, ComparisonRunShowData, ComparisonRunShowErrors, ComparisonRunShowResponses, ComparisonRunUnlockData, ComparisonRunUnlockErrors, ComparisonRunUpdateScoringModelData, ComparisonRunUpdateScoringModelErrors, DashboardKpisData, DashboardKpisResponses, DashboardRecentActivityData, DashboardRecentActivityResponses, DashboardRiskAlertsData, DashboardRiskAlertsResponses, DashboardSpendTrendData, DashboardSpendTrendResponses, DashboardVendorScoresData, DashboardVendorScoresResponses, DecisionTrailExportData, DecisionTrailExportResponses, DecisionTrailIndexData, DecisionTrailIndexResponses, DecisionTrailShowData, DecisionTrailShowErrors, DecisionTrailShowResponses, DecisionTrailVerifyData, DecisionTrailVerifyResponses, DocumentAddDocumentToBundleData, DocumentAddDocumentToBundleResponses, DocumentBundlesData, DocumentBundlesResponses, DocumentCreateBundleData, DocumentCreateBundleResponses, DocumentDownloadData, DocumentDownloadResponses, DocumentExportBundleData, DocumentExportBundleResponses, DocumentFinalizeBundleData, DocumentFinalizeBundleResponses, DocumentIndexData, DocumentIndexResponses, DocumentPreviewData, DocumentPreviewResponses, DocumentShowBundleData, DocumentShowBundleResponses, DocumentShowData, DocumentShowResponses, HandoffDestinationsData, HandoffDestinationsResponses, HandoffIndexData, HandoffIndexResponses, HandoffRetryData, HandoffRetryResponses, HandoffSendData, HandoffSendResponses, HandoffShowData, HandoffShowResponses, HandoffValidateData, HandoffValidateResponses, IntegrationCatalogData, IntegrationCatalogResponses, IntegrationDestroyData, IntegrationDestroyResponses, IntegrationHealthData, IntegrationHealthResponses, IntegrationIndexData, IntegrationIndexResponses, IntegrationJobsData, IntegrationJobsResponses, IntegrationRetryJobData, IntegrationRetryJobResponses, IntegrationShowData, IntegrationShowResponses, IntegrationStoreData, IntegrationStoreResponses, IntegrationTestData, IntegrationTestResponses, IntegrationUpdateData, IntegrationUpdateResponses, IntegrationUpdateStatusData, IntegrationUpdateStatusResponses, NegotiationBafoData, NegotiationBafoErrors, NegotiationCloseData, NegotiationCloseErrors, NegotiationCounterOfferData, NegotiationCounterOfferErrors, NegotiationIndexData, NegotiationIndexErrors, NegotiationStartRoundData, NegotiationStartRoundErrors, NormalizationBulkMappingData, NormalizationBulkMappingErrors, NormalizationBulkMappingResponses, NormalizationConflictsData, NormalizationConflictsErrors, NormalizationConflictsResponses, NormalizationLockData, NormalizationLockErrors, NormalizationLockResponses, NormalizationNormalizedItemsData, NormalizationNormalizedItemsErrors, NormalizationNormalizedItemsResponses, NormalizationOverrideData, NormalizationOverrideErrors, NormalizationOverrideResponses, NormalizationResolveConflictData, NormalizationResolveConflictErrors, NormalizationResolveConflictResponses, NormalizationRevertOverrideData, NormalizationRevertOverrideErrors, NormalizationRevertOverrideResponses, NormalizationSourceLinesData, NormalizationSourceLinesErrors, NormalizationSourceLinesResponses, NormalizationUnlockData, NormalizationUnlockErrors, NormalizationUnlockResponses, NormalizationUpdateMappingData, NormalizationUpdateMappingErrors, NormalizationUpdateMappingResponses, NotificationClearReadData, NotificationClearReadResponses, NotificationIndexData, NotificationIndexResponses, NotificationMarkAllReadData, NotificationMarkAllReadResponses, NotificationMarkReadData, NotificationMarkReadResponses, NotificationUnreadCountData, NotificationUnreadCountResponses, ProjectBudgetData, ProjectBudgetResponses, ProjectGetAclData, ProjectGetAclErrors, ProjectGetAclResponses, ProjectHealthData, ProjectHealthResponses, ProjectIndexData, ProjectIndexResponses, ProjectRfqsData, ProjectRfqsResponses, ProjectShowData, ProjectShowErrors, ProjectShowResponses, ProjectTasksData, ProjectTasksResponses, ProjectUpdateAclData, ProjectUpdateAclErrors, ProjectUpdateAclResponses, ProjectUpdateData, ProjectUpdateErrors, ProjectUpdateResponses, ProjectUpdateStatusData, ProjectUpdateStatusErrors, ProjectUpdateStatusResponses, QuoteSubmissionAssignData, QuoteSubmissionAssignResponses, QuoteSubmissionIndexData, QuoteSubmissionIndexResponses, QuoteSubmissionReparseData, QuoteSubmissionReparseErrors, QuoteSubmissionReparseResponses, QuoteSubmissionReplaceData, QuoteSubmissionReplaceResponses, QuoteSubmissionShowData, QuoteSubmissionShowErrors, QuoteSubmissionShowResponses, QuoteSubmissionUpdateStatusData, QuoteSubmissionUpdateStatusErrors, QuoteSubmissionUpdateStatusResponses, QuoteSubmissionUploadData, QuoteSubmissionUploadErrors, QuoteSubmissionUploadResponses, RecommendationMcdaData, RecommendationMcdaResponses, RecommendationOverrideData, RecommendationOverrideResponses, RecommendationRerunData, RecommendationRerunResponses, RecommendationShowData, RecommendationShowResponses, ReportCreateScheduleData, ReportCreateScheduleResponses, ReportDestroyScheduleData, ReportDestroyScheduleResponses, ReportDownloadRunData, ReportDownloadRunResponses, ReportExportData, ReportExportResponses, ReportKpisData, ReportKpisResponses, ReportRunScheduleNowData, ReportRunScheduleNowResponses, ReportRunsData, ReportRunsResponses, ReportSchedulesData, ReportSchedulesResponses, ReportSpendByCategoryData, ReportSpendByCategoryResponses, ReportSpendTrendData, ReportSpendTrendResponses, ReportUpdateScheduleData, ReportUpdateScheduleResponses, RfqActivityData, RfqActivityErrors, RfqActivityResponses, RfqCountsData, RfqCountsResponses, RfqDestroyLineItemData, RfqDestroyLineItemErrors, RfqDestroyLineItemResponses, RfqIndexData, RfqIndexResponses, RfqLineItemsData, RfqLineItemsErrors, RfqLineItemsResponses, RfqOverviewData, RfqOverviewErrors, RfqOverviewResponses, RfqSaveDraftData, RfqSaveDraftErrors, RfqSaveDraftResponses, RfqShowData, RfqShowErrors, RfqShowResponses, RfqStoreLineItemData, RfqStoreLineItemErrors, RfqStoreLineItemResponses, RfqTemplateIndexData, RfqTemplateIndexResponses, RfqTemplateShowData, RfqTemplateShowResponses, RfqTemplateUpdateData, RfqTemplateUpdateResponses, RfqTemplateUpdateStatusData, RfqTemplateUpdateStatusResponses, RfqUpdateData, RfqUpdateErrors, RfqUpdateLineItemData, RfqUpdateLineItemErrors, RfqUpdateLineItemResponses, RfqUpdateResponses, RfqUpdateStatusData, RfqUpdateStatusErrors, RfqUpdateStatusResponses, RiskComplianceDueDiligenceData, RiskComplianceDueDiligenceResponses, RiskComplianceEscalateData, RiskComplianceEscalateResponses, RiskComplianceExceptionData, RiskComplianceExceptionResponses, RiskComplianceIndexData, RiskComplianceIndexResponses, RiskComplianceSanctionsHistoryData, RiskComplianceSanctionsHistoryResponses, RiskComplianceSanctionsScreeningData, RiskComplianceSanctionsScreeningResponses, RiskComplianceUpdateDueDiligenceData, RiskComplianceUpdateDueDiligenceResponses, ScenarioCompareData, ScenarioCompareResponses, ScenarioDestroyData, ScenarioDestroyResponses, ScenarioIndexData, ScenarioIndexResponses, ScenarioStoreData, ScenarioStoreResponses, ScenarioUpdateData, ScenarioUpdateResponses, ScoringModelIndexData, ScoringModelIndexResponses, ScoringModelPreviewData, ScoringModelPreviewResponses, ScoringModelPublishData, ScoringModelPublishResponses, ScoringModelShowData, ScoringModelShowResponses, ScoringModelStoreData, ScoringModelStoreResponses, ScoringModelUpdateAssignmentsData, ScoringModelUpdateAssignmentsResponses, ScoringModelUpdateData, ScoringModelUpdateResponses, ScoringModelVersionsData, ScoringModelVersionsResponses, ScoringPolicyIndexData, ScoringPolicyIndexResponses, ScoringPolicyPublishData, ScoringPolicyPublishResponses, ScoringPolicyShowData, ScoringPolicyShowResponses, ScoringPolicyStoreData, ScoringPolicyStoreResponses, ScoringPolicyUpdateAssignmentsData, ScoringPolicyUpdateAssignmentsResponses, ScoringPolicyUpdateData, ScoringPolicyUpdateResponses, ScoringPolicyUpdateStatusData, ScoringPolicyUpdateStatusResponses, ScoringPolicyVersionsData, ScoringPolicyVersionsResponses, SearchSearchData, SearchSearchResponses, SettingFeatureFlagsData, SettingFeatureFlagsResponses, SettingIndexData, SettingIndexErrors, SettingUpdateComplianceData, SettingUpdateComplianceErrors, SettingUpdateFeatureFlagData, SettingUpdateFeatureFlagErrors, SettingUpdateGeneralData, SettingUpdateGeneralErrors, SettingUpdateWorkflowData, SettingUpdateWorkflowErrors, TaskGetDependenciesData, TaskGetDependenciesErrors, TaskGetDependenciesResponses, TaskIndexData, TaskIndexResponses, TaskSchedulePreviewData, TaskSchedulePreviewResponses, TaskShowData, TaskShowErrors, TaskShowResponses, TaskUpdateData, TaskUpdateDependenciesData, TaskUpdateDependenciesErrors, TaskUpdateDependenciesResponses, TaskUpdateErrors, TaskUpdateResponses, TaskUpdateStatusData, TaskUpdateStatusErrors, TaskUpdateStatusResponses, UserDelegationRulesData, UserDelegationRulesResponses, UserIndexData, UserIndexResponses, UserInviteData, UserInviteResponses, UserReactivateData, UserReactivateResponses, UserRolesData, UserRolesResponses, UserShowData, UserShowResponses, UserSuspendData, UserSuspendResponses, UserUpdateAuthorityLimitsData, UserUpdateAuthorityLimitsResponses, UserUpdateData, UserUpdateDelegationRulesData, UserUpdateDelegationRulesResponses, UserUpdateResponses, V1AccountProfile02Data, V1AccountProfile02Errors, V1AccountProfile02Responses, V1AccountProfile0Data, V1AccountProfile0Errors, V1AccountProfile0Responses, V1AccountUpdateProfile12Data, V1AccountUpdateProfile12Errors, V1AccountUpdateProfile12Responses, V1AccountUpdateProfile1Data, V1AccountUpdateProfile1Errors, V1AccountUpdateProfile1Responses, V1OperationalApprovalsInstancesDecisionsStoreData, V1OperationalApprovalsInstancesDecisionsStoreErrors, V1OperationalApprovalsInstancesDecisionsStoreResponses, V1OperationalApprovalsInstancesIndexData, V1OperationalApprovalsInstancesIndexErrors, V1OperationalApprovalsInstancesIndexResponses, V1OperationalApprovalsInstancesShowData, V1OperationalApprovalsInstancesShowResponses, V1OperationalApprovalsInstancesStoreData, V1OperationalApprovalsInstancesStoreErrors, V1OperationalApprovalsInstancesStoreResponses, V1ProjectsStoreData, V1ProjectsStoreErrors, V1ProjectsStoreResponses, V1RfqsBulkActionData, V1RfqsBulkActionErrors, V1RfqsBulkActionResponses, V1RfqsDuplicateData, V1RfqsDuplicateErrors, V1RfqsDuplicateResponses, V1RfqsInvitationsRemindData, V1RfqsInvitationsRemindErrors, V1RfqsInvitationsRemindResponses, V1RfqsInvitationsStoreData, V1RfqsInvitationsStoreErrors, V1RfqsInvitationsStoreResponses, V1RfqsStoreData, V1RfqsStoreErrors, V1RfqsStoreResponses, V1RfqTemplatesApplyData, V1RfqTemplatesApplyResponses, V1RfqTemplatesDuplicateData, V1RfqTemplatesDuplicateResponses, V1RfqTemplatesStoreData, V1RfqTemplatesStoreResponses, V1TasksStoreData, V1TasksStoreErrors, V1TasksStoreResponses, VendorComplianceData, VendorComplianceResponses, VendorHistoryData, VendorHistoryResponses, VendorIndexData, VendorIndexResponses, VendorInvitationIndexData, VendorInvitationIndexErrors, VendorInvitationIndexResponses, VendorPerformanceData, VendorPerformanceResponses, VendorShowData, VendorShowResponses } from './types.gen';
+import type { AccountAddPaymentMethodData, AccountAddPaymentMethodResponses, AccountChangePasswordData, AccountChangePasswordResponses, AccountChangeSubscriptionData, AccountChangeSubscriptionResponses, AccountNotificationSettingsData, AccountNotificationSettingsResponses, AccountPaymentMethodsData, AccountPaymentMethodsResponses, AccountPreferencesData, AccountPreferencesResponses, AccountRemovePaymentMethodData, AccountRemovePaymentMethodResponses, AccountSetDefaultPaymentMethodData, AccountSetDefaultPaymentMethodResponses, AccountSubscriptionData, AccountSubscriptionPlansData, AccountSubscriptionPlansResponses, AccountSubscriptionResponses, AccountUpdateNotificationSettingsData, AccountUpdateNotificationSettingsResponses, AccountUpdatePreferencesData, AccountUpdatePreferencesResponses, ApprovalApproveData, ApprovalApproveErrors, ApprovalApproveResponses, ApprovalBulkApproveData, ApprovalBulkApproveResponses, ApprovalBulkReassignData, ApprovalBulkReassignResponses, ApprovalBulkRejectData, ApprovalBulkRejectResponses, ApprovalHistoryData, ApprovalHistoryResponses, ApprovalIndexData, ApprovalIndexResponses, ApprovalReassignData, ApprovalReassignResponses, ApprovalRejectData, ApprovalRejectErrors, ApprovalRejectResponses, ApprovalRequestEvidenceData, ApprovalRequestEvidenceResponses, ApprovalReturnData, ApprovalReturnResponses, ApprovalShowData, ApprovalShowErrors, ApprovalShowResponses, ApprovalSnoozeData, ApprovalSnoozeResponses, AuthDeviceTrustData, AuthDeviceTrustErrors, AuthForgotPasswordData, AuthForgotPasswordErrors, AuthForgotPasswordResponses, AuthLoginData, AuthLoginErrors, AuthLoginResponses, AuthLogoutData, AuthLogoutErrors, AuthLogoutResponses, AuthMfaVerifyData, AuthMfaVerifyErrors, AuthMfaVerifyResponses, AuthRefreshData, AuthRefreshErrors, AuthRefreshResponses, AuthResetPasswordData, AuthResetPasswordErrors, AuthResetPasswordResponses, AuthSsoData, AuthSsoErrors, AuthSsoResponses, AwardDebriefData, AwardDebriefErrors, AwardDebriefResponses, AwardIndexData, AwardIndexResponses, AwardProtestData, AwardProtestErrors, AwardProtestResponses, AwardResolveProtestData, AwardResolveProtestErrors, AwardResolveProtestResponses, AwardSignoffData, AwardSignoffErrors, AwardSignoffResponses, AwardStoreData, AwardStoreErrors, AwardStoreResponses, AwardUpdateSplitData, AwardUpdateSplitErrors, AwardUpdateSplitResponses, ComparisonRunFinalData, ComparisonRunFinalErrors, ComparisonRunFinalResponses, ComparisonRunIndexData, ComparisonRunIndexResponses, ComparisonRunLockData, ComparisonRunLockErrors, ComparisonRunMatrixData, ComparisonRunMatrixErrors, ComparisonRunMatrixResponses, ComparisonRunPreviewData, ComparisonRunPreviewErrors, ComparisonRunPreviewResponses, ComparisonRunReadinessData, ComparisonRunReadinessErrors, ComparisonRunReadinessResponses, ComparisonRunShowData, ComparisonRunShowErrors, ComparisonRunShowResponses, ComparisonRunUnlockData, ComparisonRunUnlockErrors, ComparisonRunUpdateScoringModelData, ComparisonRunUpdateScoringModelErrors, DashboardKpisData, DashboardKpisResponses, DashboardRecentActivityData, DashboardRecentActivityResponses, DashboardRiskAlertsData, DashboardRiskAlertsResponses, DashboardSpendTrendData, DashboardSpendTrendResponses, DashboardVendorScoresData, DashboardVendorScoresResponses, DecisionTrailExportData, DecisionTrailExportResponses, DecisionTrailIndexData, DecisionTrailIndexResponses, DecisionTrailShowData, DecisionTrailShowErrors, DecisionTrailShowResponses, DecisionTrailVerifyData, DecisionTrailVerifyResponses, DocumentAddDocumentToBundleData, DocumentAddDocumentToBundleResponses, DocumentBundlesData, DocumentBundlesResponses, DocumentCreateBundleData, DocumentCreateBundleResponses, DocumentDownloadData, DocumentDownloadResponses, DocumentExportBundleData, DocumentExportBundleResponses, DocumentFinalizeBundleData, DocumentFinalizeBundleResponses, DocumentIndexData, DocumentIndexResponses, DocumentPreviewData, DocumentPreviewResponses, DocumentShowBundleData, DocumentShowBundleResponses, DocumentShowData, DocumentShowResponses, HandoffDestinationsData, HandoffDestinationsResponses, HandoffIndexData, HandoffIndexResponses, HandoffRetryData, HandoffRetryResponses, HandoffSendData, HandoffSendResponses, HandoffShowData, HandoffShowResponses, HandoffValidateData, HandoffValidateResponses, IntegrationCatalogData, IntegrationCatalogResponses, IntegrationDestroyData, IntegrationDestroyResponses, IntegrationHealthData, IntegrationHealthResponses, IntegrationIndexData, IntegrationIndexResponses, IntegrationJobsData, IntegrationJobsResponses, IntegrationRetryJobData, IntegrationRetryJobResponses, IntegrationShowData, IntegrationShowResponses, IntegrationStoreData, IntegrationStoreResponses, IntegrationTestData, IntegrationTestResponses, IntegrationUpdateData, IntegrationUpdateResponses, IntegrationUpdateStatusData, IntegrationUpdateStatusResponses, NegotiationBafoData, NegotiationBafoErrors, NegotiationCloseData, NegotiationCloseErrors, NegotiationCounterOfferData, NegotiationCounterOfferErrors, NegotiationIndexData, NegotiationIndexErrors, NegotiationStartRoundData, NegotiationStartRoundErrors, NormalizationBulkMappingData, NormalizationBulkMappingErrors, NormalizationBulkMappingResponses, NormalizationConflictsData, NormalizationConflictsErrors, NormalizationConflictsResponses, NormalizationLockData, NormalizationLockErrors, NormalizationLockResponses, NormalizationNormalizedItemsData, NormalizationNormalizedItemsErrors, NormalizationNormalizedItemsResponses, NormalizationOverrideData, NormalizationOverrideErrors, NormalizationOverrideResponses, NormalizationResolveConflictData, NormalizationResolveConflictErrors, NormalizationResolveConflictResponses, NormalizationRevertOverrideData, NormalizationRevertOverrideErrors, NormalizationRevertOverrideResponses, NormalizationSourceLinesData, NormalizationSourceLinesErrors, NormalizationSourceLinesResponses, NormalizationUnlockData, NormalizationUnlockErrors, NormalizationUnlockResponses, NormalizationUpdateMappingData, NormalizationUpdateMappingErrors, NormalizationUpdateMappingResponses, NotificationClearReadData, NotificationClearReadResponses, NotificationIndexData, NotificationIndexResponses, NotificationMarkAllReadData, NotificationMarkAllReadResponses, NotificationMarkReadData, NotificationMarkReadResponses, NotificationUnreadCountData, NotificationUnreadCountResponses, ProjectBudgetData, ProjectBudgetResponses, ProjectGetAclData, ProjectGetAclErrors, ProjectGetAclResponses, ProjectHealthData, ProjectHealthResponses, ProjectIndexData, ProjectIndexResponses, ProjectRfqsData, ProjectRfqsResponses, ProjectShowData, ProjectShowErrors, ProjectShowResponses, ProjectTasksData, ProjectTasksResponses, ProjectUpdateAclData, ProjectUpdateAclErrors, ProjectUpdateAclResponses, ProjectUpdateData, ProjectUpdateErrors, ProjectUpdateResponses, ProjectUpdateStatusData, ProjectUpdateStatusErrors, ProjectUpdateStatusResponses, QuoteSubmissionAssignData, QuoteSubmissionAssignResponses, QuoteSubmissionIndexData, QuoteSubmissionIndexResponses, QuoteSubmissionReparseData, QuoteSubmissionReparseErrors, QuoteSubmissionReparseResponses, QuoteSubmissionReplaceData, QuoteSubmissionReplaceResponses, QuoteSubmissionShowData, QuoteSubmissionShowErrors, QuoteSubmissionShowResponses, QuoteSubmissionUpdateStatusData, QuoteSubmissionUpdateStatusErrors, QuoteSubmissionUpdateStatusResponses, QuoteSubmissionUploadData, QuoteSubmissionUploadErrors, QuoteSubmissionUploadResponses, RecommendationMcdaData, RecommendationMcdaResponses, RecommendationOverrideData, RecommendationOverrideResponses, RecommendationRerunData, RecommendationRerunResponses, RecommendationShowData, RecommendationShowResponses, RegisterCompanyStoreData, RegisterCompanyStoreErrors, RegisterCompanyStoreResponses, ReportCreateScheduleData, ReportCreateScheduleResponses, ReportDestroyScheduleData, ReportDestroyScheduleResponses, ReportDownloadRunData, ReportDownloadRunResponses, ReportExportData, ReportExportResponses, ReportKpisData, ReportKpisResponses, ReportRunScheduleNowData, ReportRunScheduleNowResponses, ReportRunsData, ReportRunsResponses, ReportSchedulesData, ReportSchedulesResponses, ReportSpendByCategoryData, ReportSpendByCategoryResponses, ReportSpendTrendData, ReportSpendTrendResponses, ReportUpdateScheduleData, ReportUpdateScheduleResponses, RfqActivityData, RfqActivityErrors, RfqActivityResponses, RfqCountsData, RfqCountsResponses, RfqDestroyLineItemData, RfqDestroyLineItemErrors, RfqDestroyLineItemResponses, RfqIndexData, RfqIndexResponses, RfqLineItemsData, RfqLineItemsErrors, RfqLineItemsResponses, RfqOverviewData, RfqOverviewErrors, RfqOverviewResponses, RfqSaveDraftData, RfqSaveDraftErrors, RfqSaveDraftResponses, RfqShowData, RfqShowErrors, RfqShowResponses, RfqStoreLineItemData, RfqStoreLineItemErrors, RfqStoreLineItemResponses, RfqTemplateIndexData, RfqTemplateIndexResponses, RfqTemplateShowData, RfqTemplateShowResponses, RfqTemplateUpdateData, RfqTemplateUpdateResponses, RfqTemplateUpdateStatusData, RfqTemplateUpdateStatusResponses, RfqUpdateData, RfqUpdateErrors, RfqUpdateLineItemData, RfqUpdateLineItemErrors, RfqUpdateLineItemResponses, RfqUpdateResponses, RfqUpdateStatusData, RfqUpdateStatusErrors, RfqUpdateStatusResponses, RiskComplianceDueDiligenceData, RiskComplianceDueDiligenceResponses, RiskComplianceEscalateData, RiskComplianceEscalateResponses, RiskComplianceExceptionData, RiskComplianceExceptionResponses, RiskComplianceIndexData, RiskComplianceIndexResponses, RiskComplianceSanctionsHistoryData, RiskComplianceSanctionsHistoryResponses, RiskComplianceSanctionsScreeningData, RiskComplianceSanctionsScreeningResponses, RiskComplianceUpdateDueDiligenceData, RiskComplianceUpdateDueDiligenceResponses, ScenarioCompareData, ScenarioCompareResponses, ScenarioDestroyData, ScenarioDestroyResponses, ScenarioIndexData, ScenarioIndexResponses, ScenarioStoreData, ScenarioStoreResponses, ScenarioUpdateData, ScenarioUpdateResponses, ScoringModelIndexData, ScoringModelIndexResponses, ScoringModelPreviewData, ScoringModelPreviewResponses, ScoringModelPublishData, ScoringModelPublishResponses, ScoringModelShowData, ScoringModelShowResponses, ScoringModelStoreData, ScoringModelStoreResponses, ScoringModelUpdateAssignmentsData, ScoringModelUpdateAssignmentsResponses, ScoringModelUpdateData, ScoringModelUpdateResponses, ScoringModelVersionsData, ScoringModelVersionsResponses, ScoringPolicyIndexData, ScoringPolicyIndexResponses, ScoringPolicyPublishData, ScoringPolicyPublishResponses, ScoringPolicyShowData, ScoringPolicyShowResponses, ScoringPolicyStoreData, ScoringPolicyStoreResponses, ScoringPolicyUpdateAssignmentsData, ScoringPolicyUpdateAssignmentsResponses, ScoringPolicyUpdateData, ScoringPolicyUpdateResponses, ScoringPolicyUpdateStatusData, ScoringPolicyUpdateStatusResponses, ScoringPolicyVersionsData, ScoringPolicyVersionsResponses, SearchSearchData, SearchSearchResponses, SettingFeatureFlagsData, SettingFeatureFlagsResponses, SettingIndexData, SettingIndexErrors, SettingUpdateComplianceData, SettingUpdateComplianceErrors, SettingUpdateFeatureFlagData, SettingUpdateFeatureFlagErrors, SettingUpdateGeneralData, SettingUpdateGeneralErrors, SettingUpdateWorkflowData, SettingUpdateWorkflowErrors, TaskGetDependenciesData, TaskGetDependenciesErrors, TaskGetDependenciesResponses, TaskIndexData, TaskIndexResponses, TaskSchedulePreviewData, TaskSchedulePreviewResponses, TaskShowData, TaskShowErrors, TaskShowResponses, TaskUpdateData, TaskUpdateDependenciesData, TaskUpdateDependenciesErrors, TaskUpdateDependenciesResponses, TaskUpdateErrors, TaskUpdateResponses, TaskUpdateStatusData, TaskUpdateStatusErrors, TaskUpdateStatusResponses, UserDelegationRulesData, UserDelegationRulesErrors, UserIndexData, UserIndexResponses, UserInviteData, UserInviteErrors, UserInviteResponses, UserReactivateData, UserReactivateResponses, UserRolesData, UserRolesResponses, UserShowData, UserShowResponses, UserSuspendData, UserSuspendResponses, UserUpdateAuthorityLimitsData, UserUpdateAuthorityLimitsErrors, UserUpdateData, UserUpdateDelegationRulesData, UserUpdateDelegationRulesErrors, UserUpdateErrors, V1AccountProfile02Data, V1AccountProfile02Errors, V1AccountProfile02Responses, V1AccountProfile0Data, V1AccountProfile0Errors, V1AccountProfile0Responses, V1AccountUpdateProfile12Data, V1AccountUpdateProfile12Errors, V1AccountUpdateProfile12Responses, V1AccountUpdateProfile1Data, V1AccountUpdateProfile1Errors, V1AccountUpdateProfile1Responses, V1OperationalApprovalsInstancesDecisionsStoreData, V1OperationalApprovalsInstancesDecisionsStoreErrors, V1OperationalApprovalsInstancesDecisionsStoreResponses, V1OperationalApprovalsInstancesIndexData, V1OperationalApprovalsInstancesIndexErrors, V1OperationalApprovalsInstancesIndexResponses, V1OperationalApprovalsInstancesShowData, V1OperationalApprovalsInstancesShowResponses, V1OperationalApprovalsInstancesStoreData, V1OperationalApprovalsInstancesStoreErrors, V1OperationalApprovalsInstancesStoreResponses, V1ProjectsStoreData, V1ProjectsStoreErrors, V1ProjectsStoreResponses, V1RfqsBulkActionData, V1RfqsBulkActionErrors, V1RfqsBulkActionResponses, V1RfqsDuplicateData, V1RfqsDuplicateErrors, V1RfqsDuplicateResponses, V1RfqsInvitationsRemindData, V1RfqsInvitationsRemindErrors, V1RfqsInvitationsRemindResponses, V1RfqsInvitationsStoreData, V1RfqsInvitationsStoreErrors, V1RfqsInvitationsStoreResponses, V1RfqsStoreData, V1RfqsStoreErrors, V1RfqsStoreResponses, V1RfqTemplatesApplyData, V1RfqTemplatesApplyResponses, V1RfqTemplatesDuplicateData, V1RfqTemplatesDuplicateResponses, V1RfqTemplatesStoreData, V1RfqTemplatesStoreResponses, V1TasksStoreData, V1TasksStoreErrors, V1TasksStoreResponses, VendorComplianceData, VendorComplianceErrors, VendorComplianceResponses, VendorHistoryData, VendorHistoryErrors, VendorHistoryResponses, VendorIndexData, VendorIndexResponses, VendorInvitationIndexData, VendorInvitationIndexErrors, VendorInvitationIndexResponses, VendorPerformanceData, VendorPerformanceErrors, VendorPerformanceResponses, VendorShowData, VendorShowErrors, VendorShowResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -23,229 +23,145 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
  *
  * GET /me or GET /account/profile
  */
-export const v1AccountProfile0 = <ThrowOnError extends boolean = false>(options?: Options<V1AccountProfile0Data, ThrowOnError>) => (options?.client ?? client).get<V1AccountProfile0Responses, V1AccountProfile0Errors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/me',
-    ...options
-});
+export const v1AccountProfile0 = <ThrowOnError extends boolean = false>(options?: Options<V1AccountProfile0Data, ThrowOnError>) => (options?.client ?? client).get<V1AccountProfile0Responses, V1AccountProfile0Errors, ThrowOnError>({ url: '/me', ...options });
 
 /**
  * Update current user profile
  *
  * PUT /me or PUT /account/profile
  */
-export const v1AccountUpdateProfile1 = <ThrowOnError extends boolean = false>(options?: Options<V1AccountUpdateProfile1Data, ThrowOnError>) => (options?.client ?? client).put<V1AccountUpdateProfile1Responses, V1AccountUpdateProfile1Errors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/me',
-    ...options
-});
+export const v1AccountUpdateProfile1 = <ThrowOnError extends boolean = false>(options?: Options<V1AccountUpdateProfile1Data, ThrowOnError>) => (options?.client ?? client).put<V1AccountUpdateProfile1Responses, V1AccountUpdateProfile1Errors, ThrowOnError>({ url: '/me', ...options });
 
 /**
  * Get current user profile
  *
  * GET /me or GET /account/profile
  */
-export const v1AccountProfile02 = <ThrowOnError extends boolean = false>(options?: Options<V1AccountProfile02Data, ThrowOnError>) => (options?.client ?? client).get<V1AccountProfile02Responses, V1AccountProfile02Errors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/account/profile',
-    ...options
-});
+export const v1AccountProfile02 = <ThrowOnError extends boolean = false>(options?: Options<V1AccountProfile02Data, ThrowOnError>) => (options?.client ?? client).get<V1AccountProfile02Responses, V1AccountProfile02Errors, ThrowOnError>({ url: '/account/profile', ...options });
 
 /**
  * Update current user profile
  *
  * PUT /me or PUT /account/profile
  */
-export const v1AccountUpdateProfile12 = <ThrowOnError extends boolean = false>(options?: Options<V1AccountUpdateProfile12Data, ThrowOnError>) => (options?.client ?? client).put<V1AccountUpdateProfile12Responses, V1AccountUpdateProfile12Errors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/account/profile',
-    ...options
-});
+export const v1AccountUpdateProfile12 = <ThrowOnError extends boolean = false>(options?: Options<V1AccountUpdateProfile12Data, ThrowOnError>) => (options?.client ?? client).put<V1AccountUpdateProfile12Responses, V1AccountUpdateProfile12Errors, ThrowOnError>({ url: '/account/profile', ...options });
 
 /**
  * Change password
  *
  * POST /account/change-password
  */
-export const accountChangePassword = <ThrowOnError extends boolean = false>(options?: Options<AccountChangePasswordData, ThrowOnError>) => (options?.client ?? client).post<AccountChangePasswordResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/account/change-password',
-    ...options
-});
+export const accountChangePassword = <ThrowOnError extends boolean = false>(options?: Options<AccountChangePasswordData, ThrowOnError>) => (options?.client ?? client).post<AccountChangePasswordResponses, unknown, ThrowOnError>({ url: '/account/change-password', ...options });
 
 /**
  * Get user preferences
  *
  * GET /account/preferences
  */
-export const accountPreferences = <ThrowOnError extends boolean = false>(options?: Options<AccountPreferencesData, ThrowOnError>) => (options?.client ?? client).get<AccountPreferencesResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/account/preferences',
-    ...options
-});
+export const accountPreferences = <ThrowOnError extends boolean = false>(options?: Options<AccountPreferencesData, ThrowOnError>) => (options?.client ?? client).get<AccountPreferencesResponses, unknown, ThrowOnError>({ url: '/account/preferences', ...options });
 
 /**
  * Update user preferences
  *
  * PUT /account/preferences
  */
-export const accountUpdatePreferences = <ThrowOnError extends boolean = false>(options?: Options<AccountUpdatePreferencesData, ThrowOnError>) => (options?.client ?? client).put<AccountUpdatePreferencesResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/account/preferences',
-    ...options
-});
+export const accountUpdatePreferences = <ThrowOnError extends boolean = false>(options?: Options<AccountUpdatePreferencesData, ThrowOnError>) => (options?.client ?? client).put<AccountUpdatePreferencesResponses, unknown, ThrowOnError>({ url: '/account/preferences', ...options });
 
 /**
  * Get notification settings
  *
  * GET /account/notifications
  */
-export const accountNotificationSettings = <ThrowOnError extends boolean = false>(options?: Options<AccountNotificationSettingsData, ThrowOnError>) => (options?.client ?? client).get<AccountNotificationSettingsResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/account/notifications',
-    ...options
-});
+export const accountNotificationSettings = <ThrowOnError extends boolean = false>(options?: Options<AccountNotificationSettingsData, ThrowOnError>) => (options?.client ?? client).get<AccountNotificationSettingsResponses, unknown, ThrowOnError>({ url: '/account/notifications', ...options });
 
 /**
  * Update notification settings
  *
  * PUT /account/notifications
  */
-export const accountUpdateNotificationSettings = <ThrowOnError extends boolean = false>(options?: Options<AccountUpdateNotificationSettingsData, ThrowOnError>) => (options?.client ?? client).put<AccountUpdateNotificationSettingsResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/account/notifications',
-    ...options
-});
+export const accountUpdateNotificationSettings = <ThrowOnError extends boolean = false>(options?: Options<AccountUpdateNotificationSettingsData, ThrowOnError>) => (options?.client ?? client).put<AccountUpdateNotificationSettingsResponses, unknown, ThrowOnError>({ url: '/account/notifications', ...options });
 
 /**
  * Get subscription details
  *
  * GET /account/subscription
  */
-export const accountSubscription = <ThrowOnError extends boolean = false>(options?: Options<AccountSubscriptionData, ThrowOnError>) => (options?.client ?? client).get<AccountSubscriptionResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/account/subscription',
-    ...options
-});
+export const accountSubscription = <ThrowOnError extends boolean = false>(options?: Options<AccountSubscriptionData, ThrowOnError>) => (options?.client ?? client).get<AccountSubscriptionResponses, unknown, ThrowOnError>({ url: '/account/subscription', ...options });
 
 /**
  * Get available subscription plans
  *
  * GET /account/subscription/plans
  */
-export const accountSubscriptionPlans = <ThrowOnError extends boolean = false>(options?: Options<AccountSubscriptionPlansData, ThrowOnError>) => (options?.client ?? client).get<AccountSubscriptionPlansResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/account/subscription/plans',
-    ...options
-});
+export const accountSubscriptionPlans = <ThrowOnError extends boolean = false>(options?: Options<AccountSubscriptionPlansData, ThrowOnError>) => (options?.client ?? client).get<AccountSubscriptionPlansResponses, unknown, ThrowOnError>({ url: '/account/subscription/plans', ...options });
 
 /**
  * Change subscription plan
  *
  * POST /account/subscription/change
  */
-export const accountChangeSubscription = <ThrowOnError extends boolean = false>(options?: Options<AccountChangeSubscriptionData, ThrowOnError>) => (options?.client ?? client).post<AccountChangeSubscriptionResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/account/subscription/change',
-    ...options
-});
+export const accountChangeSubscription = <ThrowOnError extends boolean = false>(options?: Options<AccountChangeSubscriptionData, ThrowOnError>) => (options?.client ?? client).post<AccountChangeSubscriptionResponses, unknown, ThrowOnError>({ url: '/account/subscription/change', ...options });
 
 /**
  * List payment methods
  *
  * GET /account/payment-methods
  */
-export const accountPaymentMethods = <ThrowOnError extends boolean = false>(options?: Options<AccountPaymentMethodsData, ThrowOnError>) => (options?.client ?? client).get<AccountPaymentMethodsResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/account/payment-methods',
-    ...options
-});
+export const accountPaymentMethods = <ThrowOnError extends boolean = false>(options?: Options<AccountPaymentMethodsData, ThrowOnError>) => (options?.client ?? client).get<AccountPaymentMethodsResponses, unknown, ThrowOnError>({ url: '/account/payment-methods', ...options });
 
 /**
  * Add payment method
  *
  * POST /account/payment-methods
  */
-export const accountAddPaymentMethod = <ThrowOnError extends boolean = false>(options?: Options<AccountAddPaymentMethodData, ThrowOnError>) => (options?.client ?? client).post<AccountAddPaymentMethodResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/account/payment-methods',
-    ...options
-});
+export const accountAddPaymentMethod = <ThrowOnError extends boolean = false>(options?: Options<AccountAddPaymentMethodData, ThrowOnError>) => (options?.client ?? client).post<AccountAddPaymentMethodResponses, unknown, ThrowOnError>({ url: '/account/payment-methods', ...options });
 
 /**
  * Remove payment method
  *
  * DELETE /account/payment-methods/:id
  */
-export const accountRemovePaymentMethod = <ThrowOnError extends boolean = false>(options: Options<AccountRemovePaymentMethodData, ThrowOnError>) => (options.client ?? client).delete<AccountRemovePaymentMethodResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/account/payment-methods/{id}',
-    ...options
-});
+export const accountRemovePaymentMethod = <ThrowOnError extends boolean = false>(options: Options<AccountRemovePaymentMethodData, ThrowOnError>) => (options.client ?? client).delete<AccountRemovePaymentMethodResponses, unknown, ThrowOnError>({ url: '/account/payment-methods/{id}', ...options });
 
 /**
  * Set default payment method
  *
  * PATCH /account/payment-methods/:id/default
  */
-export const accountSetDefaultPaymentMethod = <ThrowOnError extends boolean = false>(options: Options<AccountSetDefaultPaymentMethodData, ThrowOnError>) => (options.client ?? client).patch<AccountSetDefaultPaymentMethodResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/account/payment-methods/{id}/default',
-    ...options
-});
+export const accountSetDefaultPaymentMethod = <ThrowOnError extends boolean = false>(options: Options<AccountSetDefaultPaymentMethodData, ThrowOnError>) => (options.client ?? client).patch<AccountSetDefaultPaymentMethodResponses, unknown, ThrowOnError>({ url: '/account/payment-methods/{id}/default', ...options });
 
 /**
  * GET /approvals
  *
  * Query: type, status, priority, page, per_page
  */
-export const approvalIndex = <ThrowOnError extends boolean = false>(options?: Options<ApprovalIndexData, ThrowOnError>) => (options?.client ?? client).get<ApprovalIndexResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/approvals',
-    ...options
-});
+export const approvalIndex = <ThrowOnError extends boolean = false>(options?: Options<ApprovalIndexData, ThrowOnError>) => (options?.client ?? client).get<ApprovalIndexResponses, unknown, ThrowOnError>({ url: '/approvals', ...options });
 
 /**
  * POST /approvals/bulk-approve
  *
  * Body: ids[], reason
  */
-export const approvalBulkApprove = <ThrowOnError extends boolean = false>(options?: Options<ApprovalBulkApproveData, ThrowOnError>) => (options?.client ?? client).post<ApprovalBulkApproveResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/approvals/bulk-approve',
-    ...options
-});
+export const approvalBulkApprove = <ThrowOnError extends boolean = false>(options?: Options<ApprovalBulkApproveData, ThrowOnError>) => (options?.client ?? client).post<ApprovalBulkApproveResponses, unknown, ThrowOnError>({ url: '/approvals/bulk-approve', ...options });
 
 /**
  * POST /approvals/bulk-reject
  *
  * Body: ids[], reason
  */
-export const approvalBulkReject = <ThrowOnError extends boolean = false>(options?: Options<ApprovalBulkRejectData, ThrowOnError>) => (options?.client ?? client).post<ApprovalBulkRejectResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/approvals/bulk-reject',
-    ...options
-});
+export const approvalBulkReject = <ThrowOnError extends boolean = false>(options?: Options<ApprovalBulkRejectData, ThrowOnError>) => (options?.client ?? client).post<ApprovalBulkRejectResponses, unknown, ThrowOnError>({ url: '/approvals/bulk-reject', ...options });
 
 /**
  * POST /approvals/bulk-reassign
  *
  * Body: ids[], assignee_id
  */
-export const approvalBulkReassign = <ThrowOnError extends boolean = false>(options?: Options<ApprovalBulkReassignData, ThrowOnError>) => (options?.client ?? client).post<ApprovalBulkReassignResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/approvals/bulk-reassign',
-    ...options
-});
+export const approvalBulkReassign = <ThrowOnError extends boolean = false>(options?: Options<ApprovalBulkReassignData, ThrowOnError>) => (options?.client ?? client).post<ApprovalBulkReassignResponses, unknown, ThrowOnError>({ url: '/approvals/bulk-reassign', ...options });
 
 /**
  * GET /approvals/:id
  */
-export const approvalShow = <ThrowOnError extends boolean = false>(options: Options<ApprovalShowData, ThrowOnError>) => (options.client ?? client).get<ApprovalShowResponses, ApprovalShowErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/approvals/{id}',
-    ...options
-});
+export const approvalShow = <ThrowOnError extends boolean = false>(options: Options<ApprovalShowData, ThrowOnError>) => (options.client ?? client).get<ApprovalShowResponses, ApprovalShowErrors, ThrowOnError>({ url: '/approvals/{id}', ...options });
 
 /**
  * POST /approvals/:id/approve
@@ -253,7 +169,6 @@ export const approvalShow = <ThrowOnError extends boolean = false>(options: Opti
  * Body: reason (required)
  */
 export const approvalApprove = <ThrowOnError extends boolean = false>(options: Options<ApprovalApproveData, ThrowOnError>) => (options.client ?? client).post<ApprovalApproveResponses, ApprovalApproveErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/approvals/{id}/approve',
     ...options,
     headers: {
@@ -268,7 +183,6 @@ export const approvalApprove = <ThrowOnError extends boolean = false>(options: O
  * Body: reason (required)
  */
 export const approvalReject = <ThrowOnError extends boolean = false>(options: Options<ApprovalRejectData, ThrowOnError>) => (options.client ?? client).post<ApprovalRejectResponses, ApprovalRejectErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/approvals/{id}/reject',
     ...options,
     headers: {
@@ -282,56 +196,34 @@ export const approvalReject = <ThrowOnError extends boolean = false>(options: Op
  *
  * Body: reason, instructions
  */
-export const approvalReturn = <ThrowOnError extends boolean = false>(options: Options<ApprovalReturnData, ThrowOnError>) => (options.client ?? client).post<ApprovalReturnResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/approvals/{id}/return',
-    ...options
-});
+export const approvalReturn = <ThrowOnError extends boolean = false>(options: Options<ApprovalReturnData, ThrowOnError>) => (options.client ?? client).post<ApprovalReturnResponses, unknown, ThrowOnError>({ url: '/approvals/{id}/return', ...options });
 
 /**
  * POST /approvals/:id/reassign
  *
  * Body: assignee_id
  */
-export const approvalReassign = <ThrowOnError extends boolean = false>(options: Options<ApprovalReassignData, ThrowOnError>) => (options.client ?? client).post<ApprovalReassignResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/approvals/{id}/reassign',
-    ...options
-});
+export const approvalReassign = <ThrowOnError extends boolean = false>(options: Options<ApprovalReassignData, ThrowOnError>) => (options.client ?? client).post<ApprovalReassignResponses, unknown, ThrowOnError>({ url: '/approvals/{id}/reassign', ...options });
 
 /**
  * POST /approvals/:id/snooze
  *
  * Body: duration_hours
  */
-export const approvalSnooze = <ThrowOnError extends boolean = false>(options: Options<ApprovalSnoozeData, ThrowOnError>) => (options.client ?? client).post<ApprovalSnoozeResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/approvals/{id}/snooze',
-    ...options
-});
+export const approvalSnooze = <ThrowOnError extends boolean = false>(options: Options<ApprovalSnoozeData, ThrowOnError>) => (options.client ?? client).post<ApprovalSnoozeResponses, unknown, ThrowOnError>({ url: '/approvals/{id}/snooze', ...options });
 
 /**
  * POST /approvals/:id/request-evidence
  */
-export const approvalRequestEvidence = <ThrowOnError extends boolean = false>(options: Options<ApprovalRequestEvidenceData, ThrowOnError>) => (options.client ?? client).post<ApprovalRequestEvidenceResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/approvals/{id}/request-evidence',
-    ...options
-});
+export const approvalRequestEvidence = <ThrowOnError extends boolean = false>(options: Options<ApprovalRequestEvidenceData, ThrowOnError>) => (options.client ?? client).post<ApprovalRequestEvidenceResponses, unknown, ThrowOnError>({ url: '/approvals/{id}/request-evidence', ...options });
 
 /**
  * GET /approvals/:id/history
  */
-export const approvalHistory = <ThrowOnError extends boolean = false>(options: Options<ApprovalHistoryData, ThrowOnError>) => (options.client ?? client).get<ApprovalHistoryResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/approvals/{id}/history',
-    ...options
-});
+export const approvalHistory = <ThrowOnError extends boolean = false>(options: Options<ApprovalHistoryData, ThrowOnError>) => (options.client ?? client).get<ApprovalHistoryResponses, unknown, ThrowOnError>({ url: '/approvals/{id}/history', ...options });
 
 /**
  * Authenticate user with email and password, return JWT tokens
- *
- * Tenant is taken from the user row (one user → one tenant). `tenant_id` in the body is ignored.
  *
  * POST /auth/login
  */
@@ -363,7 +255,7 @@ export const authSso = <ThrowOnError extends boolean = false>(options: Options<A
  *
  * POST /auth/mfa/verify
  */
-export const authMfaVerify = <ThrowOnError extends boolean = false>(options: Options<AuthMfaVerifyData, ThrowOnError>) => (options.client ?? client).post<unknown, AuthMfaVerifyErrors, ThrowOnError>({
+export const authMfaVerify = <ThrowOnError extends boolean = false>(options: Options<AuthMfaVerifyData, ThrowOnError>) => (options.client ?? client).post<AuthMfaVerifyResponses, AuthMfaVerifyErrors, ThrowOnError>({
     url: '/auth/mfa/verify',
     ...options,
     headers: {
@@ -419,7 +311,7 @@ export const authRefresh = <ThrowOnError extends boolean = false>(options: Optio
  *
  * POST /auth/logout
  */
-export const authLogout = <ThrowOnError extends boolean = false>(options?: Options<AuthLogoutData, ThrowOnError>) => (options?.client ?? client).post<unknown, AuthLogoutErrors, ThrowOnError>({ url: '/auth/logout', ...options });
+export const authLogout = <ThrowOnError extends boolean = false>(options?: Options<AuthLogoutData, ThrowOnError>) => (options?.client ?? client).post<AuthLogoutResponses, AuthLogoutErrors, ThrowOnError>({ url: '/auth/logout', ...options });
 
 /**
  * Trust the current device for simplified future authentication
@@ -433,11 +325,7 @@ export const authDeviceTrust = <ThrowOnError extends boolean = false>(options?: 
  *
  * Query: rfqId=:id
  */
-export const awardIndex = <ThrowOnError extends boolean = false>(options?: Options<AwardIndexData, ThrowOnError>) => (options?.client ?? client).get<AwardIndexResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/awards',
-    ...options
-});
+export const awardIndex = <ThrowOnError extends boolean = false>(options?: Options<AwardIndexData, ThrowOnError>) => (options?.client ?? client).get<AwardIndexResponses, unknown, ThrowOnError>({ url: '/awards', ...options });
 
 /**
  * POST /awards
@@ -445,7 +333,6 @@ export const awardIndex = <ThrowOnError extends boolean = false>(options?: Optio
  * Create an award. Returns 201.
  */
 export const awardStore = <ThrowOnError extends boolean = false>(options: Options<AwardStoreData, ThrowOnError>) => (options.client ?? client).post<AwardStoreResponses, AwardStoreErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/awards',
     ...options,
     headers: {
@@ -458,7 +345,6 @@ export const awardStore = <ThrowOnError extends boolean = false>(options: Option
  * PUT /awards/:id/split
  */
 export const awardUpdateSplit = <ThrowOnError extends boolean = false>(options: Options<AwardUpdateSplitData, ThrowOnError>) => (options.client ?? client).put<AwardUpdateSplitResponses, AwardUpdateSplitErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/awards/{id}/split',
     ...options,
     headers: {
@@ -471,7 +357,6 @@ export const awardUpdateSplit = <ThrowOnError extends boolean = false>(options: 
  * POST /awards/:id/debrief/:vendorId
  */
 export const awardDebrief = <ThrowOnError extends boolean = false>(options: Options<AwardDebriefData, ThrowOnError>) => (options.client ?? client).post<AwardDebriefResponses, AwardDebriefErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/awards/{id}/debrief/{vendorId}',
     ...options,
     headers: {
@@ -484,7 +369,6 @@ export const awardDebrief = <ThrowOnError extends boolean = false>(options: Opti
  * POST /awards/:id/protest
  */
 export const awardProtest = <ThrowOnError extends boolean = false>(options: Options<AwardProtestData, ThrowOnError>) => (options.client ?? client).post<AwardProtestResponses, AwardProtestErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/awards/{id}/protest',
     ...options,
     headers: {
@@ -496,37 +380,24 @@ export const awardProtest = <ThrowOnError extends boolean = false>(options: Opti
 /**
  * PATCH /awards/:id/protest/:protestId/resolve
  */
-export const awardResolveProtest = <ThrowOnError extends boolean = false>(options: Options<AwardResolveProtestData, ThrowOnError>) => (options.client ?? client).patch<AwardResolveProtestResponses, AwardResolveProtestErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/awards/{id}/protest/{protestId}/resolve',
-    ...options
-});
+export const awardResolveProtest = <ThrowOnError extends boolean = false>(options: Options<AwardResolveProtestData, ThrowOnError>) => (options.client ?? client).patch<AwardResolveProtestResponses, AwardResolveProtestErrors, ThrowOnError>({ url: '/awards/{id}/protest/{protestId}/resolve', ...options });
 
 /**
  * POST /awards/:id/signoff
  */
-export const awardSignoff = <ThrowOnError extends boolean = false>(options: Options<AwardSignoffData, ThrowOnError>) => (options.client ?? client).post<AwardSignoffResponses, AwardSignoffErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/awards/{id}/signoff',
-    ...options
-});
+export const awardSignoff = <ThrowOnError extends boolean = false>(options: Options<AwardSignoffData, ThrowOnError>) => (options.client ?? client).post<AwardSignoffResponses, AwardSignoffErrors, ThrowOnError>({ url: '/awards/{id}/signoff', ...options });
 
 /**
  * GET /comparison-runs
  * Scoped by tenant_id
  */
-export const comparisonRunIndex = <ThrowOnError extends boolean = false>(options?: Options<ComparisonRunIndexData, ThrowOnError>) => (options?.client ?? client).get<ComparisonRunIndexResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/comparison-runs',
-    ...options
-});
+export const comparisonRunIndex = <ThrowOnError extends boolean = false>(options?: Options<ComparisonRunIndexData, ThrowOnError>) => (options?.client ?? client).get<ComparisonRunIndexResponses, unknown, ThrowOnError>({ url: '/comparison-runs', ...options });
 
 /**
  * POST /comparison-runs/preview
  * Scoped by tenant_id
  */
 export const comparisonRunPreview = <ThrowOnError extends boolean = false>(options: Options<ComparisonRunPreviewData, ThrowOnError>) => (options.client ?? client).post<ComparisonRunPreviewResponses, ComparisonRunPreviewErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/comparison-runs/preview',
     ...options,
     headers: {
@@ -541,7 +412,6 @@ export const comparisonRunPreview = <ThrowOnError extends boolean = false>(optio
  * Scoped by tenant_id
  */
 export const comparisonRunFinal = <ThrowOnError extends boolean = false>(options: Options<ComparisonRunFinalData, ThrowOnError>) => (options.client ?? client).post<ComparisonRunFinalResponses, ComparisonRunFinalErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/comparison-runs/final',
     ...options,
     headers: {
@@ -554,140 +424,87 @@ export const comparisonRunFinal = <ThrowOnError extends boolean = false>(options
  * GET /comparison-runs/:id
  * Scoped by tenant_id
  */
-export const comparisonRunShow = <ThrowOnError extends boolean = false>(options: Options<ComparisonRunShowData, ThrowOnError>) => (options.client ?? client).get<ComparisonRunShowResponses, ComparisonRunShowErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/comparison-runs/{id}',
-    ...options
-});
+export const comparisonRunShow = <ThrowOnError extends boolean = false>(options: Options<ComparisonRunShowData, ThrowOnError>) => (options.client ?? client).get<ComparisonRunShowResponses, ComparisonRunShowErrors, ThrowOnError>({ url: '/comparison-runs/{id}', ...options });
 
 /**
  * GET /comparison-runs/:id/matrix
  * Scoped by tenant_id
  */
-export const comparisonRunMatrix = <ThrowOnError extends boolean = false>(options: Options<ComparisonRunMatrixData, ThrowOnError>) => (options.client ?? client).get<ComparisonRunMatrixResponses, ComparisonRunMatrixErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/comparison-runs/{id}/matrix',
-    ...options
-});
+export const comparisonRunMatrix = <ThrowOnError extends boolean = false>(options: Options<ComparisonRunMatrixData, ThrowOnError>) => (options.client ?? client).get<ComparisonRunMatrixResponses, ComparisonRunMatrixErrors, ThrowOnError>({ url: '/comparison-runs/{id}/matrix', ...options });
 
 /**
  * GET /comparison-runs/:id/readiness
  * Scoped by tenant_id
  */
-export const comparisonRunReadiness = <ThrowOnError extends boolean = false>(options: Options<ComparisonRunReadinessData, ThrowOnError>) => (options.client ?? client).get<ComparisonRunReadinessResponses, ComparisonRunReadinessErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/comparison-runs/{id}/readiness',
-    ...options
-});
+export const comparisonRunReadiness = <ThrowOnError extends boolean = false>(options: Options<ComparisonRunReadinessData, ThrowOnError>) => (options.client ?? client).get<ComparisonRunReadinessResponses, ComparisonRunReadinessErrors, ThrowOnError>({ url: '/comparison-runs/{id}/readiness', ...options });
 
 /**
  * PATCH /comparison-runs/:id/scoring-model
  * Scoped by tenant_id
  */
-export const comparisonRunUpdateScoringModel = <ThrowOnError extends boolean = false>(options: Options<ComparisonRunUpdateScoringModelData, ThrowOnError>) => (options.client ?? client).patch<unknown, ComparisonRunUpdateScoringModelErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/comparison-runs/{id}/scoring-model',
-    ...options
-});
+export const comparisonRunUpdateScoringModel = <ThrowOnError extends boolean = false>(options: Options<ComparisonRunUpdateScoringModelData, ThrowOnError>) => (options.client ?? client).patch<unknown, ComparisonRunUpdateScoringModelErrors, ThrowOnError>({ url: '/comparison-runs/{id}/scoring-model', ...options });
 
 /**
  * POST /comparison-runs/:id/lock
  * Scoped by tenant_id
  */
-export const comparisonRunLock = <ThrowOnError extends boolean = false>(options: Options<ComparisonRunLockData, ThrowOnError>) => (options.client ?? client).post<unknown, ComparisonRunLockErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/comparison-runs/{id}/lock',
-    ...options
-});
+export const comparisonRunLock = <ThrowOnError extends boolean = false>(options: Options<ComparisonRunLockData, ThrowOnError>) => (options.client ?? client).post<unknown, ComparisonRunLockErrors, ThrowOnError>({ url: '/comparison-runs/{id}/lock', ...options });
 
 /**
  * POST /comparison-runs/:id/unlock
  * Scoped by tenant_id
  */
-export const comparisonRunUnlock = <ThrowOnError extends boolean = false>(options: Options<ComparisonRunUnlockData, ThrowOnError>) => (options.client ?? client).post<unknown, ComparisonRunUnlockErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/comparison-runs/{id}/unlock',
-    ...options
-});
+export const comparisonRunUnlock = <ThrowOnError extends boolean = false>(options: Options<ComparisonRunUnlockData, ThrowOnError>) => (options.client ?? client).post<unknown, ComparisonRunUnlockErrors, ThrowOnError>({ url: '/comparison-runs/{id}/unlock', ...options });
 
 /**
  * Get dashboard KPIs scoped by tenant
  *
  * GET /dashboard/kpis
  */
-export const dashboardKpis = <ThrowOnError extends boolean = false>(options?: Options<DashboardKpisData, ThrowOnError>) => (options?.client ?? client).get<DashboardKpisResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/dashboard/kpis',
-    ...options
-});
+export const dashboardKpis = <ThrowOnError extends boolean = false>(options?: Options<DashboardKpisData, ThrowOnError>) => (options?.client ?? client).get<DashboardKpisResponses, unknown, ThrowOnError>({ url: '/dashboard/kpis', ...options });
 
 /**
  * Get spend trend data scoped by tenant
  *
  * GET /dashboard/spend-trend
  */
-export const dashboardSpendTrend = <ThrowOnError extends boolean = false>(options?: Options<DashboardSpendTrendData, ThrowOnError>) => (options?.client ?? client).get<DashboardSpendTrendResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/dashboard/spend-trend',
-    ...options
-});
+export const dashboardSpendTrend = <ThrowOnError extends boolean = false>(options?: Options<DashboardSpendTrendData, ThrowOnError>) => (options?.client ?? client).get<DashboardSpendTrendResponses, unknown, ThrowOnError>({ url: '/dashboard/spend-trend', ...options });
 
 /**
  * Get vendor score data scoped by tenant
  *
  * GET /dashboard/vendor-scores
  */
-export const dashboardVendorScores = <ThrowOnError extends boolean = false>(options?: Options<DashboardVendorScoresData, ThrowOnError>) => (options?.client ?? client).get<DashboardVendorScoresResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/dashboard/vendor-scores',
-    ...options
-});
+export const dashboardVendorScores = <ThrowOnError extends boolean = false>(options?: Options<DashboardVendorScoresData, ThrowOnError>) => (options?.client ?? client).get<DashboardVendorScoresResponses, unknown, ThrowOnError>({ url: '/dashboard/vendor-scores', ...options });
 
 /**
  * Get recent activity scoped by tenant
  *
  * GET /dashboard/recent-activity
  */
-export const dashboardRecentActivity = <ThrowOnError extends boolean = false>(options?: Options<DashboardRecentActivityData, ThrowOnError>) => (options?.client ?? client).get<DashboardRecentActivityResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/dashboard/recent-activity',
-    ...options
-});
+export const dashboardRecentActivity = <ThrowOnError extends boolean = false>(options?: Options<DashboardRecentActivityData, ThrowOnError>) => (options?.client ?? client).get<DashboardRecentActivityResponses, unknown, ThrowOnError>({ url: '/dashboard/recent-activity', ...options });
 
 /**
  * Get risk alerts scoped by tenant
  *
  * GET /dashboard/risk-alerts
  */
-export const dashboardRiskAlerts = <ThrowOnError extends boolean = false>(options?: Options<DashboardRiskAlertsData, ThrowOnError>) => (options?.client ?? client).get<DashboardRiskAlertsResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/dashboard/risk-alerts',
-    ...options
-});
+export const dashboardRiskAlerts = <ThrowOnError extends boolean = false>(options?: Options<DashboardRiskAlertsData, ThrowOnError>) => (options?.client ?? client).get<DashboardRiskAlertsResponses, unknown, ThrowOnError>({ url: '/dashboard/risk-alerts', ...options });
 
 /**
  * GET /decision-trail
  */
-export const decisionTrailIndex = <ThrowOnError extends boolean = false>(options?: Options<DecisionTrailIndexData, ThrowOnError>) => (options?.client ?? client).get<DecisionTrailIndexResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/decision-trail',
-    ...options
-});
+export const decisionTrailIndex = <ThrowOnError extends boolean = false>(options?: Options<DecisionTrailIndexData, ThrowOnError>) => (options?.client ?? client).get<DecisionTrailIndexResponses, unknown, ThrowOnError>({ url: '/decision-trail', ...options });
 
 /**
  * POST /decision-trail/verify
  */
-export const decisionTrailVerify = <ThrowOnError extends boolean = false>(options?: Options<DecisionTrailVerifyData, ThrowOnError>) => (options?.client ?? client).post<DecisionTrailVerifyResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/decision-trail/verify',
-    ...options
-});
+export const decisionTrailVerify = <ThrowOnError extends boolean = false>(options?: Options<DecisionTrailVerifyData, ThrowOnError>) => (options?.client ?? client).post<DecisionTrailVerifyResponses, unknown, ThrowOnError>({ url: '/decision-trail/verify', ...options });
 
 /**
  * POST /decision-trail/export
  */
 export const decisionTrailExport = <ThrowOnError extends boolean = false>(options?: Options<DecisionTrailExportData, ThrowOnError>) => (options?.client ?? client).post<DecisionTrailExportResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/decision-trail/export',
     ...options,
     headers: {
@@ -699,11 +516,7 @@ export const decisionTrailExport = <ThrowOnError extends boolean = false>(option
 /**
  * GET /decision-trail/{id}
  */
-export const decisionTrailShow = <ThrowOnError extends boolean = false>(options: Options<DecisionTrailShowData, ThrowOnError>) => (options.client ?? client).get<DecisionTrailShowResponses, DecisionTrailShowErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/decision-trail/{id}',
-    ...options
-});
+export const decisionTrailShow = <ThrowOnError extends boolean = false>(options: Options<DecisionTrailShowData, ThrowOnError>) => (options.client ?? client).get<DecisionTrailShowResponses, DecisionTrailShowErrors, ThrowOnError>({ url: '/decision-trail/{id}', ...options });
 
 /**
  * List documents
@@ -711,362 +524,225 @@ export const decisionTrailShow = <ThrowOnError extends boolean = false>(options:
  * GET /documents
  * Query: type, rfq_id, vendor_id, tags, page, per_page
  */
-export const documentIndex = <ThrowOnError extends boolean = false>(options?: Options<DocumentIndexData, ThrowOnError>) => (options?.client ?? client).get<DocumentIndexResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/documents',
-    ...options
-});
+export const documentIndex = <ThrowOnError extends boolean = false>(options?: Options<DocumentIndexData, ThrowOnError>) => (options?.client ?? client).get<DocumentIndexResponses, unknown, ThrowOnError>({ url: '/documents', ...options });
 
 /**
  * Show a single document
  *
  * GET /documents/:id
  */
-export const documentShow = <ThrowOnError extends boolean = false>(options: Options<DocumentShowData, ThrowOnError>) => (options.client ?? client).get<DocumentShowResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/documents/{id}',
-    ...options
-});
+export const documentShow = <ThrowOnError extends boolean = false>(options: Options<DocumentShowData, ThrowOnError>) => (options.client ?? client).get<DocumentShowResponses, unknown, ThrowOnError>({ url: '/documents/{id}', ...options });
 
 /**
  * Get document download URL or redirect
  *
  * GET /documents/:id/download
  */
-export const documentDownload = <ThrowOnError extends boolean = false>(options: Options<DocumentDownloadData, ThrowOnError>) => (options.client ?? client).get<DocumentDownloadResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/documents/{id}/download',
-    ...options
-});
+export const documentDownload = <ThrowOnError extends boolean = false>(options: Options<DocumentDownloadData, ThrowOnError>) => (options.client ?? client).get<DocumentDownloadResponses, unknown, ThrowOnError>({ url: '/documents/{id}/download', ...options });
 
 /**
  * Get document preview URL
  *
  * GET /documents/:id/preview
  */
-export const documentPreview = <ThrowOnError extends boolean = false>(options: Options<DocumentPreviewData, ThrowOnError>) => (options.client ?? client).get<DocumentPreviewResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/documents/{id}/preview',
-    ...options
-});
+export const documentPreview = <ThrowOnError extends boolean = false>(options: Options<DocumentPreviewData, ThrowOnError>) => (options.client ?? client).get<DocumentPreviewResponses, unknown, ThrowOnError>({ url: '/documents/{id}/preview', ...options });
 
 /**
  * List evidence bundles
  *
  * GET /evidence-bundles
  */
-export const documentBundles = <ThrowOnError extends boolean = false>(options?: Options<DocumentBundlesData, ThrowOnError>) => (options?.client ?? client).get<DocumentBundlesResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/evidence-bundles',
-    ...options
-});
+export const documentBundles = <ThrowOnError extends boolean = false>(options?: Options<DocumentBundlesData, ThrowOnError>) => (options?.client ?? client).get<DocumentBundlesResponses, unknown, ThrowOnError>({ url: '/evidence-bundles', ...options });
 
 /**
  * Create an evidence bundle
  *
  * POST /evidence-bundles
  */
-export const documentCreateBundle = <ThrowOnError extends boolean = false>(options?: Options<DocumentCreateBundleData, ThrowOnError>) => (options?.client ?? client).post<DocumentCreateBundleResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/evidence-bundles',
-    ...options
-});
+export const documentCreateBundle = <ThrowOnError extends boolean = false>(options?: Options<DocumentCreateBundleData, ThrowOnError>) => (options?.client ?? client).post<DocumentCreateBundleResponses, unknown, ThrowOnError>({ url: '/evidence-bundles', ...options });
 
 /**
  * Show a single evidence bundle
  *
  * GET /evidence-bundles/:id
  */
-export const documentShowBundle = <ThrowOnError extends boolean = false>(options: Options<DocumentShowBundleData, ThrowOnError>) => (options.client ?? client).get<DocumentShowBundleResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/evidence-bundles/{id}',
-    ...options
-});
+export const documentShowBundle = <ThrowOnError extends boolean = false>(options: Options<DocumentShowBundleData, ThrowOnError>) => (options.client ?? client).get<DocumentShowBundleResponses, unknown, ThrowOnError>({ url: '/evidence-bundles/{id}', ...options });
 
 /**
  * Add document to evidence bundle
  *
  * POST /evidence-bundles/:id/add-document
  */
-export const documentAddDocumentToBundle = <ThrowOnError extends boolean = false>(options: Options<DocumentAddDocumentToBundleData, ThrowOnError>) => (options.client ?? client).post<DocumentAddDocumentToBundleResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/evidence-bundles/{id}/add-document',
-    ...options
-});
+export const documentAddDocumentToBundle = <ThrowOnError extends boolean = false>(options: Options<DocumentAddDocumentToBundleData, ThrowOnError>) => (options.client ?? client).post<DocumentAddDocumentToBundleResponses, unknown, ThrowOnError>({ url: '/evidence-bundles/{id}/add-document', ...options });
 
 /**
  * Finalize evidence bundle
  *
  * POST /evidence-bundles/:id/finalize
  */
-export const documentFinalizeBundle = <ThrowOnError extends boolean = false>(options: Options<DocumentFinalizeBundleData, ThrowOnError>) => (options.client ?? client).post<DocumentFinalizeBundleResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/evidence-bundles/{id}/finalize',
-    ...options
-});
+export const documentFinalizeBundle = <ThrowOnError extends boolean = false>(options: Options<DocumentFinalizeBundleData, ThrowOnError>) => (options.client ?? client).post<DocumentFinalizeBundleResponses, unknown, ThrowOnError>({ url: '/evidence-bundles/{id}/finalize', ...options });
 
 /**
  * Export evidence bundle
  *
  * GET /evidence-bundles/:id/export
  */
-export const documentExportBundle = <ThrowOnError extends boolean = false>(options: Options<DocumentExportBundleData, ThrowOnError>) => (options.client ?? client).get<DocumentExportBundleResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/evidence-bundles/{id}/export',
-    ...options
-});
+export const documentExportBundle = <ThrowOnError extends boolean = false>(options: Options<DocumentExportBundleData, ThrowOnError>) => (options.client ?? client).get<DocumentExportBundleResponses, unknown, ThrowOnError>({ url: '/evidence-bundles/{id}/export', ...options });
 
 /**
  * GET /handoffs
  */
-export const handoffIndex = <ThrowOnError extends boolean = false>(options?: Options<HandoffIndexData, ThrowOnError>) => (options?.client ?? client).get<HandoffIndexResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/handoffs',
-    ...options
-});
+export const handoffIndex = <ThrowOnError extends boolean = false>(options?: Options<HandoffIndexData, ThrowOnError>) => (options?.client ?? client).get<HandoffIndexResponses, unknown, ThrowOnError>({ url: '/handoffs', ...options });
 
 /**
  * GET /handoffs/destinations
  */
-export const handoffDestinations = <ThrowOnError extends boolean = false>(options?: Options<HandoffDestinationsData, ThrowOnError>) => (options?.client ?? client).get<HandoffDestinationsResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/handoffs/destinations',
-    ...options
-});
+export const handoffDestinations = <ThrowOnError extends boolean = false>(options?: Options<HandoffDestinationsData, ThrowOnError>) => (options?.client ?? client).get<HandoffDestinationsResponses, unknown, ThrowOnError>({ url: '/handoffs/destinations', ...options });
 
 /**
  * GET /handoffs/:id
  */
-export const handoffShow = <ThrowOnError extends boolean = false>(options: Options<HandoffShowData, ThrowOnError>) => (options.client ?? client).get<HandoffShowResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/handoffs/{id}',
-    ...options
-});
+export const handoffShow = <ThrowOnError extends boolean = false>(options: Options<HandoffShowData, ThrowOnError>) => (options.client ?? client).get<HandoffShowResponses, unknown, ThrowOnError>({ url: '/handoffs/{id}', ...options });
 
 /**
  * POST /handoffs/:id/validate
  *
  * Method name validate_ to avoid reserved word.
  */
-export const handoffValidate = <ThrowOnError extends boolean = false>(options: Options<HandoffValidateData, ThrowOnError>) => (options.client ?? client).post<HandoffValidateResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/handoffs/{id}/validate',
-    ...options
-});
+export const handoffValidate = <ThrowOnError extends boolean = false>(options: Options<HandoffValidateData, ThrowOnError>) => (options.client ?? client).post<HandoffValidateResponses, unknown, ThrowOnError>({ url: '/handoffs/{id}/validate', ...options });
 
 /**
  * POST /handoffs/:id/send
  */
-export const handoffSend = <ThrowOnError extends boolean = false>(options: Options<HandoffSendData, ThrowOnError>) => (options.client ?? client).post<HandoffSendResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/handoffs/{id}/send',
-    ...options
-});
+export const handoffSend = <ThrowOnError extends boolean = false>(options: Options<HandoffSendData, ThrowOnError>) => (options.client ?? client).post<HandoffSendResponses, unknown, ThrowOnError>({ url: '/handoffs/{id}/send', ...options });
 
 /**
  * POST /handoffs/:id/retry
  */
-export const handoffRetry = <ThrowOnError extends boolean = false>(options: Options<HandoffRetryData, ThrowOnError>) => (options.client ?? client).post<HandoffRetryResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/handoffs/{id}/retry',
-    ...options
-});
+export const handoffRetry = <ThrowOnError extends boolean = false>(options: Options<HandoffRetryData, ThrowOnError>) => (options.client ?? client).post<HandoffRetryResponses, unknown, ThrowOnError>({ url: '/handoffs/{id}/retry', ...options });
 
 /**
  * List integrations
  *
  * GET /integrations
  */
-export const integrationIndex = <ThrowOnError extends boolean = false>(options?: Options<IntegrationIndexData, ThrowOnError>) => (options?.client ?? client).get<IntegrationIndexResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/integrations',
-    ...options
-});
+export const integrationIndex = <ThrowOnError extends boolean = false>(options?: Options<IntegrationIndexData, ThrowOnError>) => (options?.client ?? client).get<IntegrationIndexResponses, unknown, ThrowOnError>({ url: '/integrations', ...options });
 
 /**
  * Create integration
  *
  * POST /integrations
  */
-export const integrationStore = <ThrowOnError extends boolean = false>(options?: Options<IntegrationStoreData, ThrowOnError>) => (options?.client ?? client).post<IntegrationStoreResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/integrations',
-    ...options
-});
+export const integrationStore = <ThrowOnError extends boolean = false>(options?: Options<IntegrationStoreData, ThrowOnError>) => (options?.client ?? client).post<IntegrationStoreResponses, unknown, ThrowOnError>({ url: '/integrations', ...options });
 
 /**
  * Get integrations catalog
  *
  * GET /integrations/catalog
  */
-export const integrationCatalog = <ThrowOnError extends boolean = false>(options?: Options<IntegrationCatalogData, ThrowOnError>) => (options?.client ?? client).get<IntegrationCatalogResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/integrations/catalog',
-    ...options
-});
+export const integrationCatalog = <ThrowOnError extends boolean = false>(options?: Options<IntegrationCatalogData, ThrowOnError>) => (options?.client ?? client).get<IntegrationCatalogResponses, unknown, ThrowOnError>({ url: '/integrations/catalog', ...options });
 
 /**
  * Get integrations health status
  *
  * GET /integrations/health
  */
-export const integrationHealth = <ThrowOnError extends boolean = false>(options?: Options<IntegrationHealthData, ThrowOnError>) => (options?.client ?? client).get<IntegrationHealthResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/integrations/health',
-    ...options
-});
+export const integrationHealth = <ThrowOnError extends boolean = false>(options?: Options<IntegrationHealthData, ThrowOnError>) => (options?.client ?? client).get<IntegrationHealthResponses, unknown, ThrowOnError>({ url: '/integrations/health', ...options });
 
 /**
  * List integration jobs
  *
  * GET /integrations/jobs
  */
-export const integrationJobs = <ThrowOnError extends boolean = false>(options?: Options<IntegrationJobsData, ThrowOnError>) => (options?.client ?? client).get<IntegrationJobsResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/integrations/jobs',
-    ...options
-});
+export const integrationJobs = <ThrowOnError extends boolean = false>(options?: Options<IntegrationJobsData, ThrowOnError>) => (options?.client ?? client).get<IntegrationJobsResponses, unknown, ThrowOnError>({ url: '/integrations/jobs', ...options });
 
 /**
  * Retry failed integration job
  *
  * POST /integrations/jobs/:jobId/retry
  */
-export const integrationRetryJob = <ThrowOnError extends boolean = false>(options: Options<IntegrationRetryJobData, ThrowOnError>) => (options.client ?? client).post<IntegrationRetryJobResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/integrations/jobs/{jobId}/retry',
-    ...options
-});
+export const integrationRetryJob = <ThrowOnError extends boolean = false>(options: Options<IntegrationRetryJobData, ThrowOnError>) => (options.client ?? client).post<IntegrationRetryJobResponses, unknown, ThrowOnError>({ url: '/integrations/jobs/{jobId}/retry', ...options });
 
 /**
  * Delete integration
  *
  * DELETE /integrations/:id
  */
-export const integrationDestroy = <ThrowOnError extends boolean = false>(options: Options<IntegrationDestroyData, ThrowOnError>) => (options.client ?? client).delete<IntegrationDestroyResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/integrations/{id}',
-    ...options
-});
+export const integrationDestroy = <ThrowOnError extends boolean = false>(options: Options<IntegrationDestroyData, ThrowOnError>) => (options.client ?? client).delete<IntegrationDestroyResponses, unknown, ThrowOnError>({ url: '/integrations/{id}', ...options });
 
 /**
  * Show a single integration
  *
  * GET /integrations/:id
  */
-export const integrationShow = <ThrowOnError extends boolean = false>(options: Options<IntegrationShowData, ThrowOnError>) => (options.client ?? client).get<IntegrationShowResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/integrations/{id}',
-    ...options
-});
+export const integrationShow = <ThrowOnError extends boolean = false>(options: Options<IntegrationShowData, ThrowOnError>) => (options.client ?? client).get<IntegrationShowResponses, unknown, ThrowOnError>({ url: '/integrations/{id}', ...options });
 
 /**
  * Update integration
  *
  * PUT /integrations/:id
  */
-export const integrationUpdate = <ThrowOnError extends boolean = false>(options: Options<IntegrationUpdateData, ThrowOnError>) => (options.client ?? client).put<IntegrationUpdateResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/integrations/{id}',
-    ...options
-});
+export const integrationUpdate = <ThrowOnError extends boolean = false>(options: Options<IntegrationUpdateData, ThrowOnError>) => (options.client ?? client).put<IntegrationUpdateResponses, unknown, ThrowOnError>({ url: '/integrations/{id}', ...options });
 
 /**
  * Update integration status
  *
  * PATCH /integrations/:id/status
  */
-export const integrationUpdateStatus = <ThrowOnError extends boolean = false>(options: Options<IntegrationUpdateStatusData, ThrowOnError>) => (options.client ?? client).patch<IntegrationUpdateStatusResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/integrations/{id}/status',
-    ...options
-});
+export const integrationUpdateStatus = <ThrowOnError extends boolean = false>(options: Options<IntegrationUpdateStatusData, ThrowOnError>) => (options.client ?? client).patch<IntegrationUpdateStatusResponses, unknown, ThrowOnError>({ url: '/integrations/{id}/status', ...options });
 
 /**
  * Test integration connection
  *
  * POST /integrations/:id/test
  */
-export const integrationTest = <ThrowOnError extends boolean = false>(options: Options<IntegrationTestData, ThrowOnError>) => (options.client ?? client).post<IntegrationTestResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/integrations/{id}/test',
-    ...options
-});
+export const integrationTest = <ThrowOnError extends boolean = false>(options: Options<IntegrationTestData, ThrowOnError>) => (options.client ?? client).post<IntegrationTestResponses, unknown, ThrowOnError>({ url: '/integrations/{id}/test', ...options });
 
 /**
  * GET /negotiations
  *
  * Query: rfqId=:id
  */
-export const negotiationIndex = <ThrowOnError extends boolean = false>(options?: Options<NegotiationIndexData, ThrowOnError>) => (options?.client ?? client).get<unknown, NegotiationIndexErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/negotiations',
-    ...options
-});
+export const negotiationIndex = <ThrowOnError extends boolean = false>(options?: Options<NegotiationIndexData, ThrowOnError>) => (options?.client ?? client).get<unknown, NegotiationIndexErrors, ThrowOnError>({ url: '/negotiations', ...options });
 
 /**
  * POST /negotiations/rounds
  *
  * Start a new negotiation round. Returns 201.
  */
-export const negotiationStartRound = <ThrowOnError extends boolean = false>(options?: Options<NegotiationStartRoundData, ThrowOnError>) => (options?.client ?? client).post<unknown, NegotiationStartRoundErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/negotiations/rounds',
-    ...options
-});
+export const negotiationStartRound = <ThrowOnError extends boolean = false>(options?: Options<NegotiationStartRoundData, ThrowOnError>) => (options?.client ?? client).post<unknown, NegotiationStartRoundErrors, ThrowOnError>({ url: '/negotiations/rounds', ...options });
 
 /**
  * POST /negotiations/rounds/:roundId/counter-offer
  */
-export const negotiationCounterOffer = <ThrowOnError extends boolean = false>(options: Options<NegotiationCounterOfferData, ThrowOnError>) => (options.client ?? client).post<unknown, NegotiationCounterOfferErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/negotiations/rounds/{roundId}/counter-offer',
-    ...options
-});
+export const negotiationCounterOffer = <ThrowOnError extends boolean = false>(options: Options<NegotiationCounterOfferData, ThrowOnError>) => (options.client ?? client).post<unknown, NegotiationCounterOfferErrors, ThrowOnError>({ url: '/negotiations/rounds/{roundId}/counter-offer', ...options });
 
 /**
  * POST /negotiations/:rfqId/bafo
  *
  * Best and Final Offer
  */
-export const negotiationBafo = <ThrowOnError extends boolean = false>(options: Options<NegotiationBafoData, ThrowOnError>) => (options.client ?? client).post<unknown, NegotiationBafoErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/negotiations/{rfqId}/bafo',
-    ...options
-});
+export const negotiationBafo = <ThrowOnError extends boolean = false>(options: Options<NegotiationBafoData, ThrowOnError>) => (options.client ?? client).post<unknown, NegotiationBafoErrors, ThrowOnError>({ url: '/negotiations/{rfqId}/bafo', ...options });
 
 /**
  * POST /negotiations/:rfqId/close
  */
-export const negotiationClose = <ThrowOnError extends boolean = false>(options: Options<NegotiationCloseData, ThrowOnError>) => (options.client ?? client).post<unknown, NegotiationCloseErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/negotiations/{rfqId}/close',
-    ...options
-});
+export const negotiationClose = <ThrowOnError extends boolean = false>(options: Options<NegotiationCloseData, ThrowOnError>) => (options.client ?? client).post<unknown, NegotiationCloseErrors, ThrowOnError>({ url: '/negotiations/{rfqId}/close', ...options });
 
 /**
  * GET /normalization/{rfqId}/source-lines
  */
-export const normalizationSourceLines = <ThrowOnError extends boolean = false>(options: Options<NormalizationSourceLinesData, ThrowOnError>) => (options.client ?? client).get<NormalizationSourceLinesResponses, NormalizationSourceLinesErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/normalization/{rfqId}/source-lines',
-    ...options
-});
+export const normalizationSourceLines = <ThrowOnError extends boolean = false>(options: Options<NormalizationSourceLinesData, ThrowOnError>) => (options.client ?? client).get<NormalizationSourceLinesResponses, NormalizationSourceLinesErrors, ThrowOnError>({ url: '/normalization/{rfqId}/source-lines', ...options });
 
 /**
  * GET /normalization/{rfqId}/normalized-items
  */
-export const normalizationNormalizedItems = <ThrowOnError extends boolean = false>(options: Options<NormalizationNormalizedItemsData, ThrowOnError>) => (options.client ?? client).get<NormalizationNormalizedItemsResponses, NormalizationNormalizedItemsErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/normalization/{rfqId}/normalized-items',
-    ...options
-});
+export const normalizationNormalizedItems = <ThrowOnError extends boolean = false>(options: Options<NormalizationNormalizedItemsData, ThrowOnError>) => (options.client ?? client).get<NormalizationNormalizedItemsResponses, NormalizationNormalizedItemsErrors, ThrowOnError>({ url: '/normalization/{rfqId}/normalized-items', ...options });
 
 /**
  * PUT /normalization/source-lines/{id}/mapping
  */
 export const normalizationUpdateMapping = <ThrowOnError extends boolean = false>(options: Options<NormalizationUpdateMappingData, ThrowOnError>) => (options.client ?? client).put<NormalizationUpdateMappingResponses, NormalizationUpdateMappingErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/normalization/source-lines/{id}/mapping',
     ...options,
     headers: {
@@ -1079,7 +755,6 @@ export const normalizationUpdateMapping = <ThrowOnError extends boolean = false>
  * POST /normalization/{rfqId}/bulk-mapping
  */
 export const normalizationBulkMapping = <ThrowOnError extends boolean = false>(options: Options<NormalizationBulkMappingData, ThrowOnError>) => (options.client ?? client).post<NormalizationBulkMappingResponses, NormalizationBulkMappingErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/normalization/{rfqId}/bulk-mapping',
     ...options,
     headers: {
@@ -1091,17 +766,12 @@ export const normalizationBulkMapping = <ThrowOnError extends boolean = false>(o
 /**
  * DELETE /normalization/source-lines/{id}/override
  */
-export const normalizationRevertOverride = <ThrowOnError extends boolean = false>(options: Options<NormalizationRevertOverrideData, ThrowOnError>) => (options.client ?? client).delete<NormalizationRevertOverrideResponses, NormalizationRevertOverrideErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/normalization/source-lines/{id}/override',
-    ...options
-});
+export const normalizationRevertOverride = <ThrowOnError extends boolean = false>(options: Options<NormalizationRevertOverrideData, ThrowOnError>) => (options.client ?? client).delete<NormalizationRevertOverrideResponses, NormalizationRevertOverrideErrors, ThrowOnError>({ url: '/normalization/source-lines/{id}/override', ...options });
 
 /**
  * PUT /normalization/source-lines/{id}/override
  */
 export const normalizationOverride = <ThrowOnError extends boolean = false>(options: Options<NormalizationOverrideData, ThrowOnError>) => (options.client ?? client).put<NormalizationOverrideResponses, NormalizationOverrideErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/normalization/source-lines/{id}/override',
     ...options,
     headers: {
@@ -1113,17 +783,12 @@ export const normalizationOverride = <ThrowOnError extends boolean = false>(opti
 /**
  * GET /normalization/{rfqId}/conflicts
  */
-export const normalizationConflicts = <ThrowOnError extends boolean = false>(options: Options<NormalizationConflictsData, ThrowOnError>) => (options.client ?? client).get<NormalizationConflictsResponses, NormalizationConflictsErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/normalization/{rfqId}/conflicts',
-    ...options
-});
+export const normalizationConflicts = <ThrowOnError extends boolean = false>(options: Options<NormalizationConflictsData, ThrowOnError>) => (options.client ?? client).get<NormalizationConflictsResponses, NormalizationConflictsErrors, ThrowOnError>({ url: '/normalization/{rfqId}/conflicts', ...options });
 
 /**
  * PUT /normalization/conflicts/{id}/resolve
  */
 export const normalizationResolveConflict = <ThrowOnError extends boolean = false>(options: Options<NormalizationResolveConflictData, ThrowOnError>) => (options.client ?? client).put<NormalizationResolveConflictResponses, NormalizationResolveConflictErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/normalization/conflicts/{id}/resolve',
     ...options,
     headers: {
@@ -1135,87 +800,54 @@ export const normalizationResolveConflict = <ThrowOnError extends boolean = fals
 /**
  * POST /normalization/{rfqId}/lock
  */
-export const normalizationLock = <ThrowOnError extends boolean = false>(options: Options<NormalizationLockData, ThrowOnError>) => (options.client ?? client).post<NormalizationLockResponses, NormalizationLockErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/normalization/{rfqId}/lock',
-    ...options
-});
+export const normalizationLock = <ThrowOnError extends boolean = false>(options: Options<NormalizationLockData, ThrowOnError>) => (options.client ?? client).post<NormalizationLockResponses, NormalizationLockErrors, ThrowOnError>({ url: '/normalization/{rfqId}/lock', ...options });
 
 /**
  * POST /normalization/{rfqId}/unlock
  */
-export const normalizationUnlock = <ThrowOnError extends boolean = false>(options: Options<NormalizationUnlockData, ThrowOnError>) => (options.client ?? client).post<NormalizationUnlockResponses, NormalizationUnlockErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/normalization/{rfqId}/unlock',
-    ...options
-});
+export const normalizationUnlock = <ThrowOnError extends boolean = false>(options: Options<NormalizationUnlockData, ThrowOnError>) => (options.client ?? client).post<NormalizationUnlockResponses, NormalizationUnlockErrors, ThrowOnError>({ url: '/normalization/{rfqId}/unlock', ...options });
 
 /**
  * List notifications
  *
  * GET /notifications
  */
-export const notificationIndex = <ThrowOnError extends boolean = false>(options?: Options<NotificationIndexData, ThrowOnError>) => (options?.client ?? client).get<NotificationIndexResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/notifications',
-    ...options
-});
+export const notificationIndex = <ThrowOnError extends boolean = false>(options?: Options<NotificationIndexData, ThrowOnError>) => (options?.client ?? client).get<NotificationIndexResponses, unknown, ThrowOnError>({ url: '/notifications', ...options });
 
 /**
  * Get unread notification count
  *
  * GET /notifications/unread-count
  */
-export const notificationUnreadCount = <ThrowOnError extends boolean = false>(options?: Options<NotificationUnreadCountData, ThrowOnError>) => (options?.client ?? client).get<NotificationUnreadCountResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/notifications/unread-count',
-    ...options
-});
+export const notificationUnreadCount = <ThrowOnError extends boolean = false>(options?: Options<NotificationUnreadCountData, ThrowOnError>) => (options?.client ?? client).get<NotificationUnreadCountResponses, unknown, ThrowOnError>({ url: '/notifications/unread-count', ...options });
 
 /**
  * Mark notification as read
  *
  * PATCH /notifications/:id/read
  */
-export const notificationMarkRead = <ThrowOnError extends boolean = false>(options: Options<NotificationMarkReadData, ThrowOnError>) => (options.client ?? client).patch<NotificationMarkReadResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/notifications/{id}/read',
-    ...options
-});
+export const notificationMarkRead = <ThrowOnError extends boolean = false>(options: Options<NotificationMarkReadData, ThrowOnError>) => (options.client ?? client).patch<NotificationMarkReadResponses, unknown, ThrowOnError>({ url: '/notifications/{id}/read', ...options });
 
 /**
  * Mark all notifications as read
  *
  * POST /notifications/mark-all-read
  */
-export const notificationMarkAllRead = <ThrowOnError extends boolean = false>(options?: Options<NotificationMarkAllReadData, ThrowOnError>) => (options?.client ?? client).post<NotificationMarkAllReadResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/notifications/mark-all-read',
-    ...options
-});
+export const notificationMarkAllRead = <ThrowOnError extends boolean = false>(options?: Options<NotificationMarkAllReadData, ThrowOnError>) => (options?.client ?? client).post<NotificationMarkAllReadResponses, unknown, ThrowOnError>({ url: '/notifications/mark-all-read', ...options });
 
 /**
  * Clear read notifications
  *
  * DELETE /notifications/clear-read
  */
-export const notificationClearRead = <ThrowOnError extends boolean = false>(options?: Options<NotificationClearReadData, ThrowOnError>) => (options?.client ?? client).delete<NotificationClearReadResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/notifications/clear-read',
-    ...options
-});
+export const notificationClearRead = <ThrowOnError extends boolean = false>(options?: Options<NotificationClearReadData, ThrowOnError>) => (options?.client ?? client).delete<NotificationClearReadResponses, unknown, ThrowOnError>({ url: '/notifications/clear-read', ...options });
 
-export const v1OperationalApprovalsInstancesIndex = <ThrowOnError extends boolean = false>(options?: Options<V1OperationalApprovalsInstancesIndexData, ThrowOnError>) => (options?.client ?? client).get<V1OperationalApprovalsInstancesIndexResponses, V1OperationalApprovalsInstancesIndexErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/operational-approvals/instances',
-    ...options
-});
+export const v1OperationalApprovalsInstancesIndex = <ThrowOnError extends boolean = false>(options?: Options<V1OperationalApprovalsInstancesIndexData, ThrowOnError>) => (options?.client ?? client).get<V1OperationalApprovalsInstancesIndexResponses, V1OperationalApprovalsInstancesIndexErrors, ThrowOnError>({ url: '/operational-approvals/instances', ...options });
 
 /**
  * Start a generic operational approval (distinct from RFQ quote approvals)
  */
 export const v1OperationalApprovalsInstancesStore = <ThrowOnError extends boolean = false>(options: Options<V1OperationalApprovalsInstancesStoreData, ThrowOnError>) => (options.client ?? client).post<V1OperationalApprovalsInstancesStoreResponses, V1OperationalApprovalsInstancesStoreErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/operational-approvals/instances',
     ...options,
     headers: {
@@ -1224,14 +856,9 @@ export const v1OperationalApprovalsInstancesStore = <ThrowOnError extends boolea
     }
 });
 
-export const v1OperationalApprovalsInstancesShow = <ThrowOnError extends boolean = false>(options: Options<V1OperationalApprovalsInstancesShowData, ThrowOnError>) => (options.client ?? client).get<V1OperationalApprovalsInstancesShowResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/operational-approvals/instances/{instanceId}',
-    ...options
-});
+export const v1OperationalApprovalsInstancesShow = <ThrowOnError extends boolean = false>(options: Options<V1OperationalApprovalsInstancesShowData, ThrowOnError>) => (options.client ?? client).get<V1OperationalApprovalsInstancesShowResponses, unknown, ThrowOnError>({ url: '/operational-approvals/instances/{instanceId}', ...options });
 
 export const v1OperationalApprovalsInstancesDecisionsStore = <ThrowOnError extends boolean = false>(options: Options<V1OperationalApprovalsInstancesDecisionsStoreData, ThrowOnError>) => (options.client ?? client).post<V1OperationalApprovalsInstancesDecisionsStoreResponses, V1OperationalApprovalsInstancesDecisionsStoreErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/operational-approvals/instances/{instanceId}/decisions',
     ...options,
     headers: {
@@ -1240,14 +867,9 @@ export const v1OperationalApprovalsInstancesDecisionsStore = <ThrowOnError exten
     }
 });
 
-export const projectIndex = <ThrowOnError extends boolean = false>(options?: Options<ProjectIndexData, ThrowOnError>) => (options?.client ?? client).get<ProjectIndexResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/projects',
-    ...options
-});
+export const projectIndex = <ThrowOnError extends boolean = false>(options?: Options<ProjectIndexData, ThrowOnError>) => (options?.client ?? client).get<ProjectIndexResponses, unknown, ThrowOnError>({ url: '/projects', ...options });
 
 export const v1ProjectsStore = <ThrowOnError extends boolean = false>(options: Options<V1ProjectsStoreData, ThrowOnError>) => (options.client ?? client).post<V1ProjectsStoreResponses, V1ProjectsStoreErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/projects',
     ...options,
     headers: {
@@ -1256,14 +878,9 @@ export const v1ProjectsStore = <ThrowOnError extends boolean = false>(options: O
     }
 });
 
-export const projectShow = <ThrowOnError extends boolean = false>(options: Options<ProjectShowData, ThrowOnError>) => (options.client ?? client).get<ProjectShowResponses, ProjectShowErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/projects/{id}',
-    ...options
-});
+export const projectShow = <ThrowOnError extends boolean = false>(options: Options<ProjectShowData, ThrowOnError>) => (options.client ?? client).get<ProjectShowResponses, ProjectShowErrors, ThrowOnError>({ url: '/projects/{id}', ...options });
 
 export const projectUpdate = <ThrowOnError extends boolean = false>(options: Options<ProjectUpdateData, ThrowOnError>) => (options.client ?? client).put<ProjectUpdateResponses, ProjectUpdateErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/projects/{id}',
     ...options,
     headers: {
@@ -1273,7 +890,6 @@ export const projectUpdate = <ThrowOnError extends boolean = false>(options: Opt
 });
 
 export const projectUpdateStatus = <ThrowOnError extends boolean = false>(options: Options<ProjectUpdateStatusData, ThrowOnError>) => (options.client ?? client).patch<ProjectUpdateStatusResponses, ProjectUpdateStatusErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/projects/{id}/status',
     ...options,
     headers: {
@@ -1282,38 +898,17 @@ export const projectUpdateStatus = <ThrowOnError extends boolean = false>(option
     }
 });
 
-export const projectHealth = <ThrowOnError extends boolean = false>(options: Options<ProjectHealthData, ThrowOnError>) => (options.client ?? client).get<ProjectHealthResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/projects/{id}/health',
-    ...options
-});
+export const projectHealth = <ThrowOnError extends boolean = false>(options: Options<ProjectHealthData, ThrowOnError>) => (options.client ?? client).get<ProjectHealthResponses, unknown, ThrowOnError>({ url: '/projects/{id}/health', ...options });
 
-export const projectRfqs = <ThrowOnError extends boolean = false>(options: Options<ProjectRfqsData, ThrowOnError>) => (options.client ?? client).get<ProjectRfqsResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/projects/{id}/rfqs',
-    ...options
-});
+export const projectRfqs = <ThrowOnError extends boolean = false>(options: Options<ProjectRfqsData, ThrowOnError>) => (options.client ?? client).get<ProjectRfqsResponses, unknown, ThrowOnError>({ url: '/projects/{id}/rfqs', ...options });
 
-export const projectTasks = <ThrowOnError extends boolean = false>(options: Options<ProjectTasksData, ThrowOnError>) => (options.client ?? client).get<ProjectTasksResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/projects/{id}/tasks',
-    ...options
-});
+export const projectTasks = <ThrowOnError extends boolean = false>(options: Options<ProjectTasksData, ThrowOnError>) => (options.client ?? client).get<ProjectTasksResponses, unknown, ThrowOnError>({ url: '/projects/{id}/tasks', ...options });
 
-export const projectBudget = <ThrowOnError extends boolean = false>(options: Options<ProjectBudgetData, ThrowOnError>) => (options.client ?? client).get<ProjectBudgetResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/projects/{id}/budget',
-    ...options
-});
+export const projectBudget = <ThrowOnError extends boolean = false>(options: Options<ProjectBudgetData, ThrowOnError>) => (options.client ?? client).get<ProjectBudgetResponses, unknown, ThrowOnError>({ url: '/projects/{id}/budget', ...options });
 
-export const projectGetAcl = <ThrowOnError extends boolean = false>(options: Options<ProjectGetAclData, ThrowOnError>) => (options.client ?? client).get<ProjectGetAclResponses, ProjectGetAclErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/projects/{id}/acl',
-    ...options
-});
+export const projectGetAcl = <ThrowOnError extends boolean = false>(options: Options<ProjectGetAclData, ThrowOnError>) => (options.client ?? client).get<ProjectGetAclResponses, ProjectGetAclErrors, ThrowOnError>({ url: '/projects/{id}/acl', ...options });
 
 export const projectUpdateAcl = <ThrowOnError extends boolean = false>(options: Options<ProjectUpdateAclData, ThrowOnError>) => (options.client ?? client).put<ProjectUpdateAclResponses, ProjectUpdateAclErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/projects/{id}/acl',
     ...options,
     headers: {
@@ -1327,11 +922,7 @@ export const projectUpdateAcl = <ThrowOnError extends boolean = false>(options: 
  * Params: status, rfq_id, vendor_id, page, per_page
  * Scoped by tenant_id
  */
-export const quoteSubmissionIndex = <ThrowOnError extends boolean = false>(options?: Options<QuoteSubmissionIndexData, ThrowOnError>) => (options?.client ?? client).get<QuoteSubmissionIndexResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/quote-submissions',
-    ...options
-});
+export const quoteSubmissionIndex = <ThrowOnError extends boolean = false>(options?: Options<QuoteSubmissionIndexData, ThrowOnError>) => (options?.client ?? client).get<QuoteSubmissionIndexResponses, unknown, ThrowOnError>({ url: '/quote-submissions', ...options });
 
 /**
  * POST /quote-submissions/upload
@@ -1339,7 +930,6 @@ export const quoteSubmissionIndex = <ThrowOnError extends boolean = false>(optio
  */
 export const quoteSubmissionUpload = <ThrowOnError extends boolean = false>(options: Options<QuoteSubmissionUploadData, ThrowOnError>) => (options.client ?? client).post<QuoteSubmissionUploadResponses, QuoteSubmissionUploadErrors, ThrowOnError>({
     ...formDataBodySerializer,
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/quote-submissions/upload',
     ...options,
     headers: {
@@ -1353,11 +943,7 @@ export const quoteSubmissionUpload = <ThrowOnError extends boolean = false>(opti
  * Two-tab detail data.
  * Scoped by tenant_id
  */
-export const quoteSubmissionShow = <ThrowOnError extends boolean = false>(options: Options<QuoteSubmissionShowData, ThrowOnError>) => (options.client ?? client).get<QuoteSubmissionShowResponses, QuoteSubmissionShowErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/quote-submissions/{id}',
-    ...options
-});
+export const quoteSubmissionShow = <ThrowOnError extends boolean = false>(options: Options<QuoteSubmissionShowData, ThrowOnError>) => (options.client ?? client).get<QuoteSubmissionShowResponses, QuoteSubmissionShowErrors, ThrowOnError>({ url: '/quote-submissions/{id}', ...options });
 
 /**
  * PATCH /quote-submissions/:id/status
@@ -1365,7 +951,6 @@ export const quoteSubmissionShow = <ThrowOnError extends boolean = false>(option
  * Scoped by tenant_id
  */
 export const quoteSubmissionUpdateStatus = <ThrowOnError extends boolean = false>(options: Options<QuoteSubmissionUpdateStatusData, ThrowOnError>) => (options.client ?? client).patch<QuoteSubmissionUpdateStatusResponses, QuoteSubmissionUpdateStatusErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/quote-submissions/{id}/status',
     ...options,
     headers: {
@@ -1378,66 +963,47 @@ export const quoteSubmissionUpdateStatus = <ThrowOnError extends boolean = false
  * POST /quote-submissions/:id/replace
  * Scoped by tenant_id
  */
-export const quoteSubmissionReplace = <ThrowOnError extends boolean = false>(options: Options<QuoteSubmissionReplaceData, ThrowOnError>) => (options.client ?? client).post<QuoteSubmissionReplaceResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/quote-submissions/{id}/replace',
-    ...options
-});
+export const quoteSubmissionReplace = <ThrowOnError extends boolean = false>(options: Options<QuoteSubmissionReplaceData, ThrowOnError>) => (options.client ?? client).post<QuoteSubmissionReplaceResponses, unknown, ThrowOnError>({ url: '/quote-submissions/{id}/replace', ...options });
 
 /**
  * POST /quote-submissions/:id/reparse
  * Scoped by tenant_id
  */
-export const quoteSubmissionReparse = <ThrowOnError extends boolean = false>(options: Options<QuoteSubmissionReparseData, ThrowOnError>) => (options.client ?? client).post<QuoteSubmissionReparseResponses, QuoteSubmissionReparseErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/quote-submissions/{id}/reparse',
-    ...options
-});
+export const quoteSubmissionReparse = <ThrowOnError extends boolean = false>(options: Options<QuoteSubmissionReparseData, ThrowOnError>) => (options.client ?? client).post<QuoteSubmissionReparseResponses, QuoteSubmissionReparseErrors, ThrowOnError>({ url: '/quote-submissions/{id}/reparse', ...options });
 
 /**
  * POST /quote-submissions/:id/assign
  * Scoped by tenant_id
  */
-export const quoteSubmissionAssign = <ThrowOnError extends boolean = false>(options: Options<QuoteSubmissionAssignData, ThrowOnError>) => (options.client ?? client).post<QuoteSubmissionAssignResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/quote-submissions/{id}/assign',
-    ...options
-});
+export const quoteSubmissionAssign = <ThrowOnError extends boolean = false>(options: Options<QuoteSubmissionAssignData, ThrowOnError>) => (options.client ?? client).post<QuoteSubmissionAssignResponses, unknown, ThrowOnError>({ url: '/quote-submissions/{id}/assign', ...options });
 
 /**
  * GET /recommendations/:runId
  */
-export const recommendationShow = <ThrowOnError extends boolean = false>(options: Options<RecommendationShowData, ThrowOnError>) => (options.client ?? client).get<RecommendationShowResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/recommendations/{runId}',
-    ...options
-});
+export const recommendationShow = <ThrowOnError extends boolean = false>(options: Options<RecommendationShowData, ThrowOnError>) => (options.client ?? client).get<RecommendationShowResponses, unknown, ThrowOnError>({ url: '/recommendations/{runId}', ...options });
 
 /**
  * GET /recommendations/:runId/mcda
  */
-export const recommendationMcda = <ThrowOnError extends boolean = false>(options: Options<RecommendationMcdaData, ThrowOnError>) => (options.client ?? client).get<RecommendationMcdaResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/recommendations/{runId}/mcda',
-    ...options
-});
+export const recommendationMcda = <ThrowOnError extends boolean = false>(options: Options<RecommendationMcdaData, ThrowOnError>) => (options.client ?? client).get<RecommendationMcdaResponses, unknown, ThrowOnError>({ url: '/recommendations/{runId}/mcda', ...options });
 
 /**
  * POST /recommendations/:runId/override
  */
-export const recommendationOverride = <ThrowOnError extends boolean = false>(options: Options<RecommendationOverrideData, ThrowOnError>) => (options.client ?? client).post<RecommendationOverrideResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/recommendations/{runId}/override',
-    ...options
-});
+export const recommendationOverride = <ThrowOnError extends boolean = false>(options: Options<RecommendationOverrideData, ThrowOnError>) => (options.client ?? client).post<RecommendationOverrideResponses, unknown, ThrowOnError>({ url: '/recommendations/{runId}/override', ...options });
 
 /**
  * POST /recommendations/:runId/rerun
  */
-export const recommendationRerun = <ThrowOnError extends boolean = false>(options: Options<RecommendationRerunData, ThrowOnError>) => (options.client ?? client).post<RecommendationRerunResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/recommendations/{runId}/rerun',
-    ...options
+export const recommendationRerun = <ThrowOnError extends boolean = false>(options: Options<RecommendationRerunData, ThrowOnError>) => (options.client ?? client).post<RecommendationRerunResponses, unknown, ThrowOnError>({ url: '/recommendations/{runId}/rerun', ...options });
+
+export const registerCompanyStore = <ThrowOnError extends boolean = false>(options: Options<RegisterCompanyStoreData, ThrowOnError>) => (options.client ?? client).post<RegisterCompanyStoreResponses, RegisterCompanyStoreErrors, ThrowOnError>({
+    url: '/auth/register-company',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**
@@ -1445,147 +1011,90 @@ export const recommendationRerun = <ThrowOnError extends boolean = false>(option
  *
  * GET /reports/kpis
  */
-export const reportKpis = <ThrowOnError extends boolean = false>(options?: Options<ReportKpisData, ThrowOnError>) => (options?.client ?? client).get<ReportKpisResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/reports/kpis',
-    ...options
-});
+export const reportKpis = <ThrowOnError extends boolean = false>(options?: Options<ReportKpisData, ThrowOnError>) => (options?.client ?? client).get<ReportKpisResponses, unknown, ThrowOnError>({ url: '/reports/kpis', ...options });
 
 /**
  * Get spend trend
  *
  * GET /reports/spend-trend
  */
-export const reportSpendTrend = <ThrowOnError extends boolean = false>(options?: Options<ReportSpendTrendData, ThrowOnError>) => (options?.client ?? client).get<ReportSpendTrendResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/reports/spend-trend',
-    ...options
-});
+export const reportSpendTrend = <ThrowOnError extends boolean = false>(options?: Options<ReportSpendTrendData, ThrowOnError>) => (options?.client ?? client).get<ReportSpendTrendResponses, unknown, ThrowOnError>({ url: '/reports/spend-trend', ...options });
 
 /**
  * Get spend by category
  *
  * GET /reports/spend-by-category
  */
-export const reportSpendByCategory = <ThrowOnError extends boolean = false>(options?: Options<ReportSpendByCategoryData, ThrowOnError>) => (options?.client ?? client).get<ReportSpendByCategoryResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/reports/spend-by-category',
-    ...options
-});
+export const reportSpendByCategory = <ThrowOnError extends boolean = false>(options?: Options<ReportSpendByCategoryData, ThrowOnError>) => (options?.client ?? client).get<ReportSpendByCategoryResponses, unknown, ThrowOnError>({ url: '/reports/spend-by-category', ...options });
 
 /**
  * Export report
  *
  * POST /reports/export
  */
-export const reportExport = <ThrowOnError extends boolean = false>(options?: Options<ReportExportData, ThrowOnError>) => (options?.client ?? client).post<ReportExportResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/reports/export',
-    ...options
-});
+export const reportExport = <ThrowOnError extends boolean = false>(options?: Options<ReportExportData, ThrowOnError>) => (options?.client ?? client).post<ReportExportResponses, unknown, ThrowOnError>({ url: '/reports/export', ...options });
 
 /**
  * List report runs
  *
  * GET /reports/runs
  */
-export const reportRuns = <ThrowOnError extends boolean = false>(options?: Options<ReportRunsData, ThrowOnError>) => (options?.client ?? client).get<ReportRunsResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/reports/runs',
-    ...options
-});
+export const reportRuns = <ThrowOnError extends boolean = false>(options?: Options<ReportRunsData, ThrowOnError>) => (options?.client ?? client).get<ReportRunsResponses, unknown, ThrowOnError>({ url: '/reports/runs', ...options });
 
 /**
  * Download report run output
  *
  * GET /reports/runs/:id/download
  */
-export const reportDownloadRun = <ThrowOnError extends boolean = false>(options: Options<ReportDownloadRunData, ThrowOnError>) => (options.client ?? client).get<ReportDownloadRunResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/reports/runs/{id}/download',
-    ...options
-});
+export const reportDownloadRun = <ThrowOnError extends boolean = false>(options: Options<ReportDownloadRunData, ThrowOnError>) => (options.client ?? client).get<ReportDownloadRunResponses, unknown, ThrowOnError>({ url: '/reports/runs/{id}/download', ...options });
 
 /**
  * List report schedules
  *
  * GET /reports/schedules
  */
-export const reportSchedules = <ThrowOnError extends boolean = false>(options?: Options<ReportSchedulesData, ThrowOnError>) => (options?.client ?? client).get<ReportSchedulesResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/reports/schedules',
-    ...options
-});
+export const reportSchedules = <ThrowOnError extends boolean = false>(options?: Options<ReportSchedulesData, ThrowOnError>) => (options?.client ?? client).get<ReportSchedulesResponses, unknown, ThrowOnError>({ url: '/reports/schedules', ...options });
 
 /**
  * Create report schedule
  *
  * POST /reports/schedules
  */
-export const reportCreateSchedule = <ThrowOnError extends boolean = false>(options?: Options<ReportCreateScheduleData, ThrowOnError>) => (options?.client ?? client).post<ReportCreateScheduleResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/reports/schedules',
-    ...options
-});
+export const reportCreateSchedule = <ThrowOnError extends boolean = false>(options?: Options<ReportCreateScheduleData, ThrowOnError>) => (options?.client ?? client).post<ReportCreateScheduleResponses, unknown, ThrowOnError>({ url: '/reports/schedules', ...options });
 
 /**
  * Delete report schedule
  *
  * DELETE /reports/schedules/:id
  */
-export const reportDestroySchedule = <ThrowOnError extends boolean = false>(options: Options<ReportDestroyScheduleData, ThrowOnError>) => (options.client ?? client).delete<ReportDestroyScheduleResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/reports/schedules/{id}',
-    ...options
-});
+export const reportDestroySchedule = <ThrowOnError extends boolean = false>(options: Options<ReportDestroyScheduleData, ThrowOnError>) => (options.client ?? client).delete<ReportDestroyScheduleResponses, unknown, ThrowOnError>({ url: '/reports/schedules/{id}', ...options });
 
 /**
  * Update report schedule
  *
  * PUT /reports/schedules/:id
  */
-export const reportUpdateSchedule = <ThrowOnError extends boolean = false>(options: Options<ReportUpdateScheduleData, ThrowOnError>) => (options.client ?? client).put<ReportUpdateScheduleResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/reports/schedules/{id}',
-    ...options
-});
+export const reportUpdateSchedule = <ThrowOnError extends boolean = false>(options: Options<ReportUpdateScheduleData, ThrowOnError>) => (options.client ?? client).put<ReportUpdateScheduleResponses, unknown, ThrowOnError>({ url: '/reports/schedules/{id}', ...options });
 
 /**
  * Run schedule immediately
  *
  * POST /reports/schedules/:id/run-now
  */
-export const reportRunScheduleNow = <ThrowOnError extends boolean = false>(options: Options<ReportRunScheduleNowData, ThrowOnError>) => (options.client ?? client).post<ReportRunScheduleNowResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/reports/schedules/{id}/run-now',
-    ...options
-});
+export const reportRunScheduleNow = <ThrowOnError extends boolean = false>(options: Options<ReportRunScheduleNowData, ThrowOnError>) => (options.client ?? client).post<ReportRunScheduleNowResponses, unknown, ThrowOnError>({ url: '/reports/schedules/{id}/run-now', ...options });
 
-export const rfqIndex = <ThrowOnError extends boolean = false>(options?: Options<RfqIndexData, ThrowOnError>) => (options?.client ?? client).get<RfqIndexResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/rfqs',
-    ...options
-});
+export const rfqIndex = <ThrowOnError extends boolean = false>(options?: Options<RfqIndexData, ThrowOnError>) => (options?.client ?? client).get<RfqIndexResponses, unknown, ThrowOnError>({ url: '/rfqs', ...options });
 
-export const v1RfqsStore = <ThrowOnError extends boolean = false>(options: Options<V1RfqsStoreData, ThrowOnError>) => (options.client ?? client).post<V1RfqsStoreResponses, V1RfqsStoreErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/rfqs',
-    ...options
-});
+export const v1RfqsStore = <ThrowOnError extends boolean = false>(options: Options<V1RfqsStoreData, ThrowOnError>) => (options.client ?? client).post<V1RfqsStoreResponses, V1RfqsStoreErrors, ThrowOnError>({ url: '/rfqs', ...options });
 
 /**
  * GET /rfqs/counts — tenant-scoped RFQ counts for dashboard nav badges
  *
  * Keys align with WEB sidebar filters: active ≈ published, archived ≈ cancelled.
  */
-export const rfqCounts = <ThrowOnError extends boolean = false>(options?: Options<RfqCountsData, ThrowOnError>) => (options?.client ?? client).get<RfqCountsResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/rfqs/counts',
-    ...options
-});
+export const rfqCounts = <ThrowOnError extends boolean = false>(options?: Options<RfqCountsData, ThrowOnError>) => (options?.client ?? client).get<RfqCountsResponses, unknown, ThrowOnError>({ url: '/rfqs/counts', ...options });
 
 export const v1RfqsBulkAction = <ThrowOnError extends boolean = false>(options: Options<V1RfqsBulkActionData, ThrowOnError>) => (options.client ?? client).post<V1RfqsBulkActionResponses, V1RfqsBulkActionErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/rfqs/bulk-action',
     ...options,
     headers: {
@@ -1594,38 +1103,21 @@ export const v1RfqsBulkAction = <ThrowOnError extends boolean = false>(options: 
     }
 });
 
-export const rfqShow = <ThrowOnError extends boolean = false>(options: Options<RfqShowData, ThrowOnError>) => (options.client ?? client).get<RfqShowResponses, RfqShowErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/rfqs/{id}',
-    ...options
-});
+export const rfqShow = <ThrowOnError extends boolean = false>(options: Options<RfqShowData, ThrowOnError>) => (options.client ?? client).get<RfqShowResponses, RfqShowErrors, ThrowOnError>({ url: '/rfqs/{id}', ...options });
 
-export const rfqUpdate = <ThrowOnError extends boolean = false>(options: Options<RfqUpdateData, ThrowOnError>) => (options.client ?? client).put<RfqUpdateResponses, RfqUpdateErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/rfqs/{id}',
-    ...options
-});
+export const rfqUpdate = <ThrowOnError extends boolean = false>(options: Options<RfqUpdateData, ThrowOnError>) => (options.client ?? client).put<RfqUpdateResponses, RfqUpdateErrors, ThrowOnError>({ url: '/rfqs/{id}', ...options });
 
 /**
  * GET /rfqs/:id/overview — aggregated summary for the RFQ overview screen
  */
-export const rfqOverview = <ThrowOnError extends boolean = false>(options: Options<RfqOverviewData, ThrowOnError>) => (options.client ?? client).get<RfqOverviewResponses, RfqOverviewErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/rfqs/{id}/overview',
-    ...options
-});
+export const rfqOverview = <ThrowOnError extends boolean = false>(options: Options<RfqOverviewData, ThrowOnError>) => (options.client ?? client).get<RfqOverviewResponses, RfqOverviewErrors, ThrowOnError>({ url: '/rfqs/{id}/overview', ...options });
 
 /**
  * GET /rfqs/:rfqId/activity?limit=20 — tenant-scoped activity feed (lighter than full overview)
  */
-export const rfqActivity = <ThrowOnError extends boolean = false>(options: Options<RfqActivityData, ThrowOnError>) => (options.client ?? client).get<RfqActivityResponses, RfqActivityErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/rfqs/{rfqId}/activity',
-    ...options
-});
+export const rfqActivity = <ThrowOnError extends boolean = false>(options: Options<RfqActivityData, ThrowOnError>) => (options.client ?? client).get<RfqActivityResponses, RfqActivityErrors, ThrowOnError>({ url: '/rfqs/{rfqId}/activity', ...options });
 
 export const rfqUpdateStatus = <ThrowOnError extends boolean = false>(options: Options<RfqUpdateStatusData, ThrowOnError>) => (options.client ?? client).patch<RfqUpdateStatusResponses, RfqUpdateStatusErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/rfqs/{id}/status',
     ...options,
     headers: {
@@ -1634,14 +1126,9 @@ export const rfqUpdateStatus = <ThrowOnError extends boolean = false>(options: O
     }
 });
 
-export const v1RfqsDuplicate = <ThrowOnError extends boolean = false>(options: Options<V1RfqsDuplicateData, ThrowOnError>) => (options.client ?? client).post<V1RfqsDuplicateResponses, V1RfqsDuplicateErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/rfqs/{id}/duplicate',
-    ...options
-});
+export const v1RfqsDuplicate = <ThrowOnError extends boolean = false>(options: Options<V1RfqsDuplicateData, ThrowOnError>) => (options.client ?? client).post<V1RfqsDuplicateResponses, V1RfqsDuplicateErrors, ThrowOnError>({ url: '/rfqs/{id}/duplicate', ...options });
 
 export const rfqSaveDraft = <ThrowOnError extends boolean = false>(options: Options<RfqSaveDraftData, ThrowOnError>) => (options.client ?? client).put<RfqSaveDraftResponses, RfqSaveDraftErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/rfqs/{id}/draft',
     ...options,
     headers: {
@@ -1650,14 +1137,9 @@ export const rfqSaveDraft = <ThrowOnError extends boolean = false>(options: Opti
     }
 });
 
-export const rfqLineItems = <ThrowOnError extends boolean = false>(options: Options<RfqLineItemsData, ThrowOnError>) => (options.client ?? client).get<RfqLineItemsResponses, RfqLineItemsErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/rfqs/{rfqId}/line-items',
-    ...options
-});
+export const rfqLineItems = <ThrowOnError extends boolean = false>(options: Options<RfqLineItemsData, ThrowOnError>) => (options.client ?? client).get<RfqLineItemsResponses, RfqLineItemsErrors, ThrowOnError>({ url: '/rfqs/{rfqId}/line-items', ...options });
 
 export const rfqStoreLineItem = <ThrowOnError extends boolean = false>(options: Options<RfqStoreLineItemData, ThrowOnError>) => (options.client ?? client).post<RfqStoreLineItemResponses, RfqStoreLineItemErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/rfqs/{rfqId}/line-items',
     ...options,
     headers: {
@@ -1666,32 +1148,19 @@ export const rfqStoreLineItem = <ThrowOnError extends boolean = false>(options: 
     }
 });
 
-export const rfqDestroyLineItem = <ThrowOnError extends boolean = false>(options: Options<RfqDestroyLineItemData, ThrowOnError>) => (options.client ?? client).delete<RfqDestroyLineItemResponses, RfqDestroyLineItemErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/rfqs/{rfqId}/line-items/{itemId}',
-    ...options
-});
+export const rfqDestroyLineItem = <ThrowOnError extends boolean = false>(options: Options<RfqDestroyLineItemData, ThrowOnError>) => (options.client ?? client).delete<RfqDestroyLineItemResponses, RfqDestroyLineItemErrors, ThrowOnError>({ url: '/rfqs/{rfqId}/line-items/{itemId}', ...options });
 
-export const rfqUpdateLineItem = <ThrowOnError extends boolean = false>(options: Options<RfqUpdateLineItemData, ThrowOnError>) => (options.client ?? client).put<RfqUpdateLineItemResponses, RfqUpdateLineItemErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/rfqs/{rfqId}/line-items/{itemId}',
-    ...options
-});
+export const rfqUpdateLineItem = <ThrowOnError extends boolean = false>(options: Options<RfqUpdateLineItemData, ThrowOnError>) => (options.client ?? client).put<RfqUpdateLineItemResponses, RfqUpdateLineItemErrors, ThrowOnError>({ url: '/rfqs/{rfqId}/line-items/{itemId}', ...options });
 
 /**
  * GET /rfq-templates
  */
-export const rfqTemplateIndex = <ThrowOnError extends boolean = false>(options?: Options<RfqTemplateIndexData, ThrowOnError>) => (options?.client ?? client).get<RfqTemplateIndexResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/rfq-templates',
-    ...options
-});
+export const rfqTemplateIndex = <ThrowOnError extends boolean = false>(options?: Options<RfqTemplateIndexData, ThrowOnError>) => (options?.client ?? client).get<RfqTemplateIndexResponses, unknown, ThrowOnError>({ url: '/rfq-templates', ...options });
 
 /**
  * POST /rfq-templates
  */
 export const v1RfqTemplatesStore = <ThrowOnError extends boolean = false>(options: Options<V1RfqTemplatesStoreData, ThrowOnError>) => (options.client ?? client).post<V1RfqTemplatesStoreResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/rfq-templates',
     ...options,
     headers: {
@@ -1703,26 +1172,17 @@ export const v1RfqTemplatesStore = <ThrowOnError extends boolean = false>(option
 /**
  * GET /rfq-templates/{id}
  */
-export const rfqTemplateShow = <ThrowOnError extends boolean = false>(options: Options<RfqTemplateShowData, ThrowOnError>) => (options.client ?? client).get<RfqTemplateShowResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/rfq-templates/{id}',
-    ...options
-});
+export const rfqTemplateShow = <ThrowOnError extends boolean = false>(options: Options<RfqTemplateShowData, ThrowOnError>) => (options.client ?? client).get<RfqTemplateShowResponses, unknown, ThrowOnError>({ url: '/rfq-templates/{id}', ...options });
 
 /**
  * PUT /rfq-templates/{id}
  */
-export const rfqTemplateUpdate = <ThrowOnError extends boolean = false>(options: Options<RfqTemplateUpdateData, ThrowOnError>) => (options.client ?? client).put<RfqTemplateUpdateResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/rfq-templates/{id}',
-    ...options
-});
+export const rfqTemplateUpdate = <ThrowOnError extends boolean = false>(options: Options<RfqTemplateUpdateData, ThrowOnError>) => (options.client ?? client).put<RfqTemplateUpdateResponses, unknown, ThrowOnError>({ url: '/rfq-templates/{id}', ...options });
 
 /**
  * PATCH /rfq-templates/{id}/status
  */
 export const rfqTemplateUpdateStatus = <ThrowOnError extends boolean = false>(options: Options<RfqTemplateUpdateStatusData, ThrowOnError>) => (options.client ?? client).patch<RfqTemplateUpdateStatusResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/rfq-templates/{id}/status',
     ...options,
     headers: {
@@ -1734,143 +1194,82 @@ export const rfqTemplateUpdateStatus = <ThrowOnError extends boolean = false>(op
 /**
  * POST /rfq-templates/{id}/duplicate
  */
-export const v1RfqTemplatesDuplicate = <ThrowOnError extends boolean = false>(options: Options<V1RfqTemplatesDuplicateData, ThrowOnError>) => (options.client ?? client).post<V1RfqTemplatesDuplicateResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/rfq-templates/{id}/duplicate',
-    ...options
-});
+export const v1RfqTemplatesDuplicate = <ThrowOnError extends boolean = false>(options: Options<V1RfqTemplatesDuplicateData, ThrowOnError>) => (options.client ?? client).post<V1RfqTemplatesDuplicateResponses, unknown, ThrowOnError>({ url: '/rfq-templates/{id}/duplicate', ...options });
 
 /**
  * POST /rfq-templates/{id}/apply
  */
-export const v1RfqTemplatesApply = <ThrowOnError extends boolean = false>(options: Options<V1RfqTemplatesApplyData, ThrowOnError>) => (options.client ?? client).post<V1RfqTemplatesApplyResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/rfq-templates/{id}/apply',
-    ...options
-});
+export const v1RfqTemplatesApply = <ThrowOnError extends boolean = false>(options: Options<V1RfqTemplatesApplyData, ThrowOnError>) => (options.client ?? client).post<V1RfqTemplatesApplyResponses, unknown, ThrowOnError>({ url: '/rfq-templates/{id}/apply', ...options });
 
 /**
  * POST /vendors/:id/sanctions-screening
  */
-export const riskComplianceSanctionsScreening = <ThrowOnError extends boolean = false>(options: Options<RiskComplianceSanctionsScreeningData, ThrowOnError>) => (options.client ?? client).post<RiskComplianceSanctionsScreeningResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/vendors/{vendorId}/sanctions-screening',
-    ...options
-});
+export const riskComplianceSanctionsScreening = <ThrowOnError extends boolean = false>(options: Options<RiskComplianceSanctionsScreeningData, ThrowOnError>) => (options.client ?? client).post<RiskComplianceSanctionsScreeningResponses, unknown, ThrowOnError>({ url: '/vendors/{vendorId}/sanctions-screening', ...options });
 
 /**
  * GET /vendors/:id/sanctions-history
  */
-export const riskComplianceSanctionsHistory = <ThrowOnError extends boolean = false>(options: Options<RiskComplianceSanctionsHistoryData, ThrowOnError>) => (options.client ?? client).get<RiskComplianceSanctionsHistoryResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/vendors/{vendorId}/sanctions-history',
-    ...options
-});
+export const riskComplianceSanctionsHistory = <ThrowOnError extends boolean = false>(options: Options<RiskComplianceSanctionsHistoryData, ThrowOnError>) => (options.client ?? client).get<RiskComplianceSanctionsHistoryResponses, unknown, ThrowOnError>({ url: '/vendors/{vendorId}/sanctions-history', ...options });
 
 /**
  * GET /vendors/:id/due-diligence
  */
-export const riskComplianceDueDiligence = <ThrowOnError extends boolean = false>(options: Options<RiskComplianceDueDiligenceData, ThrowOnError>) => (options.client ?? client).get<RiskComplianceDueDiligenceResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/vendors/{vendorId}/due-diligence',
-    ...options
-});
+export const riskComplianceDueDiligence = <ThrowOnError extends boolean = false>(options: Options<RiskComplianceDueDiligenceData, ThrowOnError>) => (options.client ?? client).get<RiskComplianceDueDiligenceResponses, unknown, ThrowOnError>({ url: '/vendors/{vendorId}/due-diligence', ...options });
 
 /**
  * PATCH /vendors/:id/due-diligence/:itemId
  */
-export const riskComplianceUpdateDueDiligence = <ThrowOnError extends boolean = false>(options: Options<RiskComplianceUpdateDueDiligenceData, ThrowOnError>) => (options.client ?? client).patch<RiskComplianceUpdateDueDiligenceResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/vendors/{vendorId}/due-diligence/{itemId}',
-    ...options
-});
+export const riskComplianceUpdateDueDiligence = <ThrowOnError extends boolean = false>(options: Options<RiskComplianceUpdateDueDiligenceData, ThrowOnError>) => (options.client ?? client).patch<RiskComplianceUpdateDueDiligenceResponses, unknown, ThrowOnError>({ url: '/vendors/{vendorId}/due-diligence/{itemId}', ...options });
 
 /**
  * GET /risk-items?rfqId=:id
  */
-export const riskComplianceIndex = <ThrowOnError extends boolean = false>(options?: Options<RiskComplianceIndexData, ThrowOnError>) => (options?.client ?? client).get<RiskComplianceIndexResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/risk-items',
-    ...options
-});
+export const riskComplianceIndex = <ThrowOnError extends boolean = false>(options?: Options<RiskComplianceIndexData, ThrowOnError>) => (options?.client ?? client).get<RiskComplianceIndexResponses, unknown, ThrowOnError>({ url: '/risk-items', ...options });
 
 /**
  * POST /risk-items/:id/escalate
  */
-export const riskComplianceEscalate = <ThrowOnError extends boolean = false>(options: Options<RiskComplianceEscalateData, ThrowOnError>) => (options.client ?? client).post<RiskComplianceEscalateResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/risk-items/{id}/escalate',
-    ...options
-});
+export const riskComplianceEscalate = <ThrowOnError extends boolean = false>(options: Options<RiskComplianceEscalateData, ThrowOnError>) => (options.client ?? client).post<RiskComplianceEscalateResponses, unknown, ThrowOnError>({ url: '/risk-items/{id}/escalate', ...options });
 
 /**
  * POST /risk-items/:id/exception
  */
-export const riskComplianceException = <ThrowOnError extends boolean = false>(options: Options<RiskComplianceExceptionData, ThrowOnError>) => (options.client ?? client).post<RiskComplianceExceptionResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/risk-items/{id}/exception',
-    ...options
-});
+export const riskComplianceException = <ThrowOnError extends boolean = false>(options: Options<RiskComplianceExceptionData, ThrowOnError>) => (options.client ?? client).post<RiskComplianceExceptionResponses, unknown, ThrowOnError>({ url: '/risk-items/{id}/exception', ...options });
 
 /**
  * GET /scenarios?rfqId=:id
  */
-export const scenarioIndex = <ThrowOnError extends boolean = false>(options?: Options<ScenarioIndexData, ThrowOnError>) => (options?.client ?? client).get<ScenarioIndexResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/scenarios',
-    ...options
-});
+export const scenarioIndex = <ThrowOnError extends boolean = false>(options?: Options<ScenarioIndexData, ThrowOnError>) => (options?.client ?? client).get<ScenarioIndexResponses, unknown, ThrowOnError>({ url: '/scenarios', ...options });
 
 /**
  * POST /scenarios
  */
-export const scenarioStore = <ThrowOnError extends boolean = false>(options?: Options<ScenarioStoreData, ThrowOnError>) => (options?.client ?? client).post<ScenarioStoreResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/scenarios',
-    ...options
-});
+export const scenarioStore = <ThrowOnError extends boolean = false>(options?: Options<ScenarioStoreData, ThrowOnError>) => (options?.client ?? client).post<ScenarioStoreResponses, unknown, ThrowOnError>({ url: '/scenarios', ...options });
 
 /**
  * POST /scenarios/compare
  */
-export const scenarioCompare = <ThrowOnError extends boolean = false>(options?: Options<ScenarioCompareData, ThrowOnError>) => (options?.client ?? client).post<ScenarioCompareResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/scenarios/compare',
-    ...options
-});
+export const scenarioCompare = <ThrowOnError extends boolean = false>(options?: Options<ScenarioCompareData, ThrowOnError>) => (options?.client ?? client).post<ScenarioCompareResponses, unknown, ThrowOnError>({ url: '/scenarios/compare', ...options });
 
 /**
  * DELETE /scenarios/:id
  */
-export const scenarioDestroy = <ThrowOnError extends boolean = false>(options: Options<ScenarioDestroyData, ThrowOnError>) => (options.client ?? client).delete<ScenarioDestroyResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/scenarios/{id}',
-    ...options
-});
+export const scenarioDestroy = <ThrowOnError extends boolean = false>(options: Options<ScenarioDestroyData, ThrowOnError>) => (options.client ?? client).delete<ScenarioDestroyResponses, unknown, ThrowOnError>({ url: '/scenarios/{id}', ...options });
 
 /**
  * PUT /scenarios/:id
  */
-export const scenarioUpdate = <ThrowOnError extends boolean = false>(options: Options<ScenarioUpdateData, ThrowOnError>) => (options.client ?? client).put<ScenarioUpdateResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/scenarios/{id}',
-    ...options
-});
+export const scenarioUpdate = <ThrowOnError extends boolean = false>(options: Options<ScenarioUpdateData, ThrowOnError>) => (options.client ?? client).put<ScenarioUpdateResponses, unknown, ThrowOnError>({ url: '/scenarios/{id}', ...options });
 
 /**
  * GET /scoring-models
  */
-export const scoringModelIndex = <ThrowOnError extends boolean = false>(options?: Options<ScoringModelIndexData, ThrowOnError>) => (options?.client ?? client).get<ScoringModelIndexResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/scoring-models',
-    ...options
-});
+export const scoringModelIndex = <ThrowOnError extends boolean = false>(options?: Options<ScoringModelIndexData, ThrowOnError>) => (options?.client ?? client).get<ScoringModelIndexResponses, unknown, ThrowOnError>({ url: '/scoring-models', ...options });
 
 /**
  * POST /scoring-models
  */
 export const scoringModelStore = <ThrowOnError extends boolean = false>(options?: Options<ScoringModelStoreData, ThrowOnError>) => (options?.client ?? client).post<ScoringModelStoreResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/scoring-models',
     ...options,
     headers: {
@@ -1882,44 +1281,27 @@ export const scoringModelStore = <ThrowOnError extends boolean = false>(options?
 /**
  * GET /scoring-models/{id}
  */
-export const scoringModelShow = <ThrowOnError extends boolean = false>(options: Options<ScoringModelShowData, ThrowOnError>) => (options.client ?? client).get<ScoringModelShowResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/scoring-models/{id}',
-    ...options
-});
+export const scoringModelShow = <ThrowOnError extends boolean = false>(options: Options<ScoringModelShowData, ThrowOnError>) => (options.client ?? client).get<ScoringModelShowResponses, unknown, ThrowOnError>({ url: '/scoring-models/{id}', ...options });
 
 /**
  * PUT /scoring-models/{id}
  */
-export const scoringModelUpdate = <ThrowOnError extends boolean = false>(options: Options<ScoringModelUpdateData, ThrowOnError>) => (options.client ?? client).put<ScoringModelUpdateResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/scoring-models/{id}',
-    ...options
-});
+export const scoringModelUpdate = <ThrowOnError extends boolean = false>(options: Options<ScoringModelUpdateData, ThrowOnError>) => (options.client ?? client).put<ScoringModelUpdateResponses, unknown, ThrowOnError>({ url: '/scoring-models/{id}', ...options });
 
 /**
  * POST /scoring-models/{id}/publish
  */
-export const scoringModelPublish = <ThrowOnError extends boolean = false>(options: Options<ScoringModelPublishData, ThrowOnError>) => (options.client ?? client).post<ScoringModelPublishResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/scoring-models/{id}/publish',
-    ...options
-});
+export const scoringModelPublish = <ThrowOnError extends boolean = false>(options: Options<ScoringModelPublishData, ThrowOnError>) => (options.client ?? client).post<ScoringModelPublishResponses, unknown, ThrowOnError>({ url: '/scoring-models/{id}/publish', ...options });
 
 /**
  * GET /scoring-models/{id}/versions
  */
-export const scoringModelVersions = <ThrowOnError extends boolean = false>(options: Options<ScoringModelVersionsData, ThrowOnError>) => (options.client ?? client).get<ScoringModelVersionsResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/scoring-models/{id}/versions',
-    ...options
-});
+export const scoringModelVersions = <ThrowOnError extends boolean = false>(options: Options<ScoringModelVersionsData, ThrowOnError>) => (options.client ?? client).get<ScoringModelVersionsResponses, unknown, ThrowOnError>({ url: '/scoring-models/{id}/versions', ...options });
 
 /**
  * PUT /scoring-models/{id}/assignments
  */
 export const scoringModelUpdateAssignments = <ThrowOnError extends boolean = false>(options: Options<ScoringModelUpdateAssignmentsData, ThrowOnError>) => (options.client ?? client).put<ScoringModelUpdateAssignmentsResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/scoring-models/{id}/assignments',
     ...options,
     headers: {
@@ -1931,138 +1313,82 @@ export const scoringModelUpdateAssignments = <ThrowOnError extends boolean = fal
 /**
  * POST /scoring-models/{id}/preview
  */
-export const scoringModelPreview = <ThrowOnError extends boolean = false>(options: Options<ScoringModelPreviewData, ThrowOnError>) => (options.client ?? client).post<ScoringModelPreviewResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/scoring-models/{id}/preview',
-    ...options
-});
+export const scoringModelPreview = <ThrowOnError extends boolean = false>(options: Options<ScoringModelPreviewData, ThrowOnError>) => (options.client ?? client).post<ScoringModelPreviewResponses, unknown, ThrowOnError>({ url: '/scoring-models/{id}/preview', ...options });
 
 /**
  * GET /scoring-policies
  */
-export const scoringPolicyIndex = <ThrowOnError extends boolean = false>(options?: Options<ScoringPolicyIndexData, ThrowOnError>) => (options?.client ?? client).get<ScoringPolicyIndexResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/scoring-policies',
-    ...options
-});
+export const scoringPolicyIndex = <ThrowOnError extends boolean = false>(options?: Options<ScoringPolicyIndexData, ThrowOnError>) => (options?.client ?? client).get<ScoringPolicyIndexResponses, unknown, ThrowOnError>({ url: '/scoring-policies', ...options });
 
 /**
  * POST /scoring-policies
  */
-export const scoringPolicyStore = <ThrowOnError extends boolean = false>(options?: Options<ScoringPolicyStoreData, ThrowOnError>) => (options?.client ?? client).post<ScoringPolicyStoreResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/scoring-policies',
-    ...options
-});
+export const scoringPolicyStore = <ThrowOnError extends boolean = false>(options?: Options<ScoringPolicyStoreData, ThrowOnError>) => (options?.client ?? client).post<ScoringPolicyStoreResponses, unknown, ThrowOnError>({ url: '/scoring-policies', ...options });
 
 /**
  * GET /scoring-policies/:id
  */
-export const scoringPolicyShow = <ThrowOnError extends boolean = false>(options: Options<ScoringPolicyShowData, ThrowOnError>) => (options.client ?? client).get<ScoringPolicyShowResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/scoring-policies/{id}',
-    ...options
-});
+export const scoringPolicyShow = <ThrowOnError extends boolean = false>(options: Options<ScoringPolicyShowData, ThrowOnError>) => (options.client ?? client).get<ScoringPolicyShowResponses, unknown, ThrowOnError>({ url: '/scoring-policies/{id}', ...options });
 
 /**
  * PUT /scoring-policies/:id
  */
-export const scoringPolicyUpdate = <ThrowOnError extends boolean = false>(options: Options<ScoringPolicyUpdateData, ThrowOnError>) => (options.client ?? client).put<ScoringPolicyUpdateResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/scoring-policies/{id}',
-    ...options
-});
+export const scoringPolicyUpdate = <ThrowOnError extends boolean = false>(options: Options<ScoringPolicyUpdateData, ThrowOnError>) => (options.client ?? client).put<ScoringPolicyUpdateResponses, unknown, ThrowOnError>({ url: '/scoring-policies/{id}', ...options });
 
 /**
  * POST /scoring-policies/:id/publish
  */
-export const scoringPolicyPublish = <ThrowOnError extends boolean = false>(options: Options<ScoringPolicyPublishData, ThrowOnError>) => (options.client ?? client).post<ScoringPolicyPublishResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/scoring-policies/{id}/publish',
-    ...options
-});
+export const scoringPolicyPublish = <ThrowOnError extends boolean = false>(options: Options<ScoringPolicyPublishData, ThrowOnError>) => (options.client ?? client).post<ScoringPolicyPublishResponses, unknown, ThrowOnError>({ url: '/scoring-policies/{id}/publish', ...options });
 
 /**
  * PATCH /scoring-policies/:id/status
  */
-export const scoringPolicyUpdateStatus = <ThrowOnError extends boolean = false>(options: Options<ScoringPolicyUpdateStatusData, ThrowOnError>) => (options.client ?? client).patch<ScoringPolicyUpdateStatusResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/scoring-policies/{id}/status',
-    ...options
-});
+export const scoringPolicyUpdateStatus = <ThrowOnError extends boolean = false>(options: Options<ScoringPolicyUpdateStatusData, ThrowOnError>) => (options.client ?? client).patch<ScoringPolicyUpdateStatusResponses, unknown, ThrowOnError>({ url: '/scoring-policies/{id}/status', ...options });
 
 /**
  * PUT /scoring-policies/:id/assignments
  */
-export const scoringPolicyUpdateAssignments = <ThrowOnError extends boolean = false>(options: Options<ScoringPolicyUpdateAssignmentsData, ThrowOnError>) => (options.client ?? client).put<ScoringPolicyUpdateAssignmentsResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/scoring-policies/{id}/assignments',
-    ...options
-});
+export const scoringPolicyUpdateAssignments = <ThrowOnError extends boolean = false>(options: Options<ScoringPolicyUpdateAssignmentsData, ThrowOnError>) => (options.client ?? client).put<ScoringPolicyUpdateAssignmentsResponses, unknown, ThrowOnError>({ url: '/scoring-policies/{id}/assignments', ...options });
 
 /**
  * GET /scoring-policies/:id/versions
  */
-export const scoringPolicyVersions = <ThrowOnError extends boolean = false>(options: Options<ScoringPolicyVersionsData, ThrowOnError>) => (options.client ?? client).get<ScoringPolicyVersionsResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/scoring-policies/{id}/versions',
-    ...options
-});
+export const scoringPolicyVersions = <ThrowOnError extends boolean = false>(options: Options<ScoringPolicyVersionsData, ThrowOnError>) => (options.client ?? client).get<ScoringPolicyVersionsResponses, unknown, ThrowOnError>({ url: '/scoring-policies/{id}/versions', ...options });
 
 /**
  * Global search
  *
  * GET /search?q=:query
  */
-export const searchSearch = <ThrowOnError extends boolean = false>(options?: Options<SearchSearchData, ThrowOnError>) => (options?.client ?? client).get<SearchSearchResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/search',
-    ...options
-});
+export const searchSearch = <ThrowOnError extends boolean = false>(options?: Options<SearchSearchData, ThrowOnError>) => (options?.client ?? client).get<SearchSearchResponses, unknown, ThrowOnError>({ url: '/search', ...options });
 
 /**
  * List all settings
  *
  * GET /settings
  */
-export const settingIndex = <ThrowOnError extends boolean = false>(options?: Options<SettingIndexData, ThrowOnError>) => (options?.client ?? client).get<unknown, SettingIndexErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/settings',
-    ...options
-});
+export const settingIndex = <ThrowOnError extends boolean = false>(options?: Options<SettingIndexData, ThrowOnError>) => (options?.client ?? client).get<unknown, SettingIndexErrors, ThrowOnError>({ url: '/settings', ...options });
 
 /**
  * Update general settings
  *
  * PUT /settings/general
  */
-export const settingUpdateGeneral = <ThrowOnError extends boolean = false>(options?: Options<SettingUpdateGeneralData, ThrowOnError>) => (options?.client ?? client).put<unknown, SettingUpdateGeneralErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/settings/general',
-    ...options
-});
+export const settingUpdateGeneral = <ThrowOnError extends boolean = false>(options?: Options<SettingUpdateGeneralData, ThrowOnError>) => (options?.client ?? client).put<unknown, SettingUpdateGeneralErrors, ThrowOnError>({ url: '/settings/general', ...options });
 
 /**
  * Update workflow settings
  *
  * PUT /settings/workflow
  */
-export const settingUpdateWorkflow = <ThrowOnError extends boolean = false>(options?: Options<SettingUpdateWorkflowData, ThrowOnError>) => (options?.client ?? client).put<unknown, SettingUpdateWorkflowErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/settings/workflow',
-    ...options
-});
+export const settingUpdateWorkflow = <ThrowOnError extends boolean = false>(options?: Options<SettingUpdateWorkflowData, ThrowOnError>) => (options?.client ?? client).put<unknown, SettingUpdateWorkflowErrors, ThrowOnError>({ url: '/settings/workflow', ...options });
 
 /**
  * Update compliance settings
  *
  * PUT /settings/compliance
  */
-export const settingUpdateCompliance = <ThrowOnError extends boolean = false>(options?: Options<SettingUpdateComplianceData, ThrowOnError>) => (options?.client ?? client).put<unknown, SettingUpdateComplianceErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/settings/compliance',
-    ...options
-});
+export const settingUpdateCompliance = <ThrowOnError extends boolean = false>(options?: Options<SettingUpdateComplianceData, ThrowOnError>) => (options?.client ?? client).put<unknown, SettingUpdateComplianceErrors, ThrowOnError>({ url: '/settings/compliance', ...options });
 
 /**
  * List feature flags (read-only mirror of server config)
@@ -2071,31 +1397,18 @@ export const settingUpdateCompliance = <ThrowOnError extends boolean = false>(op
  *
  * GET /feature-flags
  */
-export const settingFeatureFlags = <ThrowOnError extends boolean = false>(options?: Options<SettingFeatureFlagsData, ThrowOnError>) => (options?.client ?? client).get<SettingFeatureFlagsResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/feature-flags',
-    ...options
-});
+export const settingFeatureFlags = <ThrowOnError extends boolean = false>(options?: Options<SettingFeatureFlagsData, ThrowOnError>) => (options?.client ?? client).get<SettingFeatureFlagsResponses, unknown, ThrowOnError>({ url: '/feature-flags', ...options });
 
 /**
  * Update feature flag
  *
  * PUT /feature-flags/:id
  */
-export const settingUpdateFeatureFlag = <ThrowOnError extends boolean = false>(options: Options<SettingUpdateFeatureFlagData, ThrowOnError>) => (options.client ?? client).put<unknown, SettingUpdateFeatureFlagErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/feature-flags/{id}',
-    ...options
-});
+export const settingUpdateFeatureFlag = <ThrowOnError extends boolean = false>(options: Options<SettingUpdateFeatureFlagData, ThrowOnError>) => (options.client ?? client).put<unknown, SettingUpdateFeatureFlagErrors, ThrowOnError>({ url: '/feature-flags/{id}', ...options });
 
-export const taskIndex = <ThrowOnError extends boolean = false>(options?: Options<TaskIndexData, ThrowOnError>) => (options?.client ?? client).get<TaskIndexResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/tasks',
-    ...options
-});
+export const taskIndex = <ThrowOnError extends boolean = false>(options?: Options<TaskIndexData, ThrowOnError>) => (options?.client ?? client).get<TaskIndexResponses, unknown, ThrowOnError>({ url: '/tasks', ...options });
 
 export const v1TasksStore = <ThrowOnError extends boolean = false>(options: Options<V1TasksStoreData, ThrowOnError>) => (options.client ?? client).post<V1TasksStoreResponses, V1TasksStoreErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/tasks',
     ...options,
     headers: {
@@ -2104,20 +1417,11 @@ export const v1TasksStore = <ThrowOnError extends boolean = false>(options: Opti
     }
 });
 
-export const taskSchedulePreview = <ThrowOnError extends boolean = false>(options?: Options<TaskSchedulePreviewData, ThrowOnError>) => (options?.client ?? client).post<TaskSchedulePreviewResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/tasks/schedule/preview',
-    ...options
-});
+export const taskSchedulePreview = <ThrowOnError extends boolean = false>(options?: Options<TaskSchedulePreviewData, ThrowOnError>) => (options?.client ?? client).post<TaskSchedulePreviewResponses, unknown, ThrowOnError>({ url: '/tasks/schedule/preview', ...options });
 
-export const taskShow = <ThrowOnError extends boolean = false>(options: Options<TaskShowData, ThrowOnError>) => (options.client ?? client).get<TaskShowResponses, TaskShowErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/tasks/{id}',
-    ...options
-});
+export const taskShow = <ThrowOnError extends boolean = false>(options: Options<TaskShowData, ThrowOnError>) => (options.client ?? client).get<TaskShowResponses, TaskShowErrors, ThrowOnError>({ url: '/tasks/{id}', ...options });
 
 export const taskUpdate = <ThrowOnError extends boolean = false>(options: Options<TaskUpdateData, ThrowOnError>) => (options.client ?? client).put<TaskUpdateResponses, TaskUpdateErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/tasks/{id}',
     ...options,
     headers: {
@@ -2127,7 +1431,6 @@ export const taskUpdate = <ThrowOnError extends boolean = false>(options: Option
 });
 
 export const taskUpdateStatus = <ThrowOnError extends boolean = false>(options: Options<TaskUpdateStatusData, ThrowOnError>) => (options.client ?? client).patch<TaskUpdateStatusResponses, TaskUpdateStatusErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/tasks/{id}/status',
     ...options,
     headers: {
@@ -2136,14 +1439,9 @@ export const taskUpdateStatus = <ThrowOnError extends boolean = false>(options: 
     }
 });
 
-export const taskGetDependencies = <ThrowOnError extends boolean = false>(options: Options<TaskGetDependenciesData, ThrowOnError>) => (options.client ?? client).get<TaskGetDependenciesResponses, TaskGetDependenciesErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/tasks/{id}/dependencies',
-    ...options
-});
+export const taskGetDependencies = <ThrowOnError extends boolean = false>(options: Options<TaskGetDependenciesData, ThrowOnError>) => (options.client ?? client).get<TaskGetDependenciesResponses, TaskGetDependenciesErrors, ThrowOnError>({ url: '/tasks/{id}/dependencies', ...options });
 
 export const taskUpdateDependencies = <ThrowOnError extends boolean = false>(options: Options<TaskUpdateDependenciesData, ThrowOnError>) => (options.client ?? client).put<TaskUpdateDependenciesResponses, TaskUpdateDependenciesErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/tasks/{id}/dependencies',
     ...options,
     headers: {
@@ -2157,19 +1455,14 @@ export const taskUpdateDependencies = <ThrowOnError extends boolean = false>(opt
  *
  * GET /users
  */
-export const userIndex = <ThrowOnError extends boolean = false>(options?: Options<UserIndexData, ThrowOnError>) => (options?.client ?? client).get<UserIndexResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/users',
-    ...options
-});
+export const userIndex = <ThrowOnError extends boolean = false>(options?: Options<UserIndexData, ThrowOnError>) => (options?.client ?? client).get<UserIndexResponses, unknown, ThrowOnError>({ url: '/users', ...options });
 
 /**
  * Invite a new user
  *
  * POST /users/invite
  */
-export const userInvite = <ThrowOnError extends boolean = false>(options: Options<UserInviteData, ThrowOnError>) => (options.client ?? client).post<UserInviteResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
+export const userInvite = <ThrowOnError extends boolean = false>(options: Options<UserInviteData, ThrowOnError>) => (options.client ?? client).post<UserInviteResponses, UserInviteErrors, ThrowOnError>({
     url: '/users/invite',
     ...options,
     headers: {
@@ -2183,127 +1476,70 @@ export const userInvite = <ThrowOnError extends boolean = false>(options: Option
  *
  * GET /users/:id
  */
-export const userShow = <ThrowOnError extends boolean = false>(options: Options<UserShowData, ThrowOnError>) => (options.client ?? client).get<UserShowResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/users/{id}',
-    ...options
-});
+export const userShow = <ThrowOnError extends boolean = false>(options: Options<UserShowData, ThrowOnError>) => (options.client ?? client).get<UserShowResponses, unknown, ThrowOnError>({ url: '/users/{id}', ...options });
 
 /**
  * Update user
  *
  * PUT /users/:id
  */
-export const userUpdate = <ThrowOnError extends boolean = false>(options: Options<UserUpdateData, ThrowOnError>) => (options.client ?? client).put<UserUpdateResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/users/{id}',
-    ...options
-});
+export const userUpdate = <ThrowOnError extends boolean = false>(options: Options<UserUpdateData, ThrowOnError>) => (options.client ?? client).put<unknown, UserUpdateErrors, ThrowOnError>({ url: '/users/{id}', ...options });
 
 /**
  * Suspend user
  *
  * POST /users/:id/suspend
  */
-export const userSuspend = <ThrowOnError extends boolean = false>(options: Options<UserSuspendData, ThrowOnError>) => (options.client ?? client).post<UserSuspendResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/users/{id}/suspend',
-    ...options
-});
+export const userSuspend = <ThrowOnError extends boolean = false>(options: Options<UserSuspendData, ThrowOnError>) => (options.client ?? client).post<UserSuspendResponses, unknown, ThrowOnError>({ url: '/users/{id}/suspend', ...options });
 
 /**
  * Reactivate user
  *
  * POST /users/:id/reactivate
  */
-export const userReactivate = <ThrowOnError extends boolean = false>(options: Options<UserReactivateData, ThrowOnError>) => (options.client ?? client).post<UserReactivateResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/users/{id}/reactivate',
-    ...options
-});
+export const userReactivate = <ThrowOnError extends boolean = false>(options: Options<UserReactivateData, ThrowOnError>) => (options.client ?? client).post<UserReactivateResponses, unknown, ThrowOnError>({ url: '/users/{id}/reactivate', ...options });
 
 /**
  * Get user delegation rules
  *
  * GET /users/:id/delegation-rules
  */
-export const userDelegationRules = <ThrowOnError extends boolean = false>(options: Options<UserDelegationRulesData, ThrowOnError>) => (options.client ?? client).get<UserDelegationRulesResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/users/{id}/delegation-rules',
-    ...options
-});
+export const userDelegationRules = <ThrowOnError extends boolean = false>(options: Options<UserDelegationRulesData, ThrowOnError>) => (options.client ?? client).get<unknown, UserDelegationRulesErrors, ThrowOnError>({ url: '/users/{id}/delegation-rules', ...options });
 
 /**
  * Update user delegation rules
  *
  * PUT /users/:id/delegation-rules
  */
-export const userUpdateDelegationRules = <ThrowOnError extends boolean = false>(options: Options<UserUpdateDelegationRulesData, ThrowOnError>) => (options.client ?? client).put<UserUpdateDelegationRulesResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/users/{id}/delegation-rules',
-    ...options
-});
+export const userUpdateDelegationRules = <ThrowOnError extends boolean = false>(options: Options<UserUpdateDelegationRulesData, ThrowOnError>) => (options.client ?? client).put<unknown, UserUpdateDelegationRulesErrors, ThrowOnError>({ url: '/users/{id}/delegation-rules', ...options });
 
 /**
  * Update user authority limits
  *
  * PUT /users/:id/authority-limits
  */
-export const userUpdateAuthorityLimits = <ThrowOnError extends boolean = false>(options: Options<UserUpdateAuthorityLimitsData, ThrowOnError>) => (options.client ?? client).put<UserUpdateAuthorityLimitsResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/users/{id}/authority-limits',
-    ...options
-});
+export const userUpdateAuthorityLimits = <ThrowOnError extends boolean = false>(options: Options<UserUpdateAuthorityLimitsData, ThrowOnError>) => (options.client ?? client).put<unknown, UserUpdateAuthorityLimitsErrors, ThrowOnError>({ url: '/users/{id}/authority-limits', ...options });
 
 /**
  * List roles
  *
  * GET /roles
  */
-export const userRoles = <ThrowOnError extends boolean = false>(options?: Options<UserRolesData, ThrowOnError>) => (options?.client ?? client).get<UserRolesResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/roles',
-    ...options
-});
+export const userRoles = <ThrowOnError extends boolean = false>(options?: Options<UserRolesData, ThrowOnError>) => (options?.client ?? client).get<UserRolesResponses, unknown, ThrowOnError>({ url: '/roles', ...options });
 
-export const vendorIndex = <ThrowOnError extends boolean = false>(options?: Options<VendorIndexData, ThrowOnError>) => (options?.client ?? client).get<VendorIndexResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/vendors',
-    ...options
-});
+export const vendorIndex = <ThrowOnError extends boolean = false>(options?: Options<VendorIndexData, ThrowOnError>) => (options?.client ?? client).get<VendorIndexResponses, unknown, ThrowOnError>({ url: '/vendors', ...options });
 
-export const vendorShow = <ThrowOnError extends boolean = false>(options: Options<VendorShowData, ThrowOnError>) => (options.client ?? client).get<VendorShowResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/vendors/{id}',
-    ...options
-});
+export const vendorShow = <ThrowOnError extends boolean = false>(options: Options<VendorShowData, ThrowOnError>) => (options.client ?? client).get<VendorShowResponses, VendorShowErrors, ThrowOnError>({ url: '/vendors/{id}', ...options });
 
-export const vendorPerformance = <ThrowOnError extends boolean = false>(options: Options<VendorPerformanceData, ThrowOnError>) => (options.client ?? client).get<VendorPerformanceResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/vendors/{id}/performance',
-    ...options
-});
+export const vendorPerformance = <ThrowOnError extends boolean = false>(options: Options<VendorPerformanceData, ThrowOnError>) => (options.client ?? client).get<VendorPerformanceResponses, VendorPerformanceErrors, ThrowOnError>({ url: '/vendors/{id}/performance', ...options });
 
-export const vendorCompliance = <ThrowOnError extends boolean = false>(options: Options<VendorComplianceData, ThrowOnError>) => (options.client ?? client).get<VendorComplianceResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/vendors/{id}/compliance',
-    ...options
-});
+export const vendorCompliance = <ThrowOnError extends boolean = false>(options: Options<VendorComplianceData, ThrowOnError>) => (options.client ?? client).get<VendorComplianceResponses, VendorComplianceErrors, ThrowOnError>({ url: '/vendors/{id}/compliance', ...options });
 
-export const vendorHistory = <ThrowOnError extends boolean = false>(options: Options<VendorHistoryData, ThrowOnError>) => (options.client ?? client).get<VendorHistoryResponses, unknown, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/vendors/{id}/history',
-    ...options
-});
+export const vendorHistory = <ThrowOnError extends boolean = false>(options: Options<VendorHistoryData, ThrowOnError>) => (options.client ?? client).get<VendorHistoryResponses, VendorHistoryErrors, ThrowOnError>({ url: '/vendors/{id}/history', ...options });
 
-export const vendorInvitationIndex = <ThrowOnError extends boolean = false>(options: Options<VendorInvitationIndexData, ThrowOnError>) => (options.client ?? client).get<VendorInvitationIndexResponses, VendorInvitationIndexErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/rfqs/{rfqId}/invitations',
-    ...options
-});
+export const vendorInvitationIndex = <ThrowOnError extends boolean = false>(options: Options<VendorInvitationIndexData, ThrowOnError>) => (options.client ?? client).get<VendorInvitationIndexResponses, VendorInvitationIndexErrors, ThrowOnError>({ url: '/rfqs/{rfqId}/invitations', ...options });
 
 export const v1RfqsInvitationsStore = <ThrowOnError extends boolean = false>(options: Options<V1RfqsInvitationsStoreData, ThrowOnError>) => (options.client ?? client).post<V1RfqsInvitationsStoreResponses, V1RfqsInvitationsStoreErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/rfqs/{rfqId}/invitations',
     ...options,
     headers: {
@@ -2312,8 +1548,4 @@ export const v1RfqsInvitationsStore = <ThrowOnError extends boolean = false>(opt
     }
 });
 
-export const v1RfqsInvitationsRemind = <ThrowOnError extends boolean = false>(options: Options<V1RfqsInvitationsRemindData, ThrowOnError>) => (options.client ?? client).post<V1RfqsInvitationsRemindResponses, V1RfqsInvitationsRemindErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/rfqs/{rfqId}/invitations/{invId}/remind',
-    ...options
-});
+export const v1RfqsInvitationsRemind = <ThrowOnError extends boolean = false>(options: Options<V1RfqsInvitationsRemindData, ThrowOnError>) => (options.client ?? client).post<V1RfqsInvitationsRemindResponses, V1RfqsInvitationsRemindErrors, ThrowOnError>({ url: '/rfqs/{rfqId}/invitations/{invId}/remind', ...options });
