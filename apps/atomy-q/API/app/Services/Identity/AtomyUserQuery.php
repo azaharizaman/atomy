@@ -53,10 +53,13 @@ final readonly class AtomyUserQuery implements UserQueryInterface
         return $user !== null ? new AtomyIdentityUser($user) : null;
     }
 
-    public function emailExists(string $email, ?string $excludeUserId = null): bool
+    public function emailExists(string $email, ?string $excludeUserId = null, ?string $tenantId = null): bool
     {
         $normalized = strtolower(trim($email));
         $q = UserModel::query()->where('email', $normalized);
+        if ($tenantId !== null && trim($tenantId) !== '') {
+            $q->where('tenant_id', trim($tenantId));
+        }
         if ($excludeUserId !== null && $excludeUserId !== '') {
             $q->where('id', '!=', $excludeUserId);
         }

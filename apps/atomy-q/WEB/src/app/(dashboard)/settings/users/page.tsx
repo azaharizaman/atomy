@@ -1,45 +1,288 @@
 'use client';
 
 import React from 'react';
-import { Users, UserPlus } from 'lucide-react';
-import { AlphaDeferredScreen } from '@/components/alpha/alpha-deferred-screen';
+import { AlertTriangle, RotateCcw, UserPlus, Users, UserX } from 'lucide-react';
 import { Button } from '@/components/ds/Button';
+import { EmptyState, SectionCard } from '@/components/ds/Card';
 import { PageHeader } from '@/components/ds/FilterBar';
-import { isAlphaMode } from '@/lib/alpha-mode';
+import {
+  useInviteUser,
+  useReactivateUser,
+  useSuspendUser,
+  useUserRoles,
+  useUsers,
+} from '@/hooks/use-users';
+
+function formatStatusLabel(status: string): string {
+  return status
+    .replaceAll('_', ' ')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function getStatusClasses(status: string): string {
+  const normalized = status.trim().toLowerCase();
+  if (normalized === 'active') {
+    return 'border-green-200 bg-green-50 text-green-700';
+  }
+  if (normalized === 'pending' || normalized === 'pending_activation') {
+    return 'border-amber-200 bg-amber-50 text-amber-700';
+  }
+  if (normalized === 'suspended' || normalized === 'inactive') {
+    return 'border-slate-200 bg-slate-100 text-slate-600';
+  }
+
+  return 'border-slate-200 bg-slate-50 text-slate-600';
+}
+
+function getRoleLabel(role: string, roles: { id: string; name: string }[]): string {
+  const match = roles.find((entry) => entry.id === role || entry.name === role);
+  return match?.name ?? role;
+}
+
+function getRoleMeta(role: string): string {
+  return role
+    .replaceAll('_', ' ')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
 
 export default function SettingsUsersPage() {
-  if (isAlphaMode()) {
-    return <AlphaDeferredScreen title="Users & Roles" subtitle="User management is deferred in alpha." />;
+  const usersQuery = useUsers();
+  const rolesQuery = useUserRoles();
+  const inviteUserMutation = useInviteUser();
+  const suspendUserMutation = useSuspendUser();
+  const reactivateUserMutation = useReactivateUser();
+
+  const users = usersQuery.data?.items ?? [];
+  const roles = rolesQuery.data ?? [];
+  const [inviteEmail, setInviteEmail] = React.useState('');
+  const [inviteName, setInviteName] = React.useState('');
+  const [mutationError, setMutationError] = React.useState<string | null>(null);
+  const [pendingUserAction, setPendingUserAction] = React.useState<{
+    userId: string;
+    action: 'suspend' | 'reactivate';
+  } | null>(null);
+
+  const isLoading = usersQuery.isLoading || rolesQuery.isLoading;
+  const loadError = usersQuery.error ?? rolesQuery.error;
+
+  const handleInviteSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setMutationError(null);
+
+    const email = inviteEmail.trim();
+    const name = inviteName.trim();
+    if (!email || !name) {
+      return;
+    }
+
+    try {
+      await inviteUserMutation.mutateAsync({ email, name });
+      setInviteEmail('');
+      setInviteName('');
+    } catch (error) {
+      setMutationError(error instanceof Error ? error.message : 'Unable to invite user.');
+    }
+  };
+
+  const handleToggleAccess = async (userId: string, action: 'suspend' | 'reactivate') => {
+    setMutationError(null);
+    setPendingUserAction({ userId, action });
+
+    try {
+      if (action === 'suspend') {
+        await suspendUserMutation.mutateAsync(userId);
+      } else {
+        await reactivateUserMutation.mutateAsync(userId);
+      }
+    } catch (error) {
+      setMutationError(error instanceof Error ? error.message : 'Unable to update user access.');
+    } finally {
+      setPendingUserAction(null);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Users & Roles" subtitle="Loading users and roles…" />
+        <SectionCard title="Workspace users" subtitle="Loading live user directory">
+          <div className="flex items-center justify-center py-12" aria-busy="true">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+          </div>
+        </SectionCard>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    const message = loadError instanceof Error ? loadError.message : 'Unable to load users and roles.';
+
+    return (
+      <div className="space-y-6">
+        <PageHeader title="Users & Roles" subtitle="Live tenant user management" />
+        <SectionCard title="Unable to load users & roles" subtitle="The live roster could not be loaded.">
+          <EmptyState
+            icon={<AlertTriangle size={20} />}
+            title="Could not load the users page"
+            description={message}
+          />
+        </SectionCard>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Users & Roles"
-        subtitle="Manage workspace users, roles, and permissions."
-        actions={
-          <Button size="sm" variant="primary" disabled>
-            <UserPlus size={14} className="mr-1.5" />
-            Invite user
-          </Button>
-        }
+        subtitle="Review workspace access, invite new users, and manage pending activation without claiming delivery has happened yet."
       />
 
-      <div className="rounded-lg border border-slate-200 bg-white p-8">
-        <div className="flex flex-col items-center justify-center text-center">
-          <div className="rounded-full bg-slate-100 p-4">
-            <Users size={32} className="text-slate-500" />
+      <SectionCard
+        title="Invite user"
+        subtitle="Create a pending activation record. New invites keep the baseline user role until fuller role administration is in scope."
+      >
+        <form onSubmit={handleInviteSubmit} className="flex flex-col gap-3 lg:flex-row lg:items-end">
+          <div className="min-w-0 flex-1">
+            <label htmlFor="invite-user-name" className="mb-1 block text-xs font-medium text-slate-600">
+              Name
+            </label>
+            <input
+              id="invite-user-name"
+              name="name"
+              type="text"
+              value={inviteName}
+              onChange={(event) => setInviteName(event.target.value)}
+              placeholder="Alex Morgan"
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+              autoComplete="name"
+            />
           </div>
-          <h2 className="mt-4 text-lg font-semibold text-slate-900">User management</h2>
-          <p className="mt-2 max-w-sm text-sm text-slate-500">
-            Invite users and assign roles. The user list and role management will appear here when the API is connected.
-          </p>
-          <Button size="sm" variant="outline" className="mt-6" disabled>
+
+          <div className="min-w-0 flex-1">
+            <label htmlFor="invite-user-email" className="mb-1 block text-xs font-medium text-slate-600">
+              Email
+            </label>
+            <input
+              id="invite-user-email"
+              name="email"
+              type="email"
+              value={inviteEmail}
+              onChange={(event) => setInviteEmail(event.target.value)}
+              placeholder="name@company.com"
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+              autoComplete="email"
+            />
+          </div>
+
+          <Button
+            type="submit"
+            size="sm"
+            variant="primary"
+            loading={inviteUserMutation.isPending}
+            disabled={!inviteEmail.trim() || !inviteName.trim()}
+          >
             <UserPlus size={14} className="mr-1.5" />
             Invite user
           </Button>
+        </form>
+
+        <p className="mt-3 text-xs text-slate-500">
+          Invites create a pending activation user record. We do not claim delivery from this screen.
+        </p>
+      </SectionCard>
+
+      {mutationError && (
+        <div role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {mutationError}
         </div>
-      </div>
+      )}
+
+      <SectionCard title="Workspace users" subtitle={`${users.length} user${users.length === 1 ? '' : 's'} in this tenant`}>
+        {users.length === 0 ? (
+          <EmptyState
+            icon={<Users size={20} />}
+            title="No users yet"
+            description="Invite the first user to start building the workspace roster."
+          />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full border-collapse">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50">
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-600">User</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-600">Status</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-slate-600">Role</th>
+                  <th className="px-3 py-2 text-right text-xs font-medium text-slate-600">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => {
+                  const status = user.status.trim().toLowerCase();
+                  const shouldSuspend = status === 'active';
+                  const canReactivate = status === 'suspended' || status === 'inactive';
+                  const action = shouldSuspend ? 'suspend' : 'reactivate';
+                  const isActionPending = pendingUserAction?.userId === user.id && pendingUserAction.action === action;
+                  const roleLabel = getRoleMeta(getRoleLabel(user.role, roles));
+
+                  return (
+                    <tr key={user.id} className="border-b border-slate-100 last:border-b-0">
+                      <td className="px-3 py-3 align-top">
+                        <div className="text-sm font-medium text-slate-800">{user.name ?? user.email}</div>
+                        <div className="text-xs text-slate-500">{user.email}</div>
+                      </td>
+                      <td className="px-3 py-3 align-top">
+                        <span
+                          className={[
+                            'inline-flex rounded-full border px-2 py-0.5 text-xs font-medium',
+                            getStatusClasses(user.status),
+                          ].join(' ')}
+                        >
+                          {formatStatusLabel(user.status)}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 align-top">
+                        <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-700">
+                          {roleLabel}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 align-top text-right">
+                        {shouldSuspend || canReactivate ? (
+                          <Button
+                            size="sm"
+                            variant={shouldSuspend ? 'destructive' : 'outline'}
+                            loading={isActionPending}
+                            onClick={() => void handleToggleAccess(user.id, action)}
+                            aria-label={shouldSuspend ? `Suspend ${user.name ?? user.email}` : `Reactivate ${user.name ?? user.email}`}
+                          >
+                            {shouldSuspend ? (
+                              <>
+                                <UserX size={14} className="mr-1.5" />
+                                Suspend
+                              </>
+                            ) : (
+                              <>
+                                <RotateCcw size={14} className="mr-1.5" />
+                                Reactivate
+                              </>
+                            )}
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-slate-500">Pending activation</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </SectionCard>
     </div>
   );
 }

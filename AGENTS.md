@@ -352,3 +352,12 @@ After each resolved PR review comment, append a new entry below using this templ
 - **Root cause:** I relied on downstream defensive checks and a short mode summary instead of making the parent eager-load boundary and operator-facing contract explicit in the same pass.
 - **Action taken:** Added tenant scoping to the parent RFQ eager load in `DeterministicContentProcessor`, strengthened the tenant-scoping regression test, cleaned up deterministic/dormant adapter declarations, and expanded API docs plus `IMPLEMENTATION_SUMMARY.md` to describe the env contract and sanitized dormant-`llm` failure path.
 - **Follow-up tasks:** Before closing future review threads on ingestion flows, verify that all eagerly loaded parent relations are tenant-scoped and that README/env docs describe the exact runtime failure shape for config-gated modes.
+
+---
+
+- **Date:** 2026-04-17
+- **PR/Issue ID:** [#369](https://github.com/azaharizaman/atomy/pull/369)
+- **Summary of mistake:** The Task 6 follow-up review exposed contract drift in the productionized Users & Roles slice: the invite UI omitted the required display name while still exposing an unsupported role selector, and the hook normalizers accepted malformed single-user / boolean payloads too loosely.
+- **Root cause:** I optimized the first pass for happy-path tenant admin behavior and did not run a final contract-alignment pass against the backend invite validator and strict live-payload parsing semantics.
+- **Action taken:** Added the required invite name field, removed alpha-out-of-scope role selection from the UI payload, hardened single-user and role normalizers, tightened Task 6 tests, trimmed identity query adapter IDs before filtering, and updated the release-plan and implementation-summary docs.
+- **Follow-up tasks:** Before closing future alpha review threads, explicitly verify (1) UI form fields match backend validation exactly, (2) unsupported controls are removed instead of left half-wired, and (3) boolean/envelope normalizers reject ambiguous live payload values.

@@ -201,6 +201,12 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 
 **Seed flow (Task 8):** `atomy:seed-rfq-flow` calls `syncNormalizationLinesForQuotes()` after HTTP uploads so comparison final can pass pilot gates.
 
+## 2026-04-17 Alpha Task 6 Minimal Users & Roles
+
+- `UserController` now serves live tenant-scoped `GET /api/v1/users` and `GET /api/v1/roles` data through the identity query interfaces, with invite/suspend/reactivate mutating persisted rows instead of returning synthetic success payloads.
+- Unsupported `/api/v1/users/{id}/delegation-rules` and `/api/v1/users/{id}/authority-limits` routes return honest deferred responses instead of fake data, and cross-tenant user lookups fail with tenant-safe `404` semantics.
+- The alpha admin surface stays narrow: tenant admin is limited to users/roles list, invite, suspend, and reactivate flows; broader identity administration remains deferred until a future task.
+
 ## Testing & Seed Data
 - Added feature test coverage for auth flows, middleware enforcement, and all protected API endpoints.
 - Added identity gap regression coverage for login lockout, wildcard role permissions, and authenticated session revocation.
@@ -226,6 +232,13 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - `DecisionTrailRecorder` now allocates per-run event sequences under transaction/lock so concurrent award workflow writes do not race on `(comparison_run_id, sequence)`.
 - Verification:
   - `cd apps/atomy-q/API && php artisan test --filter AwardWorkflowTest` -> PASS, 9 tests, 49 assertions.
+
+## 2026-04-17 Alpha Task 6 Follow-Up Review Remediation
+
+- Restored backward-compatible `UserQueryInterface::emailExists(string $email, ?string $excludeUserId = null, ?string $tenantId = null)` usage while keeping tenant-scoped duplicate-email checks in the users invite flow.
+- `UserQueryAdapter`, `AtomyUserQuery`, and `EloquentUserRepository` now trim tenant and excluded-user identifiers before applying tenant filters or `whereKeyNot(...)`, so whitespace cannot bypass Task 6 duplicate checks.
+- `IdentityGap7Test` now covers tenant-safe cross-tenant suspend `404` behavior and confirms the roles index stays isolated to the authenticated tenant.
+- The `POST /users/invite` OpenAPI contract now documents the required `{ email, name }` request body and the full user invite response shape so WEB generation no longer emits the stale `body?: never` contract.
 
 ## Middleware
 

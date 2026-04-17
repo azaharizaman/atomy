@@ -62,14 +62,14 @@ This plan was produced after tracing the Atomy-Q stack through the active codeba
 
 | ID | Blocker | Risk | Required closure |
 |---|---|---|---|
-| A1 | Quote intelligence still needed an honestly named deterministic alpha binding in `AppServiceProvider`. | High | Keep the deterministic default, leave `llm` dormant until a production provider exists, and avoid hidden mock behavior in live mode. |
-| A2 | Award journey is implemented in pieces but not proven as compare -> select winner -> persist award -> signoff -> decision trail from WEB. | High | Add API + WEB + E2E coverage for the complete user journey. |
-| A3 | WEB still has many `NEXT_PUBLIC_USE_MOCKS` branches and seed imports. Several have live tests, but the full golden path needs fail-loud verification. | High | Add a live-mode no-seed regression matrix for RFQ, vendors, submissions, normalization, comparison, awards, approvals, dashboard shell. |
-| A4 | Broad non-alpha controllers still return placeholder data or 501/deferred responses: negotiations, settings writes, account subscription/payment, reports, integrations, recommendations, scenarios, risk, documents/handoff. | Medium | Hide from alpha navigation or return explicit deferred responses with no golden-path dependency. |
-| A5 | User/role management surfaces are still mostly thin/stubbed while auth/RBAC internals are stronger. | High | Either productionize minimal Users & Roles for alpha admin or hide/gate those routes. |
+| A1 | Quote intelligence still needed an honestly named deterministic alpha binding in `AppServiceProvider`. | High | Closed locally by Task 2: deterministic mode is the supported alpha default, `llm` is explicitly dormant, and live failures follow the sanitized ingestion failure path. |
+| A2 | Award journey is implemented in pieces but not proven as compare -> select winner -> persist award -> signoff -> decision trail from WEB. | High | Closed locally by Task 3: focused API, WEB, and Playwright evidence now cover the single-winner compare -> award -> debrief -> signoff path. |
+| A3 | WEB still has many `NEXT_PUBLIC_USE_MOCKS` branches and seed imports. Several have live tests, but the full golden path needs fail-loud verification. | High | Closed locally by Task 4: live-mode hooks and golden-path pages now fail loudly under `NEXT_PUBLIC_USE_MOCKS=false`, with targeted build and Vitest coverage recorded in the release checklist. |
+| A4 | Broad non-alpha controllers still return placeholder data or 501/deferred responses: negotiations, settings writes, account subscription/payment, reports, integrations, recommendations, scenarios, risk, documents/handoff. | Medium | Closed locally by Task 5 for alpha scope: hidden routes are removed from alpha navigation or render an explicit deferred screen so they are not part of the shipped design-partner path. |
+| A5 | User/role management surfaces are still mostly thin/stubbed while auth/RBAC internals are stronger. | High | Closed locally by Task 6: alpha now includes a minimal tenant-scoped Users & Roles surface for list, invite, suspend, reactivate, and roles read. |
 | A6 | OpenAPI/generated WEB client drift is likely after recent API hardening. | Medium | Export Scramble spec, regenerate WEB client, and verify no generated/consumer drift. |
 | A7 | Queue/storage/AI/env runbook is incomplete for real quote ingestion. | High | Document and smoke-test worker, storage disk, file upload, AI env, CORS, and API URL contract. |
-| A8 | Alpha evidence is fragmented across tests, docs, and historic plans. | Medium | Use this plan plus a release checklist only; archive historical alpha docs. |
+| A8 | Alpha evidence is fragmented across tests, docs, and historic plans. | Medium | Finish Tasks 7 to 9 so contract evidence, staging runbook, and the final release checklist point to one current operator path. |
 
 ## 5. Layer 1 Findings
 
@@ -247,60 +247,89 @@ After this task, stakeholders should know whether alpha includes user administra
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/UserController.php`
 - Modify: `apps/atomy-q/WEB/src/app/(dashboard)/settings/users/page.tsx`
 - Test: `apps/atomy-q/API/tests/Feature/IdentityGap7Test.php`
+- Follow-up implementation plan: [`ALPHA_TASK6_MINIMAL_USERS_ROLES_IMPLEMENTATION_PLAN_2026-04-17.md`](./ALPHA_TASK6_MINIMAL_USERS_ROLES_IMPLEMENTATION_PLAN_2026-04-17.md)
 
-- [ ] Choose one: productionize minimal tenant-scoped users/roles list/invite/suspend/reactivate, or hide Settings/Users from alpha.
-- [ ] If productionizing, wire controller methods to real identity query/persist interfaces and enforce tenant-scoped 404 semantics.
-- [ ] If hiding, remove the nav route from alpha mode and document post-alpha ownership.
+- [x] Choose one: productionize minimal tenant-scoped users/roles list/invite/suspend/reactivate, or hide Settings/Users from alpha.
+- [x] If productionizing, wire controller methods to real identity query/persist interfaces and enforce tenant-scoped 404 semantics.
+- [x] Hide alternative rejected on 2026-04-17: Settings/Users remains in alpha because the minimal production Users & Roles flow shipped under `ALPHA_TASK6_MINIMAL_USERS_ROLES_IMPLEMENTATION_PLAN_2026-04-17.md`.
 
 ### Task 7: Regenerate API Contract And WEB Client
 
 This task realigns the API contract and generated frontend client after recent backend changes. It matters because alpha readiness depends on the WEB consuming the same shapes the Laravel API actually exposes, especially around vendors, awards, comparison, and normalization.
 
-After this task, `openapi.json`, generated client code, and manual hook mappings should be synchronized, and build failures from contract drift should be resolved before staging validation.
+After this task, `openapi.json`, generated client code, and the remaining hand-written hook wrappers should be synchronized, unsafe generated-client workarounds should be removed where possible, and staging should not depend on stale committed client artifacts.
 
 **Files:**
 - Modify: `apps/atomy-q/openapi/openapi.json`
 - Modify: `apps/atomy-q/WEB/src/generated/api/**`
-- Modify as needed after generation drift is visible: `apps/atomy-q/WEB/src/hooks/use-award.ts`, `apps/atomy-q/WEB/src/hooks/use-rfq-vendors.ts`, `apps/atomy-q/WEB/src/hooks/use-comparison-run.ts`, `apps/atomy-q/WEB/src/hooks/use-comparison-run-matrix.ts`, `apps/atomy-q/WEB/src/hooks/use-normalization-review.ts`
+- Modify as needed after generation drift is visible: `apps/atomy-q/WEB/src/hooks/use-award.ts`, `apps/atomy-q/WEB/src/hooks/use-rfq-vendors.ts`, `apps/atomy-q/WEB/src/hooks/use-comparison-run.ts`, `apps/atomy-q/WEB/src/hooks/use-comparison-run-matrix.ts`, `apps/atomy-q/WEB/src/hooks/use-normalization-review.ts`, `apps/atomy-q/WEB/src/hooks/use-users.ts`
+- Modify: `apps/atomy-q/docs/ALPHA_RELEASE_CHECKLIST.md`
 
 - [ ] Run `cd apps/atomy-q/API && php artisan scramble:export --path=../openapi/openapi.json`.
 - [ ] Run `cd apps/atomy-q/WEB && npm run generate:api`.
 - [ ] Run `cd apps/atomy-q/WEB && npm run build`.
-- [ ] Fix any drift in award/vendor/comparison/normalization consumers.
+- [ ] Audit generated diff for auth, users, vendors, RFQs, quote submissions, normalization, comparison runs, awards, and decision-trail operations so no alpha-critical endpoint still relies on stale request or response types.
+- [ ] Remove or reduce temporary generated-client escape hatches introduced by drift, especially manual casts around request bodies or response envelopes.
+- [ ] Run targeted WEB verification after regeneration: `npx vitest run src/hooks/use-award.live.test.ts src/hooks/use-users.test.tsx src/hooks/use-rfq-vendors.live.test.ts src/hooks/use-comparison-run.live.test.ts src/hooks/use-comparison-run-matrix.live.test.ts src/hooks/use-normalization-review.live.test.ts`.
+- [ ] Record the export/generate/build evidence and any accepted remaining manual wrapper exceptions in `ALPHA_RELEASE_CHECKLIST.md`.
+
+Implementation note, 2026-04-17:
+
+- The generated client is already committed under `apps/atomy-q/WEB/src/generated/api/`, but Task 6 follow-up work still shows why this task remains necessary: recent users/roles changes required local hook normalization and one remaining client-body workaround rather than a fresh contract sync.
+- Treat this task as the final contract-alignment pass before staging, not as a speculative cleanup. If regeneration reveals API schema drift, fix the schema or hook mapping now rather than carrying more local casting into Task 8.
 
 ### Task 8: Staging Operations Readiness
 
 This task makes the release deployable, not just coded. It documents and verifies the environment, queue, storage, AI/provider, CORS, and URL contracts needed for a design-partner staging environment.
 
-After this task, a new operator should be able to configure staging, run the golden-path smoke test with mocks off, and understand which external services are required for quote ingestion and notifications.
+After this task, a new operator should be able to configure staging from documented env files and runbooks, bring up the worker and storage dependencies, and execute a reproducible mocks-off golden-path smoke without relying on tribal knowledge.
 
 **Files:**
 - Modify: `apps/atomy-q/API/README.md`
 - Modify: `apps/atomy-q/WEB/README.md`
+- Create or update: `apps/atomy-q/API/.env.example`
+- Modify: `apps/atomy-q/WEB/.env.example`
 - Create: `apps/atomy-q/docs/STAGING_ALPHA_RUNBOOK.md`
+- Modify: `apps/atomy-q/docs/ALPHA_RELEASE_CHECKLIST.md`
 
 - [ ] Document required API env: `JWT_SECRET`, DB, Redis, CORS, storage disk, mail/notification settings, quote-intelligence provider settings, feature flags.
 - [ ] Document required WEB env: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_USE_MOCKS=false`, Playwright base URL.
-- [ ] Smoke upload storage with real configured disk.
-- [ ] Smoke queue worker for quote ingestion if ingestion is async.
-- [ ] Smoke tenant registration, login, RFQ creation, quote upload, normalization, comparison final, award signoff.
+- [ ] Add an API example env or equivalent documented env contract that an operator can copy without reconstructing values from prose.
+- [ ] Document staging prerequisites explicitly: database migration command, seed policy, queue worker command, storage bucket/MinIO wiring, allowed CORS origins, and whether projects/tasks flags should be enabled for the design-partner environment.
+- [ ] Decide and document the quote-ingestion runtime mode for staging: synchronous deterministic alpha path versus queued processing, including the exact worker requirement if async processing remains enabled.
+- [ ] Smoke upload storage with the real configured disk and confirm stored quote files are readable by the application path used in staging.
+- [ ] Smoke queue worker startup, job execution, and failure visibility for quote ingestion if ingestion is async in staging.
+- [ ] Smoke tenant registration, login, RFQ creation, vendor invite, quote upload, normalization readiness, comparison final, award create/signoff, and Users & Roles invite from the staging WEB with `NEXT_PUBLIC_USE_MOCKS=false`.
+- [ ] Record the exact staging URLs, env assumptions, smoke operator, and smoke date in `ALPHA_RELEASE_CHECKLIST.md`.
+
+Implementation note, 2026-04-17:
+
+- `apps/atomy-q/docs/STAGING_ALPHA_RUNBOOK.md` does not exist yet, and the API currently relies more on README prose than on a copyable `.env.example`; both gaps should be closed in this task rather than deferred to release day.
+- This task is now the main operational blocker. Code-path proof is substantially better than deployment proof at this point.
 
 ### Task 9: Final Alpha Release Gate
 
 This task is the final go/no-go checkpoint. It consolidates blocker status, verification evidence, staging smoke results, and accepted deferments so alpha is declared from evidence rather than optimism.
 
-After this task, the team should have a release-ready checklist that clearly states whether alpha can ship, what was intentionally deferred, and what must be addressed immediately after partner onboarding.
+After this task, the team should have one release-ready checklist that names the shipped alpha surface, the closed blockers, the remaining accepted constraints, the staging evidence, and the immediate post-onboarding watchlist.
 
 **Files:**
 - Modify: `apps/atomy-q/docs/ALPHA_RELEASE_CHECKLIST.md`
 - Modify: package/app `IMPLEMENTATION_SUMMARY.md` files only where code changed
 
-- [ ] All blockers A1-A8 are closed or explicitly accepted as design-partner constraints.
+- [ ] Update the blocker ledger so A1 to A5 reflect their local closure evidence and A6 to A8 reflect current remaining work or accepted constraints.
 - [ ] WEB lint/build/unit gates pass.
 - [ ] API alpha matrix passes against a clean test database.
 - [ ] At least one staging golden-path smoke passes with mocks off.
 - [ ] No active alpha instruction points to archived docs.
-- [ ] Any intentionally deferred feature has owner, rationale, and post-alpha target.
+- [ ] Every intentionally deferred feature still exposed anywhere in code or docs has an owner, rationale, operator-facing behavior, and post-alpha target.
+- [ ] The final release checklist includes explicit sign-off fields for engineering, product, and operator/staging owner.
+- [ ] The final release checklist names the exact alpha-supported flow in one paragraph so partner onboarding cannot infer unsupported modules from the broader route surface.
+
+Implementation note, 2026-04-17:
+
+- The final gate should now assume Tasks 1 to 6 are implementation-complete and use them as evidence inputs, not as open planning items.
+- If Task 8 staging smoke cannot be completed in time, the release decision must say that explicitly and downgrade the status to internal alpha only rather than silently promoting design-partner readiness.
 
 ## 10. Verification Matrix
 
@@ -311,6 +340,7 @@ After this task, the team should have a release-ready checklist that clearly sta
 | WEB unit | `cd apps/atomy-q/WEB && npm run test:unit` | Yes |
 | WEB E2E mock smoke | `cd apps/atomy-q/WEB && npm run test:e2e -- tests/screen-smoke.spec.ts` | Useful but not sufficient |
 | WEB E2E live smoke | `E2E_USE_REAL_API=1 PLAYWRIGHT_USE_EXISTING_SERVER=1 npm run test:e2e -- tests/rfq-lifecycle-e2e.spec.ts` | Yes before release |
+| Staging golden-path smoke | `PLAYWRIGHT_BASE_URL=https://<staging-web-origin> E2E_USE_REAL_API=1 PLAYWRIGHT_USE_EXISTING_SERVER=1 cd apps/atomy-q/WEB && npm run test:e2e -- tests/rfq-lifecycle-e2e.spec.ts` | Yes for design-partner alpha |
 | API full suite | `cd apps/atomy-q/API && php artisan test` | Preferred |
 | API alpha suite | `cd apps/atomy-q/API && php artisan test --filter "RegisterCompanyTest|AuthTest|RfqLifecycleMutationTest|RfqInvitationReminderTest|QuoteSubmissionWorkflowTest|QuoteIngestionPipelineTest|QuoteIngestionIntelligenceTest|NormalizationReviewWorkflowTest|ComparisonRunWorkflowTest|ComparisonSnapshotWorkflowTest|AwardWorkflowTest|VendorWorkflowTest|IdentityGap7Test|OperationalApprovalApiTest|ProjectAclTest"` | Minimum |
 | OpenAPI export | `cd apps/atomy-q/API && php artisan scramble:export --path=../openapi/openapi.json` | Yes after API changes |

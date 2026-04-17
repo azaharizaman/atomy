@@ -6053,7 +6053,10 @@ export type UserIndexResponses = {
 export type UserIndexResponse = UserIndexResponses[keyof UserIndexResponses];
 
 export type UserInviteData = {
-    body?: never;
+    body: {
+        email: string;
+        name: string;
+    };
     path?: never;
     query?: never;
     url: '/users/invite';
@@ -6063,8 +6066,13 @@ export type UserInviteResponses = {
     201: {
         data: {
             id: 'stub-user-id';
+            name: 'Stub User';
             email: 'invited@example.com';
             status: 'pending';
+            role: 'user';
+            tenant_id: string;
+            created_at: string;
+            last_login_at: string | null;
         };
     };
 };

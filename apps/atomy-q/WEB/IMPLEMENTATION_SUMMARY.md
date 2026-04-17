@@ -93,3 +93,13 @@
   - `cd apps/atomy-q/WEB && npx eslint src/lib/alpha-mode.ts src/components/alpha/alpha-deferred-screen.tsx src/components/alpha/alpha-deferred-screen.test.tsx src/config/nav.ts 'src/app/(dashboard)/layout.tsx' 'src/app/(dashboard)/rfqs/[rfqId]/layout.tsx' src/components/workspace/active-record-menu.tsx tests/dashboard-nav.spec.ts 'src/app/(dashboard)/documents/page.tsx' 'src/app/(dashboard)/reporting/page.tsx' 'src/app/(dashboard)/settings/page.tsx' 'src/app/(dashboard)/settings/users/page.tsx' 'src/app/(dashboard)/rfqs/[rfqId]/negotiations/page.tsx' 'src/app/(dashboard)/rfqs/[rfqId]/documents/page.tsx' 'src/app/(dashboard)/rfqs/[rfqId]/risk/page.tsx' 'src/app/(dashboard)/deferred-routes.test.tsx' tests/screen-smoke.spec.ts` -> PASS.
   - `cd apps/atomy-q/WEB && NEXT_PUBLIC_ALPHA_MODE=true npx playwright test tests/dashboard-nav.spec.ts` -> PASS, 1 test.
   - `cd apps/atomy-q/WEB && NEXT_PUBLIC_ALPHA_MODE=true npx playwright test tests/screen-smoke.spec.ts` -> PASS, 1 test.
+
+## 2026-04-17 Alpha Task 6 Minimal Users & Roles
+
+- The Settings > Users & Roles page now consumes live `use-users` data for the tenant user directory, shows explicit loading / empty / error states, and supports invite, suspend, and reactivate actions from the live API.
+- The users page keeps mutation feedback in-page and renders the live heading `Users & Roles`, so nav and smoke tests can validate the productionized admin surface without adding CRUD-heavy coverage.
+- Follow-up review remediation kept Task 6 within spec boundaries: the invite form now requires a display name, sends only `{ email, name }`, and documents that baseline role assignment stays fixed during alpha instead of exposing unsupported role selection.
+- `use-users.ts` now rejects null single-user envelopes explicitly and parses `is_system_role` with exact truthy checks so malformed live payloads fail loudly instead of coercing `"false"` to `true`.
+- `use-users.ts` now throws non-2xx client-fetch envelopes from the server error payload before normalizing, and the page-level `role="alert"` banner now appears above the users table so suspend/reactivate failures are visible.
+- The invite OpenAPI contract was regenerated so the generated `userInvite` helper accepts the required `{ email, name }` body instead of relying on the old `as never` cast.
+- Users-page tests now cover the required `Name` field and pending-activation rows without action buttons.
