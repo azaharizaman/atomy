@@ -196,7 +196,7 @@ Failing alpha-critical tests:
 | A3: Eliminate live-mode seed fallback on golden path | Closed locally | WEB build, Task 4 page unavailable-state tests, and the full live-hook matrix all pass with `NEXT_PUBLIC_USE_MOCKS=false` as of 2026-04-16. | WEB + Backend quote intake |
 | A4: Hide/defer non-alpha surfaces | Open | Not executed in Task 1. | Product + WEB/API |
 | A5: Decide minimal Users/Roles scope | Open | API `AuthTest` MFA legacy path requires `tenant_id`; identity gap suite passes, but endpoint contract remains inconsistent. | Backend identity |
-| A6: Regenerate API contract and WEB client | Not started | Not executed in Task 1. | API + WEB |
+| A6: Regenerate API contract and WEB client | Completed | Task 7 evidence recorded on 2026-04-17: OpenAPI export, WEB client generation, WEB build, and alpha hook verification passed. | API + WEB |
 | A7: Staging operations readiness | Not started | Not executed in Task 1. | Platform / DevOps |
 | A8: Release evidence control | In progress | This checklist now records baseline commands and failures. | Release owner |
 
