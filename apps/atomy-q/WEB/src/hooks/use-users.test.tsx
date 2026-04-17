@@ -201,7 +201,6 @@ describe('use-users', () => {
     const response = await result.current.mutateAsync({
       email: 'new@atomy.test',
       name: 'New User',
-      role: 'user',
     });
 
     expect(response).toEqual({
@@ -226,9 +225,29 @@ describe('use-users', () => {
     await expect(result.current.mutateAsync({
       email: 'new@atomy.test',
       name: 'New User',
-      role: 'user',
     })).rejects.toThrow('Invite failed');
     expect(invalidateSpy).not.toHaveBeenCalled();
+  });
+
+  it('rejects single-user payloads with null data', async () => {
+    vi.mocked(userInvite).mockResolvedValueOnce({
+      data: {
+        data: null,
+      },
+      error: undefined,
+      request: {} as Request,
+      response: {} as Response,
+    });
+
+    const { Wrapper } = createTestWrapper();
+    const { result } = renderHook(() => useInviteUser(), { wrapper: Wrapper });
+
+    await expect(
+      result.current.mutateAsync({
+        email: 'new@atomy.test',
+        name: 'New User',
+      }),
+    ).rejects.toThrow('Invalid user payload: expected non-null data object.');
   });
 
   it('invalidates users query after suspend mutation', async () => {

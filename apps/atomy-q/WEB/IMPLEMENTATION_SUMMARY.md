@@ -98,3 +98,6 @@
 
 - The Settings > Users & Roles page now consumes live `use-users` data for the tenant user directory, shows explicit loading / empty / error states, and supports invite, suspend, and reactivate actions from the live API.
 - The users page keeps mutation feedback in-page and renders the live heading `Users & Roles`, so nav and smoke tests can validate the productionized admin surface without adding CRUD-heavy coverage.
+- Follow-up review remediation kept Task 6 within spec boundaries: the invite form now requires a display name, sends only `{ email, name }`, and documents that baseline role assignment stays fixed during alpha instead of exposing unsupported role selection.
+- `use-users.ts` now rejects null single-user envelopes explicitly and parses `is_system_role` with exact truthy checks so malformed live payloads fail loudly instead of coercing `"false"` to `true`.
+- Users-page tests now cover the required `Name` field and pending-activation rows without action buttons.

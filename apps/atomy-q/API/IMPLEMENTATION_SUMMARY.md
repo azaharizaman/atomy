@@ -233,6 +233,12 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - Verification:
   - `cd apps/atomy-q/API && php artisan test --filter AwardWorkflowTest` -> PASS, 9 tests, 49 assertions.
 
+## 2026-04-17 Alpha Task 6 Follow-Up Review Remediation
+
+- Restored backward-compatible `UserQueryInterface::emailExists(string $email, ?string $excludeUserId = null, ?string $tenantId = null)` usage while keeping tenant-scoped duplicate-email checks in the users invite flow.
+- `UserQueryAdapter`, `AtomyUserQuery`, and `EloquentUserRepository` now trim tenant and excluded-user identifiers before applying tenant filters or `whereKeyNot(...)`, so whitespace cannot bypass Task 6 duplicate checks.
+- `IdentityGap7Test` now covers tenant-safe cross-tenant suspend `404` behavior and confirms the roles index stays isolated to the authenticated tenant.
+
 ## Middleware
 
 - `JwtAuthenticate` — Validates Bearer JWT, extracts `auth_user_id` and `auth_tenant_id`

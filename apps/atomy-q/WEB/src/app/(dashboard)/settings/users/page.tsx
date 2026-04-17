@@ -59,7 +59,7 @@ export default function SettingsUsersPage() {
   const users = usersQuery.data?.items ?? [];
   const roles = rolesQuery.data ?? [];
   const [inviteEmail, setInviteEmail] = React.useState('');
-  const [inviteRole, setInviteRole] = React.useState('');
+  const [inviteName, setInviteName] = React.useState('');
   const [mutationError, setMutationError] = React.useState<string | null>(null);
   const [pendingUserAction, setPendingUserAction] = React.useState<{
     userId: string;
@@ -69,37 +69,20 @@ export default function SettingsUsersPage() {
   const isLoading = usersQuery.isLoading || rolesQuery.isLoading;
   const loadError = usersQuery.error ?? rolesQuery.error;
 
-  React.useEffect(() => {
-    if (inviteRole !== '' || roles.length === 0) {
-      return;
-    }
-
-    setInviteRole(roles[0].id);
-  }, [inviteRole, roles]);
-
-  const roleOptions = React.useMemo(
-    () =>
-      roles.map((role) => ({
-        value: role.id,
-        label: role.name,
-      })),
-    [roles],
-  );
-
-  const selectedRoleLabel = inviteRole ? getRoleLabel(inviteRole, roles) : '';
-
   const handleInviteSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setMutationError(null);
 
     const email = inviteEmail.trim();
-    if (!email || !inviteRole) {
+    const name = inviteName.trim();
+    if (!email || !name) {
       return;
     }
 
     try {
-      await inviteUserMutation.mutateAsync({ email, role: inviteRole });
+      await inviteUserMutation.mutateAsync({ email, name });
       setInviteEmail('');
+      setInviteName('');
     } catch (error) {
       setMutationError(error instanceof Error ? error.message : 'Unable to invite user.');
     }
@@ -161,9 +144,25 @@ export default function SettingsUsersPage() {
 
       <SectionCard
         title="Invite user"
-        subtitle="Create a pending activation record. The invite becomes active when the user accepts it."
+        subtitle="Create a pending activation record. New invites keep the baseline user role until fuller role administration is in scope."
       >
         <form onSubmit={handleInviteSubmit} className="flex flex-col gap-3 lg:flex-row lg:items-end">
+          <div className="min-w-0 flex-1">
+            <label htmlFor="invite-user-name" className="mb-1 block text-xs font-medium text-slate-600">
+              Name
+            </label>
+            <input
+              id="invite-user-name"
+              name="name"
+              type="text"
+              value={inviteName}
+              onChange={(event) => setInviteName(event.target.value)}
+              placeholder="Alex Morgan"
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+              autoComplete="name"
+            />
+          </div>
+
           <div className="min-w-0 flex-1">
             <label htmlFor="invite-user-email" className="mb-1 block text-xs font-medium text-slate-600">
               Email
@@ -180,34 +179,12 @@ export default function SettingsUsersPage() {
             />
           </div>
 
-          <div className="w-full lg:w-56">
-            <label htmlFor="invite-user-role" className="mb-1 block text-xs font-medium text-slate-600">
-              Role
-            </label>
-            <select
-              id="invite-user-role"
-              name="role"
-              value={inviteRole}
-              onChange={(event) => setInviteRole(event.target.value)}
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
-            >
-              <option value="" disabled>
-                Select a role
-              </option>
-              {roleOptions.map((role) => (
-                <option key={role.value} value={role.value}>
-                  {role.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
           <Button
             type="submit"
             size="sm"
             variant="primary"
             loading={inviteUserMutation.isPending}
-            disabled={!inviteEmail.trim() || !inviteRole}
+            disabled={!inviteEmail.trim() || !inviteName.trim()}
           >
             <UserPlus size={14} className="mr-1.5" />
             Invite user
@@ -216,7 +193,6 @@ export default function SettingsUsersPage() {
 
         <p className="mt-3 text-xs text-slate-500">
           Invites create a pending activation user record. We do not claim delivery from this screen.
-          {selectedRoleLabel ? ` The selected role is ${selectedRoleLabel}.` : ''}
         </p>
 
         {mutationError && (

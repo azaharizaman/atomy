@@ -249,9 +249,9 @@ After this task, stakeholders should know whether alpha includes user administra
 - Test: `apps/atomy-q/API/tests/Feature/IdentityGap7Test.php`
 - Follow-up implementation plan: [`ALPHA_TASK6_MINIMAL_USERS_ROLES_IMPLEMENTATION_PLAN_2026-04-17.md`](./ALPHA_TASK6_MINIMAL_USERS_ROLES_IMPLEMENTATION_PLAN_2026-04-17.md)
 
-- [ ] Choose one: productionize minimal tenant-scoped users/roles list/invite/suspend/reactivate, or hide Settings/Users from alpha.
-- [ ] If productionizing, wire controller methods to real identity query/persist interfaces and enforce tenant-scoped 404 semantics.
-- [ ] If hiding, remove the nav route from alpha mode and document post-alpha ownership.
+- [x] Choose one: productionize minimal tenant-scoped users/roles list/invite/suspend/reactivate, or hide Settings/Users from alpha.
+- [x] If productionizing, wire controller methods to real identity query/persist interfaces and enforce tenant-scoped 404 semantics.
+- [x] Hide alternative rejected on 2026-04-17: Settings/Users remains in alpha because the minimal production Users & Roles flow shipped under `ALPHA_TASK6_MINIMAL_USERS_ROLES_IMPLEMENTATION_PLAN_2026-04-17.md`.
 
 ### Task 7: Regenerate API Contract And WEB Client
 

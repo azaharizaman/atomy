@@ -39,8 +39,7 @@ export interface SettingsUserRole {
 
 export interface InviteUserPayload {
   email: string;
-  role: string;
-  name?: string | null;
+  name: string;
 }
 
 const settingsUsersQueryKey = ['settings-users'] as const;
@@ -121,6 +120,8 @@ function normalizeRolesResponse(payload: unknown): SettingsUserRole[] {
     throw new Error('Invalid user roles payload: expected data array.');
   }
 
+  const isTrueValue = (value: unknown): boolean => value === true || value === 'true';
+
   return envelope.data.map((role: unknown, index: number) => {
     const row = requireEnvelope(role, `Invalid user role at index ${index}: expected object`);
     const id = toText(row.id);
@@ -137,15 +138,15 @@ function normalizeRolesResponse(payload: unknown): SettingsUserRole[] {
       name,
       description: normalizeOptionalText(row.description),
       tenantId: normalizeOptionalText(row.tenant_id ?? row.tenantId),
-      isSystemRole: Boolean(row.is_system_role ?? row.isSystemRole),
+      isSystemRole: isTrueValue(row.is_system_role) || isTrueValue(row.isSystemRole),
     };
   });
 }
 
 function normalizeSingleUserResponse(payload: unknown): SettingsUserRow {
   const envelope = requireEnvelope(payload, 'Invalid user payload: expected object envelope.');
-  if (!('data' in envelope)) {
-    throw new Error('Invalid user payload: expected data object.');
+  if (!('data' in envelope) || !isObject(envelope.data)) {
+    throw new Error('Invalid user payload: expected non-null data object.');
   }
 
   return normalizeUserRow(envelope.data, 0);

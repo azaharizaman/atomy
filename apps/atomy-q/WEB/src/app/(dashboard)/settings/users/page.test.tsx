@@ -105,8 +105,8 @@ describe('SettingsUsersPage', () => {
     expect(screen.getByRole('heading', { name: 'Users & Roles' })).toBeInTheDocument();
     expect(screen.getByText('No users yet')).toBeInTheDocument();
     expect(screen.getByText(/invite the first user/i)).toBeInTheDocument();
+    expect(screen.getByLabelText('Name')).toBeInTheDocument();
     expect(screen.getByLabelText('Email')).toBeInTheDocument();
-    expect(screen.getByLabelText('Role')).toBeInTheDocument();
   });
 
   it('renders a populated list and status actions', () => {
@@ -202,14 +202,14 @@ describe('SettingsUsersPage', () => {
 
     render(<SettingsUsersPage />);
 
+    await user.type(screen.getByLabelText('Name'), 'Invitee Name');
     await user.type(screen.getByLabelText('Email'), 'invitee@example.com');
-    await user.selectOptions(screen.getByLabelText('Role'), 'user');
     await user.click(screen.getByRole('button', { name: 'Invite user' }));
 
     await waitFor(() =>
       expect(inviteMutateAsync).toHaveBeenCalledWith({
         email: 'invitee@example.com',
-        role: 'user',
+        name: 'Invitee Name',
       }),
     );
     expect(await screen.findByRole('alert')).toHaveTextContent('Invite failed');
