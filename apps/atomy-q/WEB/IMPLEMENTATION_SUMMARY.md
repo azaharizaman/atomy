@@ -103,3 +103,8 @@
 - `use-users.ts` now throws non-2xx client-fetch envelopes from the server error payload before normalizing, and the page-level `role="alert"` banner now appears above the users table so suspend/reactivate failures are visible.
 - The invite OpenAPI contract was regenerated so the generated `userInvite` helper accepts the required `{ email, name }` body instead of relying on the old `as never` cast.
 - Users-page tests now cover the required `Name` field and pending-activation rows without action buttons.
+
+## 2026-04-17 Alpha Task 2 Roles Contract Parity Follow-Up
+
+- Regenerated `/roles` client types now expose the concrete role item shape, so `use-users.ts` consumes `UserRolesResponse['data']` directly instead of normalizing from an `unknown[]` contract.
+- `use-users.test.tsx` no longer carries the stale `as never` workaround for the undefined invite-response guard case.

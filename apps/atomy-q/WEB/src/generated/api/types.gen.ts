@@ -6324,7 +6324,13 @@ export type UserRolesData = {
 
 export type UserRolesResponses = {
     200: {
-        data: Array<unknown>;
+        data: Array<{
+            id: string;
+            name: string;
+            description: string | null;
+            tenant_id: string | null;
+            is_system_role: boolean;
+        }>;
     };
 };
 

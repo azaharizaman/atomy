@@ -9,7 +9,7 @@ import {
   userRoles,
   userSuspend,
 } from '@/generated/api/sdk.gen';
-import type { UserInviteData } from '@/generated/api/types.gen';
+import type { UserInviteData, UserRolesResponse } from '@/generated/api/types.gen';
 
 export interface SettingsUserRow {
   id: string;
@@ -112,18 +112,12 @@ function normalizeUsersResponse(payload: unknown): SettingsUsersResult {
   };
 }
 
-function normalizeRolesResponse(payload: unknown): SettingsUserRole[] {
-  const envelope = requireEnvelope(payload, 'Invalid user roles payload: expected object envelope with data array.');
-  if (!Array.isArray(envelope.data)) {
-    throw new Error('Invalid user roles payload: expected data array.');
-  }
-
+function normalizeRolesResponse(payload: UserRolesResponse['data']): SettingsUserRole[] {
   const isTrueValue = (value: unknown): boolean => value === true || value === 'true';
 
-  return envelope.data.map((role: unknown, index: number) => {
-    const row = requireEnvelope(role, `Invalid user role at index ${index}: expected object`);
-    const id = toText(row.id);
-    const name = toText(row.name);
+  return payload.data.map((role, index: number) => {
+    const id = toText(role.id);
+    const name = toText(role.name);
     if (id === null) {
       throw new Error(`Invalid user role at index ${index}: missing id`);
     }
@@ -134,9 +128,9 @@ function normalizeRolesResponse(payload: unknown): SettingsUserRole[] {
     return {
       id,
       name,
-      description: normalizeOptionalText(row.description),
-      tenantId: normalizeOptionalText(row.tenant_id ?? row.tenantId),
-      isSystemRole: isTrueValue(row.is_system_role) || isTrueValue(row.isSystemRole),
+      description: normalizeOptionalText(role.description),
+      tenantId: normalizeOptionalText(role.tenant_id),
+      isSystemRole: isTrueValue(role.is_system_role),
     };
   });
 }

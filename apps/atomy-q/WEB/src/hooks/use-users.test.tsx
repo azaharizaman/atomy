@@ -222,7 +222,7 @@ describe('use-users', () => {
   });
 
   it('rejects undefined invite responses before normalization', async () => {
-    vi.mocked(userInvite).mockResolvedValueOnce(undefined as never);
+    vi.mocked(userInvite).mockResolvedValueOnce(undefined);
 
     const { Wrapper } = createTestWrapper();
     const { result } = renderHook(() => useInviteUser(), { wrapper: Wrapper });
