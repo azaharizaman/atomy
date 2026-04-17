@@ -294,3 +294,8 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - `AuthController` SSO catch-all now distinguishes server/runtime failures (reported + HTTP 500) from authentication failures (HTTP 401).
 - `ProjectController::updateAcl` now enforces project-level ACL management authorization (owner/admin only) before mutating `project_acl`.
 - Queue test `IdentityWelcomeQueueTest` now asserts enqueued job payload properties with a predicate closure, not class-only assertion.
+
+## 2026-04-17 Alpha Task 2 Contract Follow-Up
+
+- `UserController::roles` now declares an explicit `@response` shape for Scramble so `/roles` exports a concrete `data[]` item schema instead of `Array<unknown>`.
+- Regenerating `apps/atomy-q/openapi/openapi.json` from the API source now preserves typed role fields (`id`, `name`, `description`, `tenant_id`, `is_system_role`) for downstream client generation.

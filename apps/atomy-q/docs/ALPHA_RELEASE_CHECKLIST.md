@@ -44,6 +44,15 @@ The strongest rectification signal is that the alpha-critical backend flows pass
 - `cd apps/atomy-q/WEB && NEXT_PUBLIC_ALPHA_MODE=true npx playwright test tests/dashboard-nav.spec.ts`: PASS. 1 test.
 - `cd apps/atomy-q/WEB && NEXT_PUBLIC_ALPHA_MODE=true npx playwright test tests/screen-smoke.spec.ts`: PASS. 1 test.
 
+## Latest Task 7 API Contract And WEB Client Evidence - 2026-04-17
+
+- Operator/author: Azahari Zaman.
+- `cd apps/atomy-q/API && DB_CONNECTION=sqlite DB_DATABASE=':memory:' php artisan scramble:export --path=../openapi/openapi.json`: PASS (workspace verification used sqlite override because PostgreSQL was unavailable in this run).
+- `cd apps/atomy-q/WEB && npm run generate:api`: PASS.
+- `cd apps/atomy-q/WEB && npm run build`: PASS.
+- `cd apps/atomy-q/WEB && npx vitest run src/hooks/use-award.live.test.ts src/hooks/use-users.test.tsx src/hooks/use-rfq-vendors.live.test.ts src/hooks/use-comparison-run.live.test.ts src/hooks/use-comparison-run-matrix.live.test.ts src/hooks/use-normalization-review.live.test.ts`: PASS.
+- Remaining accepted wrapper exceptions: none.
+
 ## Historical Baseline Evidence
 
 ## Gate Summary
@@ -187,7 +196,7 @@ Failing alpha-critical tests:
 | A3: Eliminate live-mode seed fallback on golden path | Closed locally | WEB build, Task 4 page unavailable-state tests, and the full live-hook matrix all pass with `NEXT_PUBLIC_USE_MOCKS=false` as of 2026-04-16. | WEB + Backend quote intake |
 | A4: Hide/defer non-alpha surfaces | Open | Not executed in Task 1. | Product + WEB/API |
 | A5: Decide minimal Users/Roles scope | Open | API `AuthTest` MFA legacy path requires `tenant_id`; identity gap suite passes, but endpoint contract remains inconsistent. | Backend identity |
-| A6: Regenerate API contract and WEB client | Not started | Not executed in Task 1. | API + WEB |
+| A6: Regenerate API contract and WEB client | Completed | Task 7 evidence recorded on 2026-04-17: OpenAPI export, WEB client generation, WEB build, and alpha hook verification passed. | API + WEB |
 | A7: Staging operations readiness | Not started | Not executed in Task 1. | Platform / DevOps |
 | A8: Release evidence control | In progress | This checklist now records baseline commands and failures. | Release owner |
 

@@ -66,6 +66,20 @@ export type QuoteSubmissionUploadRequest = {
 };
 
 /**
+ * RegisterCompanyRequest
+ */
+export type RegisterCompanyRequest = {
+    tenant_code: string;
+    company_name: string;
+    owner_name: string;
+    owner_email: string;
+    owner_password: string;
+    timezone?: string | null;
+    locale?: string | null;
+    currency?: string | null;
+};
+
+/**
  * RfqBulkActionRequest
  */
 export type RfqBulkActionRequest = {
@@ -96,59 +110,6 @@ export type RfqDraftRequest = {
  */
 export type RfqStatusTransitionRequest = {
     status: 'draft' | 'published' | 'closed' | 'awarded' | 'cancelled';
-};
-
-export type ComparisonMatrix = {
-    tenant_id: string;
-    rfq_id: string;
-    clusters: Array<{
-        cluster_key: string;
-        basis: string;
-        offers: Array<{
-            vendor_id: string;
-            rfq_line_id: string;
-            taxonomy_code: string;
-            normalized_unit_price: number;
-            normalized_quantity: number;
-            ai_confidence: number;
-            [key: string]: unknown;
-        }>;
-        statistics: {
-            min_normalized_unit_price: number;
-            max_normalized_unit_price: number;
-            avg_normalized_unit_price: number;
-            [key: string]: unknown;
-        };
-        recommendation: {
-            recommended_vendor_id: string;
-            reason: string;
-            [key: string]: unknown;
-        };
-        [key: string]: unknown;
-    }>;
-    [key: string]: unknown;
-};
-
-export type ComparisonReadiness = {
-    is_ready: boolean;
-    is_preview_only: boolean;
-    blockers: Array<{
-        code: string;
-        message: string;
-        [key: string]: unknown;
-    }>;
-    warnings: Array<{
-        code: string;
-        message: string;
-        [key: string]: unknown;
-    }>;
-    [key: string]: unknown;
-};
-
-export type ApprovalPayload = Array<unknown> | {
-    policy_id?: string;
-    status?: string;
-    [key: string]: unknown;
 };
 
 export type V1AccountProfile0Data = {
@@ -822,9 +783,15 @@ export type AuthLoginData = {
 export type AuthLoginErrors = {
     401: {
         message: 'Invalid credentials';
+    } | {
+        message: 'Multi-factor authentication required';
+        challenge_id: string;
     };
     422: {
         errors: MessageBag;
+    };
+    500: {
+        message: 'Internal server error';
     };
 };
 
@@ -837,11 +804,11 @@ export type AuthLoginResponses = {
         token_type: 'Bearer';
         expires_in: string;
         user: {
-            id: string;
-            email: string;
-            name: string;
-            role: string;
-            tenantId: string;
+            id: string | null;
+            email: string | null;
+            name: string | null;
+            role: unknown;
+            tenantId: string | null;
         };
     };
 };
@@ -884,14 +851,17 @@ export type AuthSsoResponses = {
         token_type: 'Bearer';
         expires_in: string;
         user: {
-            id: string;
-            email: string;
-            name: string;
+            id: string | null;
+            email: string | null;
+            name: string | null;
             role: null;
             tenantId: string;
         };
     } | {
-        data: string;
+        data: {
+            authorization_url: string;
+            state: string;
+        };
     };
 };
 
@@ -900,6 +870,7 @@ export type AuthSsoResponse = AuthSsoResponses[keyof AuthSsoResponses];
 export type AuthMfaVerifyData = {
     body: {
         challenge_id: string;
+        tenant_id?: string;
         otp: string;
     };
     path?: never;
@@ -908,16 +879,40 @@ export type AuthMfaVerifyData = {
 };
 
 export type AuthMfaVerifyErrors = {
+    401: {
+        message: 'Invalid MFA code';
+    } | {
+        message: 'Invalid or expired MFA challenge';
+    };
+    403: {
+        message: 'Invalid login session or tenant mismatch';
+        error: string;
+        challenge_id: string;
+    };
     422: {
         errors: MessageBag;
-    };
-    501: {
-        message: 'MFA verification flow is not implemented yet.';
-        verified: boolean;
     };
 };
 
 export type AuthMfaVerifyError = AuthMfaVerifyErrors[keyof AuthMfaVerifyErrors];
+
+export type AuthMfaVerifyResponses = {
+    200: {
+        access_token: string;
+        refresh_token: string;
+        token_type: 'Bearer';
+        expires_in: string;
+        user: {
+            id: string | null;
+            email: string | null;
+            name: string | null;
+            role: unknown;
+            tenantId: string | null;
+        };
+    };
+};
+
+export type AuthMfaVerifyResponse = AuthMfaVerifyResponses[keyof AuthMfaVerifyResponses];
 
 export type AuthForgotPasswordData = {
     body: {
@@ -1018,12 +1013,23 @@ export type AuthLogoutData = {
 };
 
 export type AuthLogoutErrors = {
+    500: {
+        message: 'Logout failed.';
+    };
     501: {
         message: 'Logout flow is not implemented yet.';
     };
 };
 
 export type AuthLogoutError = AuthLogoutErrors[keyof AuthLogoutErrors];
+
+export type AuthLogoutResponses = {
+    200: {
+        message: 'Logged out successfully.';
+    };
+};
+
+export type AuthLogoutResponse = AuthLogoutResponses[keyof AuthLogoutResponses];
 
 export type AuthDeviceTrustData = {
     body?: never;
@@ -1085,7 +1091,7 @@ export type AwardIndexResponse = AwardIndexResponses[keyof AwardIndexResponses];
 export type AwardStoreData = {
     body: {
         rfq_id: string;
-        comparison_run_id?: string | null;
+        comparison_run_id: string;
         vendor_id: string;
         amount: number;
         currency: string;
@@ -1428,6 +1434,15 @@ export type ComparisonRunPreviewData = {
 };
 
 export type ComparisonRunPreviewErrors = {
+    /**
+     * Authorization error
+     */
+    403: {
+        /**
+         * Error overview.
+         */
+        message: string;
+    };
     404: {
         message: 'RFQ not found';
     };
@@ -1457,9 +1472,9 @@ export type ComparisonRunPreviewResponses = {
             rfq_id: string;
             status: 'preview';
             is_preview: boolean;
-            matrix: ComparisonMatrix;
-            readiness: ComparisonReadiness;
-            approval: ApprovalPayload;
+            matrix: string;
+            readiness: string;
+            approval: string;
             created_at: string;
         };
     };
@@ -1523,8 +1538,8 @@ export type ComparisonRunFinalResponses = {
                 currency_meta: string;
                 vendors: Array<unknown>;
             };
-            matrix: ComparisonMatrix;
-            readiness: ComparisonReadiness;
+            matrix: string;
+            readiness: string;
         };
     };
 };
@@ -1585,7 +1600,7 @@ export type ComparisonRunMatrixResponses = {
     200: {
         data: {
             id: string;
-            matrix: ComparisonMatrix;
+            matrix: string | Array<string>;
         };
     };
 };
@@ -1613,7 +1628,7 @@ export type ComparisonRunReadinessResponses = {
     200: {
         data: {
             id: string;
-            readiness: ComparisonReadiness;
+            readiness: string | Array<string>;
         };
     };
 };
@@ -3255,13 +3270,6 @@ export type V1ProjectsStoreError = V1ProjectsStoreErrors[keyof V1ProjectsStoreEr
 
 export type V1ProjectsStoreResponses = {
     200: {
-        data: {
-            id: string;
-            rfq_id: string;
-            status: string;
-            reminded_at: string;
-            [key: string]: unknown;
-        };
         [key: string]: unknown;
     };
 };
@@ -3931,6 +3939,55 @@ export type RecommendationRerunResponses = {
 };
 
 export type RecommendationRerunResponse = RecommendationRerunResponses[keyof RecommendationRerunResponses];
+
+export type RegisterCompanyStoreData = {
+    body: RegisterCompanyRequest;
+    path?: never;
+    query?: never;
+    url: '/auth/register-company';
+};
+
+export type RegisterCompanyStoreErrors = {
+    /**
+     * Validation error
+     */
+    422: {
+        /**
+         * Errors overview.
+         */
+        message: string;
+        /**
+         * A detailed description of each field that failed validation.
+         */
+        errors: {
+            [key: string]: Array<string>;
+        };
+    };
+    500: {
+        message: 'Company onboarding failed';
+    };
+};
+
+export type RegisterCompanyStoreError = RegisterCompanyStoreErrors[keyof RegisterCompanyStoreErrors];
+
+export type RegisterCompanyStoreResponses = {
+    200: {
+        access_token: string;
+        refresh_token: string;
+        token_type: 'Bearer';
+        expires_in: string;
+        user: {
+            id: string;
+            email: string;
+            name: string;
+            role: 'admin';
+            tenantId: string;
+        };
+        bootstrap: string | Array<string>;
+    };
+};
+
+export type RegisterCompanyStoreResponse = RegisterCompanyStoreResponses[keyof RegisterCompanyStoreResponses];
 
 export type ReportKpisData = {
     body?: never;
@@ -6031,13 +6088,15 @@ export type TaskUpdateDependenciesResponse = TaskUpdateDependenciesResponses[key
 export type UserIndexData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        status?: string;
+    };
     url: '/users';
 };
 
 export type UserIndexResponses = {
     200: {
-        data: Array<string>;
+        data: Array<unknown>;
         meta: {
             current_page: {
                 [key: string]: unknown;
@@ -6062,17 +6121,40 @@ export type UserInviteData = {
     url: '/users/invite';
 };
 
+export type UserInviteErrors = {
+    409: {
+        message: 'A user with that email already exists.';
+    };
+    /**
+     * Validation error
+     */
+    422: {
+        /**
+         * Errors overview.
+         */
+        message: string;
+        /**
+         * A detailed description of each field that failed validation.
+         */
+        errors: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type UserInviteError = UserInviteErrors[keyof UserInviteErrors];
+
 export type UserInviteResponses = {
     201: {
         data: {
-            id: 'stub-user-id';
-            name: 'Stub User';
-            email: 'invited@example.com';
-            status: 'pending';
-            role: 'user';
-            tenant_id: string;
+            id: string;
+            name: string | null;
+            email: string;
+            status: string;
+            role: string;
+            tenant_id: string | null;
             created_at: string;
-            last_login_at: string | null;
+            last_login_at: null;
         };
     };
 };
@@ -6092,8 +6174,13 @@ export type UserShowResponses = {
     200: {
         data: {
             id: string;
-            email: 'user@example.com';
-            name: 'Stub User';
+            name: string | null;
+            email: string;
+            status: string;
+            role: string;
+            tenant_id: string | null;
+            created_at: string;
+            last_login_at: null;
         };
     };
 };
@@ -6109,17 +6196,15 @@ export type UserUpdateData = {
     url: '/users/{id}';
 };
 
-export type UserUpdateResponses = {
-    200: {
-        data: {
-            id: string;
-            email: 'user@example.com';
-            name: 'Stub User';
-        };
+export type UserUpdateErrors = {
+    501: {
+        error: 'Not implemented';
+        message: string;
+        context: Array<unknown>;
     };
 };
 
-export type UserUpdateResponse = UserUpdateResponses[keyof UserUpdateResponses];
+export type UserUpdateError = UserUpdateErrors[keyof UserUpdateErrors];
 
 export type UserSuspendData = {
     body?: never;
@@ -6134,7 +6219,13 @@ export type UserSuspendResponses = {
     200: {
         data: {
             id: string;
-            status: 'suspended';
+            name: string | null;
+            email: string;
+            status: string;
+            role: string;
+            tenant_id: string | null;
+            created_at: string;
+            last_login_at: null;
         };
     };
 };
@@ -6154,7 +6245,13 @@ export type UserReactivateResponses = {
     200: {
         data: {
             id: string;
-            status: 'active';
+            name: string | null;
+            email: string;
+            status: string;
+            role: string;
+            tenant_id: string | null;
+            created_at: string;
+            last_login_at: null;
         };
     };
 };
@@ -6170,16 +6267,15 @@ export type UserDelegationRulesData = {
     url: '/users/{id}/delegation-rules';
 };
 
-export type UserDelegationRulesResponses = {
-    200: {
-        data: {
-            user_id: string;
-            rules: Array<string>;
-        };
+export type UserDelegationRulesErrors = {
+    501: {
+        error: 'Not implemented';
+        message: string;
+        context: Array<unknown>;
     };
 };
 
-export type UserDelegationRulesResponse = UserDelegationRulesResponses[keyof UserDelegationRulesResponses];
+export type UserDelegationRulesError = UserDelegationRulesErrors[keyof UserDelegationRulesErrors];
 
 export type UserUpdateDelegationRulesData = {
     body?: never;
@@ -6190,16 +6286,15 @@ export type UserUpdateDelegationRulesData = {
     url: '/users/{id}/delegation-rules';
 };
 
-export type UserUpdateDelegationRulesResponses = {
-    200: {
-        data: {
-            user_id: string;
-            rules: Array<string>;
-        };
+export type UserUpdateDelegationRulesErrors = {
+    501: {
+        error: 'Not implemented';
+        message: string;
+        context: Array<unknown>;
     };
 };
 
-export type UserUpdateDelegationRulesResponse = UserUpdateDelegationRulesResponses[keyof UserUpdateDelegationRulesResponses];
+export type UserUpdateDelegationRulesError = UserUpdateDelegationRulesErrors[keyof UserUpdateDelegationRulesErrors];
 
 export type UserUpdateAuthorityLimitsData = {
     body?: never;
@@ -6210,16 +6305,15 @@ export type UserUpdateAuthorityLimitsData = {
     url: '/users/{id}/authority-limits';
 };
 
-export type UserUpdateAuthorityLimitsResponses = {
-    200: {
-        data: {
-            user_id: string;
-            limits: Array<string>;
-        };
+export type UserUpdateAuthorityLimitsErrors = {
+    501: {
+        error: 'Not implemented';
+        message: string;
+        context: Array<unknown>;
     };
 };
 
-export type UserUpdateAuthorityLimitsResponse = UserUpdateAuthorityLimitsResponses[keyof UserUpdateAuthorityLimitsResponses];
+export type UserUpdateAuthorityLimitsError = UserUpdateAuthorityLimitsErrors[keyof UserUpdateAuthorityLimitsErrors];
 
 export type UserRolesData = {
     body?: never;
@@ -6230,7 +6324,13 @@ export type UserRolesData = {
 
 export type UserRolesResponses = {
     200: {
-        data: Array<string>;
+        data: Array<{
+            id: string;
+            name: string;
+            description: string | null;
+            tenant_id: string | null;
+            is_system_role: boolean;
+        }>;
     };
 };
 
@@ -6239,16 +6339,36 @@ export type UserRolesResponse = UserRolesResponses[keyof UserRolesResponses];
 export type VendorIndexData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        status?: string;
+        q?: string;
+        search?: string;
+    };
     url: '/vendors';
 };
 
 export type VendorIndexResponses = {
-    /**
-     * TODO: tenant scoping via $this->tenantId($request) before any DB query
-     */
     200: {
-        data: Array<string>;
+        data: Array<{
+            id: string;
+            name: string;
+            trading_name: string;
+            registration_number: string;
+            tax_id: string;
+            country_code: string;
+            email: string;
+            phone: string;
+            status: string;
+            onboarded_at: string;
+            created_at: string;
+            updated_at: string;
+        }>;
+        meta: {
+            current_page: number;
+            per_page: number;
+            total: number;
+            total_pages: number;
+        };
     };
 };
 
@@ -6263,14 +6383,29 @@ export type VendorShowData = {
     url: '/vendors/{id}';
 };
 
+export type VendorShowErrors = {
+    404: {
+        message: 'Vendor not found';
+    };
+};
+
+export type VendorShowError = VendorShowErrors[keyof VendorShowErrors];
+
 export type VendorShowResponses = {
-    /**
-     * TODO: tenant scoping via $this->tenantId($request)
-     */
     200: {
         data: {
             id: string;
-            name: 'Stub Vendor';
+            name: string;
+            trading_name: string;
+            registration_number: string;
+            tax_id: string;
+            country_code: string;
+            email: string;
+            phone: string;
+            status: string;
+            onboarded_at: string;
+            created_at: string;
+            updated_at: string;
         };
     };
 };
@@ -6286,14 +6421,25 @@ export type VendorPerformanceData = {
     url: '/vendors/{id}/performance';
 };
 
+export type VendorPerformanceErrors = {
+    404: {
+        message: 'Vendor not found';
+    };
+};
+
+export type VendorPerformanceError = VendorPerformanceErrors[keyof VendorPerformanceErrors];
+
 export type VendorPerformanceResponses = {
-    /**
-     * TODO: tenant scoping via $this->tenantId($request)
-     */
     200: {
         data: {
             vendor_id: string;
             score: number;
+            metrics: {
+                quotes_submitted: number;
+                quotes_ready: number;
+                awards_won: number;
+                average_confidence: number | null;
+            };
         };
     };
 };
@@ -6309,14 +6455,22 @@ export type VendorComplianceData = {
     url: '/vendors/{id}/compliance';
 };
 
+export type VendorComplianceErrors = {
+    404: {
+        message: 'Vendor not found';
+    };
+};
+
+export type VendorComplianceError = VendorComplianceErrors[keyof VendorComplianceErrors];
+
 export type VendorComplianceResponses = {
-    /**
-     * TODO: tenant scoping via $this->tenantId($request)
-     */
     200: {
         data: {
             vendor_id: string;
-            status: 'compliant';
+            status: 'compliant' | 'review_required';
+            kyc_verified: boolean;
+            sanctions_screened: boolean;
+            last_checked_at: string | null;
         };
     };
 };
@@ -6332,10 +6486,15 @@ export type VendorHistoryData = {
     url: '/vendors/{id}/history';
 };
 
+export type VendorHistoryErrors = {
+    404: {
+        message: 'Vendor not found';
+    };
+};
+
+export type VendorHistoryError = VendorHistoryErrors[keyof VendorHistoryErrors];
+
 export type VendorHistoryResponses = {
-    /**
-     * TODO: tenant scoping via $this->tenantId($request)
-     */
     200: {
         data: Array<string>;
     };

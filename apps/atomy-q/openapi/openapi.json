@@ -3,7 +3,7 @@
     "info": {
         "title": "Atomy-Q API",
         "version": "0.0.1",
-        "description": "Atomy-Q Quote Comparison API — generated OpenAPI for client tooling (design-partner alpha).\n\n### Idempotency error `code` values\n\nJSON error bodies may include a string `code` for clients and tooling. Idempotency-related values:\n\n| `code` | HTTP | Meaning |\n|--------|------|---------|\n| `idempotency_key_required` | 400 | `Idempotency-Key` header missing or empty |\n| `idempotency_key_invalid` | 400 | Key failed validation (e.g. length) |\n| `idempotency_fingerprint_conflict` | 409 | Same key, different request body |\n| `idempotency_in_progress` | 409 | Same key; prior attempt not finished |\n| `idempotency_operation_ref_missing` | 500 | Route has no name (misconfiguration) |\n| `idempotency_tenant_missing` | 500 | Tenant not on request after auth |\n| `idempotency_replay_missing` | 500 | Replay outcome without stored payload |\n| `idempotency_record_missing` | 500 | Internal idempotency state inconsistency |\n| `idempotency_envelope_too_large` | 500 | Response too large to store for replay |\n"
+        "description": "Atomy-Q Quote Comparison API \u2014 generated OpenAPI for client tooling (design-partner alpha).\n\n### Idempotency error `code` values\n\nJSON error bodies may include a string `code` for clients and tooling. Idempotency-related values:\n\n| `code` | HTTP | Meaning |\n|--------|------|---------|\n| `idempotency_key_required` | 400 | `Idempotency-Key` header missing or empty |\n| `idempotency_key_invalid` | 400 | Key failed validation (e.g. length) |\n| `idempotency_fingerprint_conflict` | 409 | Same key, different request body |\n| `idempotency_in_progress` | 409 | Same key; prior attempt not finished |\n| `idempotency_operation_ref_missing` | 500 | Route has no name (misconfiguration) |\n| `idempotency_tenant_missing` | 500 | Tenant not on request after auth |\n| `idempotency_replay_missing` | 500 | Replay outcome without stored payload |\n| `idempotency_record_missing` | 500 | Internal idempotency state inconsistency |\n| `idempotency_envelope_too_large` | 500 | Response too large to store for replay |\n"
     },
     "servers": [
         {
@@ -881,7 +881,7 @@
                                                     },
                                                     "sla": {
                                                         "type": "string",
-                                                        "const": "—"
+                                                        "const": "\u2014"
                                                     },
                                                     "sla_variant": {
                                                         "type": "string",
@@ -895,7 +895,7 @@
                                                             {
                                                                 "type": "string",
                                                                 "enum": [
-                                                                    "—"
+                                                                    "\u2014"
                                                                 ]
                                                             }
                                                         ]
@@ -1168,7 +1168,7 @@
                                                 },
                                                 "sla": {
                                                     "type": "string",
-                                                    "const": "—"
+                                                    "const": "\u2014"
                                                 },
                                                 "sla_variant": {
                                                     "type": "string",
@@ -1182,7 +1182,7 @@
                                                         {
                                                             "type": "string",
                                                             "enum": [
-                                                                "—"
+                                                                "\u2014"
                                                             ]
                                                         }
                                                     ]
@@ -1347,6 +1347,9 @@
                             }
                         }
                     },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
                     "404": {
                         "description": "",
                         "content": {
@@ -1365,9 +1368,6 @@
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -1444,6 +1444,9 @@
                             }
                         }
                     },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
                     "404": {
                         "description": "",
                         "content": {
@@ -1462,9 +1465,6 @@
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -1734,7 +1734,7 @@
         "/auth/login": {
             "post": {
                 "operationId": "auth.login",
-                "description": "Tenant is taken from the user row (one user → one tenant). `tenant_id` in the body is ignored.\n\nPOST /auth/login",
+                "description": "POST /auth/login",
                 "summary": "Authenticate user with email and password, return JWT tokens",
                 "tags": [
                     "Auth"
@@ -1763,6 +1763,64 @@
                     }
                 },
                 "responses": {
+                    "500": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Internal server error"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "Invalid credentials"
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "Multi-factor authentication required"
+                                                },
+                                                "challenge_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "message",
+                                                "challenge_id"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "200": {
                         "description": "",
                         "content": {
@@ -1787,19 +1845,29 @@
                                             "type": "object",
                                             "properties": {
                                                 "id": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "email": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "name": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
-                                                "role": {
-                                                    "type": "string"
-                                                },
+                                                "role": {},
                                                 "tenantId": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 }
                                             },
                                             "required": [
@@ -1817,25 +1885,6 @@
                                         "token_type",
                                         "expires_in",
                                         "user"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Invalid credentials"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
                                     ]
                                 }
                             }
@@ -1859,8 +1908,7 @@
                             }
                         }
                     }
-                },
-                "security": []
+                }
             }
         },
         "/auth/sso": {
@@ -1905,6 +1953,62 @@
                     }
                 },
                 "responses": {
+                    "401": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "SSO authentication failed"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "SSO provider unavailable"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "200": {
                         "description": "",
                         "content": {
@@ -1931,13 +2035,22 @@
                                                     "type": "object",
                                                     "properties": {
                                                         "id": {
-                                                            "type": "string"
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
                                                         },
                                                         "email": {
-                                                            "type": "string"
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
                                                         },
                                                         "name": {
-                                                            "type": "string"
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
                                                         },
                                                         "role": {
                                                             "type": "null"
@@ -1967,50 +2080,25 @@
                                             "type": "object",
                                             "properties": {
                                                 "data": {
-                                                    "type": "string"
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "authorization_url": {
+                                                            "type": "string"
+                                                        },
+                                                        "state": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "authorization_url",
+                                                        "state"
+                                                    ]
                                                 }
                                             },
                                             "required": [
                                                 "data"
                                             ]
                                         }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "SSO authentication failed"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
                                     ]
                                 }
                             }
@@ -2033,28 +2121,8 @@
                                 }
                             }
                         }
-                    },
-                    "500": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "SSO provider unavailable"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
                     }
-                },
-                "security": []
+                }
             }
         },
         "/auth/mfa/verify": {
@@ -2075,6 +2143,9 @@
                                     "challenge_id": {
                                         "type": "string"
                                     },
+                                    "tenant_id": {
+                                        "type": "string"
+                                    },
                                     "otp": {
                                         "type": "string"
                                     }
@@ -2088,6 +2159,137 @@
                     }
                 },
                 "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "access_token": {
+                                            "type": "string"
+                                        },
+                                        "refresh_token": {
+                                            "type": "string"
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "const": "Bearer"
+                                        },
+                                        "expires_in": {
+                                            "type": "string"
+                                        },
+                                        "user": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "email": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "name": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "role": {},
+                                                "tenantId": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "email",
+                                                "name",
+                                                "role",
+                                                "tenantId"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "access_token",
+                                        "refresh_token",
+                                        "token_type",
+                                        "expires_in",
+                                        "user"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Invalid login session or tenant mismatch"
+                                        },
+                                        "error": {
+                                            "type": "string"
+                                        },
+                                        "challenge_id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "error",
+                                        "challenge_id"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "Invalid MFA code"
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "Invalid or expired MFA challenge"
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "description": "",
                         "content": {
@@ -2105,38 +2307,14 @@
                                 }
                             }
                         }
-                    },
-                    "501": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "MFA verification flow is not implemented yet."
-                                        },
-                                        "verified": {
-                                            "type": "boolean"
-                                        }
-                                    },
-                                    "required": [
-                                        "message",
-                                        "verified"
-                                    ]
-                                }
-                            }
-                        }
                     }
-                },
-                "security": []
+                }
             }
         },
         "/auth/forgot-password": {
             "post": {
                 "operationId": "auth.forgotPassword",
-                "description": "POST /auth/forgot-password — body: `email` only. Reset tokens are stored per user tenant (from the user row).",
+                "description": "POST /auth/forgot-password \u2014 body: `email` only. Reset tokens are stored per user tenant (from the user row).",
                 "summary": "Request password reset",
                 "tags": [
                     "Auth"
@@ -2198,8 +2376,7 @@
                             }
                         }
                     }
-                },
-                "security": []
+                }
             }
         },
         "/auth/reset-password": {
@@ -2264,6 +2441,25 @@
                             }
                         }
                     },
+                    "500": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Unable to complete password reset. Please try again later."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "description": "",
                         "content": {
@@ -2297,28 +2493,8 @@
                                 }
                             }
                         }
-                    },
-                    "500": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Unable to complete password reset. Please try again later."
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
                     }
-                },
-                "security": []
+                }
             }
         },
         "/auth/refresh": {
@@ -2432,8 +2608,7 @@
                             }
                         }
                     }
-                },
-                "security": []
+                }
             }
         },
         "/auth/logout": {
@@ -2445,6 +2620,44 @@
                     "Auth"
                 ],
                 "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Logged out successfully."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Logout failed."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "501": {
                         "description": "",
                         "content": {
@@ -2464,8 +2677,7 @@
                             }
                         }
                     }
-                },
-                "security": []
+                }
             }
         },
         "/auth/device-trust": {
@@ -2496,8 +2708,7 @@
                             }
                         }
                     }
-                },
-                "security": []
+                }
             }
         },
         "/awards": {
@@ -2679,10 +2890,7 @@
                                         "type": "string"
                                     },
                                     "comparison_run_id": {
-                                        "type": [
-                                            "string",
-                                            "null"
-                                        ]
+                                        "type": "string"
                                     },
                                     "vendor_id": {
                                         "type": "string"
@@ -2708,6 +2916,7 @@
                                 },
                                 "required": [
                                     "rfq_id",
+                                    "comparison_run_id",
                                     "vendor_id",
                                     "amount",
                                     "currency"
@@ -2824,6 +3033,9 @@
                             }
                         }
                     },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
                     "404": {
                         "description": "",
                         "content": {
@@ -2870,9 +3082,6 @@
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -2905,8 +3114,7 @@
                                         "type": "array",
                                         "items": {
                                             "type": "string"
-                                        },
-                                        "minItems": 1
+                                        }
                                     }
                                 },
                                 "required": [
@@ -3685,13 +3893,13 @@
                                                     "type": "boolean"
                                                 },
                                                 "matrix": {
-                                                    "$ref": "#/components/schemas/ComparisonMatrix"
+                                                    "type": "string"
                                                 },
                                                 "readiness": {
-                                                    "$ref": "#/components/schemas/ComparisonReadiness"
+                                                    "type": "string"
                                                 },
                                                 "approval": {
-                                                    "$ref": "#/components/schemas/ApprovalPayload"
+                                                    "type": "string"
                                                 },
                                                 "created_at": {
                                                     "type": "string"
@@ -3716,6 +3924,9 @@
                             }
                         }
                     },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
                     "404": {
                         "description": "",
                         "content": {
@@ -3735,8 +3946,8 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 }
             }
@@ -3872,10 +4083,10 @@
                                                     ]
                                                 },
                                                 "matrix": {
-                                                    "$ref": "#/components/schemas/ComparisonMatrix"
+                                                    "type": "string"
                                                 },
                                                 "readiness": {
-                                                    "$ref": "#/components/schemas/ComparisonReadiness"
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
@@ -3895,6 +4106,9 @@
                             }
                         }
                     },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
                     "404": {
                         "description": "",
                         "content": {
@@ -3913,9 +4127,6 @@
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -3992,7 +4203,23 @@
                         }
                     },
                     "404": {
-                        "$ref": "#/components/responses/ComparisonRunNotFound"
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Comparison run not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -4029,7 +4256,20 @@
                                                     "type": "string"
                                                 },
                                                 "matrix": {
-                                                    "$ref": "#/components/schemas/ComparisonMatrix"
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "minItems": 0,
+                                                            "maxItems": 0,
+                                                            "additionalItems": false
+                                                        }
+                                                    ]
                                                 }
                                             },
                                             "required": [
@@ -4046,7 +4286,23 @@
                         }
                     },
                     "404": {
-                        "$ref": "#/components/responses/ComparisonRunNotFound"
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Comparison run not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -4083,7 +4339,20 @@
                                                     "type": "string"
                                                 },
                                                 "readiness": {
-                                                    "$ref": "#/components/schemas/ComparisonReadiness"
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string"
+                                                        },
+                                                        {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            },
+                                                            "minItems": 0,
+                                                            "maxItems": 0,
+                                                            "additionalItems": false
+                                                        }
+                                                    ]
                                                 }
                                             },
                                             "required": [
@@ -4100,7 +4369,23 @@
                         }
                     },
                     "404": {
-                        "$ref": "#/components/responses/ComparisonRunNotFound"
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Comparison run not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -4123,63 +4408,6 @@
                     }
                 ],
                 "responses": {
-                    "404": {
-                        "$ref": "#/components/responses/ComparisonRunNotFound"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ComparisonControlDeferred"
-                    }
-                }
-            }
-        },
-        "/comparison-runs/{id}/lock": {
-            "post": {
-                "operationId": "comparisonRun.lock",
-                "summary": "POST /comparison-runs/:id/lock\nScoped by tenant_id",
-                "tags": [
-                    "ComparisonRun"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "404": {
-                        "$ref": "#/components/responses/ComparisonRunNotFound"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ComparisonControlDeferred"
-                    }
-                }
-            }
-        },
-        "/comparison-runs/{id}/unlock": {
-            "post": {
-                "operationId": "comparisonRun.unlock",
-                "summary": "POST /comparison-runs/:id/unlock\nScoped by tenant_id",
-                "tags": [
-                    "ComparisonRun"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "404": {
-                        "$ref": "#/components/responses/ComparisonRunNotFound"
-                    },
                     "422": {
                         "description": "",
                         "content": {
@@ -4211,6 +4439,177 @@
                                         "code",
                                         "error",
                                         "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Comparison run not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/comparison-runs/{id}/lock": {
+            "post": {
+                "operationId": "comparisonRun.lock",
+                "summary": "POST /comparison-runs/:id/lock\nScoped by tenant_id",
+                "tags": [
+                    "ComparisonRun"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "422": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "string",
+                                            "const": "COMPARISON_CONTROL_DEFERRED"
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "const": "This comparison control is deferred to beta and is not available in alpha."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "code",
+                                        "error",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Comparison run not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/comparison-runs/{id}/unlock": {
+            "post": {
+                "operationId": "comparisonRun.unlock",
+                "summary": "POST /comparison-runs/:id/unlock\nScoped by tenant_id",
+                "tags": [
+                    "ComparisonRun"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "422": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "string",
+                                            "const": "COMPARISON_CONTROL_DEFERRED"
+                                        },
+                                        "error": {
+                                            "type": "string",
+                                            "const": "This comparison control is deferred to beta and is not available in alpha."
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "code",
+                                        "error",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Comparison run not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -6922,6 +7321,9 @@
                             }
                         }
                     },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
                     "404": {
                         "description": "",
                         "content": {
@@ -6940,9 +7342,6 @@
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -8155,46 +8554,10 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string"
-                                                },
-                                                "rfq_id": {
-                                                    "type": "string",
-                                                    "format": "ulid"
-                                                },
-                                                "status": {
-                                                    "type": "string"
-                                                },
-                                                "reminded_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "nullable": true
-                                                }
-                                            },
-                                            "required": [
-                                                "id",
-                                                "rfq_id",
-                                                "status",
-                                                "reminded_at"
-                                            ],
-                                            "additionalProperties": true
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ],
-                                    "additionalProperties": true
+                                    "type": "object"
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     },
                     "500": {
                         "description": "An error",
@@ -8215,13 +8578,11 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/projects/{id}": {
@@ -8856,8 +9217,7 @@
                                                 "user_id",
                                                 "role"
                                             ]
-                                        },
-                                        "minItems": 1
+                                        }
                                     }
                                 },
                                 "required": [
@@ -9801,6 +10161,125 @@
                 }
             }
         },
+        "/auth/register-company": {
+            "post": {
+                "operationId": "registerCompany.store",
+                "tags": [
+                    "RegisterCompany"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RegisterCompanyRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "access_token": {
+                                            "type": "string"
+                                        },
+                                        "refresh_token": {
+                                            "type": "string"
+                                        },
+                                        "token_type": {
+                                            "type": "string",
+                                            "const": "Bearer"
+                                        },
+                                        "expires_in": {
+                                            "type": "string"
+                                        },
+                                        "user": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "const": "admin"
+                                                },
+                                                "tenantId": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "email",
+                                                "name",
+                                                "role",
+                                                "tenantId"
+                                            ]
+                                        },
+                                        "bootstrap": {
+                                            "anyOf": [
+                                                {
+                                                    "type": "string"
+                                                },
+                                                {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "minItems": 0,
+                                                    "maxItems": 0,
+                                                    "additionalItems": false
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "access_token",
+                                        "refresh_token",
+                                        "token_type",
+                                        "expires_in",
+                                        "user",
+                                        "bootstrap"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Company onboarding failed"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/reports/kpis": {
             "get": {
                 "operationId": "report.kpis",
@@ -10518,19 +10997,14 @@
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/rfqs/counts": {
             "get": {
                 "operationId": "rfq.counts",
-                "description": "Keys align with WEB sidebar filters: active ≈ published, archived ≈ cancelled.",
-                "summary": "GET /rfqs/counts — tenant-scoped RFQ counts for dashboard nav badges",
+                "description": "Keys align with WEB sidebar filters: active \u2248 published, archived \u2248 cancelled.",
+                "summary": "GET /rfqs/counts \u2014 tenant-scoped RFQ counts for dashboard nav badges",
                 "tags": [
                     "Rfq"
                 ],
@@ -10622,6 +11096,9 @@
                     }
                 },
                 "responses": {
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
                     "200": {
                         "description": "",
                         "content": {
@@ -10650,9 +11127,6 @@
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -10890,7 +11364,7 @@
         "/rfqs/{id}/overview": {
             "get": {
                 "operationId": "rfq.overview",
-                "summary": "GET /rfqs/:id/overview — aggregated summary for the RFQ overview screen",
+                "summary": "GET /rfqs/:id/overview \u2014 aggregated summary for the RFQ overview screen",
                 "tags": [
                     "Rfq"
                 ],
@@ -11255,7 +11729,7 @@
         "/rfqs/{rfqId}/activity": {
             "get": {
                 "operationId": "rfq.activity",
-                "summary": "GET /rfqs/:rfqId/activity?limit=20 — tenant-scoped activity feed (lighter than full overview)",
+                "summary": "GET /rfqs/:rfqId/activity?limit=20 \u2014 tenant-scoped activity feed (lighter than full overview)",
                 "tags": [
                     "Rfq"
                 ],
@@ -11508,35 +11982,6 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "RFQ not found"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
                     "422": {
                         "description": "",
                         "content": {
@@ -11575,13 +12020,37 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "RFQ not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/rfqs/{id}/draft": {
@@ -11914,6 +12383,24 @@
                             }
                         }
                     },
+                    "422": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "errors": {
+                                            "$ref": "#/components/schemas/MessageBag"
+                                        }
+                                    },
+                                    "required": [
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "404": {
                         "description": "",
                         "content": {
@@ -11928,24 +12415,6 @@
                                     },
                                     "required": [
                                         "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "errors": {
-                                            "$ref": "#/components/schemas/MessageBag"
-                                        }
-                                    },
-                                    "required": [
-                                        "errors"
                                     ]
                                 }
                             }
@@ -14669,9 +15138,6 @@
                             }
                         }
                     },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     },
@@ -14693,6 +15159,9 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
                     }
                 }
             }
@@ -15120,11 +15589,11 @@
                             }
                         }
                     },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
                     }
                 }
             }
@@ -15137,6 +15606,15 @@
                 "tags": [
                     "User"
                 ],
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "",
@@ -15147,12 +15625,7 @@
                                     "properties": {
                                         "data": {
                                             "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            },
-                                            "minItems": 0,
-                                            "maxItems": 0,
-                                            "additionalItems": false
+                                            "items": {}
                                         },
                                         "meta": {
                                             "type": "object",
@@ -15235,36 +15708,34 @@
                                             "type": "object",
                                             "properties": {
                                                 "id": {
-                                                    "type": "string",
-                                                    "const": "stub-user-id"
+                                                    "type": "string"
                                                 },
                                                 "name": {
-                                                    "type": "string",
-                                                    "const": "Stub User"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "email": {
-                                                    "type": "string",
-                                                    "const": "invited@example.com"
+                                                    "type": "string"
                                                 },
                                                 "status": {
-                                                    "type": "string",
-                                                    "const": "pending"
+                                                    "type": "string"
                                                 },
                                                 "role": {
-                                                    "type": "string",
-                                                    "const": "user"
+                                                    "type": "string"
                                                 },
                                                 "tenant_id": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "created_at": {
                                                     "type": "string"
                                                 },
                                                 "last_login_at": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "null"
                                                 }
                                             },
                                             "required": [
@@ -15285,6 +15756,28 @@
                                 }
                             }
                         }
+                    },
+                    "409": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "A user with that email already exists."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -15321,19 +15814,43 @@
                                                 "id": {
                                                     "type": "string"
                                                 },
-                                                "email": {
-                                                    "type": "string",
-                                                    "const": "user@example.com"
-                                                },
                                                 "name": {
-                                                    "type": "string",
-                                                    "const": "Stub User"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "role": {
+                                                    "type": "string"
+                                                },
+                                                "tenant_id": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                },
+                                                "last_login_at": {
+                                                    "type": "null"
                                                 }
                                             },
                                             "required": [
                                                 "id",
+                                                "name",
                                                 "email",
-                                                "name"
+                                                "status",
+                                                "role",
+                                                "tenant_id",
+                                                "created_at",
+                                                "last_login_at"
                                             ]
                                         }
                                     },
@@ -15364,37 +15881,29 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "501": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string"
-                                                },
-                                                "email": {
-                                                    "type": "string",
-                                                    "const": "user@example.com"
-                                                },
-                                                "name": {
-                                                    "type": "string",
-                                                    "const": "Stub User"
-                                                }
-                                            },
-                                            "required": [
-                                                "id",
-                                                "email",
-                                                "name"
-                                            ]
+                                        "error": {
+                                            "type": "string",
+                                            "const": "Not implemented"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "context": {
+                                            "type": "array",
+                                            "items": {}
                                         }
                                     },
                                     "required": [
-                                        "data"
+                                        "error",
+                                        "message",
+                                        "context"
                                     ]
                                 }
                             }
@@ -15435,14 +15944,43 @@
                                                 "id": {
                                                     "type": "string"
                                                 },
+                                                "name": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
                                                 "status": {
-                                                    "type": "string",
-                                                    "const": "suspended"
+                                                    "type": "string"
+                                                },
+                                                "role": {
+                                                    "type": "string"
+                                                },
+                                                "tenant_id": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                },
+                                                "last_login_at": {
+                                                    "type": "null"
                                                 }
                                             },
                                             "required": [
                                                 "id",
-                                                "status"
+                                                "name",
+                                                "email",
+                                                "status",
+                                                "role",
+                                                "tenant_id",
+                                                "created_at",
+                                                "last_login_at"
                                             ]
                                         }
                                     },
@@ -15488,14 +16026,43 @@
                                                 "id": {
                                                     "type": "string"
                                                 },
+                                                "name": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
                                                 "status": {
-                                                    "type": "string",
-                                                    "const": "active"
+                                                    "type": "string"
+                                                },
+                                                "role": {
+                                                    "type": "string"
+                                                },
+                                                "tenant_id": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                },
+                                                "last_login_at": {
+                                                    "type": "null"
                                                 }
                                             },
                                             "required": [
                                                 "id",
-                                                "status"
+                                                "name",
+                                                "email",
+                                                "status",
+                                                "role",
+                                                "tenant_id",
+                                                "created_at",
+                                                "last_login_at"
                                             ]
                                         }
                                     },
@@ -15528,37 +16095,29 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "501": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "user_id": {
-                                                    "type": "string"
-                                                },
-                                                "rules": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    },
-                                                    "minItems": 0,
-                                                    "maxItems": 0,
-                                                    "additionalItems": false
-                                                }
-                                            },
-                                            "required": [
-                                                "user_id",
-                                                "rules"
-                                            ]
+                                        "error": {
+                                            "type": "string",
+                                            "const": "Not implemented"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "context": {
+                                            "type": "array",
+                                            "items": {}
                                         }
                                     },
                                     "required": [
-                                        "data"
+                                        "error",
+                                        "message",
+                                        "context"
                                     ]
                                 }
                             }
@@ -15584,37 +16143,29 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "501": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "user_id": {
-                                                    "type": "string"
-                                                },
-                                                "rules": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    },
-                                                    "minItems": 0,
-                                                    "maxItems": 0,
-                                                    "additionalItems": false
-                                                }
-                                            },
-                                            "required": [
-                                                "user_id",
-                                                "rules"
-                                            ]
+                                        "error": {
+                                            "type": "string",
+                                            "const": "Not implemented"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "context": {
+                                            "type": "array",
+                                            "items": {}
                                         }
                                     },
                                     "required": [
-                                        "data"
+                                        "error",
+                                        "message",
+                                        "context"
                                     ]
                                 }
                             }
@@ -15642,37 +16193,29 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "501": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "user_id": {
-                                                    "type": "string"
-                                                },
-                                                "limits": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    },
-                                                    "minItems": 0,
-                                                    "maxItems": 0,
-                                                    "additionalItems": false
-                                                }
-                                            },
-                                            "required": [
-                                                "user_id",
-                                                "limits"
-                                            ]
+                                        "error": {
+                                            "type": "string",
+                                            "const": "Not implemented"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "context": {
+                                            "type": "array",
+                                            "items": {}
                                         }
                                     },
                                     "required": [
-                                        "data"
+                                        "error",
+                                        "message",
+                                        "context"
                                     ]
                                 }
                             }
@@ -15700,11 +16243,38 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "type": "string"
-                                            },
-                                            "minItems": 0,
-                                            "maxItems": 0,
-                                            "additionalItems": false
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "description": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "tenant_id": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "is_system_role": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "name",
+                                                    "description",
+                                                    "tenant_id",
+                                                    "is_system_role"
+                                                ]
+                                            }
                                         }
                                     },
                                     "required": [
@@ -15723,9 +16293,32 @@
                 "tags": [
                     "Vendor"
                 ],
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "TODO: tenant scoping via $this->tenantId($request) before any DB query",
+                        "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -15734,15 +16327,88 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "type": "string"
+                                                "type": "object",
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "trading_name": {
+                                                        "type": "string"
+                                                    },
+                                                    "registration_number": {
+                                                        "type": "string"
+                                                    },
+                                                    "tax_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "country_code": {
+                                                        "type": "string"
+                                                    },
+                                                    "email": {
+                                                        "type": "string"
+                                                    },
+                                                    "phone": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "onboarded_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "id",
+                                                    "name",
+                                                    "trading_name",
+                                                    "registration_number",
+                                                    "tax_id",
+                                                    "country_code",
+                                                    "email",
+                                                    "phone",
+                                                    "status",
+                                                    "onboarded_at",
+                                                    "created_at",
+                                                    "updated_at"
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                },
+                                                "total_pages": {
+                                                    "type": "integer"
+                                                }
                                             },
-                                            "minItems": 0,
-                                            "maxItems": 0,
-                                            "additionalItems": false
+                                            "required": [
+                                                "current_page",
+                                                "per_page",
+                                                "total",
+                                                "total_pages"
+                                            ]
                                         }
                                     },
                                     "required": [
-                                        "data"
+                                        "data",
+                                        "meta"
                                     ]
                                 }
                             }
@@ -15769,7 +16435,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "TODO: tenant scoping via $this->tenantId($request)",
+                        "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -15782,18 +16448,76 @@
                                                     "type": "string"
                                                 },
                                                 "name": {
-                                                    "type": "string",
-                                                    "const": "Stub Vendor"
+                                                    "type": "string"
+                                                },
+                                                "trading_name": {
+                                                    "type": "string"
+                                                },
+                                                "registration_number": {
+                                                    "type": "string"
+                                                },
+                                                "tax_id": {
+                                                    "type": "string"
+                                                },
+                                                "country_code": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "phone": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "onboarded_at": {
+                                                    "type": "string"
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
                                                 "id",
-                                                "name"
+                                                "name",
+                                                "trading_name",
+                                                "registration_number",
+                                                "tax_id",
+                                                "country_code",
+                                                "email",
+                                                "phone",
+                                                "status",
+                                                "onboarded_at",
+                                                "created_at",
+                                                "updated_at"
                                             ]
                                         }
                                     },
                                     "required": [
                                         "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Vendor not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -15820,7 +16544,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "TODO: tenant scoping via $this->tenantId($request)",
+                        "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -15833,17 +16557,64 @@
                                                     "type": "string"
                                                 },
                                                 "score": {
-                                                    "type": "integer"
+                                                    "type": "number"
+                                                },
+                                                "metrics": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "quotes_submitted": {
+                                                            "type": "integer"
+                                                        },
+                                                        "quotes_ready": {
+                                                            "type": "integer"
+                                                        },
+                                                        "awards_won": {
+                                                            "type": "integer",
+                                                            "minimum": 0
+                                                        },
+                                                        "average_confidence": {
+                                                            "type": [
+                                                                "number",
+                                                                "null"
+                                                            ]
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "quotes_submitted",
+                                                        "quotes_ready",
+                                                        "awards_won",
+                                                        "average_confidence"
+                                                    ]
                                                 }
                                             },
                                             "required": [
                                                 "vendor_id",
-                                                "score"
+                                                "score",
+                                                "metrics"
                                             ]
                                         }
                                     },
                                     "required": [
                                         "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Vendor not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -15870,7 +16641,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "TODO: tenant scoping via $this->tenantId($request)",
+                        "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -15884,17 +16655,54 @@
                                                 },
                                                 "status": {
                                                     "type": "string",
-                                                    "const": "compliant"
+                                                    "enum": [
+                                                        "compliant",
+                                                        "review_required"
+                                                    ]
+                                                },
+                                                "kyc_verified": {
+                                                    "type": "boolean"
+                                                },
+                                                "sanctions_screened": {
+                                                    "type": "boolean"
+                                                },
+                                                "last_checked_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 }
                                             },
                                             "required": [
                                                 "vendor_id",
-                                                "status"
+                                                "status",
+                                                "kyc_verified",
+                                                "sanctions_screened",
+                                                "last_checked_at"
                                             ]
                                         }
                                     },
                                     "required": [
                                         "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Vendor not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -15921,7 +16729,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "TODO: tenant scoping via $this->tenantId($request)",
+                        "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -15931,14 +16739,30 @@
                                             "type": "array",
                                             "items": {
                                                 "type": "string"
-                                            },
-                                            "minItems": 0,
-                                            "maxItems": 0,
-                                            "additionalItems": false
+                                            }
                                         }
                                     },
                                     "required": [
                                         "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Vendor not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -16080,6 +16904,24 @@
                             }
                         }
                     },
+                    "422": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "errors": {
+                                            "$ref": "#/components/schemas/MessageBag"
+                                        }
+                                    },
+                                    "required": [
+                                        "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "404": {
                         "description": "",
                         "content": {
@@ -16098,31 +16940,8 @@
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "errors": {
-                                            "$ref": "#/components/schemas/MessageBag"
-                                        }
-                                    },
-                                    "required": [
-                                        "errors"
-                                    ]
-                                }
-                            }
-                        }
                     }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                }
             }
         },
         "/rfqs/{rfqId}/invitations/{invId}/remind": {
@@ -16161,12 +16980,25 @@
                     }
                 ],
                 "responses": {
-                    "200": {
+                    "412": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "const": "Precondition failed"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "error",
+                                        "message"
+                                    ]
                                 }
                             }
                         }
@@ -16206,25 +17038,12 @@
                             }
                         }
                     },
-                    "412": {
+                    "200": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "const": "Precondition failed"
-                                        },
-                                        "message": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "error",
-                                        "message"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
@@ -16239,8 +17058,7 @@
                 "type": "object",
                 "properties": {
                     "rfq_id": {
-                        "type": "string",
-                        "format": "ulid"
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -16252,8 +17070,7 @@
                 "type": "object",
                 "properties": {
                     "rfq_id": {
-                        "type": "string",
-                        "format": "ulid"
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -16278,8 +17095,7 @@
                         "type": "array",
                         "items": {
                             "type": "string"
-                        },
-                        "minItems": 1
+                        }
                     },
                     "issue_code": {
                         "type": [
@@ -16410,6 +17226,67 @@
                 ],
                 "title": "QuoteSubmissionUploadRequest"
             },
+            "RegisterCompanyRequest": {
+                "type": "object",
+                "properties": {
+                    "tenant_code": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+                        "minLength": 2,
+                        "maxLength": 64
+                    },
+                    "company_name": {
+                        "type": "string",
+                        "minLength": 2,
+                        "maxLength": 255
+                    },
+                    "owner_name": {
+                        "type": "string",
+                        "minLength": 2,
+                        "maxLength": 255
+                    },
+                    "owner_email": {
+                        "type": "string",
+                        "format": "email",
+                        "maxLength": 255
+                    },
+                    "owner_password": {
+                        "type": "string",
+                        "minLength": 8,
+                        "maxLength": 255
+                    },
+                    "timezone": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 64
+                    },
+                    "locale": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 16
+                    },
+                    "currency": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "minLength": 3,
+                        "maxLength": 3
+                    }
+                },
+                "required": [
+                    "tenant_code",
+                    "company_name",
+                    "owner_name",
+                    "owner_email",
+                    "owner_password"
+                ],
+                "title": "RegisterCompanyRequest"
+            },
             "RfqBulkActionRequest": {
                 "type": "object",
                 "properties": {
@@ -16538,192 +17415,6 @@
                     "status"
                 ],
                 "title": "RfqStatusTransitionRequest"
-            },
-            "ComparisonMatrix": {
-                "type": "object",
-                "properties": {
-                    "tenant_id": {
-                        "type": "string"
-                    },
-                    "rfq_id": {
-                        "type": "string"
-                    },
-                    "clusters": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "cluster_key": {
-                                    "type": "string"
-                                },
-                                "basis": {
-                                    "type": "string"
-                                },
-                                "offers": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "object",
-                                        "properties": {
-                                            "vendor_id": {
-                                                "type": "string"
-                                            },
-                                            "rfq_line_id": {
-                                                "type": "string"
-                                            },
-                                            "taxonomy_code": {
-                                                "type": "string"
-                                            },
-                                            "normalized_unit_price": {
-                                                "type": "number"
-                                            },
-                                            "normalized_quantity": {
-                                                "type": "number"
-                                            },
-                                            "ai_confidence": {
-                                                "type": "number"
-                                            }
-                                        },
-                                        "required": [
-                                            "vendor_id",
-                                            "rfq_line_id",
-                                            "taxonomy_code",
-                                            "normalized_unit_price",
-                                            "normalized_quantity",
-                                            "ai_confidence"
-                                        ],
-                                        "additionalProperties": true
-                                    }
-                                },
-                                "statistics": {
-                                    "type": "object",
-                                    "properties": {
-                                        "min_normalized_unit_price": {
-                                            "type": "number"
-                                        },
-                                        "max_normalized_unit_price": {
-                                            "type": "number"
-                                        },
-                                        "avg_normalized_unit_price": {
-                                            "type": "number"
-                                        }
-                                    },
-                                    "required": [
-                                        "min_normalized_unit_price",
-                                        "max_normalized_unit_price",
-                                        "avg_normalized_unit_price"
-                                    ],
-                                    "additionalProperties": true
-                                },
-                                "recommendation": {
-                                    "type": "object",
-                                    "properties": {
-                                        "recommended_vendor_id": {
-                                            "type": "string"
-                                        },
-                                        "reason": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "recommended_vendor_id",
-                                        "reason"
-                                    ],
-                                    "additionalProperties": true
-                                }
-                            },
-                            "required": [
-                                "cluster_key",
-                                "basis",
-                                "offers",
-                                "statistics",
-                                "recommendation"
-                            ],
-                            "additionalProperties": true
-                        }
-                    }
-                },
-                "required": [
-                    "tenant_id",
-                    "rfq_id",
-                    "clusters"
-                ],
-                "additionalProperties": true
-            },
-            "ComparisonReadiness": {
-                "type": "object",
-                "properties": {
-                    "is_ready": {
-                        "type": "boolean"
-                    },
-                    "is_preview_only": {
-                        "type": "boolean"
-                    },
-                    "blockers": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "code": {
-                                    "type": "string"
-                                },
-                                "message": {
-                                    "type": "string"
-                                }
-                            },
-                            "required": [
-                                "code",
-                                "message"
-                            ],
-                            "additionalProperties": true
-                        }
-                    },
-                    "warnings": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "code": {
-                                    "type": "string"
-                                },
-                                "message": {
-                                    "type": "string"
-                                }
-                            },
-                            "required": [
-                                "code",
-                                "message"
-                            ],
-                            "additionalProperties": true
-                        }
-                    }
-                },
-                "required": [
-                    "is_ready",
-                    "is_preview_only",
-                    "blockers",
-                    "warnings"
-                ],
-                "additionalProperties": true
-            },
-            "ApprovalPayload": {
-                "oneOf": [
-                    {
-                        "type": "array",
-                        "items": {}
-                    },
-                    {
-                        "type": "object",
-                        "properties": {
-                            "policy_id": {
-                                "type": "string"
-                            },
-                            "status": {
-                                "type": "string"
-                            }
-                        },
-                        "additionalProperties": true
-                    }
-                ]
             }
         },
         "responses": {
@@ -16757,6 +17448,25 @@
                     }
                 }
             },
+            "AuthorizationException": {
+                "description": "Authorization error",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Error overview."
+                                }
+                            },
+                            "required": [
+                                "message"
+                            ]
+                        }
+                    }
+                }
+            },
             "ModelNotFoundException": {
                 "description": "Not found",
                 "content": {
@@ -16775,74 +17485,7 @@
                         }
                     }
                 }
-            },
-            "ComparisonRunNotFound": {
-                "description": "",
-                "content": {
-                    "application/json": {
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string",
-                                    "const": "Comparison run not found"
-                                }
-                            },
-                            "required": [
-                                "message"
-                            ]
-                        }
-                    }
-                }
-            },
-            "ComparisonControlDeferred": {
-                "description": "",
-                "content": {
-                    "application/json": {
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "code": {
-                                    "type": "string",
-                                    "const": "COMPARISON_CONTROL_DEFERRED"
-                                },
-                                "error": {
-                                    "type": "string",
-                                    "const": "This comparison control is deferred to beta and is not available in alpha."
-                                },
-                                "data": {
-                                    "type": "object",
-                                    "properties": {
-                                        "id": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "id"
-                                    ]
-                                }
-                            },
-                            "required": [
-                                "code",
-                                "error",
-                                "data"
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "securitySchemes": {
-            "bearerAuth": {
-                "type": "http",
-                "scheme": "bearer",
-                "bearerFormat": "JWT"
             }
         }
-    },
-    "security": [
-        {
-            "bearerAuth": []
-        }
-    ]
+    }
 }

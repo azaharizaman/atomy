@@ -9,6 +9,7 @@ import {
   userRoles,
   userSuspend,
 } from '@/generated/api/sdk.gen';
+import type { UserInviteData } from '@/generated/api/types.gen';
 
 export interface SettingsUserRow {
   id: string;
@@ -37,10 +38,7 @@ export interface SettingsUserRole {
   isSystemRole: boolean;
 }
 
-export interface InviteUserPayload {
-  email: string;
-  name: string;
-}
+type InviteUserPayload = UserInviteData['body'];
 
 const settingsUsersQueryKey = ['settings-users'] as const;
 const settingsUserRolesQueryKey = ['settings-user-roles'] as const;
@@ -80,7 +78,7 @@ function normalizeUserRow(row: unknown, index: number): SettingsUserRow {
   };
 }
 
-function requireFiniteNumber(value: unknown, field: string): number {
+function requireFiniteInteger(value: unknown, field: string): number {
   if (value === null || value === undefined) {
     throw new Error(`Invalid users payload: missing ${field}`);
   }
@@ -88,9 +86,14 @@ function requireFiniteNumber(value: unknown, field: string): number {
     throw new Error(`Invalid users payload: missing ${field}`);
   }
 
-  const numberValue = typeof value === 'number' ? value : Number(value);
-  if (!Number.isFinite(numberValue)) {
-    throw new Error(`Invalid users payload: ${field} must be a finite number`);
+  const normalizedValue = typeof value === 'string' ? value.trim() : value;
+  if (typeof normalizedValue !== 'number' && typeof normalizedValue !== 'string') {
+    throw new Error(`Invalid users payload: ${field} must be a finite integer`);
+  }
+
+  const numberValue = typeof normalizedValue === 'number' ? normalizedValue : Number(normalizedValue);
+  if (!Number.isFinite(numberValue) || !Number.isInteger(numberValue)) {
+    throw new Error(`Invalid users payload: ${field} must be a finite integer`);
   }
 
   return numberValue;
@@ -107,9 +110,9 @@ function normalizeUsersResponse(payload: unknown): SettingsUsersResult {
   return {
     items: envelope.data.map((row: unknown, index: number) => normalizeUserRow(row, index)),
     meta: {
-      currentPage: requireFiniteNumber(meta.current_page, 'current_page'),
-      perPage: requireFiniteNumber(meta.per_page, 'per_page'),
-      total: requireFiniteNumber(meta.total, 'total'),
+      currentPage: requireFiniteInteger(meta.current_page, 'current_page'),
+      perPage: requireFiniteInteger(meta.per_page, 'per_page'),
+      total: requireFiniteInteger(meta.total, 'total'),
     },
   };
 }
@@ -120,25 +123,26 @@ function normalizeRolesResponse(payload: unknown): SettingsUserRole[] {
     throw new Error('Invalid user roles payload: expected data array.');
   }
 
-  const isTrueValue = (value: unknown): boolean => value === true || value === 'true';
-
   return envelope.data.map((role: unknown, index: number) => {
-    const row = requireEnvelope(role, `Invalid user role at index ${index}: expected object`);
-    const id = toText(row.id);
-    const name = toText(row.name);
+    const item = requireEnvelope(role, `Invalid user role at index ${index}: expected object`);
+    const id = toText(item.id);
+    const name = toText(item.name);
     if (id === null) {
       throw new Error(`Invalid user role at index ${index}: missing id`);
     }
     if (name === null) {
       throw new Error(`Invalid user role at index ${index}: missing name`);
     }
+    if (typeof item.is_system_role !== 'boolean') {
+      throw new Error(`Invalid user role at index ${index}: is_system_role must be a boolean`);
+    }
 
     return {
       id,
       name,
-      description: normalizeOptionalText(row.description),
-      tenantId: normalizeOptionalText(row.tenant_id ?? row.tenantId),
-      isSystemRole: isTrueValue(row.is_system_role) || isTrueValue(row.isSystemRole),
+      description: normalizeOptionalText(item.description),
+      tenantId: normalizeOptionalText(item.tenant_id),
+      isSystemRole: item.is_system_role,
     };
   });
 }

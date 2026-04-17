@@ -176,6 +176,16 @@ final class UserController extends Controller
      * List roles.
      *
      * GET /roles
+     *
+     * @response array{
+     *   data: list<array{
+     *     id: string,
+     *     name: string,
+     *     description: string|null,
+     *     tenant_id: string|null,
+     *     is_system_role: bool
+     *   }>
+     * }
      */
     public function roles(Request $request): JsonResponse
     {
