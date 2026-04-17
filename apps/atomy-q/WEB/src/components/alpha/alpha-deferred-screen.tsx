@@ -19,6 +19,7 @@ export function AlphaDeferredScreen({ title, subtitle }: AlphaDeferredScreenProp
       <SectionCard title="Deferred in alpha" subtitle={title}>
         <EmptyState
           icon={<Clock3 size={20} />}
+          title="Deferred in alpha"
           description={ALPHA_DEFERRED_COPY}
         />
       </SectionCard>
