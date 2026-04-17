@@ -2168,10 +2168,14 @@ export const userIndex = <ThrowOnError extends boolean = false>(options?: Option
  *
  * POST /users/invite
  */
-export const userInvite = <ThrowOnError extends boolean = false>(options?: Options<UserInviteData, ThrowOnError>) => (options?.client ?? client).post<UserInviteResponses, unknown, ThrowOnError>({
+export const userInvite = <ThrowOnError extends boolean = false>(options: Options<UserInviteData, ThrowOnError>) => (options.client ?? client).post<UserInviteResponses, unknown, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/users/invite',
-    ...options
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**

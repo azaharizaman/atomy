@@ -100,4 +100,6 @@
 - The users page keeps mutation feedback in-page and renders the live heading `Users & Roles`, so nav and smoke tests can validate the productionized admin surface without adding CRUD-heavy coverage.
 - Follow-up review remediation kept Task 6 within spec boundaries: the invite form now requires a display name, sends only `{ email, name }`, and documents that baseline role assignment stays fixed during alpha instead of exposing unsupported role selection.
 - `use-users.ts` now rejects null single-user envelopes explicitly and parses `is_system_role` with exact truthy checks so malformed live payloads fail loudly instead of coercing `"false"` to `true`.
+- `use-users.ts` now throws non-2xx client-fetch envelopes from the server error payload before normalizing, and the page-level `role="alert"` banner now appears above the users table so suspend/reactivate failures are visible.
+- The invite OpenAPI contract was regenerated so the generated `userInvite` helper accepts the required `{ email, name }` body instead of relying on the old `as never` cast.
 - Users-page tests now cover the required `Name` field and pending-activation rows without action buttons.

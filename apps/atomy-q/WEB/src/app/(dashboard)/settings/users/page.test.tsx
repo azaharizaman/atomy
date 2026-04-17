@@ -248,6 +248,39 @@ describe('SettingsUsersPage', () => {
     expect(suspendMutateAsync).toHaveBeenCalledWith('user-1');
   });
 
+  it('surfaces suspend failures in the page-level alert', async () => {
+    const user = userEvent.setup();
+    const suspendMutateAsync = vi.fn().mockRejectedValueOnce(new Error('Suspend failed'));
+
+    mockQueries({
+      users: {
+        data: {
+          items: [
+            {
+              id: 'user-1',
+              name: 'Alice Admin',
+              email: 'alice@example.com',
+              status: 'active',
+              role: 'admin',
+              createdAt: null,
+              lastLoginAt: null,
+            },
+          ],
+        },
+      },
+      roles: { data: [{ id: 'admin', name: 'admin' }] },
+      suspendMutateAsync,
+    });
+
+    render(<SettingsUsersPage />);
+
+    const row = screen.getByText('Alice Admin').closest('tr');
+    expect(row).not.toBeNull();
+    await user.click(within(row as HTMLElement).getByRole('button', { name: 'Suspend Alice Admin' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Suspend failed');
+  });
+
   it('wires the reactivate action button', async () => {
     const user = userEvent.setup();
     const reactivateMutateAsync = vi.fn().mockResolvedValueOnce(undefined);

@@ -215,8 +215,13 @@ describe('use-users', () => {
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['settings-users'] });
   });
 
-  it('does not invalidate users query after invite mutation failure', async () => {
-    vi.mocked(userInvite).mockRejectedValueOnce(new Error('Invite failed'));
+  it('does not invalidate users query after a non-2xx invite response', async () => {
+    vi.mocked(userInvite).mockResolvedValueOnce({
+      data: undefined,
+      error: { message: 'Invite failed' },
+      request: {} as Request,
+      response: {} as Response,
+    });
 
     const { queryClient, Wrapper } = createTestWrapper();
     const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');

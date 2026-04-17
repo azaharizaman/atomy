@@ -194,16 +194,13 @@ export default function SettingsUsersPage() {
         <p className="mt-3 text-xs text-slate-500">
           Invites create a pending activation user record. We do not claim delivery from this screen.
         </p>
-
-        {mutationError && (
-          <div
-            role="alert"
-            className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
-          >
-            {mutationError}
-          </div>
-        )}
       </SectionCard>
+
+      {mutationError && (
+        <div role="alert" className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {mutationError}
+        </div>
+      )}
 
       <SectionCard title="Workspace users" subtitle={`${users.length} user${users.length === 1 ? '' : 's'} in this tenant`}>
         {users.length === 0 ? (

@@ -152,8 +152,52 @@ function normalizeSingleUserResponse(payload: unknown): SettingsUserRow {
   return normalizeUserRow(envelope.data, 0);
 }
 
+function extractResponseErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    const message = error.message.trim();
+    if (message !== '') {
+      return message;
+    }
+  }
+
+  if (typeof error === 'string') {
+    const message = error.trim();
+    if (message !== '') {
+      return message;
+    }
+  }
+
+  if (isObject(error)) {
+    const message = toText(error.message ?? error.error ?? error.detail ?? error.title);
+    if (message !== null && message.trim() !== '') {
+      return message.trim();
+    }
+  }
+
+  try {
+    return JSON.stringify(error) ?? 'Request failed.';
+  } catch {
+    return 'Request failed.';
+  }
+}
+
+function requireSuccessfulResponse<TResponse extends { data: unknown; error?: unknown }>(
+  response: TResponse | undefined,
+  missingResponseMessage: string,
+): TResponse {
+  if (response === undefined) {
+    throw new Error(missingResponseMessage);
+  }
+
+  if ('error' in response && response.error !== undefined) {
+    throw new Error(extractResponseErrorMessage(response.error));
+  }
+
+  return response;
+}
+
 async function invokeUserInvite(payload: InviteUserPayload) {
-  return userInvite({ body: payload } as never);
+  return userInvite({ body: payload });
 }
 
 export function useUsers() {
@@ -163,11 +207,7 @@ export function useUsers() {
     queryKey: settingsUsersQueryKey,
     enabled: !useMocks,
     queryFn: async (): Promise<SettingsUsersResult> => {
-      const response = await userIndex();
-      if (response === undefined) {
-        throw new Error('Invalid users payload: missing response.');
-      }
-
+      const response = requireSuccessfulResponse(await userIndex(), 'Invalid users payload: missing response.');
       return normalizeUsersResponse(response.data);
     },
   });
@@ -180,11 +220,7 @@ export function useUserRoles() {
     queryKey: settingsUserRolesQueryKey,
     enabled: !useMocks,
     queryFn: async (): Promise<SettingsUserRole[]> => {
-      const response = await userRoles();
-      if (response === undefined) {
-        throw new Error('Invalid user roles payload: missing response.');
-      }
-
+      const response = requireSuccessfulResponse(await userRoles(), 'Invalid user roles payload: missing response.');
       return normalizeRolesResponse(response.data);
     },
   });
@@ -195,11 +231,7 @@ export function useInviteUser() {
 
   return useMutation({
     mutationFn: async (payload: InviteUserPayload): Promise<SettingsUserRow> => {
-      const response = await invokeUserInvite(payload);
-      if (response === undefined) {
-        throw new Error('Invalid user payload: missing response.');
-      }
-
+      const response = requireSuccessfulResponse(await invokeUserInvite(payload), 'Invalid user payload: missing response.');
       return normalizeSingleUserResponse(response.data);
     },
     onSuccess: async () => {
@@ -213,11 +245,7 @@ export function useSuspendUser() {
 
   return useMutation({
     mutationFn: async (userId: string): Promise<SettingsUserRow> => {
-      const response = await userSuspend({ path: { id: userId } });
-      if (response === undefined) {
-        throw new Error('Invalid user payload: missing response.');
-      }
-
+      const response = requireSuccessfulResponse(await userSuspend({ path: { id: userId } }), 'Invalid user payload: missing response.');
       return normalizeSingleUserResponse(response.data);
     },
     onSuccess: async () => {
@@ -231,11 +259,7 @@ export function useReactivateUser() {
 
   return useMutation({
     mutationFn: async (userId: string): Promise<SettingsUserRow> => {
-      const response = await userReactivate({ path: { id: userId } });
-      if (response === undefined) {
-        throw new Error('Invalid user payload: missing response.');
-      }
-
+      const response = requireSuccessfulResponse(await userReactivate({ path: { id: userId } }), 'Invalid user payload: missing response.');
       return normalizeSingleUserResponse(response.data);
     },
     onSuccess: async () => {

@@ -15199,6 +15199,30 @@
                 "tags": [
                     "User"
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 255
+                                    }
+                                },
+                                "required": [
+                                    "email",
+                                    "name"
+                                ]
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "201": {
                         "description": "",
@@ -15214,6 +15238,10 @@
                                                     "type": "string",
                                                     "const": "stub-user-id"
                                                 },
+                                                "name": {
+                                                    "type": "string",
+                                                    "const": "Stub User"
+                                                },
                                                 "email": {
                                                     "type": "string",
                                                     "const": "invited@example.com"
@@ -15221,12 +15249,33 @@
                                                 "status": {
                                                     "type": "string",
                                                     "const": "pending"
+                                                },
+                                                "role": {
+                                                    "type": "string",
+                                                    "const": "user"
+                                                },
+                                                "tenant_id": {
+                                                    "type": "string"
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                },
+                                                "last_login_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 }
                                             },
                                             "required": [
                                                 "id",
+                                                "name",
                                                 "email",
-                                                "status"
+                                                "status",
+                                                "role",
+                                                "tenant_id",
+                                                "created_at",
+                                                "last_login_at"
                                             ]
                                         }
                                     },
