@@ -101,12 +101,12 @@ function normalizeRfq(payload: unknown): RfqDetail {
   };
 }
 
-export function useRfq(rfqId: string) {
+export function useRfq(rfqId: string, options?: { enabled?: boolean }) {
   const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
   return useQuery({
     queryKey: ['rfqs', rfqId],
-    enabled: Boolean(rfqId),
+    enabled: Boolean(rfqId) && options?.enabled !== false,
     queryFn: async () => {
       if (useMocks) {
         const { getSeedRfqDetail } = await import('@/data/seed');

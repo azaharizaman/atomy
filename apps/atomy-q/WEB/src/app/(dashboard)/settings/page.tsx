@@ -2,8 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Settings, Users, FileCheck, FileText, Plug, Flag } from 'lucide-react';
+import { Users, FileCheck, FileText, Plug, Flag } from 'lucide-react';
+import { AlphaDeferredScreen } from '@/components/alpha/alpha-deferred-screen';
 import { PageHeader } from '@/components/ds/FilterBar';
+import { isAlphaMode } from '@/lib/alpha-mode';
 
 const links = [
   { href: '/settings/users', label: 'Users & Roles', icon: <Users size={18} />, description: 'Manage workspace users and roles' },
@@ -14,6 +16,10 @@ const links = [
 ];
 
 export default function SettingsPage() {
+  if (isAlphaMode()) {
+    return <AlphaDeferredScreen title="Settings" subtitle="Workspace administration is deferred in alpha." />;
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader

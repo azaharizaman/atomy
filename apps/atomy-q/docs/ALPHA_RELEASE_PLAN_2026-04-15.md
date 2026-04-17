@@ -229,6 +229,14 @@ After this task, alpha navigation should focus on the supported quote-comparison
 - [ ] Hide documents, reporting, integrations, negotiations, risk, scenarios, recommendation, handoff, billing/subscription, and settings subroutes unless explicitly signed into alpha scope.
 - [ ] For API endpoints left registered, return honest deferred responses where applicable and avoid synthetic success payloads on mutable routes.
 
+Implementation note, 2026-04-17:
+
+- `apps/atomy-q/WEB/src/lib/alpha-mode.ts` now owns the alpha-mode flag, top-level nav visibility, RFQ workspace visibility, and deferred-route detection.
+- `apps/atomy-q/WEB/src/components/alpha/alpha-deferred-screen.tsx` provides the shared deferred screen copy for alpha-hidden routes.
+- `apps/atomy-q/WEB/src/app/(dashboard)/layout.tsx` and `apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/layout.tsx` consume the shared alpha policy to hide non-alpha nav items.
+- Representative hidden routes now render the shared deferred screen in alpha mode instead of placeholder-heavy page content.
+- Verification coverage for this task lives in the WEB Vitest and Playwright checks recorded alongside the implementation summary.
+
 ### Task 6: Decide Minimal Users/Roles Scope
 
 This task forces a product decision on tenant administration for alpha. Either Users & Roles becomes a minimal, real tenant-scoped admin surface, or it is hidden so alpha does not expose partially implemented identity management.

@@ -167,33 +167,21 @@ test.beforeEach(async ({ page }) => {
   await stubAuth(page);
 });
 
-/** Screens covered by sidebar navigation + heading assert. Order matches sidebar (Dashboard first, then Projects, Task Inbox, etc.). */
-const screens: Array<{ sidebarLabel: string; heading: RegExp; expandRequisition?: boolean }> = [
-  { sidebarLabel: 'Projects', heading: /^Projects$/ },
-  { sidebarLabel: 'Task Inbox', heading: /^Task Inbox$/ },
-  { sidebarLabel: 'Active', heading: /^Requisitions$/, expandRequisition: true },
-  { sidebarLabel: 'Documents', heading: /^Documents$/ },
-  { sidebarLabel: 'Reporting', heading: /^Reporting$/ },
-  { sidebarLabel: 'Approval Queue', heading: /^Approval Queue$/ },
-  { sidebarLabel: 'Users & Roles', heading: /^Users & Roles$/, expandRequisition: false }, // Settings group: open then click sub-item
-];
+test('screen smoke: alpha core routes render headings', async ({ page }) => {
+  const sidebar = page.getByRole('navigation').first();
 
-test('screen smoke: core routes render headings', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /^Dashboard$/ })).toBeVisible();
-  const nav = page.getByRole('navigation');
+  await expect(page.getByText('Active RFQs')).toBeVisible();
+  await expect(sidebar.getByRole('link', { name: 'Dashboard' })).toBeVisible();
+  await expect(sidebar.getByRole('button', { name: 'Requisition', exact: true })).toBeVisible();
+  await expect(sidebar.getByRole('link', { name: 'Documents' })).toHaveCount(0);
+  await expect(sidebar.getByRole('link', { name: 'Reporting' })).toHaveCount(0);
+  await expect(sidebar.getByRole('link', { name: 'Approval Queue' })).toHaveCount(0);
+  await expect(sidebar.getByRole('button', { name: 'Settings' })).toHaveCount(0);
 
-  for (const s of screens) {
-    if (s.sidebarLabel === 'Users & Roles') {
-      await nav.getByRole('button', { name: 'Settings' }).click();
-      await nav.getByRole('link', { name: 'Users & Roles', exact: true }).first().click();
-    } else {
-      if (s.expandRequisition) {
-        await nav.getByRole('button', { name: 'Requisition' }).click();
-      }
-      await nav.getByRole('link', { name: s.sidebarLabel }).click();
-    }
-    await expect(page.getByRole('heading', { name: s.heading })).toBeVisible({ timeout: 20000 });
-  }
+  await sidebar.getByRole('button', { name: 'Requisition', exact: true }).click();
+  await sidebar.getByRole('link', { name: 'Active' }).click();
+  await expect(page.getByRole('heading', { name: /^Requisitions$/ })).toBeVisible({ timeout: 20000 });
 });
 
 // Note: RFQ workspace routes require auth. The "Use mock account" shortcut is not persisted across full reloads,

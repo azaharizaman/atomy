@@ -79,3 +79,17 @@
   - `cd apps/atomy-q/WEB && npx vitest run src/hooks/use-rfq.live.test.ts src/hooks/use-rfqs.live.test.ts src/hooks/use-rfq-vendors.live.test.ts src/hooks/use-quote-submissions.live.test.ts src/hooks/use-normalization-source-lines.live.test.ts src/hooks/use-normalization-review.live.test.ts src/hooks/use-comparison-runs.live.test.ts src/hooks/use-comparison-run.live.test.ts src/hooks/use-comparison-run-matrix.live.test.ts src/hooks/use-comparison-run-readiness.live.test.ts src/hooks/use-award.live.test.ts` -> PASS, 57 tests.
   - `cd apps/atomy-q/WEB && npx vitest run src/app/(dashboard)/rfqs/[rfqId]/vendors/page.test.tsx src/app/(dashboard)/rfqs/[rfqId]/quote-intake/page.test.tsx src/app/(dashboard)/rfqs/[rfqId]/quote-intake/[quoteId]/normalize/page.test.tsx src/app/(dashboard)/rfqs/[rfqId]/comparison-runs/page.test.tsx src/app/(dashboard)/rfqs/[rfqId]/award/page.test.tsx` -> PASS, 19 tests.
   - `cd apps/atomy-q/WEB && npm run build` -> PASS.
+
+## 2026-04-17 Alpha Task 5 Hide Or Defer Non-Alpha Surfaces
+
+- Added `NEXT_PUBLIC_ALPHA_MODE`-driven alpha policy helpers in `src/lib/alpha-mode.ts` for top-level nav visibility, RFQ workspace visibility, and deferred-route detection.
+- Introduced the shared `AlphaDeferredScreen` component with the exact deferred copy `This feature will be available in future releases`.
+- Hid `Documents`, `Reporting`, `Approval Queue`, `Settings`, `Projects`, and `Task Inbox` from the alpha dashboard shell while keeping RFQ-scoped approvals visible.
+- Hid `Documents`, `Reporting`, and `Settings` from the RFQ workspace collapsed rail in alpha mode.
+- Added alpha gating to representative hidden pages so direct access renders the shared deferred screen instead of placeholder content.
+- Narrowed `tests/screen-smoke.spec.ts` to the alpha-visible dashboard and requisition/RFQ list surface, and added `src/app/(dashboard)/deferred-routes.test.tsx` for representative hidden-route coverage.
+- Verification:
+  - `cd apps/atomy-q/WEB && npx vitest run src/components/alpha/alpha-deferred-screen.test.tsx src/app/(dashboard)/deferred-routes.test.tsx` -> PASS, 2 files, 9 tests.
+  - `cd apps/atomy-q/WEB && npx eslint src/lib/alpha-mode.ts src/components/alpha/alpha-deferred-screen.tsx src/components/alpha/alpha-deferred-screen.test.tsx src/config/nav.ts 'src/app/(dashboard)/layout.tsx' 'src/app/(dashboard)/rfqs/[rfqId]/layout.tsx' src/components/workspace/active-record-menu.tsx tests/dashboard-nav.spec.ts 'src/app/(dashboard)/documents/page.tsx' 'src/app/(dashboard)/reporting/page.tsx' 'src/app/(dashboard)/settings/page.tsx' 'src/app/(dashboard)/settings/users/page.tsx' 'src/app/(dashboard)/rfqs/[rfqId]/negotiations/page.tsx' 'src/app/(dashboard)/rfqs/[rfqId]/documents/page.tsx' 'src/app/(dashboard)/rfqs/[rfqId]/risk/page.tsx' 'src/app/(dashboard)/deferred-routes.test.tsx' tests/screen-smoke.spec.ts` -> PASS.
+  - `cd apps/atomy-q/WEB && NEXT_PUBLIC_ALPHA_MODE=true npx playwright test tests/dashboard-nav.spec.ts` -> PASS, 1 test.
+  - `cd apps/atomy-q/WEB && NEXT_PUBLIC_ALPHA_MODE=true npx playwright test tests/screen-smoke.spec.ts` -> PASS, 1 test.

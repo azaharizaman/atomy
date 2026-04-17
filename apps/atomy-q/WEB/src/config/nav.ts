@@ -1,3 +1,5 @@
+import { isAlphaMode, isTopLevelNavVisibleInAlpha } from '@/lib/alpha-mode';
+
 /**
  * Central navigation config — single source of truth for main app nav.
  * Consume from dashboard layout, workspace rail, and (optionally) settings page / breadcrumbs.
@@ -20,7 +22,7 @@ export interface NavGroupConfig {
   children: NavItemConfig[];
 }
 
-/** Top-level flat nav items (Dashboard, Documents, Reporting, Approval Queue). */
+/** Top-level nav items shared by the dashboard shell and alpha policy tests. */
 export const MAIN_NAV_ITEMS: NavItemConfig[] = [
   { id: 'dashboard', label: 'Dashboard', href: '/', path: '/' },
   { id: 'requisition', label: 'Requisition', href: '/rfqs', path: '/rfqs' },
@@ -44,6 +46,18 @@ export const SETTINGS_NAV_GROUP: NavGroupConfig = {
   pathPrefix: '/settings',
   children: SETTINGS_NAV_ITEMS,
 };
+
+export function getVisibleMainNavItems(): NavItemConfig[] {
+  if (!isAlphaMode()) {
+    return MAIN_NAV_ITEMS;
+  }
+
+  return MAIN_NAV_ITEMS.filter((item) => isTopLevelNavVisibleInAlpha(item.id));
+}
+
+export function isSettingsNavVisible(): boolean {
+  return !isAlphaMode();
+}
 
 /** Path → label for breadcrumbs. Includes main items and settings children. */
 const pathToLabel: Record<string, string> = {

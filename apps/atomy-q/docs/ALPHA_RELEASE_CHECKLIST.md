@@ -37,6 +37,13 @@ The strongest rectification signal is that the alpha-critical backend flows pass
 - `cd apps/atomy-q/WEB && npm run build`: PASS.
 - Blocker `A3` status: closed locally. Live mode no longer falls back to seed data on the golden path, and both the page unavailable-state tests and hook live-test matrix now pass with mock mode disabled. The earlier quote upload failure (`ready` expected, `failed` received) is no longer part of the WEB-side golden-path closure evidence for Task 4.
 
+## Latest Task 5 Hide Or Defer Non-Alpha Surfaces Evidence - 2026-04-17
+
+- `cd apps/atomy-q/WEB && npx vitest run src/components/alpha/alpha-deferred-screen.test.tsx src/app/(dashboard)/deferred-routes.test.tsx`: PASS. 2 files, 9 tests. This covers the shared deferred copy, alpha policy helpers, and representative hidden-route rendering.
+- `cd apps/atomy-q/WEB && npx eslint src/lib/alpha-mode.ts src/components/alpha/alpha-deferred-screen.tsx src/components/alpha/alpha-deferred-screen.test.tsx src/config/nav.ts 'src/app/(dashboard)/layout.tsx' 'src/app/(dashboard)/rfqs/[rfqId]/layout.tsx' src/components/workspace/active-record-menu.tsx tests/dashboard-nav.spec.ts 'src/app/(dashboard)/documents/page.tsx' 'src/app/(dashboard)/reporting/page.tsx' 'src/app/(dashboard)/settings/page.tsx' 'src/app/(dashboard)/settings/users/page.tsx' 'src/app/(dashboard)/rfqs/[rfqId]/negotiations/page.tsx' 'src/app/(dashboard)/rfqs/[rfqId]/documents/page.tsx' 'src/app/(dashboard)/rfqs/[rfqId]/risk/page.tsx' 'src/app/(dashboard)/deferred-routes.test.tsx' tests/screen-smoke.spec.ts`: PASS.
+- `cd apps/atomy-q/WEB && NEXT_PUBLIC_ALPHA_MODE=true npx playwright test tests/dashboard-nav.spec.ts`: PASS. 1 test.
+- `cd apps/atomy-q/WEB && NEXT_PUBLIC_ALPHA_MODE=true npx playwright test tests/screen-smoke.spec.ts`: PASS. 1 test.
+
 ## Historical Baseline Evidence
 
 ## Gate Summary

@@ -2,10 +2,16 @@
 
 import React from 'react';
 import { Users, UserPlus } from 'lucide-react';
+import { AlphaDeferredScreen } from '@/components/alpha/alpha-deferred-screen';
 import { Button } from '@/components/ds/Button';
 import { PageHeader } from '@/components/ds/FilterBar';
+import { isAlphaMode } from '@/lib/alpha-mode';
 
 export default function SettingsUsersPage() {
+  if (isAlphaMode()) {
+    return <AlphaDeferredScreen title="Users & Roles" subtitle="User management is deferred in alpha." />;
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
