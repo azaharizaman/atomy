@@ -247,6 +247,7 @@ After this task, stakeholders should know whether alpha includes user administra
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/UserController.php`
 - Modify: `apps/atomy-q/WEB/src/app/(dashboard)/settings/users/page.tsx`
 - Test: `apps/atomy-q/API/tests/Feature/IdentityGap7Test.php`
+- Follow-up implementation plan: [`ALPHA_TASK6_MINIMAL_USERS_ROLES_IMPLEMENTATION_PLAN_2026-04-17.md`](./ALPHA_TASK6_MINIMAL_USERS_ROLES_IMPLEMENTATION_PLAN_2026-04-17.md)
 
 - [ ] Choose one: productionize minimal tenant-scoped users/roles list/invite/suspend/reactivate, or hide Settings/Users from alpha.
 - [ ] If productionizing, wire controller methods to real identity query/persist interfaces and enforce tenant-scoped 404 semantics.

@@ -93,3 +93,8 @@
   - `cd apps/atomy-q/WEB && npx eslint src/lib/alpha-mode.ts src/components/alpha/alpha-deferred-screen.tsx src/components/alpha/alpha-deferred-screen.test.tsx src/config/nav.ts 'src/app/(dashboard)/layout.tsx' 'src/app/(dashboard)/rfqs/[rfqId]/layout.tsx' src/components/workspace/active-record-menu.tsx tests/dashboard-nav.spec.ts 'src/app/(dashboard)/documents/page.tsx' 'src/app/(dashboard)/reporting/page.tsx' 'src/app/(dashboard)/settings/page.tsx' 'src/app/(dashboard)/settings/users/page.tsx' 'src/app/(dashboard)/rfqs/[rfqId]/negotiations/page.tsx' 'src/app/(dashboard)/rfqs/[rfqId]/documents/page.tsx' 'src/app/(dashboard)/rfqs/[rfqId]/risk/page.tsx' 'src/app/(dashboard)/deferred-routes.test.tsx' tests/screen-smoke.spec.ts` -> PASS.
   - `cd apps/atomy-q/WEB && NEXT_PUBLIC_ALPHA_MODE=true npx playwright test tests/dashboard-nav.spec.ts` -> PASS, 1 test.
   - `cd apps/atomy-q/WEB && NEXT_PUBLIC_ALPHA_MODE=true npx playwright test tests/screen-smoke.spec.ts` -> PASS, 1 test.
+
+## 2026-04-17 Alpha Task 6 Minimal Users & Roles
+
+- The Settings > Users & Roles page now consumes live `use-users` data for the tenant user directory, shows explicit loading / empty / error states, and supports invite, suspend, and reactivate actions from the live API.
+- The users page keeps mutation feedback in-page and renders the live heading `Users & Roles`, so nav and smoke tests can validate the productionized admin surface without adding CRUD-heavy coverage.

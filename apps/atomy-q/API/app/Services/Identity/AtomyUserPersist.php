@@ -22,7 +22,10 @@ final readonly class AtomyUserPersist implements UserPersistInterface
         $status = (string) ($data['status'] ?? 'active');
         $firstName = trim((string) ($data['first_name'] ?? ''));
         $lastName = isset($data['last_name']) ? trim((string) $data['last_name']) : '';
-        $name = $this->composeDisplayName($firstName, $lastName, $email);
+        $explicitName = trim((string) ($data['name'] ?? ''));
+        $name = $explicitName !== ''
+            ? $explicitName
+            : $this->composeDisplayName($firstName, $lastName, $email);
 
         if ($tenantId === '' || $email === '' || $passwordHash === '') {
             throw new \InvalidArgumentException('tenant_id, email, and password_hash are required');

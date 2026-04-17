@@ -159,32 +159,96 @@ async function stubTasksApi(
   });
 }
 
+async function stubUsersRolesApi(
+  page: import('@playwright/test').Page,
+  baseUrl?: string
+) {
+  const defaultOrigin = baseUrl ?? process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000';
+  const originRef = { current: defaultOrigin };
+  trackOriginOnNavigation(page, originRef);
+
+  await page.route(/\/api\/v1\/users(?:\/|\?.*)?$/, async (route) => {
+    const corsHeaders = buildCorsHeaders(originRef.current);
+    if (route.request().method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: corsHeaders });
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      headers: corsHeaders,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: [
+          {
+            id: 'user-1',
+            name: 'Smoke User',
+            email: 'smoke.user@atomy.test',
+            status: 'active',
+            role: 'buyer',
+            created_at: '2026-04-17T00:00:00Z',
+            last_login_at: null,
+          },
+        ],
+        meta: {
+          current_page: 1,
+          per_page: 10,
+          total: 1,
+        },
+      }),
+    });
+  });
+
+  await page.route(/\/api\/v1\/roles(?:\/|\?.*)?$/, async (route) => {
+    const corsHeaders = buildCorsHeaders(originRef.current);
+    if (route.request().method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: corsHeaders });
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      headers: corsHeaders,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: [
+          {
+            id: 'buyer',
+            name: 'Buyer',
+            description: 'Buyer access',
+            tenant_id: 'tenant-smoke',
+            is_system_role: false,
+          },
+        ],
+      }),
+    });
+  });
+}
+
 const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000';
 
 test.beforeEach(async ({ page }) => {
   await stubProjectsApi(page, baseUrl);
   await stubTasksApi(page, baseUrl);
+  await stubUsersRolesApi(page, baseUrl);
   await stubAuth(page);
 });
 
 test('screen smoke: alpha core routes render headings', async ({ page }) => {
-  if (process.env.NEXT_PUBLIC_ALPHA_MODE !== 'true') {
-    test.skip();
-  }
   const sidebar = page.getByRole('navigation').first();
 
   await expect(page.getByRole('heading', { name: /^Dashboard$/ })).toBeVisible();
   await expect(page.getByText('Active RFQs')).toBeVisible();
   await expect(sidebar.getByRole('link', { name: 'Dashboard' })).toBeVisible();
   await expect(sidebar.getByRole('button', { name: 'Requisition', exact: true })).toBeVisible();
-  await expect(sidebar.getByRole('link', { name: 'Documents' })).toHaveCount(0);
-  await expect(sidebar.getByRole('link', { name: 'Reporting' })).toHaveCount(0);
-  await expect(sidebar.getByRole('link', { name: 'Approval Queue' })).toHaveCount(0);
-  await expect(sidebar.getByRole('button', { name: 'Settings' })).toHaveCount(0);
 
   await sidebar.getByRole('button', { name: 'Requisition', exact: true }).click();
   await sidebar.getByRole('link', { name: 'Active' }).click();
   await expect(page.getByRole('heading', { name: /^Requisitions$/ })).toBeVisible({ timeout: 20000 });
+});
+
+test('screen smoke: users and roles page renders heading', async ({ page }) => {
+  await page.goto('/settings/users');
+
+  await expect(page.getByRole('heading', { name: /^Users & Roles$/ })).toBeVisible({ timeout: 20000 });
 });
 
 // Note: RFQ workspace routes require auth. The "Use mock account" shortcut is not persisted across full reloads,

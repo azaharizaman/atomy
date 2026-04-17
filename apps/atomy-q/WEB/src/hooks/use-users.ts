@@ -1,0 +1,244 @@
+'use client';
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { isObject, toText } from '@/hooks/normalize-utils';
+import {
+  userIndex,
+  userInvite,
+  userReactivate,
+  userRoles,
+  userSuspend,
+} from '@/generated/api/sdk.gen';
+
+export interface SettingsUserRow {
+  id: string;
+  name: string | null;
+  email: string;
+  status: string;
+  role: string;
+  createdAt: string | null;
+  lastLoginAt: string | null;
+}
+
+export interface SettingsUsersResult {
+  items: SettingsUserRow[];
+  meta: {
+    currentPage: number;
+    perPage: number;
+    total: number;
+  };
+}
+
+export interface SettingsUserRole {
+  id: string;
+  name: string;
+  description: string | null;
+  tenantId: string | null;
+  isSystemRole: boolean;
+}
+
+export interface InviteUserPayload {
+  email: string;
+  role: string;
+  name?: string | null;
+}
+
+const settingsUsersQueryKey = ['settings-users'] as const;
+const settingsUserRolesQueryKey = ['settings-user-roles'] as const;
+
+function requireText(value: unknown, field: string, index: number): string {
+  const text = toText(value);
+  if (text === null) {
+    throw new Error(`Invalid user row at index ${index}: missing ${field}`);
+  }
+
+  return text;
+}
+
+function requireEnvelope(payload: unknown, message: string): Record<string, unknown> {
+  if (!isObject(payload)) {
+    throw new Error(message);
+  }
+
+  return payload;
+}
+
+function normalizeOptionalText(value: unknown): string | null {
+  return toText(value);
+}
+
+function normalizeUserRow(row: unknown, index: number): SettingsUserRow {
+  const item = requireEnvelope(row, `Invalid user row at index ${index}: expected object`);
+
+  return {
+    id: requireText(item.id, 'id', index),
+    name: normalizeOptionalText(item.name),
+    email: requireText(item.email, 'email', index),
+    status: requireText(item.status, 'status', index),
+    role: requireText(item.role, 'role', index),
+    createdAt: normalizeOptionalText(item.created_at ?? item.createdAt),
+    lastLoginAt: normalizeOptionalText(item.last_login_at ?? item.lastLoginAt),
+  };
+}
+
+function requireFiniteNumber(value: unknown, field: string): number {
+  if (value === null || value === undefined) {
+    throw new Error(`Invalid users payload: missing ${field}`);
+  }
+  if (typeof value === 'string' && value.trim() === '') {
+    throw new Error(`Invalid users payload: missing ${field}`);
+  }
+
+  const numberValue = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(numberValue)) {
+    throw new Error(`Invalid users payload: ${field} must be a finite number`);
+  }
+
+  return numberValue;
+}
+
+function normalizeUsersResponse(payload: unknown): SettingsUsersResult {
+  const envelope = requireEnvelope(payload, 'Invalid users payload: expected object envelope with data array.');
+  if (!Array.isArray(envelope.data)) {
+    throw new Error('Invalid users payload: expected data array.');
+  }
+
+  const meta = requireEnvelope(envelope.meta, 'Invalid users payload: expected meta object.');
+
+  return {
+    items: envelope.data.map((row: unknown, index: number) => normalizeUserRow(row, index)),
+    meta: {
+      currentPage: requireFiniteNumber(meta.current_page, 'current_page'),
+      perPage: requireFiniteNumber(meta.per_page, 'per_page'),
+      total: requireFiniteNumber(meta.total, 'total'),
+    },
+  };
+}
+
+function normalizeRolesResponse(payload: unknown): SettingsUserRole[] {
+  const envelope = requireEnvelope(payload, 'Invalid user roles payload: expected object envelope with data array.');
+  if (!Array.isArray(envelope.data)) {
+    throw new Error('Invalid user roles payload: expected data array.');
+  }
+
+  return envelope.data.map((role: unknown, index: number) => {
+    const row = requireEnvelope(role, `Invalid user role at index ${index}: expected object`);
+    const id = toText(row.id);
+    const name = toText(row.name);
+    if (id === null) {
+      throw new Error(`Invalid user role at index ${index}: missing id`);
+    }
+    if (name === null) {
+      throw new Error(`Invalid user role at index ${index}: missing name`);
+    }
+
+    return {
+      id,
+      name,
+      description: normalizeOptionalText(row.description),
+      tenantId: normalizeOptionalText(row.tenant_id ?? row.tenantId),
+      isSystemRole: Boolean(row.is_system_role ?? row.isSystemRole),
+    };
+  });
+}
+
+function normalizeSingleUserResponse(payload: unknown): SettingsUserRow {
+  const envelope = requireEnvelope(payload, 'Invalid user payload: expected object envelope.');
+  if (!('data' in envelope)) {
+    throw new Error('Invalid user payload: expected data object.');
+  }
+
+  return normalizeUserRow(envelope.data, 0);
+}
+
+async function invokeUserInvite(payload: InviteUserPayload) {
+  return userInvite({ body: payload } as never);
+}
+
+export function useUsers() {
+  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
+
+  return useQuery({
+    queryKey: settingsUsersQueryKey,
+    enabled: !useMocks,
+    queryFn: async (): Promise<SettingsUsersResult> => {
+      const response = await userIndex();
+      if (response === undefined) {
+        throw new Error('Invalid users payload: missing response.');
+      }
+
+      return normalizeUsersResponse(response.data);
+    },
+  });
+}
+
+export function useUserRoles() {
+  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
+
+  return useQuery({
+    queryKey: settingsUserRolesQueryKey,
+    enabled: !useMocks,
+    queryFn: async (): Promise<SettingsUserRole[]> => {
+      const response = await userRoles();
+      if (response === undefined) {
+        throw new Error('Invalid user roles payload: missing response.');
+      }
+
+      return normalizeRolesResponse(response.data);
+    },
+  });
+}
+
+export function useInviteUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: InviteUserPayload): Promise<SettingsUserRow> => {
+      const response = await invokeUserInvite(payload);
+      if (response === undefined) {
+        throw new Error('Invalid user payload: missing response.');
+      }
+
+      return normalizeSingleUserResponse(response.data);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: settingsUsersQueryKey });
+    },
+  });
+}
+
+export function useSuspendUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userId: string): Promise<SettingsUserRow> => {
+      const response = await userSuspend({ path: { id: userId } });
+      if (response === undefined) {
+        throw new Error('Invalid user payload: missing response.');
+      }
+
+      return normalizeSingleUserResponse(response.data);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: settingsUsersQueryKey });
+    },
+  });
+}
+
+export function useReactivateUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userId: string): Promise<SettingsUserRow> => {
+      const response = await userReactivate({ path: { id: userId } });
+      if (response === undefined) {
+        throw new Error('Invalid user payload: missing response.');
+      }
+
+      return normalizeSingleUserResponse(response.data);
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: settingsUsersQueryKey });
+    },
+  });
+}

@@ -201,6 +201,12 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 
 **Seed flow (Task 8):** `atomy:seed-rfq-flow` calls `syncNormalizationLinesForQuotes()` after HTTP uploads so comparison final can pass pilot gates.
 
+## 2026-04-17 Alpha Task 6 Minimal Users & Roles
+
+- `UserController` now serves live tenant-scoped `GET /api/v1/users` and `GET /api/v1/roles` data through the identity query interfaces, with invite/suspend/reactivate mutating persisted rows instead of returning synthetic success payloads.
+- Unsupported `/api/v1/users/{id}/delegation-rules` and `/api/v1/users/{id}/authority-limits` routes return honest deferred responses instead of fake data, and cross-tenant user lookups fail with tenant-safe `404` semantics.
+- The alpha admin surface stays narrow: tenant admin is limited to users/roles list, invite, suspend, and reactivate flows; broader identity administration remains deferred until a future task.
+
 ## Testing & Seed Data
 - Added feature test coverage for auth flows, middleware enforcement, and all protected API endpoints.
 - Added identity gap regression coverage for login lockout, wildcard role permissions, and authenticated session revocation.

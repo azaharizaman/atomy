@@ -577,6 +577,435 @@ final class IdentityGap7Test extends TestCase
             ->assertOk();
     }
 
+    public function test_users_index_returns_only_current_tenant_users(): void
+    {
+        $tenantA = Tenant::query()->create([
+            'id' => (string) Str::ulid(),
+            'code' => 'tenant-users-a',
+            'name' => 'Tenant Users A',
+            'email' => 'tenant-users-a@example.com',
+            'status' => 'active',
+            'timezone' => 'UTC',
+            'locale' => 'en',
+            'currency' => 'USD',
+            'date_format' => 'Y-m-d',
+            'time_format' => 'H:i',
+        ]);
+
+        $tenantB = Tenant::query()->create([
+            'id' => (string) Str::ulid(),
+            'code' => 'tenant-users-b',
+            'name' => 'Tenant Users B',
+            'email' => 'tenant-users-b@example.com',
+            'status' => 'active',
+            'timezone' => 'UTC',
+            'locale' => 'en',
+            'currency' => 'USD',
+            'date_format' => 'Y-m-d',
+            'time_format' => 'H:i',
+        ]);
+
+        $adminA = User::factory()->create([
+            'tenant_id' => $tenantA->id,
+            'email' => 'admin-a@atomy.test',
+            'password_hash' => Hash::make('password'),
+            'status' => 'active',
+            'role' => 'admin',
+        ]);
+
+        User::factory()->create([
+            'tenant_id' => $tenantA->id,
+            'email' => 'member-a@atomy.test',
+            'password_hash' => Hash::make('password'),
+            'status' => 'active',
+            'role' => 'user',
+        ]);
+
+        User::factory()->create([
+            'tenant_id' => $tenantB->id,
+            'email' => 'member-b@atomy.test',
+            'password_hash' => Hash::make('password'),
+            'status' => 'active',
+            'role' => 'user',
+        ]);
+
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->loginAndGetToken('admin-a@atomy.test'))
+            ->getJson('/api/v1/users');
+
+        $response->assertOk();
+        $response->assertJsonCount(2, 'data');
+        $response->assertJsonFragment(['email' => 'admin-a@atomy.test']);
+        $response->assertJsonFragment(['email' => 'member-a@atomy.test']);
+        $response->assertJsonMissing(['email' => 'member-b@atomy.test']);
+        $response->assertJsonPath('meta.total', 2);
+
+        $this->assertSame((string) $tenantA->id, (string) $adminA->tenant_id);
+    }
+
+    public function test_users_show_same_tenant_success_and_wrong_tenant_404(): void
+    {
+        $tenantA = Tenant::query()->create([
+            'id' => (string) Str::ulid(),
+            'code' => 'tenant-users-show-a',
+            'name' => 'Tenant Users Show A',
+            'email' => 'tenant-users-show-a@example.com',
+            'status' => 'active',
+            'timezone' => 'UTC',
+            'locale' => 'en',
+            'currency' => 'USD',
+            'date_format' => 'Y-m-d',
+            'time_format' => 'H:i',
+        ]);
+
+        $tenantB = Tenant::query()->create([
+            'id' => (string) Str::ulid(),
+            'code' => 'tenant-users-show-b',
+            'name' => 'Tenant Users Show B',
+            'email' => 'tenant-users-show-b@example.com',
+            'status' => 'active',
+            'timezone' => 'UTC',
+            'locale' => 'en',
+            'currency' => 'USD',
+            'date_format' => 'Y-m-d',
+            'time_format' => 'H:i',
+        ]);
+
+        $userA = User::factory()->create([
+            'tenant_id' => $tenantA->id,
+            'email' => 'show-a@atomy.test',
+            'password_hash' => Hash::make('password'),
+            'status' => 'active',
+            'role' => 'admin',
+        ]);
+
+        $userB = User::factory()->create([
+            'tenant_id' => $tenantB->id,
+            'email' => 'show-b@atomy.test',
+            'password_hash' => Hash::make('password'),
+            'status' => 'active',
+            'role' => 'user',
+        ]);
+
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->loginAndGetToken('show-a@atomy.test'))
+            ->getJson('/api/v1/users/' . $userA->id);
+
+        $response->assertOk();
+        $response->assertJsonPath('data.email', 'show-a@atomy.test');
+        $response->assertJsonPath('data.tenant_id', (string) $tenantA->id);
+
+        $this->withHeader('Authorization', 'Bearer ' . $this->loginAndGetToken('show-a@atomy.test'))
+            ->getJson('/api/v1/users/' . $userB->id)
+            ->assertStatus(404);
+    }
+
+    public function test_users_invite_creates_persisted_pending_record(): void
+    {
+        $tenant = Tenant::query()->create([
+            'id' => (string) Str::ulid(),
+            'code' => 'tenant-users-invite',
+            'name' => 'Tenant Users Invite',
+            'email' => 'tenant-users-invite@example.com',
+            'status' => 'active',
+            'timezone' => 'UTC',
+            'locale' => 'en',
+            'currency' => 'USD',
+            'date_format' => 'Y-m-d',
+            'time_format' => 'H:i',
+        ]);
+
+        User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'email' => 'invite-admin@atomy.test',
+            'password_hash' => Hash::make('password'),
+            'status' => 'active',
+            'role' => 'admin',
+        ]);
+
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->loginAndGetToken('invite-admin@atomy.test'))
+            ->postJson('/api/v1/users/invite', [
+                'email' => 'invitee@atomy.test',
+                'name' => 'Invitee User',
+            ]);
+
+        $response->assertStatus(201);
+        $response->assertJsonPath('data.email', 'invitee@atomy.test');
+        $response->assertJsonPath('data.name', 'Invitee User');
+        $response->assertJsonPath('data.status', 'pending_activation');
+        $response->assertJsonPath('data.tenant_id', (string) $tenant->id);
+
+        $this->assertDatabaseHas('users', [
+            'tenant_id' => $tenant->id,
+            'email' => 'invitee@atomy.test',
+            'name' => 'Invitee User',
+            'status' => 'pending_activation',
+        ]);
+    }
+
+    public function test_users_invite_duplicate_email_returns_409(): void
+    {
+        $tenant = Tenant::query()->create([
+            'id' => (string) Str::ulid(),
+            'code' => 'tenant-users-invite-dup',
+            'name' => 'Tenant Users Invite Dup',
+            'email' => 'tenant-users-invite-dup@example.com',
+            'status' => 'active',
+            'timezone' => 'UTC',
+            'locale' => 'en',
+            'currency' => 'USD',
+            'date_format' => 'Y-m-d',
+            'time_format' => 'H:i',
+        ]);
+
+        User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'email' => 'invite-dup-admin@atomy.test',
+            'password_hash' => Hash::make('password'),
+            'status' => 'active',
+            'role' => 'admin',
+        ]);
+
+        User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'email' => 'duplicate@atomy.test',
+            'password_hash' => Hash::make('password'),
+            'status' => 'active',
+            'role' => 'user',
+        ]);
+
+        $this->withHeader('Authorization', 'Bearer ' . $this->loginAndGetToken('invite-dup-admin@atomy.test'))
+            ->postJson('/api/v1/users/invite', [
+                'email' => 'duplicate@atomy.test',
+                'name' => 'Duplicate User',
+            ])
+            ->assertStatus(409)
+            ->assertJsonFragment(['message' => 'A user with that email already exists.']);
+    }
+
+    public function test_users_suspend_updates_status_to_suspended(): void
+    {
+        $tenant = Tenant::query()->create([
+            'id' => (string) Str::ulid(),
+            'code' => 'tenant-users-suspend',
+            'name' => 'Tenant Users Suspend',
+            'email' => 'tenant-users-suspend@example.com',
+            'status' => 'active',
+            'timezone' => 'UTC',
+            'locale' => 'en',
+            'currency' => 'USD',
+            'date_format' => 'Y-m-d',
+            'time_format' => 'H:i',
+        ]);
+
+        User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'email' => 'suspend-admin@atomy.test',
+            'password_hash' => Hash::make('password'),
+            'status' => 'active',
+            'role' => 'admin',
+        ]);
+
+        $target = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'email' => 'suspend-target@atomy.test',
+            'password_hash' => Hash::make('password'),
+            'status' => 'active',
+            'role' => 'user',
+        ]);
+
+        $otherTenant = Tenant::query()->create([
+            'id' => (string) Str::ulid(),
+            'code' => 'tenant-users-suspend-other',
+            'name' => 'Tenant Users Suspend Other',
+            'email' => 'tenant-users-suspend-other@example.com',
+            'status' => 'active',
+            'timezone' => 'UTC',
+            'locale' => 'en',
+            'currency' => 'USD',
+            'date_format' => 'Y-m-d',
+            'time_format' => 'H:i',
+        ]);
+
+        $otherTarget = User::factory()->create([
+            'tenant_id' => $otherTenant->id,
+            'email' => 'suspend-other-target@atomy.test',
+            'password_hash' => Hash::make('password'),
+            'status' => 'active',
+            'role' => 'user',
+        ]);
+
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->loginAndGetToken('suspend-admin@atomy.test'))
+            ->postJson('/api/v1/users/' . $target->id . '/suspend');
+
+        $response->assertOk();
+        $response->assertJsonPath('data.id', (string) $target->id);
+        $response->assertJsonPath('data.status', 'suspended');
+        $this->assertDatabaseHas('users', [
+            'id' => $target->id,
+            'tenant_id' => $tenant->id,
+            'status' => 'suspended',
+        ]);
+
+        $this->withHeader('Authorization', 'Bearer ' . $this->loginAndGetToken('suspend-admin@atomy.test'))
+            ->postJson('/api/v1/users/' . $otherTarget->id . '/suspend')
+            ->assertStatus(404);
+
+        $this->assertDatabaseHas('users', [
+            'id' => $otherTarget->id,
+            'tenant_id' => $otherTenant->id,
+            'status' => 'active',
+        ]);
+    }
+
+    public function test_users_reactivate_updates_status_to_active(): void
+    {
+        $tenant = Tenant::query()->create([
+            'id' => (string) Str::ulid(),
+            'code' => 'tenant-users-reactivate',
+            'name' => 'Tenant Users Reactivate',
+            'email' => 'tenant-users-reactivate@example.com',
+            'status' => 'active',
+            'timezone' => 'UTC',
+            'locale' => 'en',
+            'currency' => 'USD',
+            'date_format' => 'Y-m-d',
+            'time_format' => 'H:i',
+        ]);
+
+        User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'email' => 'reactivate-admin@atomy.test',
+            'password_hash' => Hash::make('password'),
+            'status' => 'active',
+            'role' => 'admin',
+        ]);
+
+        $target = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'email' => 'reactivate-target@atomy.test',
+            'password_hash' => Hash::make('password'),
+            'status' => 'suspended',
+            'role' => 'user',
+        ]);
+
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->loginAndGetToken('reactivate-admin@atomy.test'))
+            ->postJson('/api/v1/users/' . $target->id . '/reactivate');
+
+        $response->assertOk();
+        $response->assertJsonPath('data.id', (string) $target->id);
+        $response->assertJsonPath('data.status', 'active');
+        $this->assertDatabaseHas('users', [
+            'id' => $target->id,
+            'tenant_id' => $tenant->id,
+            'status' => 'active',
+        ]);
+    }
+
+    public function test_users_roles_returns_real_role_data(): void
+    {
+        $tenant = Tenant::query()->create([
+            'id' => (string) Str::ulid(),
+            'code' => 'tenant-users-roles',
+            'name' => 'Tenant Users Roles',
+            'email' => 'tenant-users-roles@example.com',
+            'status' => 'active',
+            'timezone' => 'UTC',
+            'locale' => 'en',
+            'currency' => 'USD',
+            'date_format' => 'Y-m-d',
+            'time_format' => 'H:i',
+        ]);
+
+        User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'email' => 'roles-admin@atomy.test',
+            'password_hash' => Hash::make('password'),
+            'status' => 'active',
+            'role' => 'admin',
+        ]);
+
+        Role::query()->create([
+            'tenant_id' => $tenant->id,
+            'name' => 'manager',
+            'description' => 'Manager role',
+        ]);
+
+        $otherTenant = Tenant::query()->create([
+            'id' => (string) Str::ulid(),
+            'code' => 'tenant-users-roles-other',
+            'name' => 'Tenant Users Roles Other',
+            'email' => 'tenant-users-roles-other@example.com',
+            'status' => 'active',
+            'timezone' => 'UTC',
+            'locale' => 'en',
+            'currency' => 'USD',
+            'date_format' => 'Y-m-d',
+            'time_format' => 'H:i',
+        ]);
+
+        Role::query()->create([
+            'tenant_id' => $otherTenant->id,
+            'name' => 'other-manager',
+            'description' => 'Other Manager role',
+        ]);
+
+        $response = $this->withHeader('Authorization', 'Bearer ' . $this->loginAndGetToken('roles-admin@atomy.test'))
+            ->getJson('/api/v1/roles');
+
+        $response->assertOk();
+        $response->assertJsonFragment([
+            'name' => 'manager',
+            'description' => 'Manager role',
+            'tenant_id' => (string) $tenant->id,
+        ]);
+        $response->assertJsonMissing([
+            'name' => 'other-manager',
+        ]);
+    }
+
+    public function test_user_delegation_rules_endpoint_returns_honest_deferred_response(): void
+    {
+        $tenant = Tenant::query()->create([
+            'id' => (string) Str::ulid(),
+            'code' => 'tenant-users-deferred',
+            'name' => 'Tenant Users Deferred',
+            'email' => 'tenant-users-deferred@example.com',
+            'status' => 'active',
+            'timezone' => 'UTC',
+            'locale' => 'en',
+            'currency' => 'USD',
+            'date_format' => 'Y-m-d',
+            'time_format' => 'H:i',
+        ]);
+
+        $user = User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'email' => 'deferred-admin@atomy.test',
+            'password_hash' => Hash::make('password'),
+            'status' => 'active',
+            'role' => 'admin',
+        ]);
+
+        $this->withHeader('Authorization', 'Bearer ' . $this->loginAndGetToken('deferred-admin@atomy.test'))
+            ->getJson('/api/v1/users/' . $user->id . '/delegation-rules')
+            ->assertStatus(501)
+            ->assertJsonPath('error', 'Not implemented');
+    }
+
+    /**
+     * @return string
+     */
+    private function loginAndGetToken(string $email, string $password = 'password'): string
+    {
+        $response = $this->postJson('/api/v1/auth/login', [
+            'email' => $email,
+            'password' => $password,
+        ]);
+
+        $response->assertOk();
+
+        return (string) $response->json('access_token');
+    }
+
     private function assertAuditLogExists(string $event, string $subjectId, string $tenantId): void
     {
         $row = DB::table('audit_logs')

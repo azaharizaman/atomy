@@ -44,9 +44,13 @@ final readonly class EloquentUserRepository implements UserRepositoryInterface
         return $user === null ? null : $this->mapUser($user);
     }
 
-    public function emailExists(string $email, ?string $excludeUserId = null): bool
+    public function emailExists(string $email, ?string $excludeUserId = null, ?string $tenantId = null): bool
     {
         $query = UserModel::query()->where('email', $this->normalizeEmail($email));
+
+        if ($tenantId !== null && trim($tenantId) !== '') {
+            $query->where('tenant_id', trim($tenantId));
+        }
 
         if ($excludeUserId !== null && trim($excludeUserId) !== '') {
             $query->whereKeyNot($excludeUserId);

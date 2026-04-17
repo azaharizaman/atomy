@@ -93,11 +93,11 @@ final readonly class UserQueryAdapter implements UserQueryInterface
 
         $query = UserModel::query()->where('email', $normalizedEmail);
 
-        if ($tenantId !== null) {
-            $query->where('tenant_id', $tenantId);
+        if ($tenantId !== null && trim($tenantId) !== '') {
+            $query->where('tenant_id', trim($tenantId));
         }
 
-        if ($excludeUserId !== null) {
+        if ($excludeUserId !== null && trim($excludeUserId) !== '') {
             $query->whereKeyNot($excludeUserId);
         }
 

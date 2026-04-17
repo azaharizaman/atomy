@@ -38,8 +38,9 @@ interface UserQueryInterface
      *
      * @param string $email Email address to check
      * @param string|null $excludeUserId User ID to exclude from check (for updates)
+     * @param string|null $tenantId Tenant ID for tenant-scoped check
      */
-    public function emailExists(string $email, ?string $excludeUserId = null): bool;
+    public function emailExists(string $email, ?string $excludeUserId = null, ?string $tenantId = null): bool;
 
     /**
      * Get all roles assigned to a user
