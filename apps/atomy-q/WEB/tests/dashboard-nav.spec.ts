@@ -16,9 +16,18 @@ const buildCorsHeaders = (origin: string) => ({
 });
 
 test.beforeEach(async ({ page }) => {
-  let origin = 'http://localhost:3000';
+  const originRef = { current: 'http://localhost:3000' };
+
+  page.on('framenavigated', () => {
+    try {
+      originRef.current = new URL(page.url()).origin;
+    } catch {
+      // ignore
+    }
+  });
+
   await page.route('**/api/v1/auth/login', async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
+    const corsHeaders = buildCorsHeaders(originRef.current);
     if (route.request().method() === 'OPTIONS') {
       await route.fulfill({ status: 204, headers: corsHeaders });
       return;
@@ -37,7 +46,7 @@ test.beforeEach(async ({ page }) => {
     });
   });
   await page.route('**/api/v1/me', async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
+    const corsHeaders = buildCorsHeaders(originRef.current);
     if (route.request().method() === 'OPTIONS') {
       await route.fulfill({ status: 204, headers: corsHeaders });
       return;
@@ -50,7 +59,7 @@ test.beforeEach(async ({ page }) => {
     });
   });
   await page.goto('/login');
-  origin = new URL(page.url()).origin;
+  originRef.current = new URL(page.url()).origin;
   await page.getByLabel('Email').fill(mockUser.email);
   await page.getByLabel('Password').fill('password123');
   await page.getByRole('button', { name: /log in/i }).click();
@@ -58,6 +67,9 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('dashboard shows the alpha sidebar after login', async ({ page }) => {
+  if (process.env.NEXT_PUBLIC_ALPHA_MODE !== 'true') {
+    test.skip();
+  }
   const sidebar = page.locator('aside').first();
 
   await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();

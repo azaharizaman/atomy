@@ -10,33 +10,25 @@ import {
   isTopLevelNavVisibleInAlpha,
 } from '@/lib/alpha-mode';
 
-const originalAlphaMode = process.env.NEXT_PUBLIC_ALPHA_MODE;
-
 afterEach(() => {
-  if (originalAlphaMode === undefined) {
-    delete process.env.NEXT_PUBLIC_ALPHA_MODE;
-  } else {
-    process.env.NEXT_PUBLIC_ALPHA_MODE = originalAlphaMode;
-  }
-
   vi.unstubAllEnvs();
 });
 
 describe('alpha mode policy', () => {
   it('uses the exact alpha flag contract', () => {
-    process.env.NEXT_PUBLIC_ALPHA_MODE = 'true';
+    vi.stubEnv('NEXT_PUBLIC_ALPHA_MODE', 'true');
     expect(isAlphaMode()).toBe(true);
 
-    process.env.NEXT_PUBLIC_ALPHA_MODE = 'false';
+    vi.stubEnv('NEXT_PUBLIC_ALPHA_MODE', 'false');
     expect(isAlphaMode()).toBe(false);
 
-    process.env.NEXT_PUBLIC_ALPHA_MODE = 'TRUE';
+    vi.stubEnv('NEXT_PUBLIC_ALPHA_MODE', 'TRUE');
     expect(isAlphaMode()).toBe(false);
 
-    process.env.NEXT_PUBLIC_ALPHA_MODE = '';
+    vi.stubEnv('NEXT_PUBLIC_ALPHA_MODE', '');
     expect(isAlphaMode()).toBe(false);
 
-    delete process.env.NEXT_PUBLIC_ALPHA_MODE;
+    vi.stubEnv('NEXT_PUBLIC_ALPHA_MODE', undefined);
     expect(isAlphaMode()).toBe(false);
   });
 

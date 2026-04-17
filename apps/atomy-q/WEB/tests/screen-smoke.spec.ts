@@ -168,6 +168,9 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('screen smoke: alpha core routes render headings', async ({ page }) => {
+  if (process.env.NEXT_PUBLIC_ALPHA_MODE !== 'true') {
+    test.skip();
+  }
   const sidebar = page.getByRole('navigation').first();
 
   await expect(page.getByRole('heading', { name: /^Dashboard$/ })).toBeVisible();

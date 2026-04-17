@@ -11,7 +11,7 @@ import { isAlphaMode } from '@/lib/alpha-mode';
 
 function RfqDocumentsPageContent({ params }: { params: Promise<{ rfqId: string }> }) {
   const { rfqId } = React.use(params);
-  const { data: rfq } = useRfq(rfqId, { enabled: true });
+  const { data: rfq } = useRfq(rfqId);
 
   const breadcrumbItems = [
     { label: 'RFQs', href: '/rfqs' },

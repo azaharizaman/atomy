@@ -15,7 +15,8 @@ import {
 import { NavGroup, NavItem, SubNavItem } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { AppFooter } from '@/components/layout/app-footer';
-import { isAlphaMode, isTopLevelNavVisibleInAlpha } from '@/lib/alpha-mode';
+import { isAlphaMode } from '@/lib/alpha-mode';
+import { getVisibleMainNavItems } from '@/config/nav';
 import { useAuthStore } from '@/store/use-auth-store';
 import { RFQ_STATUSES } from '@/hooks/use-rfqs';
 import { useRfqNavCounts } from '@/hooks/use-rfq-counts';
@@ -45,7 +46,9 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const isLoading = useAuthStore((state) => state.isLoading);
   const { data: rfqCounts } = useRfqNavCounts();
   const { data: featureFlags, isLoading: featureFlagsLoading } = useFeatureFlags();
-  const showVisibleTopLevelNavItem = (navId: string) => !alphaMode || isTopLevelNavVisibleInAlpha(navId);
+  const visibleMainNavItems = getVisibleMainNavItems();
+  const visibleNavItemIds = new Set(visibleMainNavItems.map((item) => item.id));
+  const isSettingsVisible = !alphaMode;
 
   // Deny access when not authenticated (after auth init). Redirect to login.
   useEffect(() => {
@@ -106,7 +109,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex-1 overflow-y-auto p-3 space-y-0.5 custom-scrollbar">
-          {showVisibleTopLevelNavItem('dashboard') ? (
+          {visibleNavItemIds.has('dashboard') ? (
             <NavItem
               label="Dashboard"
               icon={<LayoutPanelTop size={18} />}
@@ -143,7 +146,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             )
           ) : null}
 
-          {showVisibleTopLevelNavItem('requisition') ? (
+          {visibleNavItemIds.has('requisition') ? (
             <NavGroup
               label="Requisition"
               icon={<FileText size={18} />}
@@ -189,7 +192,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             </NavGroup>
           ) : null}
 
-          {showVisibleTopLevelNavItem('documents') ? (
+          {visibleNavItemIds.has('documents') ? (
             <NavItem
               label="Documents"
               icon={<FolderArchive size={18} />}
@@ -198,7 +201,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             />
           ) : null}
 
-          {showVisibleTopLevelNavItem('reporting') ? (
+          {visibleNavItemIds.has('reporting') ? (
             <NavItem
               label="Reporting"
               icon={<BarChart2 size={18} />}
@@ -207,7 +210,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             />
           ) : null}
 
-          {showVisibleTopLevelNavItem('approvals') ? (
+          {visibleNavItemIds.has('approvals') ? (
             <NavItem
               label="Approval Queue"
               icon={<ShieldCheck size={18} />}
@@ -216,7 +219,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
             />
           ) : null}
 
-          {!alphaMode ? (
+          {isSettingsVisible ? (
             <NavGroup
               label="Settings"
               icon={<Settings size={18} />}

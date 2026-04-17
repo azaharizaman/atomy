@@ -10,7 +10,8 @@ import { Header } from '@/components/layout/header';
 import { AppFooter } from '@/components/layout/app-footer';
 import { ActiveRecordMenu } from '@/components/workspace/active-record-menu';
 import { RfqInsightsSidebar } from '@/components/workspace/rfq-insights-sidebar';
-import { isAlphaMode } from '@/lib/alpha-mode';
+import { isAlphaMode, isTopLevelNavVisibleInAlpha } from '@/lib/alpha-mode';
+import { isSettingsNavVisible } from '@/config/nav';
 import { useRfq } from '@/hooks/use-rfq';
 import { useFeatureFlags } from '@/hooks/use-feature-flags';
 import { type RfqStatus, RFQ_STATUSES } from '@/hooks/use-rfqs';
@@ -77,7 +78,21 @@ export default function RfqWorkspaceLayout({ children, params }: { children: Rea
               <></>
             </NavGroup>
 
-            {!alphaMode ? (
+            {alphaMode ? (
+              <>
+                {isTopLevelNavVisibleInAlpha('documents') ? (
+                  <NavItem label="Documents" icon={<FolderArchive size={18} />} active={pathname.startsWith('/documents')} href="/documents" collapsed={!railExpanded} />
+                ) : null}
+                {isTopLevelNavVisibleInAlpha('reporting') ? (
+                  <NavItem label="Reporting" icon={<BarChart2 size={18} />} active={pathname.startsWith('/reporting')} href="/reporting" collapsed={!railExpanded} />
+                ) : null}
+                {isSettingsNavVisible() ? (
+                  <NavGroup label="Settings" icon={<Settings size={18} />} active={pathname.startsWith('/settings')} defaultOpen={pathname.startsWith('/settings')} collapsed={!railExpanded}>
+                    <></>
+                  </NavGroup>
+                ) : null}
+              </>
+            ) : (
               <>
                 <NavItem label="Documents" icon={<FolderArchive size={18} />} active={pathname.startsWith('/documents')} href="/documents" collapsed={!railExpanded} />
                 <NavItem label="Reporting" icon={<BarChart2 size={18} />} active={pathname.startsWith('/reporting')} href="/reporting" collapsed={!railExpanded} />
@@ -85,7 +100,7 @@ export default function RfqWorkspaceLayout({ children, params }: { children: Rea
                   <></>
                 </NavGroup>
               </>
-            ) : null}
+            )}
           </nav>
         </div>
       </div>
