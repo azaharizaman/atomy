@@ -4,8 +4,14 @@ import React from 'react';
 import { FolderArchive, FileText, Upload } from 'lucide-react';
 import { Button } from '@/components/ds/Button';
 import { PageHeader } from '@/components/ds/FilterBar';
+import { AlphaDeferredScreen } from '@/components/alpha/alpha-deferred-screen';
+import { isAlphaMode } from '@/lib/alpha-mode';
 
 export default function DocumentsPage() {
+  if (isAlphaMode()) {
+    return <AlphaDeferredScreen title="Documents" subtitle="Document management is deferred in alpha." />;
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader

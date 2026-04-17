@@ -4,8 +4,14 @@ import React from 'react';
 import { BarChart2, Download, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ds/Button';
 import { PageHeader } from '@/components/ds/FilterBar';
+import { AlphaDeferredScreen } from '@/components/alpha/alpha-deferred-screen';
+import { isAlphaMode } from '@/lib/alpha-mode';
 
 export default function ReportingPage() {
+  if (isAlphaMode()) {
+    return <AlphaDeferredScreen title="Reporting" subtitle="Reporting is deferred in alpha." />;
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader

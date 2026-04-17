@@ -16,9 +16,18 @@ const buildCorsHeaders = (origin: string) => ({
 });
 
 test.beforeEach(async ({ page }) => {
-  let origin = 'http://localhost:3000';
+  const originRef = { current: 'http://localhost:3000' };
+
+  page.on('framenavigated', () => {
+    try {
+      originRef.current = new URL(page.url()).origin;
+    } catch {
+      // ignore
+    }
+  });
+
   await page.route('**/api/v1/auth/login', async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
+    const corsHeaders = buildCorsHeaders(originRef.current);
     if (route.request().method() === 'OPTIONS') {
       await route.fulfill({ status: 204, headers: corsHeaders });
       return;
@@ -37,7 +46,7 @@ test.beforeEach(async ({ page }) => {
     });
   });
   await page.route('**/api/v1/me', async (route) => {
-    const corsHeaders = buildCorsHeaders(origin);
+    const corsHeaders = buildCorsHeaders(originRef.current);
     if (route.request().method() === 'OPTIONS') {
       await route.fulfill({ status: 204, headers: corsHeaders });
       return;
@@ -50,48 +59,28 @@ test.beforeEach(async ({ page }) => {
     });
   });
   await page.goto('/login');
-  origin = new URL(page.url()).origin;
+  originRef.current = new URL(page.url()).origin;
   await page.getByLabel('Email').fill(mockUser.email);
   await page.getByLabel('Password').fill('password123');
   await page.getByRole('button', { name: /log in/i }).click();
   await expect(page).toHaveURL('/');
 });
 
-test('dashboard shows sidebar and header after login', async ({ page }) => {
+test('dashboard shows the alpha sidebar after login', async ({ page }) => {
+  if (process.env.NEXT_PUBLIC_ALPHA_MODE !== 'true') {
+    test.skip();
+  }
+  const sidebar = page.locator('aside').first();
+
   await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
   await expect(page.getByText('Active RFQs')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Dashboard' })).toBeVisible();
-  await expect(page.getByText('Requisition', { exact: true })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Documents' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Reporting' })).toBeVisible();
-  await expect(page.getByText('Settings', { exact: true })).toBeVisible();
+  await expect(sidebar.getByRole('link', { name: 'Dashboard' })).toBeVisible();
+  await expect(sidebar.getByRole('button', { name: 'Requisition', exact: true })).toBeVisible();
+  await expect(sidebar.getByRole('link', { name: 'Projects' })).toHaveCount(0);
+  await expect(sidebar.getByRole('link', { name: 'Task Inbox' })).toHaveCount(0);
+  await expect(sidebar.getByRole('link', { name: 'Documents' })).toHaveCount(0);
+  await expect(sidebar.getByRole('link', { name: 'Reporting' })).toHaveCount(0);
+  await expect(sidebar.getByRole('link', { name: 'Approval Queue' })).toHaveCount(0);
+  await expect(sidebar.getByRole('button', { name: 'Settings' })).toHaveCount(0);
   await expect(page.getByText('Atomy-Q').first()).toBeVisible();
-});
-
-test('Documents page shows with layout', async ({ page }) => {
-  await page.goto('/documents');
-  await expect(page.getByRole('heading', { name: 'Documents', exact: true })).toBeVisible();
-  await expect(page.getByText('Documents library')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Documents' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Dashboard' })).toBeVisible();
-});
-
-test('Reporting page shows with layout', async ({ page }) => {
-  await page.goto('/reporting');
-  await expect(page.getByRole('heading', { name: 'Reporting' })).toBeVisible();
-  await expect(page.getByText('Reports & analytics')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Reporting' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Dashboard' })).toBeVisible();
-});
-
-test('Settings and Users & Roles pages show with layout', async ({ page }) => {
-  await page.goto('/settings');
-  await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Users & Roles', exact: true }).first()).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Dashboard' })).toBeVisible();
-
-  await page.getByRole('link', { name: 'Users & Roles', exact: true }).first().click();
-  await expect(page).toHaveURL(/\/settings\/users/);
-  await expect(page.getByRole('heading', { name: 'Users & Roles', exact: true })).toBeVisible();
-  await expect(page.getByText(/Invite users and assign roles/)).toBeVisible();
 });

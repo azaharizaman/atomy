@@ -8,6 +8,7 @@ import { Eye, FileText, List, Users, Inbox, GitCompareArrows, ShieldCheck, HandC
 import { Button } from '@/components/ds/Button';
 import { StatusBadge } from '@/components/ds/Badge';
 import { NavigationLink } from '@/components/layout/sidebar';
+import { isAlphaMode, isRfqSectionVisibleInAlpha } from '@/lib/alpha-mode';
 import { type RfqStatus } from '@/hooks/use-rfqs';
 import { useRfqPendingApprovalCount } from '@/hooks/use-approvals';
 import { MetricChip } from './metric-chip';
@@ -25,6 +26,7 @@ export interface ActiveRfqRecord {
 
 export function ActiveRecordMenu({ record }: { record: ActiveRfqRecord }) {
   const pathname = usePathname();
+  const alphaMode = isAlphaMode();
   const { data: pendingApprovalCount } = useRfqPendingApprovalCount(record.id);
   const normalizedPending =
     typeof pendingApprovalCount === 'number' && Number.isFinite(pendingApprovalCount)
@@ -52,6 +54,9 @@ export function ActiveRecordMenu({ record }: { record: ActiveRfqRecord }) {
     { id: 'risk', label: 'Risk & Compliance', href: `${rfqBase}/risk`, icon: <ShieldAlert size={14} />, statusDot: 'green' as const },
     { id: 'decision-trail', label: 'Decision Trail', href: `${rfqBase}/decision-trail`, icon: <List size={14} /> },
   ];
+
+  const visibleRfqLinks = alphaMode ? rfqLinks.filter((link) => isRfqSectionVisibleInAlpha(link.id)) : rfqLinks;
+  const visibleChildLinks = alphaMode ? childLinks.filter((link) => isRfqSectionVisibleInAlpha(link.id)) : childLinks;
 
   return (
     <div
@@ -86,7 +91,7 @@ export function ActiveRecordMenu({ record }: { record: ActiveRfqRecord }) {
       <div className="px-3 py-3">
         <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-3 mb-1">RFQ</div>
         <div className="flex flex-col gap-0.5">
-          {rfqLinks.map((l) => (
+          {visibleRfqLinks.map((l) => (
             <NavigationLink key={l.id} label={l.label} icon={l.icon} active={pathname === l.href} href={l.href} />
           ))}
         </div>
@@ -94,7 +99,7 @@ export function ActiveRecordMenu({ record }: { record: ActiveRfqRecord }) {
         <div className="border-t border-slate-200 mb-3" />
         <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-3 mb-1">Child Records</div>
         <div className="flex flex-col gap-0.5">
-          {childLinks.map((l) => (
+          {visibleChildLinks.map((l) => (
             <NavigationLink
               key={l.id}
               label={l.label}

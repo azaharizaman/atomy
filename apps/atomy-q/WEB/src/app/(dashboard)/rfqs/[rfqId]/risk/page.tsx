@@ -1,15 +1,17 @@
 'use client';
 
 import React from 'react';
+import { AlphaDeferredScreen } from '@/components/alpha/alpha-deferred-screen';
 import { PageHeader } from '@/components/ds/FilterBar';
 import { SectionCard } from '@/components/ds/Card';
 import { StatusBadge } from '@/components/ds/Badge';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useRfq } from '@/hooks/use-rfq';
+import { isAlphaMode } from '@/lib/alpha-mode';
 
-export default function RiskPage({ params }: { params: Promise<{ rfqId: string }> }) {
+function RiskPageContent({ params }: { params: Promise<{ rfqId: string }> }) {
   const { rfqId } = React.use(params);
-  const { data: rfq } = useRfq(rfqId);
+  const { data: rfq } = useRfq(rfqId, { enabled: true });
 
   const breadcrumbItems = [
     { label: 'RFQs', href: '/rfqs' },
@@ -29,4 +31,12 @@ export default function RiskPage({ params }: { params: Promise<{ rfqId: string }
       </SectionCard>
     </div>
   );
+}
+
+export default function RiskPage({ params }: { params: Promise<{ rfqId: string }> }) {
+  if (isAlphaMode()) {
+    return <AlphaDeferredScreen title="Risk & Compliance" subtitle="Risk screening is deferred in alpha." />;
+  }
+
+  return <RiskPageContent params={params} />;
 }

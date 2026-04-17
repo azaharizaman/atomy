@@ -10,6 +10,8 @@ import { Header } from '@/components/layout/header';
 import { AppFooter } from '@/components/layout/app-footer';
 import { ActiveRecordMenu } from '@/components/workspace/active-record-menu';
 import { RfqInsightsSidebar } from '@/components/workspace/rfq-insights-sidebar';
+import { isAlphaMode, isTopLevelNavVisibleInAlpha } from '@/lib/alpha-mode';
+import { isSettingsNavVisible } from '@/config/nav';
 import { useRfq } from '@/hooks/use-rfq';
 import { useFeatureFlags } from '@/hooks/use-feature-flags';
 import { type RfqStatus, RFQ_STATUSES } from '@/hooks/use-rfqs';
@@ -33,6 +35,7 @@ function getPrimaryActionLabel(status: RfqStatus): string {
 export default function RfqWorkspaceLayout({ children, params }: { children: React.ReactNode; params: Promise<{ rfqId: string }> }) {
   const pathname = usePathname();
   const [railExpanded, setRailExpanded] = React.useState(false);
+  const alphaMode = isAlphaMode();
 
   const { rfqId } = React.use(params);
   const { data: rfq, isLoading } = useRfq(rfqId);
@@ -75,11 +78,29 @@ export default function RfqWorkspaceLayout({ children, params }: { children: Rea
               <></>
             </NavGroup>
 
-            <NavItem label="Documents" icon={<FolderArchive size={18} />} active={pathname.startsWith('/documents')} href="/documents" collapsed={!railExpanded} />
-            <NavItem label="Reporting" icon={<BarChart2 size={18} />} active={pathname.startsWith('/reporting')} href="/reporting" collapsed={!railExpanded} />
-            <NavGroup label="Settings" icon={<Settings size={18} />} active={pathname.startsWith('/settings')} defaultOpen={pathname.startsWith('/settings')} collapsed={!railExpanded}>
-              <></>
-            </NavGroup>
+            {alphaMode ? (
+              <>
+                {isTopLevelNavVisibleInAlpha('documents') ? (
+                  <NavItem label="Documents" icon={<FolderArchive size={18} />} active={pathname.startsWith('/documents')} href="/documents" collapsed={!railExpanded} />
+                ) : null}
+                {isTopLevelNavVisibleInAlpha('reporting') ? (
+                  <NavItem label="Reporting" icon={<BarChart2 size={18} />} active={pathname.startsWith('/reporting')} href="/reporting" collapsed={!railExpanded} />
+                ) : null}
+                {isSettingsNavVisible() ? (
+                  <NavGroup label="Settings" icon={<Settings size={18} />} active={pathname.startsWith('/settings')} defaultOpen={pathname.startsWith('/settings')} collapsed={!railExpanded}>
+                    <></>
+                  </NavGroup>
+                ) : null}
+              </>
+            ) : (
+              <>
+                <NavItem label="Documents" icon={<FolderArchive size={18} />} active={pathname.startsWith('/documents')} href="/documents" collapsed={!railExpanded} />
+                <NavItem label="Reporting" icon={<BarChart2 size={18} />} active={pathname.startsWith('/reporting')} href="/reporting" collapsed={!railExpanded} />
+                <NavGroup label="Settings" icon={<Settings size={18} />} active={pathname.startsWith('/settings')} defaultOpen={pathname.startsWith('/settings')} collapsed={!railExpanded}>
+                  <></>
+                </NavGroup>
+              </>
+            )}
           </nav>
         </div>
       </div>
@@ -128,4 +149,3 @@ export default function RfqWorkspaceLayout({ children, params }: { children: Rea
     </div>
   );
 }
-

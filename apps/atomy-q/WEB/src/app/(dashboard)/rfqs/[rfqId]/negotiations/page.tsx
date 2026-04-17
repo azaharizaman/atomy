@@ -1,19 +1,21 @@
 'use client';
 
 import React from 'react';
+import { AlphaDeferredScreen } from '@/components/alpha/alpha-deferred-screen';
 import { PageHeader } from '@/components/ds/FilterBar';
-import { SectionCard, EmptyState } from '@/components/ds/Card';
+import { EmptyState } from '@/components/ds/Card';
 import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useRfq } from '@/hooks/use-rfq';
 import { HandCoins } from 'lucide-react';
+import { isAlphaMode } from '@/lib/alpha-mode';
 
 type NegotiationRow = { id: string; vendor: string; status: string; lastActivity: string };
 const MOCK_NEGOTIATIONS: NegotiationRow[] = [];
 
-export default function NegotiationsListPage({ params }: { params: Promise<{ rfqId: string }> }) {
+function NegotiationsListPageContent({ params }: { params: Promise<{ rfqId: string }> }) {
   const { rfqId } = React.use(params);
-  const { data: rfq } = useRfq(rfqId);
+  const { data: rfq } = useRfq(rfqId, { enabled: true });
 
   const breadcrumbItems = [
     { label: 'RFQs', href: '/rfqs' },
@@ -45,4 +47,12 @@ export default function NegotiationsListPage({ params }: { params: Promise<{ rfq
       />
     </div>
   );
+}
+
+export default function NegotiationsListPage({ params }: { params: Promise<{ rfqId: string }> }) {
+  if (isAlphaMode()) {
+    return <AlphaDeferredScreen title="Negotiations" subtitle="Negotiation threads are deferred in alpha." />;
+  }
+
+  return <NegotiationsListPageContent params={params} />;
 }
