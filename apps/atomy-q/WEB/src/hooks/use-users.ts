@@ -9,6 +9,7 @@ import {
   userRoles,
   userSuspend,
 } from '@/generated/api/sdk.gen';
+import type { UserInviteData } from '@/generated/api/types.gen';
 
 export interface SettingsUserRow {
   id: string;
@@ -37,10 +38,7 @@ export interface SettingsUserRole {
   isSystemRole: boolean;
 }
 
-export interface InviteUserPayload {
-  email: string;
-  name: string;
-}
+type InviteUserPayload = UserInviteData['body'];
 
 const settingsUsersQueryKey = ['settings-users'] as const;
 const settingsUserRolesQueryKey = ['settings-user-roles'] as const;

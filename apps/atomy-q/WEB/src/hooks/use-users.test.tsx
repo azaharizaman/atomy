@@ -203,6 +203,12 @@ describe('use-users', () => {
       name: 'New User',
     });
 
+    expect(userInvite).toHaveBeenCalledWith({
+      body: {
+        email: 'new@atomy.test',
+        name: 'New User',
+      },
+    });
     expect(response).toEqual({
       id: 'user-2',
       name: 'New User',
@@ -213,6 +219,20 @@ describe('use-users', () => {
       lastLoginAt: null,
     });
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['settings-users'] });
+  });
+
+  it('rejects undefined invite responses before normalization', async () => {
+    vi.mocked(userInvite).mockResolvedValueOnce(undefined as never);
+
+    const { Wrapper } = createTestWrapper();
+    const { result } = renderHook(() => useInviteUser(), { wrapper: Wrapper });
+
+    await expect(
+      result.current.mutateAsync({
+        email: 'new@atomy.test',
+        name: 'New User',
+      }),
+    ).rejects.toThrow('Invalid user payload: missing response.');
   });
 
   it('does not invalidate users query after a non-2xx invite response', async () => {
