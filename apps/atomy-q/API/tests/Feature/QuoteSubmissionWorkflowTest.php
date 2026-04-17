@@ -8,9 +8,11 @@ use App\Models\QuoteSubmission;
 use App\Models\Rfq;
 use App\Models\RfqLineItem;
 use App\Models\User;
+use App\Jobs\ProcessQuoteSubmissionJob;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\Feature\Api\ApiTestCase;
@@ -294,6 +296,114 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
             'rfq_id' => $rfq->id,
             'status' => 'failed',
         ]);
+    }
+
+    public function test_quote_submission_upload_stays_uploaded_when_queue_default_is_async(): void
+    {
+        Storage::fake('local');
+        Queue::fake();
+
+        $this->app['config']->set('queue.default', 'database');
+
+        $user = $this->createUser();
+        $rfq = Rfq::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_number' => 'RFQ-2002A',
+            'title' => 'Async Queue RFQ',
+            'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
+            'status' => 'draft',
+        ]);
+
+        RfqLineItem::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'description' => 'Pump seal kit',
+            'quantity' => 2,
+            'uom' => 'EA',
+            'unit_price' => 100,
+            'currency' => 'USD',
+            'sort_order' => 1,
+        ]);
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/quote-submissions/upload', [
+                'rfq_id' => $rfq->id,
+                'vendor_id' => (string) Str::ulid(),
+                'vendor_name' => 'Async Queue Vendor',
+                'file' => UploadedFile::fake()->create('quote.txt', 12, 'text/plain'),
+            ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.status', 'uploaded');
+
+        $quoteId = (string) $response->json('data.id');
+        $this->assertDatabaseHas('quote_submissions', [
+            'id' => $quoteId,
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'status' => 'uploaded',
+        ]);
+
+        Queue::assertPushed(
+            ProcessQuoteSubmissionJob::class,
+            static function (ProcessQuoteSubmissionJob $job) use ($quoteId): bool {
+                return $job->quoteSubmissionId === $quoteId;
+            }
+        );
+    }
+
+    public function test_quote_submission_upload_runs_inline_for_custom_sync_queue_alias(): void
+    {
+        Storage::fake('local');
+        Queue::fake();
+
+        $this->app['config']->set('queue.default', 'inline');
+        $this->app['config']->set('queue.connections.inline', [
+            'driver' => 'sync',
+        ]);
+
+        $user = $this->createUser();
+        $rfq = Rfq::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_number' => 'RFQ-2002B',
+            'title' => 'Inline Queue RFQ',
+            'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
+            'status' => 'draft',
+        ]);
+
+        RfqLineItem::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'description' => 'Pump seal kit',
+            'quantity' => 2,
+            'uom' => 'EA',
+            'unit_price' => 100,
+            'currency' => 'USD',
+            'sort_order' => 1,
+        ]);
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/quote-submissions/upload', [
+                'rfq_id' => $rfq->id,
+                'vendor_id' => (string) Str::ulid(),
+                'vendor_name' => 'Inline Queue Vendor',
+                'file' => UploadedFile::fake()->create('quote.txt', 12, 'text/plain'),
+            ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.status', 'ready');
+
+        $quoteId = (string) $response->json('data.id');
+        $this->assertDatabaseHas('quote_submissions', [
+            'id' => $quoteId,
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'status' => 'ready',
+        ]);
+
+        Queue::assertNotPushed(ProcessQuoteSubmissionJob::class);
     }
 
     public function test_quote_submission_show_returns_404_for_other_tenant(): void

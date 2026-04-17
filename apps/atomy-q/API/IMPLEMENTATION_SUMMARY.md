@@ -238,6 +238,12 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - Restored backward-compatible `UserQueryInterface::emailExists(string $email, ?string $excludeUserId = null, ?string $tenantId = null)` usage while keeping tenant-scoped duplicate-email checks in the users invite flow.
 - `UserQueryAdapter`, `AtomyUserQuery`, and `EloquentUserRepository` now trim tenant and excluded-user identifiers before applying tenant filters or `whereKeyNot(...)`, so whitespace cannot bypass Task 6 duplicate checks.
 - `IdentityGap7Test` now covers tenant-safe cross-tenant suspend `404` behavior and confirms the roles index stays isolated to the authenticated tenant.
+
+## 2026-04-18 Alpha Task 8 Staging Operations Readiness
+
+- Added the non-destructive `atomy:verify-storage-disk` command and documented it as the operator storage smoke for alpha staging.
+- The alpha staging contract is now explicit in the API docs: `QUOTE_INTELLIGENCE_MODE=deterministic`, `QUEUE_CONNECTION=sync`, and `NEXT_PUBLIC_USE_MOCKS=false` are the supported design-partner posture.
+- `API/README.md` and `docs/STAGING_ALPHA_RUNBOOK.md` now point operators to the staging runbook as the source of truth for bring-up and mocks-off smoke evidence.
 - The `POST /users/invite` OpenAPI contract now documents the required `{ email, name }` request body and the full user invite response shape so WEB generation no longer emits the stale `body?: never` contract.
 
 ## Middleware

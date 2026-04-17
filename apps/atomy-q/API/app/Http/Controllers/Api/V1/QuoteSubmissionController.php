@@ -126,8 +126,9 @@ final class QuoteSubmissionController extends Controller
 
     private function dispatchProcessingJob(QuoteSubmission $submission): void
     {
-        $shouldRunSync = in_array(config('queue.default'), ['sync', 'null'], true)
-            || app()->environment(['local', 'testing']);
+        $defaultConnection = (string) config('queue.default');
+        $driver = (string) config('queue.connections.' . $defaultConnection . '.driver');
+        $shouldRunSync = $driver === 'sync';
 
         if ($shouldRunSync) {
             $job = new ProcessQuoteSubmissionJob($submission->id);
