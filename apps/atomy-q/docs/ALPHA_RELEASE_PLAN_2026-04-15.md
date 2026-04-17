@@ -291,6 +291,8 @@ After this task, a new operator should be able to configure staging from documen
 - Modify: `apps/atomy-q/WEB/.env.example`
 - Create: `apps/atomy-q/docs/STAGING_ALPHA_RUNBOOK.md`
 - Modify: `apps/atomy-q/docs/ALPHA_RELEASE_CHECKLIST.md`
+- Follow-up spec: [`ALPHA_TASK8_STAGING_OPERATIONS_READINESS_SPEC_2026-04-17.md`](./ALPHA_TASK8_STAGING_OPERATIONS_READINESS_SPEC_2026-04-17.md)
+- Follow-up plan: [`ALPHA_TASK8_STAGING_OPERATIONS_READINESS_IMPLEMENTATION_PLAN_2026-04-17.md`](./ALPHA_TASK8_STAGING_OPERATIONS_READINESS_IMPLEMENTATION_PLAN_2026-04-17.md)
 
 - [ ] Document required API env: `JWT_SECRET`, DB, Redis, CORS, storage disk, mail/notification settings, quote-intelligence provider settings, feature flags.
 - [ ] Document required WEB env: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_USE_MOCKS=false`, Playwright base URL.
