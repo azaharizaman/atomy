@@ -83,7 +83,7 @@ cd apps/atomy-q/API && php artisan db:seed --force
 5. Verify the configured storage disk can write, read, and clean up a smoke object.
 
 ```bash
-cd apps/atomy-q/API && php artisan atomy:verify-storage-disk --disk=s3 --path-prefix=alpha-storage-smoke
+cd apps/atomy-q/API && php artisan atomy:verify-storage-disk --disk=s3
 ```
 
 6. If you need a seeded RFQ journey for shared-environment verification, create it only after migrations and storage verification pass.
@@ -112,7 +112,7 @@ The alpha staging path assumes quote files land on a real writable storage disk 
 Primary verification command:
 
 ```bash
-cd apps/atomy-q/API && php artisan atomy:verify-storage-disk --disk=s3 --path-prefix=alpha-storage-smoke
+cd apps/atomy-q/API && php artisan atomy:verify-storage-disk --disk=s3
 ```
 
 Expected result:
@@ -210,7 +210,7 @@ Minimum evidence set:
 - confirmation that `QUEUE_CONNECTION=sync`
 - confirmation that `QUOTE_INTELLIGENCE_MODE=deterministic`
 - output of `php artisan migrate --force`
-- output of `php artisan atomy:verify-storage-disk --disk=s3 --path-prefix=alpha-storage-smoke`
+- output of `php artisan atomy:verify-storage-disk --disk=s3`
 - output of `php artisan atomy:seed-rfq-flow --count=1 --status=published --base-url="$APP_URL"` if the seed path was used
 - screenshots of tenant registration success, RFQ overview, vendor invite state, quote intake/readiness, final comparison, award signoff, and Users & Roles pending activation row
 - any accepted constraints or observed non-blocking issues
@@ -240,7 +240,7 @@ Symptoms:
 - storage-related exceptions appear in API logs
 
 First checks:
-- rerun `cd apps/atomy-q/API && php artisan atomy:verify-storage-disk --disk=s3 --path-prefix=alpha-storage-smoke`
+- rerun `cd apps/atomy-q/API && php artisan atomy:verify-storage-disk --disk=s3`
 - confirm `FILESYSTEM_DISK=s3`
 - confirm bucket, endpoint, region, and credentials are correct for the deployed environment
 - confirm the target bucket or endpoint allows write, read, and delete for the configured credentials

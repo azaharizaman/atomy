@@ -298,9 +298,10 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
         ]);
     }
 
-    public function test_quote_submission_upload_stays_uploaded_when_queue_default_is_async(): void
+    public function testQuoteSubmissionUploadStaysUploadedWhenQueueDefaultIsAsync(): void
     {
         Storage::fake('local');
+        // Queue::fake intercepts dispatches, so using the database driver here does not write real jobs.
         Queue::fake();
 
         $this->app['config']->set('queue.default', 'database');
@@ -353,7 +354,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
         );
     }
 
-    public function test_quote_submission_upload_runs_inline_for_custom_sync_queue_alias(): void
+    public function testQuoteSubmissionUploadRunsInlineForCustomSyncQueueAlias(): void
     {
         Storage::fake('local');
         Queue::fake();

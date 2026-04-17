@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Tests\Feature\Console;
 
 use Closure;
+use Mockery;
 
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -59,29 +61,27 @@ final class VerifyStorageDiskCommandTest extends TestCase
 
     private function createMockDisk(Closure $deleteHandler): object
     {
-        return new class ($deleteHandler) {
-            public string $contents = '';
-
-            public function __construct(private readonly Closure $deleteHandler)
-            {
-            }
-
-            public function put(string $path, string $contents): bool
-            {
-                $this->contents = $contents;
+        $contents = '';
+        $disk = Mockery::mock(Filesystem::class);
+        $disk->shouldIgnoreMissing();
+        $disk->shouldReceive('put')
+            ->once()
+            ->andReturnUsing(static function (string $path, string $writtenContents) use (&$contents): bool {
+                $contents = $writtenContents;
 
                 return true;
-            }
+            });
+        $disk->shouldReceive('get')
+            ->once()
+            ->andReturnUsing(static function (string $path) use (&$contents): string {
+                return $contents;
+            });
+        $disk->shouldReceive('delete')
+            ->once()
+            ->andReturnUsing(static function (string $path) use ($deleteHandler): bool {
+                return $deleteHandler();
+            });
 
-            public function get(string $path): string
-            {
-                return $this->contents;
-            }
-
-            public function delete(string $path): bool
-            {
-                return ($this->deleteHandler)();
-            }
-        };
+        return $disk;
     }
 }

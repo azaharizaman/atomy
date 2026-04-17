@@ -46,7 +46,7 @@ final class VerifyStorageDiskCommand extends Command
 
             $verificationSucceeded = true;
         } catch (Throwable $throwable) {
-            $this->error('Storage verification failed: ' . $throwable->getMessage());
+            $this->error('Storage verification write/read failure: path=' . $path . ' ' . $throwable->getMessage());
         } finally {
             if ($probeWritten) {
                 try {
