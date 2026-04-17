@@ -112,10 +112,16 @@ function normalizeUsersResponse(payload: unknown): SettingsUsersResult {
   };
 }
 
-function normalizeRolesResponse(payload: UserRolesResponse['data']): SettingsUserRole[] {
+function normalizeRolesResponse(payload: unknown): SettingsUserRole[] {
+  const envelope = requireEnvelope(payload, 'Invalid user roles payload: expected object envelope with data array.');
+  if (!Array.isArray(envelope.data)) {
+    throw new Error('Invalid user roles payload: expected data array.');
+  }
+
+  const roles = envelope.data as UserRolesResponse['data'];
   const isTrueValue = (value: unknown): boolean => value === true || value === 'true';
 
-  return payload.data.map((role, index: number) => {
+  return roles.map((role: UserRolesResponse['data'][number], index: number) => {
     const id = toText(role.id);
     const name = toText(role.name);
     if (id === null) {

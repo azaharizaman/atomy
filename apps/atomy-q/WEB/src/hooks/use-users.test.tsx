@@ -176,6 +176,23 @@ describe('use-users', () => {
     expect((result.current.error as Error).message).toBe('Invalid user role at index 0: missing name');
   });
 
+  it('rejects roles payloads without a data array', async () => {
+    vi.mocked(userRoles).mockResolvedValueOnce({
+      data: {
+        data: null,
+      },
+      error: undefined,
+      request: {} as Request,
+      response: {} as Response,
+    });
+
+    const { Wrapper } = createTestWrapper();
+    const { result } = renderHook(() => useUserRoles(), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect((result.current.error as Error).message).toBe('Invalid user roles payload: expected data array.');
+  });
+
   it('invalidates users query after invite mutation', async () => {
     vi.mocked(userInvite).mockResolvedValueOnce({
       data: {
