@@ -176,6 +176,48 @@ describe('use-users', () => {
     expect((result.current.error as Error).message).toBe('Invalid user role at index 0: missing name');
   });
 
+  it('rejects null role items', async () => {
+    vi.mocked(userRoles).mockResolvedValueOnce({
+      data: {
+        data: [null],
+      },
+      error: undefined,
+      request: {} as Request,
+      response: {} as Response,
+    });
+
+    const { Wrapper } = createTestWrapper();
+    const { result } = renderHook(() => useUserRoles(), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect((result.current.error as Error).message).toBe('Invalid user role at index 0: expected object');
+  });
+
+  it('rejects malformed is_system_role values', async () => {
+    vi.mocked(userRoles).mockResolvedValueOnce({
+      data: {
+        data: [
+          {
+            id: 'role-1',
+            name: 'admin',
+            description: null,
+            tenant_id: null,
+            is_system_role: 'true',
+          },
+        ],
+      },
+      error: undefined,
+      request: {} as Request,
+      response: {} as Response,
+    });
+
+    const { Wrapper } = createTestWrapper();
+    const { result } = renderHook(() => useUserRoles(), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect((result.current.error as Error).message).toBe('Invalid user role at index 0: is_system_role must be a boolean');
+  });
+
   it('rejects roles payloads without a data array', async () => {
     vi.mocked(userRoles).mockResolvedValueOnce({
       data: {
@@ -191,6 +233,43 @@ describe('use-users', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect((result.current.error as Error).message).toBe('Invalid user roles payload: expected data array.');
+  });
+
+  it.each([
+    ['current_page', 1.5, 'Invalid users payload: current_page must be a finite integer'],
+    ['per_page', 20.25, 'Invalid users payload: per_page must be a finite integer'],
+    ['total', 1.75, 'Invalid users payload: total must be a finite integer'],
+  ] as const)('rejects decimal %s values in users meta', async (field, value, message) => {
+    vi.mocked(userIndex).mockResolvedValueOnce({
+      data: {
+        data: [
+          {
+            id: 'user-1',
+            name: 'Alpha Admin',
+            email: 'admin@atomy.test',
+            status: 'active',
+            role: 'admin',
+            created_at: '2026-04-17T00:00:00Z',
+            last_login_at: null,
+          },
+        ],
+        meta: {
+          current_page: 1,
+          per_page: 20,
+          total: 1,
+          [field]: value,
+        },
+      },
+      error: undefined,
+      request: {} as Request,
+      response: {} as Response,
+    });
+
+    const { Wrapper } = createTestWrapper();
+    const { result } = renderHook(() => useUsers(), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect((result.current.error as Error).message).toBe(message);
   });
 
   it('invalidates users query after invite mutation', async () => {
