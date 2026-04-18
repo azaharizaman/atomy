@@ -2,15 +2,16 @@
 
 This is the backend API for the Atomy‑Q Quote Comparison & Procurement platform. It exposes the `/api/v1` REST endpoints used by the WEB app and includes JWT authentication, multi‑tenant scoping, and stubbed controllers for the full endpoint surface.
 
-**Design-partner alpha:** Current scope, release gates, and deferred surfaces are documented in [`../docs/ALPHA_RELEASE_PLAN_2026-04-15.md`](../docs/ALPHA_RELEASE_PLAN_2026-04-15.md).
-**Staging bring-up:** [`../docs/STAGING_ALPHA_RUNBOOK.md`](../docs/STAGING_ALPHA_RUNBOOK.md) is the source of truth for alpha staging.
+**Design-partner alpha:** Current scope and release posture are documented in [`../docs/01-product/scope/alpha-scope.md`](../docs/01-product/scope/alpha-scope.md) and [`../docs/02-release-management/current-release/release-plan.md`](../docs/02-release-management/current-release/release-plan.md).
+**Staging bring-up:** [`../docs/02-release-management/current-release/staging-runbook.md`](../docs/02-release-management/current-release/staging-runbook.md) is the source of truth for alpha staging.
+**Engineering standards:** [`../docs/04-engineering/standards/`](../docs/04-engineering/standards/) contains the coding, branching, done, testing, and security baselines.
 
 ## Alpha staging posture
 
 - Deterministic quote intelligence is the alpha staging default.
 - `QUEUE_CONNECTION=sync` is the design-partner path for alpha staging unless the team explicitly chooses async later.
 - Verify storage wiring with `php artisan atomy:verify-storage-disk`.
-- Keep `../docs/STAGING_ALPHA_RUNBOOK.md` open when bringing the environment up.
+- Keep `../docs/02-release-management/current-release/staging-runbook.md` open when bringing the environment up.
 
 ## Quote intelligence modes
 

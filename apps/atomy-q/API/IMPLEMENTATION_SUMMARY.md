@@ -219,7 +219,7 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - RFQ index endpoint now reads from `rfqs` table with tenant scoping and basic filters.
 - RFQ list/show endpoints now return real RFQ data (owner, counts, ISO deadlines, pagination meta) with sorting and search support.
 - **`GET /api/v1/rfqs/{rfqId}/activity`:** tenant-scoped activity feed (query `limit` 1–50, default 20); **`GET .../overview`** embeds the same feed under `data.activity` and adds blueprint aliases: `expectedQuotes`, `normalizationProgress`, `latestComparisonRun`, `approvalStatus`. Tests: `RfqOverviewActivityTest`.
-- **Partner onboarding:** `../docs/ALPHA_RELEASE_PLAN_2026-04-15.md` documents current alpha scope, release gates, deferred surfaces, and verification commands.
+- **Partner onboarding:** `../docs/01-product/scope/alpha-scope.md` and `../docs/02-release-management/current-release/release-plan.md` document the current alpha scope, active release gate, and verification posture.
 - Account profile endpoints now return real user data (including tenant/role) for seeded logins.
 - Seeder can use `ATOMY_SEED_TENANT_ID` for a predictable tenant in local environments.
 - PHPUnit is configured to use PostgreSQL (port `5433`) with JWT + Redis env defaults for tests.
@@ -243,7 +243,7 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 
 - Added the non-destructive `atomy:verify-storage-disk` command and documented it as the operator storage smoke for alpha staging.
 - The alpha staging contract is now explicit in the API docs: `QUOTE_INTELLIGENCE_MODE=deterministic`, `QUEUE_CONNECTION=sync`, and `NEXT_PUBLIC_USE_MOCKS=false` are the supported design-partner posture.
-- `API/README.md` and `docs/STAGING_ALPHA_RUNBOOK.md` now point operators to the staging runbook as the source of truth for bring-up and mocks-off smoke evidence.
+- `API/README.md` and `docs/02-release-management/current-release/staging-runbook.md` now point operators to the staging runbook as the source of truth for bring-up and mocks-off smoke evidence.
 - The `POST /users/invite` OpenAPI contract now documents the required `{ email, name }` request body and the full user invite response shape so WEB generation no longer emits the stale `body?: never` contract.
 
 ## Middleware

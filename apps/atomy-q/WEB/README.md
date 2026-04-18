@@ -37,7 +37,7 @@ Staging validation should use the deployed WEB hostname and the deployed API.
 - `PLAYWRIGHT_BASE_URL` should point at the deployed WEB hostname for manual checks or smoke tests.
 - Set `PLAYWRIGHT_BASE_URL` in `.env.local` for local/manual runs or inject it as an environment variable in CI.
 
-The full staging bring-up and smoke sequence is in [`../docs/STAGING_ALPHA_RUNBOOK.md`](../docs/STAGING_ALPHA_RUNBOOK.md).
+The full staging bring-up and smoke sequence is in [`../docs/02-release-management/current-release/staging-runbook.md`](../docs/02-release-management/current-release/staging-runbook.md).
 
 ## Tests
 
@@ -55,4 +55,4 @@ For E2E runs that need browser installation:
 npm run test:e2e:install
 ```
 
-Hook changes must follow the enforced coverage standard in [`docs/HOOK_TEST_STANDARD.md`](docs/HOOK_TEST_STANDARD.md): every hook needs mock-mode behavior coverage plus the live-mode transport error, valid payload, undefined payload, and malformed payload tests.
+Hook changes must follow the testing strategy in [`../docs/04-engineering/standards/testing-strategy.md`](../docs/04-engineering/standards/testing-strategy.md): every changed hook needs mock-mode behavior coverage plus the live-mode transport error, valid payload, undefined payload, and malformed payload tests.

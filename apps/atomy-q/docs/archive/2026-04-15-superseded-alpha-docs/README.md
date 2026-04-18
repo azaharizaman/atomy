@@ -1,6 +1,11 @@
 # Superseded Atomy-Q Alpha Docs Archive - 2026-04-15
 
-These files were archived when `apps/atomy-q/docs/ALPHA_RELEASE_PLAN_2026-04-15.md` became the active alpha release plan.
+These files were archived when the April 2026 alpha release plan became the active release source of truth. The current canonical docs now live under:
+
+- `apps/atomy-q/docs/01-product/`
+- `apps/atomy-q/docs/02-release-management/current-release/`
+- `apps/atomy-q/docs/03-domains/`
+- `apps/atomy-q/docs/04-engineering/`
 
 Archived content may be useful for historical traceability, but it must not be treated as current release guidance. If a detail conflicts with the active plan, the active plan wins.
 

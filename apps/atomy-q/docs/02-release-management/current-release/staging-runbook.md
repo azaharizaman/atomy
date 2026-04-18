@@ -214,7 +214,7 @@ Minimum evidence set:
 - screenshots of tenant registration success, RFQ overview, vendor invite state, quote intake/readiness, final comparison, award signoff, and Users & Roles pending activation row
 - any accepted constraints or observed non-blocking issues
 
-Record the evidence in `apps/atomy-q/docs/ALPHA_RELEASE_CHECKLIST.md` as part of the staging-readiness pass.
+Record the evidence in `apps/atomy-q/docs/02-release-management/current-release/release-checklist.md` as part of the staging-readiness pass.
 
 ## Failure triage
 

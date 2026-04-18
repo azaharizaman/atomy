@@ -3,9 +3,9 @@
 **Date:** 2026-04-17  
 **Scope:** Task 4 live-mode fail-loud slice plus release-plan fit review for the Atomy-Q WEB alpha golden path.  
 **Primary references:**  
-- `apps/atomy-q/docs/ALPHA_TASK4_LIVE_MODE_FAIL_LOUD_SPEC_2026-04-17.md`
-- `apps/atomy-q/docs/ALPHA_TASK4_LIVE_MODE_FAIL_LOUD_IMPLEMENTATION_PLAN_2026-04-17.md`
-- `apps/atomy-q/docs/ALPHA_RELEASE_PLAN_2026-04-15.md`
+- `apps/atomy-q/docs/07-history/archived-releases/alpha-2026-04/ALPHA_TASK4_LIVE_MODE_FAIL_LOUD_SPEC_2026-04-17.md`
+- `apps/atomy-q/docs/07-history/archived-releases/alpha-2026-04/ALPHA_TASK4_LIVE_MODE_FAIL_LOUD_IMPLEMENTATION_PLAN_2026-04-17.md`
+- `apps/atomy-q/docs/07-history/archived-releases/alpha-2026-04/ALPHA_RELEASE_PLAN_2026-04-15.md`
 
 ## Final Assessment
 
@@ -57,7 +57,7 @@ Result:
   - `apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/vendors/page.test.tsx`
   - `apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/comparison-runs/page.test.tsx`
 - Consolidated duplicate Task 4 entries in `apps/atomy-q/WEB/IMPLEMENTATION_SUMMARY.md`.
-- Clarified the Blocker A3 closure note in `apps/atomy-q/docs/ALPHA_RELEASE_CHECKLIST.md`.
+- Clarified the Blocker A3 closure note in `apps/atomy-q/docs/02-release-management/current-release/release-checklist.md`.
 
 ### Deferred as not applicable or out of scope
 
@@ -72,7 +72,7 @@ Result:
 Checks performed:
 
 - Manual diff audit against the Task 4 spec and implementation plan
-- Release-plan fit check against Section 9 Task 4 of `ALPHA_RELEASE_PLAN_2026-04-15.md`
+- Release-plan fit check against the historical Section 9 Task 4 plan in `07-history/archived-releases/alpha-2026-04/ALPHA_RELEASE_PLAN_2026-04-15.md`
 - `git diff --check`
 - CodeRabbit review triage
 

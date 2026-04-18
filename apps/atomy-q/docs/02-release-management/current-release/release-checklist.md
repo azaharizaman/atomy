@@ -1,8 +1,8 @@
-# Atomy-Q Alpha Release Checklist
+# Atomy-Q Current Release Checklist
 
 **Date:** 2026-04-15  
-**Plan:** `apps/atomy-q/docs/ALPHA_RELEASE_PLAN_2026-04-15.md`  
-**Scope:** Task 1 release evidence baseline for Atomy-Q API, WEB, and alpha-critical test matrix.  
+**Plan:** `apps/atomy-q/docs/02-release-management/current-release/release-plan.md`  
+**Scope:** Current alpha release evidence ledger for Atomy-Q API, WEB, staging readiness, and final Task 9 release gate.  
 **Environment:** Local workspace with project dependencies already installed; PostgreSQL, Redis, and MinIO containers were available per operator note. API tests used the project PHPUnit configuration.
 
 ## Executive Status
@@ -72,7 +72,7 @@ Use this ledger for every remediation/update made during manual verification and
 ### Required fields per change
 
 - Change ID and PR link.
-- Change class: `C1`, `C2`, or `C3` (per release plan Section 12.3).
+- Change class: `C1`, `C2`, or `C3` (per `02-release-management/change-management/alpha-change-control.md`).
 - Scope statement: explicitly confirm `No scope expansion` or document approved expansion.
 - Blocker/task mapping: affected A1 to A8 and Task 1 to 8 references.
 - Required gate commands and outcomes.
