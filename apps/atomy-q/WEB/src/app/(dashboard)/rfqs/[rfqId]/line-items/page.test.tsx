@@ -1,11 +1,17 @@
 import React from 'react';
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
 import type { RfqLineItemRow } from '@/hooks/use-rfq-line-items';
 
+const originalUseMocks = process.env.NEXT_PUBLIC_USE_MOCKS;
+
 beforeAll(() => {
   process.env.NEXT_PUBLIC_USE_MOCKS = 'false';
+});
+
+afterAll(() => {
+  process.env.NEXT_PUBLIC_USE_MOCKS = originalUseMocks;
 });
 
 const mockUseRfqLineItems = vi.fn();

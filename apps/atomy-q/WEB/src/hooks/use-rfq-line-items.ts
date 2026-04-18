@@ -19,7 +19,7 @@ export interface RfqLineItemRow {
   sort_order: number;
 }
 
-type SeedLineItem = {
+interface SeedLineItem {
   id: string;
   rfqId: string;
   rowType: 'heading' | 'line';
@@ -31,10 +31,26 @@ type SeedLineItem = {
   currency: string;
   specifications: string | null;
   sortOrder: number;
-};
+}
 
 function toRequiredNumber(value: unknown, fieldName: string): number {
-  if (value === null || value === undefined || value === '') {
+  if (value === null || value === undefined) {
+    throw new Error(`RFQ line item is missing ${fieldName}.`);
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed === '') {
+      throw new Error(`RFQ line item is missing ${fieldName}.`);
+    }
+    const numberValue = Number(trimmed);
+    if (!Number.isFinite(numberValue)) {
+      throw new Error(`RFQ line item field ${fieldName} must be numeric.`);
+    }
+    return numberValue;
+  }
+
+  if (value === '') {
     throw new Error(`RFQ line item is missing ${fieldName}.`);
   }
 
@@ -70,11 +86,17 @@ function normalizeLineItems(payload: unknown): RfqLineItemRow[] {
       throw new Error(`RFQ line item at index ${index} is missing required fields.`);
     }
 
+    const rawRowType = item.rowType ?? item.row_type;
+    const rawSection = item.section;
+    const resolvedRowType: 'heading' | 'line' =
+      rawRowType === 'heading' || rawRowType === 'line' ? rawRowType : 'line';
+    const resolvedSection = typeof rawSection === 'string' ? rawSection : null;
+
     return {
       id,
       rfq_id: rfqId,
-      rowType: 'line',
-      section: null,
+      rowType: resolvedRowType,
+      section: resolvedSection,
       description,
       quantity: toRequiredNumber(item.quantity, 'quantity'),
       uom,
@@ -105,15 +127,19 @@ function mapSeedLineItems(items: SeedLineItem[]): RfqLineItemRow[] {
 export function useRfqLineItems(rfqId: string) {
   const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
-  return useQuery({
-    queryKey: ['rfqs', rfqId, 'line-items'],
-    enabled: Boolean(rfqId),
+  const mockQuery = useQuery({
+    queryKey: ['rfqs', rfqId, 'line-items', 'mock'],
+    enabled: useMocks && Boolean(rfqId),
     queryFn: async () => {
-      if (useMocks) {
-        const { getSeedLineItemsByRfqId } = await import('@/data/seed');
-        return mapSeedLineItems(getSeedLineItemsByRfqId(rfqId));
-      }
+      const { getSeedLineItemsByRfqId } = await import('@/data/seed');
+      return mapSeedLineItems(getSeedLineItemsByRfqId(rfqId));
+    },
+  });
 
+  const liveQuery = useQuery({
+    queryKey: ['rfqs', rfqId, 'line-items'],
+    enabled: !useMocks && Boolean(rfqId),
+    queryFn: async () => {
       const data = await fetchLiveOrFail<{ data: RfqLineItemRow[] }>(`/rfqs/${encodeURIComponent(rfqId)}/line-items`);
 
       if (data === undefined) {
@@ -123,4 +149,6 @@ export function useRfqLineItems(rfqId: string) {
       return normalizeLineItems(data);
     },
   });
+
+  return useMocks ? mockQuery : liveQuery;
 }

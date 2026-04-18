@@ -26,7 +26,7 @@ function formatMoney(amount: number, currency: string): string {
 
 export function RfqLineItemsPageContent({ rfqId }: { rfqId: string }) {
   const { data: rfq, isError: rfqIsError, error: rfqError } = useRfq(rfqId);
-  const { data: lineItems = [], isError: lineItemsIsError, error: lineItemsError } = useRfqLineItems(rfqId);
+  const { data: lineItems = [], isLoading: lineItemsIsLoading, isError: lineItemsIsError, error: lineItemsError } = useRfqLineItems(rfqId);
   const [viewMode, setViewMode] = React.useState<ViewMode>('table');
 
   const breadcrumbItems = [
@@ -175,18 +175,20 @@ export function RfqLineItemsPageContent({ rfqId }: { rfqId: string }) {
       />
 
       <SectionCard title="Requested items" subtitle="Structured evaluation baseline">
-        {lineItems.length === 0 ? (
-          <EmptyState
-            icon={<Package size={20} />}
-            title="No line items"
-            description="Add line items to define the scope of this RFQ."
-          />
+        {lineItemsIsLoading ? (
+          <div className="flex items-center justify-center py-8 text-slate-400 text-sm">Loading line items...</div>
         ) : viewMode === 'table' ? (
           <DataTable<RfqLineItemRow>
             columns={columns}
             rows={lineItems}
             rowClassName={(row) => (row.rowType === 'heading' ? 'bg-slate-50/80' : '')}
             emptyState={<EmptyState icon={<Package size={20} />} title="No line items" description="Add line items to define the scope of this RFQ." />}
+          />
+        ) : lineItems.length === 0 ? (
+          <EmptyState
+            icon={<Package size={20} />}
+            title="No line items"
+            description="Add line items to define the scope of this RFQ."
           />
         ) : (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
