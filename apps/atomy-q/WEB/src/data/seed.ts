@@ -197,6 +197,20 @@ export interface SeedQuote {
   uploadedAt: string;
 }
 
+export interface SeedLineItem {
+  id: string;
+  rfqId: string;
+  rowType: 'heading' | 'line';
+  section: string | null;
+  description: string;
+  quantity: number;
+  uom: string;
+  unitPrice: number;
+  currency: string;
+  specifications: string | null;
+  sortOrder: number;
+}
+
 export interface SeedComparisonRun {
   id: string;
   rfqId: string;
@@ -232,10 +246,196 @@ let cachedSeed: {
   rfqs: SeedRfq[];
   vendorsByRfq: Map<string, SeedVendor[]>;
   quotesByRfq: Map<string, SeedQuote[]>;
+  lineItemsByRfq: Map<string, SeedLineItem[]>;
   runsByRfq: Map<string, SeedComparisonRun[]>;
   approvalsByRfq: Map<string, SeedApproval[]>;
   awardByRfq: Map<string, SeedAward>;
 } | null = null;
+
+const LINE_ITEM_BLUEPRINTS: Record<string, Array<{
+  section: string;
+  description: string;
+  quantity: number;
+  uom: string;
+  ratio: number;
+  specifications: string;
+}>> = {
+  Software: [
+    {
+      section: 'Subscriptions',
+      description: 'License bundle and subscription seats',
+      quantity: 120,
+      uom: 'seats',
+      ratio: 0.44,
+      specifications: 'Enterprise subscription access with admin provisioning.',
+    },
+    {
+      section: 'Implementation',
+      description: 'Implementation and configuration services',
+      quantity: 1,
+      uom: 'lot',
+      ratio: 0.34,
+      specifications: 'Tenant setup, workflow alignment, and rollout support.',
+    },
+    {
+      section: 'Support',
+      description: 'Premium support and renewal coverage',
+      quantity: 12,
+      uom: 'months',
+      ratio: 0.22,
+      specifications: 'Priority support and annual renewal protection.',
+    },
+  ],
+  'IT Hardware': [
+    {
+      section: 'Infrastructure',
+      description: 'Core hardware units',
+      quantity: 8,
+      uom: 'units',
+      ratio: 0.5,
+      specifications: 'Primary production-grade equipment for deployment.',
+    },
+    {
+      section: 'Services',
+      description: 'Installation and integration services',
+      quantity: 1,
+      uom: 'lot',
+      ratio: 0.3,
+      specifications: 'Rack, cable, and environment integration support.',
+    },
+    {
+      section: 'Warranty',
+      description: 'Warranty and spares pack',
+      quantity: 2,
+      uom: 'years',
+      ratio: 0.2,
+      specifications: 'Extended warranty and critical spare coverage.',
+    },
+  ],
+  Facilities: [
+    {
+      section: 'Maintenance',
+      description: 'Preventive maintenance visits',
+      quantity: 24,
+      uom: 'visits',
+      ratio: 0.4,
+      specifications: 'Scheduled maintenance across the contract period.',
+    },
+    {
+      section: 'Response',
+      description: 'Parts and corrective call-outs',
+      quantity: 12,
+      uom: 'call-outs',
+      ratio: 0.35,
+      specifications: 'Emergency repairs and parts replacement allowance.',
+    },
+    {
+      section: 'Reporting',
+      description: 'Service coordination and reporting',
+      quantity: 1,
+      uom: 'lot',
+      ratio: 0.25,
+      specifications: 'Monthly reporting and service governance.',
+    },
+  ],
+  Security: [
+    {
+      section: 'Monitoring',
+      description: 'Monitoring and alert triage',
+      quantity: 12,
+      uom: 'months',
+      ratio: 0.46,
+      specifications: '24/7 monitoring with escalation coverage.',
+    },
+    {
+      section: 'Assessment',
+      description: 'Assessment and compliance reviews',
+      quantity: 4,
+      uom: 'reviews',
+      ratio: 0.32,
+      specifications: 'Quarterly risk and compliance review sessions.',
+    },
+    {
+      section: 'Response',
+      description: 'Incident response retainer',
+      quantity: 1,
+      uom: 'lot',
+      ratio: 0.22,
+      specifications: 'Incident response standby and remediation support.',
+    },
+  ],
+};
+
+const DEFAULT_LINE_ITEM_BLUEPRINTS: Array<{
+  section: string;
+  description: string;
+  quantity: number;
+  uom: string;
+  ratio: number;
+  specifications: string;
+}> = [
+  {
+    section: 'Core scope',
+    description: 'Primary scope items',
+    quantity: 10,
+    uom: 'units',
+    ratio: 0.45,
+    specifications: 'Main line items for the requested procurement scope.',
+  },
+  {
+    section: 'Delivery',
+    description: 'Delivery and setup services',
+    quantity: 1,
+    uom: 'lot',
+    ratio: 0.35,
+    specifications: 'Implementation, delivery, and setup support.',
+  },
+  {
+    section: 'Support',
+    description: 'Support and contingency allowance',
+    quantity: 3,
+    uom: 'months',
+    ratio: 0.2,
+    specifications: 'Optional support allowance and contingency coverage.',
+  },
+];
+
+function buildLineItemsForRfq(rfqId: string, title: string, category: string, estimatedValue: number): SeedLineItem[] {
+  const blueprints = LINE_ITEM_BLUEPRINTS[category] ?? DEFAULT_LINE_ITEM_BLUEPRINTS;
+  const safeTitle = title.replace(/\s+/g, ' ').trim();
+
+  return blueprints.flatMap((blueprint, index) => {
+    const lineOrder = index * 2;
+    return [
+      {
+        id: `${rfqId}-section-${index + 1}`,
+        rfqId,
+        rowType: 'heading' as const,
+        section: blueprint.section,
+        description: blueprint.section,
+        quantity: 0,
+        uom: '',
+        unitPrice: 0,
+        currency: 'USD',
+        specifications: null,
+        sortOrder: lineOrder + 1,
+      },
+      {
+        id: `${rfqId}-li-${index + 1}`,
+        rfqId,
+        rowType: 'line' as const,
+        section: blueprint.section,
+        description: `${safeTitle} - ${blueprint.description}`,
+        quantity: blueprint.quantity,
+        uom: blueprint.uom,
+        unitPrice: Math.max(1, Math.round((estimatedValue * blueprint.ratio) / Math.max(1, blueprint.quantity))),
+        currency: 'USD',
+        specifications: blueprint.specifications,
+        sortOrder: lineOrder + 2,
+      },
+    ];
+  });
+}
 
 function buildSeed(): NonNullable<typeof cachedSeed> {
   if (cachedSeed) return cachedSeed;
@@ -243,6 +443,7 @@ function buildSeed(): NonNullable<typeof cachedSeed> {
   const rfqs: SeedRfq[] = [];
   const vendorsByRfq = new Map<string, SeedVendor[]>();
   const quotesByRfq = new Map<string, SeedQuote[]>();
+  const lineItemsByRfq = new Map<string, SeedLineItem[]>();
   const runsByRfq = new Map<string, SeedComparisonRun[]>();
   const approvalsByRfq = new Map<string, SeedApproval[]>();
   const awardByRfq = new Map<string, SeedAward>();
@@ -316,6 +517,7 @@ function buildSeed(): NonNullable<typeof cachedSeed> {
       quotesCount,
       description: `Scope and evaluation context for ${title}. Department: ${department}; category ${category}.`,
     });
+    lineItemsByRfq.set(id, buildLineItemsForRfq(id, title, category, estimatedValue));
 
     const vendorPool = [...VENDOR_NAMES].sort((a, b) => {
       const ha = hash(i + a.length);
@@ -430,6 +632,7 @@ function buildSeed(): NonNullable<typeof cachedSeed> {
     rfqs,
     vendorsByRfq,
     quotesByRfq,
+    lineItemsByRfq,
     runsByRfq,
     approvalsByRfq,
     awardByRfq,
@@ -513,6 +716,12 @@ export function getSeedVendorsByRfqId(rfqId: string): SeedVendor[] {
 
 export function getSeedQuotesByRfqId(rfqId: string): SeedQuote[] {
   return buildSeed().quotesByRfq.get(rfqId) ?? [];
+}
+
+export function getSeedLineItemsByRfqId(rfqId: string): SeedLineItem[] {
+  const rfq = getSeedRfqById(rfqId);
+  const key = rfq?.id ?? rfqId;
+  return buildSeed().lineItemsByRfq.get(key) ?? [];
 }
 
 export function getSeedComparisonRunsByRfqId(rfqId: string): SeedComparisonRun[] {

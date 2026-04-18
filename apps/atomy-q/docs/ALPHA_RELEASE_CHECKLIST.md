@@ -83,6 +83,7 @@ Use this ledger for every remediation/update made during manual verification and
 
 | Change ID / PR | Class | Scope check | Blocker + task mapping | Verification evidence | Non-regression result | Sign-offs | Status |
 |---|---|---|---|---|---|---|---|
+| `alpha/remidiation/rfq-line-items` (local branch) | C2 | No scope expansion. Limited to RFQ line-items UI/hook remediation, seed fallback hardening, and hook-test standard documentation. | A3 + A8; Task 4 live-mode fail-loud and Task 9 release-evidence discipline. | 2026-04-18: `npm run test:unit -- src/hooks/use-rfq-line-items.test.ts src/hooks/use-rfq-line-items.live.test.ts 'src/app/(dashboard)/rfqs/[rfqId]/line-items/page.test.tsx' src/data/seed.test.ts` PASS (4 files, 8 tests). `npm run build` PASS. | Live mode now reads RFQ line items via `useRfqLineItems` + `fetchLiveOrFail`; no embedded canned line-item dataset on RFQ line-items page; line-item unavailable state is explicit on live errors; mock fallback remains explicit under `NEXT_PUBLIC_USE_MOCKS=true` only. | Engineering: pending. QA: pending. Alpha Release Owner: pending. | Ready for review |
 | pending | pending | pending | pending | pending | pending | pending | pending |
 
 ## Historical Baseline Evidence

@@ -1,43 +1,32 @@
 'use client';
 
 import React from 'react';
+import { AlertTriangle, LayoutGrid, Package, Table2 } from 'lucide-react';
+
 import { PageHeader } from '@/components/ds/FilterBar';
-import { SectionCard, Card } from '@/components/ds/Card';
+import { Card, EmptyState, SectionCard } from '@/components/ds/Card';
 import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
-import { EmptyState } from '@/components/ds/Card';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useRfq } from '@/hooks/use-rfq';
-import { Table2, LayoutGrid, Package } from 'lucide-react';
-
-type LineItemRow = {
-  id: string;
-  heading: string;
-  description: string;
-  qty: number;
-  unit: string;
-  targetPrice: number;
-  entryType: 'heading' | 'line';
-  category?: string;
-};
-
-const MOCK_LINE_ITEMS: LineItemRow[] = [
-  { id: '1', heading: 'Servers', description: '', qty: 0, unit: '', targetPrice: 0, entryType: 'heading', category: undefined },
-  { id: '2', heading: '', description: 'Dell PowerEdge R750', qty: 12, unit: 'units', targetPrice: 4200, entryType: 'line', category: 'IT Hardware' },
-  { id: '3', heading: '', description: 'Dell PowerEdge R650', qty: 6, unit: 'units', targetPrice: 3100, entryType: 'line', category: 'IT Hardware' },
-  { id: '4', heading: '', description: 'HPE ProLiant DL380 Gen10', qty: 4, unit: 'units', targetPrice: 3800, entryType: 'line', category: 'IT Hardware' },
-  { id: '5', heading: 'Storage', description: '', qty: 0, unit: '', targetPrice: 0, entryType: 'heading', category: undefined },
-  { id: '6', heading: '', description: 'SAN Array 50TB', qty: 2, unit: 'units', targetPrice: 28500, entryType: 'line', category: 'Storage' },
-  { id: '7', heading: '', description: 'NAS 24-bay 10Gb', qty: 1, unit: 'units', targetPrice: 12000, entryType: 'line', category: 'Storage' },
-  { id: '8', heading: 'Network', description: '', qty: 0, unit: '', targetPrice: 0, entryType: 'heading', category: undefined },
-  { id: '9', heading: '', description: 'Cisco Catalyst 9300-48P', qty: 8, unit: 'units', targetPrice: 14500, entryType: 'line', category: 'Network' },
-  { id: '10', heading: '', description: '10Gb SFP+ Transceivers', qty: 24, unit: 'units', targetPrice: 320, entryType: 'line', category: 'Network' },
-];
+import { useRfqLineItems, type RfqLineItemRow } from '@/hooks/use-rfq-line-items';
 
 type ViewMode = 'table' | 'grid';
 
-export default function RfqLineItemsPage({ params }: { params: Promise<{ rfqId: string }> }) {
-  const { rfqId } = React.use(params);
-  const { data: rfq } = useRfq(rfqId);
+function formatMoney(amount: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    return `${currency} ${amount.toLocaleString()}`;
+  }
+}
+
+export function RfqLineItemsPageContent({ rfqId }: { rfqId: string }) {
+  const { data: rfq, isError: rfqIsError, error: rfqError } = useRfq(rfqId);
+  const { data: lineItems = [], isError: lineItemsIsError, error: lineItemsError } = useRfqLineItems(rfqId);
   const [viewMode, setViewMode] = React.useState<ViewMode>('table');
 
   const breadcrumbItems = [
@@ -46,14 +35,14 @@ export default function RfqLineItemsPage({ params }: { params: Promise<{ rfqId: 
     { label: 'Line Items' },
   ];
 
-  const columns: ColumnDef<LineItemRow>[] = [
+  const columns: ColumnDef<RfqLineItemRow>[] = [
     {
-      key: 'entryType',
+      key: 'rowType',
       label: 'Type',
       width: '90px',
       render: (row) => (
-        <span className={['text-xs font-medium', row.entryType === 'heading' ? 'text-slate-500 uppercase tracking-wide' : 'text-slate-600'].join(' ')}>
-          {row.entryType === 'heading' ? 'Section' : 'Line'}
+        <span className={['text-xs font-medium', row.rowType === 'heading' ? 'text-slate-500 uppercase tracking-wide' : 'text-slate-600'].join(' ')}>
+          {row.rowType === 'heading' ? 'Section' : 'Line'}
         </span>
       ),
     },
@@ -61,55 +50,97 @@ export default function RfqLineItemsPage({ params }: { params: Promise<{ rfqId: 
       key: 'description',
       label: 'Description',
       render: (row) => (
-        <span className={['text-sm', row.entryType === 'heading' ? 'font-semibold text-slate-800' : 'text-slate-700'].join(' ')}>
-          {row.entryType === 'heading' ? row.heading : row.description}
-        </span>
+        row.rowType === 'heading' ? (
+          <span className="text-sm font-semibold text-slate-800">{row.section ?? row.description}</span>
+        ) : (
+          <div className="space-y-0.5">
+            <p className="text-sm font-medium text-slate-800">{row.description}</p>
+            {row.specifications ? <p className="text-xs text-slate-500">{row.specifications}</p> : null}
+          </div>
+        )
       ),
     },
     {
-      key: 'category',
-      label: 'Category',
-      width: '120px',
-      render: (row) => <span className="text-xs text-slate-500">{row.entryType === 'line' && row.category ? row.category : '—'}</span>,
-    },
-    {
-      key: 'qty',
+      key: 'quantity',
       label: 'Qty',
-      width: '80px',
-      align: 'right',
-      render: (row) => (row.entryType === 'line' ? <span className="text-sm tabular-nums text-slate-700">{row.qty}</span> : <span className="text-slate-400">—</span>),
-    },
-    {
-      key: 'unit',
-      label: 'Unit',
-      width: '80px',
-      render: (row) => (row.entryType === 'line' && row.unit ? <span className="text-sm text-slate-600">{row.unit}</span> : <span className="text-slate-400">—</span>),
-    },
-    {
-      key: 'targetPrice',
-      label: 'Unit price',
-      width: '110px',
+      width: '90px',
       align: 'right',
       render: (row) =>
-        row.entryType === 'line' ? (
-          <span className="text-sm tabular-nums text-slate-700">${row.targetPrice.toLocaleString()}</span>
-        ) : (
+        row.rowType === 'heading' ? <span className="text-slate-400">—</span> : <span className="text-sm tabular-nums text-slate-700">{row.quantity}</span>,
+    },
+    {
+      key: 'uom',
+      label: 'Unit',
+      width: '100px',
+      render: (row) => (row.rowType === 'heading' ? <span className="text-slate-400">—</span> : <span className="text-sm text-slate-600">{row.uom}</span>),
+    },
+    {
+      key: 'unit_price',
+      label: 'Unit price',
+      width: '130px',
+      align: 'right',
+      render: (row) =>
+        row.rowType === 'heading' ? (
           <span className="text-slate-400">—</span>
+        ) : (
+          <span className="text-sm tabular-nums text-slate-700">{formatMoney(row.unit_price, row.currency)}</span>
         ),
     },
     {
       key: 'total',
       label: 'Total',
-      width: '120px',
+      width: '140px',
       align: 'right',
       render: (row) =>
-        row.entryType === 'line' ? (
-          <span className="text-sm font-semibold tabular-nums text-slate-800">${(row.targetPrice * row.qty).toLocaleString()}</span>
-        ) : (
+        row.rowType === 'heading' ? (
           <span className="text-slate-400">—</span>
+        ) : (
+          <span className="text-sm font-semibold tabular-nums text-slate-800">{formatMoney(row.unit_price * row.quantity, row.currency)}</span>
         ),
     },
+    {
+      key: 'sort_order',
+      label: 'Sort',
+      width: '80px',
+      align: 'right',
+      render: (row) => <span className="text-xs text-slate-500">{row.sort_order}</span>,
+    },
   ];
+
+  if (rfqIsError) {
+    const errorMessage = rfqError instanceof Error ? rfqError.message : 'RFQ data is unavailable.';
+    return (
+      <div className="space-y-5">
+        <WorkspaceBreadcrumbs items={breadcrumbItems} />
+        <PageHeader title="Line items" subtitle="RFQ unavailable" />
+        <SectionCard title="RFQ unavailable">
+          <EmptyState
+            icon={<AlertTriangle size={20} />}
+            title="Could not load RFQ context"
+            description={errorMessage}
+          />
+        </SectionCard>
+      </div>
+    );
+  }
+
+  if (lineItemsIsError) {
+    const errorMessage =
+      lineItemsError instanceof Error ? lineItemsError.message : 'The live line-item list could not be loaded.';
+    return (
+      <div className="space-y-5">
+        <WorkspaceBreadcrumbs items={breadcrumbItems} />
+        <PageHeader title="Line items" subtitle="Line-item data unavailable" />
+        <SectionCard title="Line-item data unavailable">
+          <EmptyState
+            icon={<AlertTriangle size={20} />}
+            title="Could not load line items"
+            description={errorMessage}
+          />
+        </SectionCard>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -142,60 +173,77 @@ export default function RfqLineItemsPage({ params }: { params: Promise<{ rfqId: 
           </div>
         }
       />
+
       <SectionCard title="Requested items" subtitle="Structured evaluation baseline">
-        {viewMode === 'table' ? (
-          <DataTable<LineItemRow>
+        {lineItems.length === 0 ? (
+          <EmptyState
+            icon={<Package size={20} />}
+            title="No line items"
+            description="Add line items to define the scope of this RFQ."
+          />
+        ) : viewMode === 'table' ? (
+          <DataTable<RfqLineItemRow>
             columns={columns}
-            rows={MOCK_LINE_ITEMS}
-            rowClassName={(row) => (row.entryType === 'heading' ? 'bg-slate-50/70' : '')}
-            emptyState={
-              <EmptyState
-                icon={<Package size={20} />}
-                title="No line items"
-                description="Add line items to define the scope of this RFQ."
-              />
-            }
+            rows={lineItems}
+            rowClassName={(row) => (row.rowType === 'heading' ? 'bg-slate-50/80' : '')}
+            emptyState={<EmptyState icon={<Package size={20} />} title="No line items" description="Add line items to define the scope of this RFQ." />}
           />
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {MOCK_LINE_ITEMS.map((item) =>
-              item.entryType === 'heading' ? (
-                <Card key={item.id} padding="sm" className="col-span-full border-slate-200 bg-slate-50/80">
-                  <p className="text-sm font-semibold text-slate-800">{item.heading}</p>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+            {lineItems.map((item) => (
+              item.rowType === 'heading' ? (
+                <Card key={item.id} padding="sm" className="col-span-full border-slate-200 bg-slate-50/90">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">{item.section ?? item.description}</p>
+                      <p className="text-xs text-slate-500">Section {item.sort_order}</p>
+                    </div>
+                    <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-medium text-slate-500 border border-slate-200">
+                      Section
+                    </span>
+                  </div>
                 </Card>
               ) : (
                 <Card key={item.id} padding="md" className="border border-slate-200">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-semibold text-slate-800 leading-tight">{item.description}</p>
+                  <div className="space-y-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-semibold text-slate-800 leading-tight">{item.description}</p>
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">
+                        {item.sort_order}
+                      </span>
+                    </div>
+                    {item.specifications ? <p className="text-xs text-slate-500">{item.specifications}</p> : null}
                   </div>
+
                   <div className="grid grid-cols-2 gap-2 mt-3">
                     <div className="rounded border border-slate-200 px-2 py-1">
-                      <p className="text-[10px] uppercase text-slate-400">Category</p>
-                      <p className="text-xs text-slate-700">{item.category ?? '—'}</p>
-                    </div>
-                    <div className="rounded border border-slate-200 px-2 py-1">
                       <p className="text-[10px] uppercase text-slate-400">Qty</p>
-                      <p className="text-xs text-slate-700">{item.qty}</p>
+                      <p className="text-xs text-slate-700 tabular-nums">{item.quantity}</p>
                     </div>
                     <div className="rounded border border-slate-200 px-2 py-1">
                       <p className="text-[10px] uppercase text-slate-400">Unit</p>
-                      <p className="text-xs text-slate-700">{item.unit}</p>
+                      <p className="text-xs text-slate-700">{item.uom}</p>
                     </div>
                     <div className="rounded border border-slate-200 px-2 py-1">
                       <p className="text-[10px] uppercase text-slate-400">Unit price</p>
-                      <p className="text-xs text-slate-700">${item.targetPrice.toLocaleString()}</p>
+                      <p className="text-xs text-slate-700 tabular-nums">{formatMoney(item.unit_price, item.currency)}</p>
                     </div>
-                    <div className="rounded border border-slate-200 px-2 py-1 col-span-2">
+                    <div className="rounded border border-slate-200 px-2 py-1">
                       <p className="text-[10px] uppercase text-slate-400">Total</p>
-                      <p className="text-xs font-semibold text-slate-800">${(item.targetPrice * item.qty).toLocaleString()}</p>
+                      <p className="text-xs font-semibold text-slate-800 tabular-nums">{formatMoney(item.unit_price * item.quantity, item.currency)}</p>
                     </div>
                   </div>
                 </Card>
               )
-            )}
+            ))}
           </div>
         )}
       </SectionCard>
     </div>
   );
+}
+
+export default function RfqLineItemsPage({ params }: { params: Promise<{ rfqId: string }> }) {
+  const { rfqId } = React.use(params);
+  return <RfqLineItemsPageContent rfqId={rfqId} />;
 }
