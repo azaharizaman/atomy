@@ -79,9 +79,10 @@ final class VerifyStorageDiskCommand extends Command
 
     private function resolvePathPrefix(): string
     {
-        $pathPrefix = trim((string) $this->option('path-prefix'));
+        $rawPathPrefix = (string) $this->option('path-prefix');
+        $pathPrefix = trim(trim($rawPathPrefix), '/');
 
-        return $pathPrefix !== '' ? trim($pathPrefix, '/') : 'alpha-storage-smoke';
+        return $pathPrefix !== '' ? $pathPrefix : 'alpha-storage-smoke';
     }
 
     private function buildPath(string $pathPrefix, Carbon $timestamp, string $entropy): string

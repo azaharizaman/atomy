@@ -95,8 +95,7 @@ cd apps/atomy-q/API && php artisan atomy:seed-rfq-flow --count=1 --status=publis
 7. Confirm the WEB build is using the deployed API origin with mocks disabled.
 
 ```bash
-cd apps/atomy-q/WEB && npm install
-cd apps/atomy-q/WEB && npm run build
+cd apps/atomy-q/WEB && npm install && npm run build
 ```
 
 8. If operators want a browser-assisted smoke against the deployed host, point Playwright at the live WEB URL.

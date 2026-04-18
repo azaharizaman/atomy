@@ -27,6 +27,18 @@ final class VerifyStorageDiskCommandTest extends TestCase
         $this->assertSame([], Storage::disk('staging')->allFiles('alpha-storage-smoke'));
     }
 
+    public function testVerifyStorageDiskCommandFallsBackToDefaultPrefixWhenPathPrefixOnlyContainsSlashes(): void
+    {
+        config()->set('filesystems.default', 'staging');
+        Storage::fake('staging');
+
+        $this->artisan('atomy:verify-storage-disk', [
+            '--path-prefix' => '///',
+        ])
+            ->assertExitCode(0)
+            ->expectsOutputToContain('path=alpha-storage-smoke/verify-');
+    }
+
     public function testVerifyStorageDiskCommandFailsWhenCleanupReturnsFalse(): void
     {
         config()->set('filesystems.default', 'cleanup-failure');
