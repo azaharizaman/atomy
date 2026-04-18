@@ -108,3 +108,29 @@
 
 - Regenerated `/roles` client types now expose the concrete role item shape, so `use-users.ts` consumes `UserRolesResponse['data']` directly instead of normalizing from an `unknown[]` contract.
 - `use-users.test.tsx` no longer carries the stale `as never` workaround for the undefined invite-response guard case.
+
+## 2026-04-18 Global Error Fallback
+
+- Added `src/app/global-error.tsx` as the root App Router error boundary for unexpected failures outside the normal page-level error states.
+- The fallback now shows a user-facing recovery path with retry and dashboard actions, plus a support-oriented panel that links to `support@atomy-q.nexusnv.net`.
+- When Next provides an error digest, the screen surfaces it as a reference code for support without exposing stack traces or internal details.
+
+## 2026-04-18 RFQ Line Items Live Source
+
+- Replaced the requisition line-items page's canned mock rows with a live `useRfqLineItems` query sourced from `GET /rfqs/{rfqId}/line-items`.
+- New requisitions now render the empty state when no line items exist, instead of showing unrelated seeded hardware rows.
+- The line-items page keeps the existing table/grid presentation, but the data now reflects the active requisition context.
+- Added `use-rfq-line-items.live.test.ts` with the same live-mode coverage pattern used by the other hooks: transport error, valid payload, undefined payload, and malformed row rejection.
+- Added `use-rfq-line-items.test.ts` to lock the current mock-mode behavior to an empty list until mock seed line-item data is introduced.
+
+## 2026-04-18 RFQ Line Items Seed Enrichment
+
+- Added deterministic RFQ line-item seed data to `src/data/seed.ts` so mock mode can render real requisition content.
+- Introduced `getSeedLineItemsByRfqId()` and wired `use-rfq-line-items` mock mode to consume seeded requisition line items instead of an empty list.
+- Added `src/data/seed.test.ts` to verify seeded requisitions expose line items, and updated the mock-mode hook test to assert the seed-backed contract.
+
+## 2026-04-18 RFQ Line Item Section Groups
+
+- Seeded requisition line items now include section heading rows and line rows, so mock-mode requisition line items show grouped sections instead of a flat list.
+- The line-items page now renders section rows in both table and grid modes while keeping live API payloads unchanged.
+- Added page coverage for grouped mock rows so the section headings and nested line items stay visible in mock-mode UI.

@@ -356,3 +356,82 @@ Implementation note, 2026-04-17:
 - New Atomy-Q alpha docs must be placed in `apps/atomy-q/docs/`.
 - Package-local implementation summaries remain next to the code they summarize.
 - General architecture standards remain under `docs/project/` and still apply.
+
+## 12. Alpha Change Management Procedure (Post-Task-8 Stabilization)
+
+Use this procedure for all changes made while manual UI/UX verification and alpha remediation are ongoing.
+
+### 12.1 Objective
+
+Keep alpha stable while remediation continues:
+
+- Prevent reintroduction of blockers A1 to A8.
+- Prevent scope creep before alpha release.
+- Require evidence-based approvals for every change.
+
+### 12.2 Allowed Change Scope
+
+Allowed without scope-expansion approval:
+
+- Error remediation on existing alpha-supported flows.
+- UI/UX refinements on existing alpha-supported screens and interactions.
+- Removal of remaining mock fallback behavior in live mode.
+- Test hardening and documentation updates tied to the above.
+
+Not allowed in this phase unless explicitly approved by Product + Engineering:
+
+- New user-facing modules/routes/capabilities outside Section 1 and Section 8 decisions.
+- Broad refactors that are not required to fix a verified alpha defect.
+- New integrations, negotiation/risk/reporting expansion, or beta-only feature activation.
+
+### 12.3 Change Classification And Required Gates
+
+Classify each PR before implementation:
+
+| Class | Definition | Minimum required gates |
+|---|---|---|
+| C1 (Low) | Cosmetic UI copy/style/layout changes with no API/contract/state logic impact. | Targeted unit tests + route smoke for touched pages + checklist entry. |
+| C2 (Medium) | UX or behavior changes inside existing alpha flows, including hook logic and fail-loud behavior updates. | Targeted unit tests + relevant live hook tests + `npm run build` + checklist entry. |
+| C3 (High) | Changes touching auth/session/tenant scoping, API contracts, RFQ/quote/comparison/award behavior, staging/env/runtime path, or cross-cutting adapters. | WEB lint/build/unit + API alpha suite + targeted E2E smoke + checklist entry + explicit reviewer sign-off. |
+
+If uncertain between classes, treat as C3.
+
+### 12.4 Mandatory Modification Path
+
+Every alpha remediation change must follow this path:
+
+1. Open a scoped change note in `ALPHA_RELEASE_CHECKLIST.md` under the Alpha Change Control Ledger.
+2. State the mapped risk against A1 to A8 and affected alpha task(s) (1 to 8).
+3. Confirm "no scope expansion" or document requested expansion for decision.
+4. Implement only after classification and reviewer assignment are clear.
+5. Run required gates for the class (C1/C2/C3) and attach exact command evidence.
+6. Confirm non-regression for the touched alpha blocker/task area.
+7. Merge only with checklist evidence and reviewer sign-off present.
+
+### 12.5 Hard Stop Conditions
+
+Do not merge when any condition below is true:
+
+- `NEXT_PUBLIC_USE_MOCKS=false` path silently falls back to seed/mock data on alpha pages.
+- Any previously closed blocker gate regresses without accepted release-owner waiver.
+- Tenant isolation semantics regress from tenant-scoped 404 behavior.
+- API/WEB contract drift is introduced without regenerated client and passing verification.
+- A deferred/non-alpha surface becomes reachable in alpha mode without explicit decision.
+
+### 12.6 Reviewer Roles
+
+Minimum approval set per alpha remediation PR:
+
+- Engineering owner for the touched area.
+- QA/verification owner confirming required gates and evidence.
+- Alpha release owner confirming scope and blocker impact.
+
+For C3 changes, all three approvals are mandatory before merge.
+
+### 12.7 Freeze Rule
+
+Starting from final release-candidate branch cut:
+
+- Only C1/C2 fixes are allowed by default.
+- C3 fixes require explicit release-owner approval and same-day regression rerun of impacted alpha gates.
+- No net-new scope is allowed after freeze.

@@ -65,6 +65,26 @@ The strongest rectification signal is that the alpha-critical backend flows pass
 
 If a true staging mocks-off smoke has not been completed, design-partner readiness is not yet earned and the release remains internal alpha only.
 
+## Alpha Change Control Ledger (Post-Task-8 Remediation)
+
+Use this ledger for every remediation/update made during manual verification and pre-release stabilization.
+
+### Required fields per change
+
+- Change ID and PR link.
+- Change class: `C1`, `C2`, or `C3` (per release plan Section 12.3).
+- Scope statement: explicitly confirm `No scope expansion` or document approved expansion.
+- Blocker/task mapping: affected A1 to A8 and Task 1 to 8 references.
+- Required gate commands and outcomes.
+- Non-regression statement.
+- Sign-off owners: Engineering, QA, Alpha Release Owner.
+
+### Ledger table
+
+| Change ID / PR | Class | Scope check | Blocker + task mapping | Verification evidence | Non-regression result | Sign-offs | Status |
+|---|---|---|---|---|---|---|---|
+| pending | pending | pending | pending | pending | pending | pending | pending |
+
 ## Historical Baseline Evidence
 
 ## Gate Summary
