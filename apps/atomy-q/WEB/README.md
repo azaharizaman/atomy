@@ -1,153 +1,56 @@
 # Atomy-Q Frontend (WEB)
 
-This is the Next.js frontend for the Atomy-Q Quote Comparison & Procurement platform.
+This is the Next.js frontend for the Atomy-Q quote comparison and procurement platform.
 
-**Design-partner alpha:** Current scope, release gates, and deferred surfaces are documented in [`../docs/ALPHA_RELEASE_PLAN_2026-04-15.md`](../docs/ALPHA_RELEASE_PLAN_2026-04-15.md).
+## Local Development
 
-## Tech Stack
-- **Framework**: Next.js 16 (App Router)
-- **Styling**: Tailwind CSS v4
-- **State Management**: Zustand (Auth), TanStack Query (Server State)
-- **Forms**: React Hook Form + Zod
-- **UI Components**: Shadcn/ui (Radix + Tailwind) + Custom Design System tokens
-- **Icons**: Lucide React
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Copy `.env.example` to `.env.local` and set local values.
+3. Start the dev server:
+   ```bash
+   npm run dev
+   ```
 
-## Getting Started
+Mock mode is local-only. Use `NEXT_PUBLIC_USE_MOCKS=true` only for local UI work or seed-backed demos. Never enable mock mode in staging or production.
 
-1.  **Install dependencies**:
-    ```bash
-    npm install
-    ```
+## Generated API Client
 
-2.  **Environment Setup**:
-    Copy `.env.example` to `.env.local` (create one if needed):
-    ```env
-    NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
-    ```
+The OpenAPI document is exported from the Laravel API into `../openapi/openapi.json` (see [`../API/README.md`](../API/README.md)).
 
-3.  **Run Development Server**:
-    ```bash
-    npm run dev
-    ```
-
-## API types (OpenAPI)
-
-The OpenAPI document is exported from the Laravel API into `../openapi/openapi.json` (see `apps/atomy-q/API/README.md`). Regenerate the typed client after API changes:
+Regenerate the typed client after API changes:
 
 ```bash
 npm run generate:api
 ```
 
-Output is committed under `src/generated/api/` so `npm run build` works without running PHP locally; CI or pre-merge workflows should run `generate:api` when the spec changes.
+The generated output is committed under `src/generated/api/` so builds do not depend on a local PHP API checkout.
 
-## Environment Variables
+## Staging Validation
 
-Required:
-- `NEXT_PUBLIC_API_URL`: Base API URL (default used by the app: `http://localhost:8000/api/v1`).
+Staging validation should use the deployed WEB hostname and the deployed API.
 
-Optional:
-- `NEXT_PUBLIC_USE_MOCKS=true`: Local-only demo mode using seed/mocked data. Do not use for alpha readiness validation.
-- `PLAYWRIGHT_BASE_URL`: Override Playwright base URL (default: `http://localhost:3000`).
-- `PLAYWRIGHT_WEB_SERVER_COMMAND`: Override the Playwright web server command.
+- `NEXT_PUBLIC_API_URL` must point at the deployed API and include `/api/v1`.
+- `NEXT_PUBLIC_USE_MOCKS=false`.
+- `PLAYWRIGHT_BASE_URL` should point at the deployed WEB hostname for manual checks or smoke tests.
+- Set `PLAYWRIGHT_BASE_URL` in `.env.local` for local/manual runs or inject it as an environment variable in CI.
 
-### Quote normalization & comparison UI
+The full staging bring-up and smoke sequence is in [`../docs/STAGING_ALPHA_RUNBOOK.md`](../docs/STAGING_ALPHA_RUNBOOK.md).
 
-- Hooks: `use-normalization-review` (GET conflicts + meta blocking flags, resolve mutation), `use-quote-submission`, `use-freeze-comparison` (POST final run), `use-comparison-readiness` (overview + blocking).
-- **Normalize** workspace surfaces **blocking issues** first, disables **Freeze comparison** until blockers clear, and links to the **decision trail**.
-- **Comparison runs** list shows a **Snapshot frozen** banner when a final run exists (mock mode uses seed data).
+## Tests
 
-## Running The App
+Essential local entry points:
 
-Development (hot reload):
 ```bash
-npm run dev
+npm run test:unit                       # fast hook/component coverage during local work
+npm run test:e2e                        # full browser regression pass before CI/review
+npm run test:e2e -- tests/screen-smoke.spec.ts  # quick deployed/local smoke validation
 ```
 
-Production build + start:
-```bash
-npm run build
-npm run start
-```
+For E2E runs that need browser installation:
 
-## Running Tests
-
-Unit/Integration (Vitest):
 ```bash
-npm run test:unit
-npm run test:unit:watch
-```
-
-E2E (Playwright):
-```bash
-# one-time browser install
 npm run test:e2e:install
-
-# run tests (starts Next dev server automatically)
-npm run test:e2e
 ```
-
-**OS note:** Playwright does not officially support **Fedora**; installs may use a fallback browser build. For **full-suite** E2E sign-off before production or partner onboarding, run `npm run test:e2e` on **Ubuntu LTS** (or rely on CI on a supported image).
-
-By default, the auth test uses a **mocked** API. To run the **login test against the real API** (catches "Invalid credentials" and redirect):
-
-1. **API** must be running with **`JWT_SECRET`** set in `.env` (see `apps/atomy-q/API/.env.example`). Without it, login returns 500.
-2. Start the API: `cd apps/atomy-q/API && php artisan serve --port=8000`
-3. Start the WEB: `npm run dev` (or use existing server).
-4. Run: `E2E_USE_REAL_API=1 PLAYWRIGHT_USE_EXISTING_SERVER=1 npm run test:e2e -- tests/auth.spec.ts -g "real API"`
-
-If login still fails in the browser, ensure the API `config/cors.php` allows your WEB origin (e.g. `http://localhost:3000`) and `supports_credentials` is `true` when the WEB sends `withCredentials: true`.
-
-CI-friendly run:
-```bash
-PLAYWRIGHT_WEB_SERVER_COMMAND="npm run build && npm run start -- --port 3000" npm run test:e2e:ci
-```
-
-Screen smoke (Playwright):
-```bash
-npm run test:e2e -- tests/screen-smoke.spec.ts
-```
-
-## Test Data And Mocks
-
-Playwright tests:
-- Stub `/api/v1/auth/login` and `/api/v1/me` with Playwright route handlers.
-- Some smoke paths may set `NEXT_PUBLIC_USE_MOCKS=true` for local test isolation; this is not representative of live-mode alpha behavior.
-
-Local manual testing:
-- If the backend is running at `NEXT_PUBLIC_API_URL`, the login page will call `/auth/login` and `/me` against the API.
-- If you want to run the UI without a backend, set `NEXT_PUBLIC_USE_MOCKS=true` for the dashboard, and use Playwright to stub auth during E2E runs.
-
-## Local Backend Setup
-
-This WEB app expects the backend to expose:
-- `POST /api/v1/auth/login` → `{ access_token, user }`
-- `GET /api/v1/me` → user payload
-- Optional: `GET /api/v1/dashboard/kpis`, `GET /api/v1/dashboard/recent-activity`
-
-To run against a local API:
-1.  Start the backend service (API app).
-2.  Set `NEXT_PUBLIC_API_URL` in `.env.local`.
-3.  Start the WEB app with `npm run dev`.
-
-## Project Structure
-- `src/app`: Next.js App Router pages and layouts.
-- `src/components`: UI components (layout, design system, shadcn).
-- `src/hooks`: Custom React hooks (React Query wrappers).
-- `src/lib`: Utilities (API client, tokens, class mergers).
-- `src/store`: Global client state (Zustand).
-- `src/providers`: Context providers (Query, Auth).
-
-## Authentication
-The app uses JWT authentication. The access token is stored in memory (`useAuthStore`) and the refresh token is expected to be handled via `httpOnly` cookies by the backend.
-On app load, `AuthProvider` attempts to refresh the session.
-
-## API Integration
-The API client is located at `src/lib/api.ts`. It includes interceptors for attaching the Bearer token and handling 401 token refreshes automatically.
-
-## Contributing
-
-1.  Create a branch for your work.
-2.  Keep changes scoped to the WEB app in `apps/atomy-q/WEB`.
-3.  Update or add tests for new behavior. Run `npm run test:e2e` when applicable.
-4.  Update `apps/atomy-q/WEB/IMPLEMENTATION_SUMMARY.md` after functional changes.
-5.  Open a PR with a clear summary and screenshots for UI changes.

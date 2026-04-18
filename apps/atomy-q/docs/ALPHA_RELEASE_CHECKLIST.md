@@ -53,6 +53,18 @@ The strongest rectification signal is that the alpha-critical backend flows pass
 - `cd apps/atomy-q/WEB && npx vitest run src/hooks/use-award.live.test.ts src/hooks/use-users.test.tsx src/hooks/use-rfq-vendors.live.test.ts src/hooks/use-comparison-run.live.test.ts src/hooks/use-comparison-run-matrix.live.test.ts src/hooks/use-normalization-review.live.test.ts`: PASS.
 - Remaining accepted wrapper exceptions: none.
 
+## Latest Task 8 Staging-Readiness Evidence - 2026-04-18
+
+- Operator: pending.
+- WEB URL: pending.
+- API URL: pending.
+- Runtime posture: pending; expected `NEXT_PUBLIC_USE_MOCKS=false`, `QUEUE_CONNECTION=sync`, `QUOTE_INTELLIGENCE_MODE=deterministic`.
+- Storage verification result: pending; expected `php artisan atomy:verify-storage-disk --disk=s3 --path-prefix=alpha-storage-smoke`.
+- Queue verification note: pending; not required for the main alpha smoke because the staging posture is `QUEUE_CONNECTION=sync`.
+- Golden-path smoke result: pending; requires a true staging mocks-off run against deployed WEB and API origins.
+
+If a true staging mocks-off smoke has not been completed, design-partner readiness is not yet earned and the release remains internal alpha only.
+
 ## Historical Baseline Evidence
 
 ## Gate Summary

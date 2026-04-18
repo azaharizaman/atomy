@@ -3,10 +3,18 @@
 This is the backend API for the Atomy‑Q Quote Comparison & Procurement platform. It exposes the `/api/v1` REST endpoints used by the WEB app and includes JWT authentication, multi‑tenant scoping, and stubbed controllers for the full endpoint surface.
 
 **Design-partner alpha:** Current scope, release gates, and deferred surfaces are documented in [`../docs/ALPHA_RELEASE_PLAN_2026-04-15.md`](../docs/ALPHA_RELEASE_PLAN_2026-04-15.md).
+**Staging bring-up:** [`../docs/STAGING_ALPHA_RUNBOOK.md`](../docs/STAGING_ALPHA_RUNBOOK.md) is the source of truth for alpha staging.
+
+## Alpha staging posture
+
+- Deterministic quote intelligence is the alpha staging default.
+- `QUEUE_CONNECTION=sync` is the design-partner path for alpha staging unless the team explicitly chooses async later.
+- Verify storage wiring with `php artisan atomy:verify-storage-disk`.
+- Keep `../docs/STAGING_ALPHA_RUNBOOK.md` open when bringing the environment up.
 
 ## Quote intelligence modes
 
-- `deterministic` is the supported alpha default and is the mode used when `QUOTE_INTELLIGENCE_MODE` is unset.
+- `deterministic` is the supported alpha staging default and is the mode used when `QUOTE_INTELLIGENCE_MODE` is unset.
 - `llm` is defined in the environment contract, but it remains dormant until a production provider adapter is wired in.
 - In live operation, alpha does not silently fall back from `llm` to deterministic mode; misconfigured or unimplemented `llm` settings fail through the quote-intelligence exception path, are logged server-side, and return the existing sanitized API failure shape for the calling workflow.
 
@@ -26,7 +34,7 @@ This is the backend API for the Atomy‑Q Quote Comparison & Procurement platfor
    ```bash
    cp .env.example .env
    ```
-   If you do not have an `.env.example`, create `.env` with the variables below.
+   `.env.example` is already staged for alpha; use it as the copyable contract and only change deployment-specific values.
 
 3. **Generate app key**
    ```bash
@@ -56,54 +64,9 @@ php artisan scramble:export --path=../openapi/openapi.json
 
 Optional: set `API_VERSION` in `.env` for the `info.version` field in the exported document.
 
-## Required Environment Variables
+## Environment Contract
 
-### App
-- `APP_ENV` (e.g. `local`)
-- `APP_KEY` (set by `php artisan key:generate`)
-- `APP_URL` (e.g. `http://localhost:8000`)
-
-### Database
-- `DB_CONNECTION` (e.g. `pgsql`)
-- `DB_HOST`
-- `DB_PORT`
-- `DB_DATABASE`
-- `DB_USERNAME`
-- `DB_PASSWORD`
-
-### JWT Auth
-- `JWT_SECRET` (required; must be non-empty)
-- `JWT_TTL` (minutes)
-- `JWT_REFRESH_TTL` (minutes)
-- `JWT_ALGO` (e.g. `HS256`)
-- `JWT_ISSUER` (e.g. `atomy-q`)
-
-### Optional (App Config)
-- `REDIS_URL`
-- `FILESYSTEM_DISK` (set to `s3` for MinIO)
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
-- `AWS_DEFAULT_REGION`
-- `AWS_BUCKET`
-- `AWS_URL` (MinIO base URL)
-- `AWS_ENDPOINT` (MinIO endpoint URL)
-- `AWS_USE_PATH_STYLE_ENDPOINTS` (set to `true` for MinIO)
-- `ATOMY_DEFAULT_PER_PAGE`
-- `ATOMY_MAX_PER_PAGE`
-- `ATOMY_MAX_UPLOAD_MB`
-- `ATOMY_MFA_DEVICE_TRUST_DAYS`
-- `ATOMY_APPROVAL_SLA_HOURS`
-- `ATOMY_APPROVAL_MAX_SNOOZE_HOURS`
-- `ATOMY_MIN_VENDORS_FINAL`
-- `ATOMY_MIN_VENDORS_PREVIEW`
-- `ATOMY_CONFIDENCE_THRESHOLD`
-- `QUOTE_INTELLIGENCE_MODE` (`deterministic` by default; `llm` stays dormant until a real provider adapter is wired in)
-- `QUOTE_INTELLIGENCE_LLM_PROVIDER`
-- `QUOTE_INTELLIGENCE_LLM_MODEL`
-- `QUOTE_INTELLIGENCE_LLM_BASE_URL`
-- `QUOTE_INTELLIGENCE_LLM_API_KEY`
-- `QUOTE_INTELLIGENCE_LLM_TIMEOUT_SECONDS`
-- **`FEATURE_PROJECTS_ENABLED`** / **`FEATURE_TASKS_ENABLED`** (default `false`): when `false`, `GET /projects` and related routes **return 404** (feature hidden). Set to `true` in local `.env` for Atomy-Q WEB Projects / Tasks screens.
+Use [`./.env.example`](./.env.example) as the copyable env contract. See **Alpha staging posture** above for the operational defaults and verification commands.
 
 ## Quote intake & comparison (pilot)
 
@@ -112,40 +75,6 @@ Optional: set `API_VERSION` in `.env` for the `info.version` field in the export
 - **POST `/approvals/{id}/approve`** requires a linked **final** comparison run whose snapshot includes `normalized_lines`, and re-checks that all submissions are still `ready` without blocking issues.
 - **Decision trail**: freezing a snapshot appends a `decision_trail_entries` row with `event_type = comparison_snapshot_frozen` (hash-chained per run). **GET `/decision-trail`** returns tenant-scoped entries; filter with `?rfq_id=`.
 - **`atomy:seed-rfq-flow`**: after HTTP quote upload, syncs `normalization_source_lines` in the database for each seeded quote so the comparison-final step can succeed against the new gates (still requires a running API and valid login).
-
-## Example `.env`
-```env
-APP_ENV=local
-APP_URL=http://localhost:8000
-APP_KEY=base64:replace-me
-
-DB_CONNECTION=pgsql
-DB_HOST=127.0.0.1
-DB_PORT=5432
-DB_DATABASE=atomy_dev
-DB_USERNAME=postgres
-DB_PASSWORD=secret
-
-JWT_SECRET=base64:change-me
-JWT_TTL=60
-JWT_REFRESH_TTL=120
-JWT_ALGO=HS256
-JWT_ISSUER=atomy-q
-
-REDIS_URL=redis://localhost:6379/0
-
-FILESYSTEM_DISK=s3
-AWS_ACCESS_KEY_ID=minioadmin
-AWS_SECRET_ACCESS_KEY=minioadmin
-AWS_DEFAULT_REGION=us-east-1
-AWS_BUCKET=your-bucket-name
-AWS_URL=http://localhost:9000
-AWS_ENDPOINT=http://localhost:9000
-AWS_USE_PATH_STYLE_ENDPOINTS=true
-
-FEATURE_PROJECTS_ENABLED=true
-FEATURE_TASKS_ENABLED=true
-```
 
 ## Running API Tests
 
