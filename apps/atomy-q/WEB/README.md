@@ -54,3 +54,5 @@ For E2E runs that need browser installation:
 ```bash
 npm run test:e2e:install
 ```
+
+Hook changes must follow the enforced coverage standard in [`docs/HOOK_TEST_STANDARD.md`](docs/HOOK_TEST_STANDARD.md): every hook needs mock-mode behavior coverage plus the live-mode transport error, valid payload, undefined payload, and malformed payload tests.
