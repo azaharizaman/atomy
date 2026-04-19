@@ -3,7 +3,9 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { createTestWrapper } from '@/test/utils';
 import { useCreateRfqLineItem } from './use-create-rfq-line-item';
 
-const mockRfQStoreLineItem = vi.fn();
+const { mockRfQStoreLineItem } = vi.hoisted(() => ({
+  mockRfQStoreLineItem: vi.fn(),
+}));
 
 vi.mock('@/generated/api', () => ({
   rfqStoreLineItem: (...args: unknown[]) => mockRfQStoreLineItem(...args),
@@ -40,6 +42,7 @@ describe('useCreateRfqLineItem', () => {
           specifications: 'Spare set',
         }),
       }),
+      expect.objectContaining({ throwOnError: true }),
     );
   });
 });

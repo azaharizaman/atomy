@@ -87,10 +87,9 @@
 - The drawer uses the live `useCreateRfqLineItem` mutation and invalidates the line-items query on successful creation.
 - Mock mode blocks persistence with an explicit read-only message.
 - Verification:
-  - `cd apps/atomy-q/WEB && npx vitest run src/app/(dashboard)/rfqs/[rfqId]/line-items/page.test.tsx src/app/(dashboard)/rfqs/[rfqId]/line-items/line-item-drawer.test.tsx src/hooks/use-create-rfq-line-item.test.ts` -> PASS, 6 tests.
-  - `cd apps/atomy-q/WEB && npm run build` -> PASS.
-  - `cd apps/atomy-q/WEB && npm run lint` -> PASS (existing warnings).
-  - `cd apps/atomy-q/WEB && npm run build` -> PASS.
+   - `cd apps/atomy-q/WEB && npx vitest run src/app/(dashboard)/rfqs/[rfqId]/line-items/page.test.tsx src/app/(dashboard)/rfqs/[rfqId]/line-items/line-item-drawer.test.tsx src/hooks/use-create-rfq-line-item.test.ts` -> PASS, 6 tests.
+   - `cd apps/atomy-q/WEB && npm run build` -> PASS.
+   - `cd apps/atomy-q/WEB && npm run lint` -> PASS (existing warnings).
 
 ## 2026-04-17 Alpha Task 5 Hide Or Defer Non-Alpha Surfaces
 

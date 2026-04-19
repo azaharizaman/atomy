@@ -30,10 +30,10 @@ vi.mock('@/hooks/use-create-rfq-line-item', () => ({
 }));
 
 vi.mock('@tanstack/react-query', async () => {
-  const actual = await vi.importActual('@tanstack/react-query');
+  const actual = await vi.importActual<typeof import('@tanstack/react-query')>('@tanstack/react-query');
   return {
     ...actual,
-    useQueryClient: () => new QueryClient(),
+    useQueryClient: () => new actual.QueryClient(),
   };
 });
 

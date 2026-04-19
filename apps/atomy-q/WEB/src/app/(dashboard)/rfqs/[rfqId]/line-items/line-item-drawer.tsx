@@ -41,6 +41,21 @@ export function LineItemDrawer({
     }
   }, [open]);
 
+  const handleEscape = React.useCallback(
+    (e: KeyboardEvent) => {
+      if (open && e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    },
+    [open, onClose],
+  );
+
+  React.useEffect(() => {
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [handleEscape]);
+
   if (!open) return null;
 
   const submit = async (event: React.FormEvent) => {
@@ -52,15 +67,42 @@ export function LineItemDrawer({
       return;
     }
 
+    const trimmedDesc = description.trim();
+    const trimmedUom = uom.trim();
+    const trimmedCurrency = currency.trim().toUpperCase();
     const trimmedSpecs = specifications.trim();
+    const qty = Number(quantity);
+    const price = Number(unitPrice);
+
+    if (!trimmedDesc) {
+      setError('Description is required.');
+      return;
+    }
+    if (!trimmedUom) {
+      setError('UOM is required.');
+      return;
+    }
+    if (!trimmedCurrency) {
+      setError('Currency is required.');
+      return;
+    }
+    if (!Number.isFinite(qty) || qty <= 0) {
+      setError('Quantity must be a positive number.');
+      return;
+    }
+    if (!Number.isFinite(price) || price < 0) {
+      setError('Unit price must be a non-negative number.');
+      return;
+    }
+
     try {
       await createLineItem.mutateAsync({
-        description: description.trim(),
-        quantity: Number(quantity),
-        uom: uom.trim(),
-        unit_price: Number(unitPrice),
-        currency: currency.trim().toUpperCase(),
-        specifications: trimmedSpecs ? trimmedSpecs : null,
+        description: trimmedDesc,
+        quantity: qty,
+        uom: trimmedUom,
+        unit_price: price,
+        currency: trimmedCurrency,
+        specifications: trimmedSpecs || null,
       });
       await onCreated?.();
       onClose();
@@ -69,24 +111,33 @@ export function LineItemDrawer({
     }
   };
 
+  React.useEffect(() => {
+    if (!open) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [open, onClose]);
+
   return (
     <>
       <div
         className="fixed inset-0 bg-black/20 z-20"
-        role="button"
-        tabIndex={0}
-        aria-label="Close line item drawer"
+        aria-hidden="true"
         onClick={onClose}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
-            e.preventDefault();
-            onClose();
-          }
-        }}
       />
-      <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white border-l border-slate-200 shadow-lg z-30 flex flex-col">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="line-item-drawer-title"
+        className="fixed inset-y-0 right-0 w-full max-w-md bg-white border-l border-slate-200 shadow-lg z-30 flex flex-col"
+      >
         <div className="flex items-center justify-between p-4 border-b border-slate-200">
-          <h2 className="text-sm font-semibold text-slate-900">Add line item</h2>
+          <h2 id="line-item-drawer-title" className="text-sm font-semibold text-slate-900">Add line item</h2>
           <Button size="sm" variant="secondary" onClick={onClose}>
             <X size={14} className="mr-1.5" />
             Close

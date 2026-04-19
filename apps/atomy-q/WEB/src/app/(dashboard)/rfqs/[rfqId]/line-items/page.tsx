@@ -36,9 +36,10 @@ export function RfqLineItemsPageContent({ rfqId }: { rfqId: string }) {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
 
   const isWritable = rfq?.status === 'draft';
+  const canPersist = isWritable && process.env.NEXT_PUBLIC_USE_MOCKS !== 'true';
 
   const handleCreated = React.useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: ['rfqLineItems', rfqId] });
+    await queryClient.invalidateQueries({ queryKey: ['rfqs', rfqId, 'line-items'] });
   }, [queryClient, rfqId]);
 
   const breadcrumbItems = [
@@ -275,7 +276,7 @@ export function RfqLineItemsPageContent({ rfqId }: { rfqId: string }) {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         onCreated={handleCreated}
-        isWritable={isWritable}
+        isWritable={canPersist}
       />
     </div>
   );

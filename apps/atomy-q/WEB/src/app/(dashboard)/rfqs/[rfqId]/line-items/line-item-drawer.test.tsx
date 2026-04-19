@@ -1,13 +1,13 @@
 import React from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
 
-const mockMutateAsync = vi.fn();
+let mockMutateAsync: ReturnType<typeof vi.fn>;
 
 vi.mock('@/hooks/use-create-rfq-line-item', () => ({
   useCreateRfqLineItem: () => ({
-    mutateAsync: mockMutateAsync,
+    mutateAsync: (...args: unknown[]) => mockMutateAsync(...args),
     isPending: false,
     error: null,
   }),
@@ -16,6 +16,14 @@ vi.mock('@/hooks/use-create-rfq-line-item', () => ({
 import { LineItemDrawer } from './line-item-drawer';
 
 describe('LineItemDrawer', () => {
+  beforeEach(() => {
+    mockMutateAsync = vi.fn();
+  });
+
+  afterEach(() => {
+    mockMutateAsync.mockReset();
+  });
+
   it('shows error state when submission fails', async () => {
     mockMutateAsync.mockRejectedValueOnce(new Error('Network error'));
     const onClose = vi.fn();
@@ -23,6 +31,10 @@ describe('LineItemDrawer', () => {
     renderWithProviders(<LineItemDrawer rfqId="rfq-1" onClose={onClose} isWritable open />);
 
     fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Test item' } });
+    fireEvent.change(screen.getByLabelText(/quantity/i), { target: { value: '1' } });
+    fireEvent.change(screen.getByLabelText(/uom/i), { target: { value: 'ea' } });
+    fireEvent.change(screen.getByLabelText(/unit price/i), { target: { value: '100' } });
+    fireEvent.change(screen.getByLabelText(/currency/i), { target: { value: 'USD' } });
     await fireEvent.click(screen.getByRole('button', { name: /save line item/i }));
 
     await vi.waitFor(() => {
@@ -63,6 +75,11 @@ describe('LineItemDrawer', () => {
         uom: 'ea',
         unit_price: 1200,
         currency: 'USD',
+      }),
+    );
+    expect(mockMutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        description: expect.any(String),
       }),
     );
     await expect(onCreated).toHaveBeenCalled();
