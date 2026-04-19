@@ -52,6 +52,7 @@ export function LineItemDrawer({
       return;
     }
 
+    const trimmedSpecs = specifications.trim();
     try {
       await createLineItem.mutateAsync({
         description: description.trim(),
@@ -59,7 +60,7 @@ export function LineItemDrawer({
         uom: uom.trim(),
         unit_price: Number(unitPrice),
         currency: currency.trim().toUpperCase(),
-        specifications: specifications.trim() ? specifications.trim() : null,
+        specifications: trimmedSpecs ? trimmedSpecs : null,
       });
       await onCreated?.();
       onClose();

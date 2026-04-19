@@ -16,6 +16,32 @@ vi.mock('@/hooks/use-create-rfq-line-item', () => ({
 import { LineItemDrawer } from './line-item-drawer';
 
 describe('LineItemDrawer', () => {
+  it('shows error state when submission fails', async () => {
+    mockMutateAsync.mockRejectedValueOnce(new Error('Network error'));
+    const onClose = vi.fn();
+
+    renderWithProviders(<LineItemDrawer rfqId="rfq-1" onClose={onClose} isWritable open />);
+
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Test item' } });
+    await fireEvent.click(screen.getByRole('button', { name: /save line item/i }));
+
+    await vi.waitFor(() => {
+      expect(screen.getByText(/network error/i)).toBeInTheDocument();
+    });
+  });
+
+  it('blocks submission in mock mode', async () => {
+    const onClose = vi.fn();
+
+    renderWithProviders(<LineItemDrawer rfqId="rfq-1" onClose={onClose} isWritable={false} open />);
+
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Test item' } });
+    await fireEvent.click(screen.getByRole('button', { name: /save line item/i }));
+
+    expect(mockMutateAsync).not.toHaveBeenCalled();
+    expect(screen.getByText(/mock mode is read-only/i)).toBeInTheDocument();
+  });
+
   it('submits the create form and closes on success', async () => {
     mockMutateAsync.mockResolvedValueOnce({ data: { id: 'li-1' } });
     const onClose = vi.fn();
