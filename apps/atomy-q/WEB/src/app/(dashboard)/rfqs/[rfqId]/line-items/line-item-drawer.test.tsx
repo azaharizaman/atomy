@@ -1,6 +1,6 @@
 import React from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, screen } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
 
 let mockMutateAsync: ReturnType<typeof vi.fn>;
@@ -35,8 +35,11 @@ describe('LineItemDrawer', () => {
     fireEvent.change(screen.getByLabelText(/uom/i), { target: { value: 'ea' } });
     fireEvent.change(screen.getByLabelText(/unit price/i), { target: { value: '100' } });
     fireEvent.change(screen.getByLabelText(/currency/i), { target: { value: 'USD' } });
-    await fireEvent.click(screen.getByRole('button', { name: /save line item/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /save line item/i }));
+    });
 
+    await vi.waitFor(() => expect(mockMutateAsync).toHaveBeenCalled());
     await vi.waitFor(() => {
       expect(screen.getByText(/network error/i)).toBeInTheDocument();
     });
@@ -52,6 +55,48 @@ describe('LineItemDrawer', () => {
 
     expect(mockMutateAsync).not.toHaveBeenCalled();
     expect(screen.getByText(/mock mode is read-only/i)).toBeInTheDocument();
+  });
+
+  it('rejects blank numeric fields before submit', async () => {
+    const onClose = vi.fn();
+
+    renderWithProviders(<LineItemDrawer rfqId="rfq-1" onClose={onClose} isWritable open />);
+
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Nitrogen compressor' } });
+    fireEvent.change(screen.getByLabelText(/quantity/i), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText(/uom/i), { target: { value: 'ea' } });
+    fireEvent.change(screen.getByLabelText(/unit price/i), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText(/currency/i), { target: { value: 'USD' } });
+    await fireEvent.click(screen.getByRole('button', { name: /save line item/i }));
+
+    expect(mockMutateAsync).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(screen.getByText(/quantity is required/i)).toBeInTheDocument());
+  });
+
+  it('rejects blank unit price before submit', async () => {
+    const onClose = vi.fn();
+
+    renderWithProviders(<LineItemDrawer rfqId="rfq-1" onClose={onClose} isWritable open />);
+
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Nitrogen compressor' } });
+    fireEvent.change(screen.getByLabelText(/quantity/i), { target: { value: '2' } });
+    fireEvent.change(screen.getByLabelText(/uom/i), { target: { value: 'ea' } });
+    fireEvent.change(screen.getByLabelText(/unit price/i), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText(/currency/i), { target: { value: 'USD' } });
+    await fireEvent.click(screen.getByRole('button', { name: /save line item/i }));
+
+    expect(mockMutateAsync).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(screen.getByText(/unit price is required/i)).toBeInTheDocument());
+  });
+
+  it('closes once when escape is pressed', async () => {
+    const onClose = vi.fn();
+
+    renderWithProviders(<LineItemDrawer rfqId="rfq-1" onClose={onClose} isWritable open />);
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
   });
 
   it('submits the create form and closes on success', async () => {
@@ -82,7 +127,7 @@ describe('LineItemDrawer', () => {
         description: expect.any(String),
       }),
     );
-    await expect(onCreated).toHaveBeenCalled();
-    await expect(onClose).toHaveBeenCalled();
+    await vi.waitFor(() => expect(onCreated).toHaveBeenCalled());
+    await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
   });
 });
