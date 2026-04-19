@@ -45,4 +45,26 @@ describe('useCreateRfqLineItem', () => {
       expect.objectContaining({ throwOnError: true }),
     );
   });
+
+  it('invalidates rfq queries after a successful create', async () => {
+    mockRfQStoreLineItem.mockResolvedValue({
+      data: { id: 'li-1', rfq_id: 'rfq-1' },
+    });
+
+    const { Wrapper, queryClient } = createTestWrapper();
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+    const { result } = renderHook(() => useCreateRfqLineItem('rfq-1'), { wrapper: Wrapper });
+
+    await result.current.mutateAsync({
+      description: 'Nitrogen compressor',
+      quantity: 2,
+      uom: 'ea',
+      unit_price: 1200,
+      currency: 'USD',
+      specifications: null,
+    });
+
+    await waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['rfqs', 'rfq-1'] }));
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['rfqs', 'rfq-1', 'line-items'] });
+  });
 });
