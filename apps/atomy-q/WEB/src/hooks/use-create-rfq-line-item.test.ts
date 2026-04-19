@@ -1,0 +1,45 @@
+import { describe, expect, it, vi } from 'vitest';
+import { renderHook, waitFor } from '@testing-library/react';
+import { createTestWrapper } from '@/test/utils';
+import { useCreateRfqLineItem } from './use-create-rfq-line-item';
+
+const mockRfQStoreLineItem = vi.fn();
+
+vi.mock('@/generated/api', () => ({
+  rfqStoreLineItem: (...args: unknown[]) => mockRfQStoreLineItem(...args),
+}));
+
+describe('useCreateRfqLineItem', () => {
+  it('calls the generated create mutation with the rfq id and payload', async () => {
+    mockRfQStoreLineItem.mockResolvedValue({
+      data: { id: 'li-1', rfq_id: 'rfq-1' },
+    });
+
+    const { Wrapper } = createTestWrapper();
+    const { result } = renderHook(() => useCreateRfqLineItem('rfq-1'), { wrapper: Wrapper });
+
+    await result.current.mutateAsync({
+      description: 'Nitrogen compressor',
+      quantity: 2,
+      uom: 'ea',
+      unit_price: 1200,
+      currency: 'USD',
+      specifications: 'Spare set',
+    });
+
+    await waitFor(() => expect(mockRfQStoreLineItem).toHaveBeenCalled());
+    expect(mockRfQStoreLineItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        path: { rfqId: 'rfq-1' },
+        body: expect.objectContaining({
+          description: 'Nitrogen compressor',
+          quantity: 2,
+          uom: 'ea',
+          unit_price: 1200,
+          currency: 'USD',
+          specifications: 'Spare set',
+        }),
+      }),
+    );
+  });
+});
