@@ -78,7 +78,18 @@
 - Verification:
   - `cd apps/atomy-q/WEB && npx vitest run src/hooks/use-rfq.live.test.ts src/hooks/use-rfqs.live.test.ts src/hooks/use-rfq-vendors.live.test.ts src/hooks/use-quote-submissions.live.test.ts src/hooks/use-normalization-source-lines.live.test.ts src/hooks/use-normalization-review.live.test.ts src/hooks/use-comparison-runs.live.test.ts src/hooks/use-comparison-run.live.test.ts src/hooks/use-comparison-run-matrix.live.test.ts src/hooks/use-comparison-run-readiness.live.test.ts src/hooks/use-award.live.test.ts` -> PASS, 57 tests.
   - `cd apps/atomy-q/WEB && npx vitest run src/app/(dashboard)/rfqs/[rfqId]/vendors/page.test.tsx src/app/(dashboard)/rfqs/[rfqId]/quote-intake/page.test.tsx src/app/(dashboard)/rfqs/[rfqId]/quote-intake/[quoteId]/normalize/page.test.tsx src/app/(dashboard)/rfqs/[rfqId]/comparison-runs/page.test.tsx src/app/(dashboard)/rfqs/[rfqId]/award/page.test.tsx` -> PASS, 19 tests.
-  - `cd apps/atomy-q/WEB && npm run build` -> PASS.
+
+## 2026-04-19 Task 3 Line Items Inline Drawer
+
+- The line-items screen now has an "Add line item" CTA button in the header (visible for draft RFQs).
+- The empty state (both table and grid view) now has an inline "Add line item" action button.
+- Clicking any CTA opens the `<LineItemDrawer>` inline drawer.
+- The drawer uses the live `useCreateRfqLineItem` mutation and invalidates the line-items query on successful creation.
+- Mock mode blocks persistence with an explicit read-only message.
+- Verification:
+   - `cd apps/atomy-q/WEB && npx vitest run src/app/(dashboard)/rfqs/[rfqId]/line-items/page.test.tsx src/app/(dashboard)/rfqs/[rfqId]/line-items/line-item-drawer.test.tsx src/hooks/use-create-rfq-line-item.test.ts` -> PASS, 6 tests.
+   - `cd apps/atomy-q/WEB && npm run build` -> PASS.
+   - `cd apps/atomy-q/WEB && npm run lint` -> PASS (existing warnings).
 
 ## 2026-04-17 Alpha Task 5 Hide Or Defer Non-Alpha Surfaces
 
