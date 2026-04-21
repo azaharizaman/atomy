@@ -1,6 +1,6 @@
 {
     "name": "nexus/vendor",
-    "description": "Vendor management for Nexus ERP ecosystem",
+    "description": "Vendor master domain for Nexus ERP ecosystem",
     "type": "library",
     "license": "MIT",
     "require": {

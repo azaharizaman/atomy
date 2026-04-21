@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\V1\SearchController;
 use App\Http\Controllers\Api\V1\SettingController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\VendorController;
+use App\Http\Controllers\Api\V1\VendorStatusController;
 use App\Http\Controllers\Api\V1\VendorInvitationController;
 use App\Http\Controllers\Api\V1\ProjectController;
 use App\Http\Controllers\Api\V1\TaskController;
@@ -124,10 +125,13 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
             ->name('v1.rfq-templates.apply');
     });
 
-    // --- Section 5: Vendor Management (5 endpoints) ---
+    // --- Section 5: Vendor Management (8 endpoints) ---
     Route::prefix('vendors')->group(function (): void {
         Route::get('/', [VendorController::class, 'index']);
+        Route::post('/', [VendorController::class, 'store']);
         Route::get('{id}', [VendorController::class, 'show']);
+        Route::patch('{id}', [VendorController::class, 'update']);
+        Route::patch('{id}/status', [VendorStatusController::class, 'update']);
         Route::get('{id}/performance', [VendorController::class, 'performance']);
         Route::get('{id}/compliance', [VendorController::class, 'compliance']);
         Route::get('{id}/history', [VendorController::class, 'history']);

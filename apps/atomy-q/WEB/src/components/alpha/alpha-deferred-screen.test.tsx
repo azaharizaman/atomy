@@ -35,6 +35,7 @@ describe('alpha mode policy', () => {
   it('keeps top-level navigation restricted to alpha surfaces', () => {
     expect(isTopLevelNavVisibleInAlpha('dashboard')).toBe(true);
     expect(isTopLevelNavVisibleInAlpha('requisition')).toBe(true);
+    expect(isTopLevelNavVisibleInAlpha('vendors')).toBe(true);
     expect(isTopLevelNavVisibleInAlpha('documents')).toBe(false);
     expect(isTopLevelNavVisibleInAlpha('reporting')).toBe(false);
     expect(isTopLevelNavVisibleInAlpha('settings')).toBe(false);

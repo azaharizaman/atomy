@@ -131,7 +131,9 @@ Cover:
 - save + fetch by tenant/id
 - list filtered by tenant
 - cross-tenant lookup returns null
+- repository reads rows created by the API's canonical lowercase tenant IDs
 - status update persists approval metadata
+- repository status update rejects invalid transitions using the domain transition policy
 
 Run: `./vendor/bin/phpunit adapters/Laravel/Vendor/tests/Feature/VendorRepositoryTest.php`
 Expected: FAIL because adapter files and migration do not exist.
@@ -165,6 +167,12 @@ Implement tenant-scoped methods:
 - `updateStatus(string $tenantId, string $vendorId, VendorStatus $status, ?VendorApprovalRecord $approvalRecord): VendorInterface`
 
 Bind `VendorRepositoryInterface` to `EloquentVendorRepository`.
+Bind `VendorStatusTransitionPolicyInterface` to `VendorStatusTransitionPolicy`.
+
+Repository persistence requirements:
+- canonicalize new vendor `tenant_id` writes to lowercase to match API-created rows,
+- use case-normalized tenant predicates for reads/updates so existing mixed-case legacy rows remain accessible without cross-tenant leakage,
+- enforce `VendorStatusTransitionPolicyInterface` in `updateStatus()` so non-HTTP mutation paths cannot bypass the approved lifecycle.
 
 - [ ] **Step 4: Run repository tests**
 
@@ -269,6 +277,7 @@ Cover detail page states:
 - overview rendering
 - approval metadata visible for approved vendor
 - status action error surfaced
+- edit core vendor fields and submit through `use-update-vendor`
 
 Run:
 ```bash
@@ -287,7 +296,7 @@ Implement hooks that:
 
 Update `MAIN_NAV_ITEMS` to include `Vendors` with path `/vendors`.
 Build `/vendors` list with filters for status + text query and a create-vendor action.
-Build `/vendors/[vendorId]` detail with overview plus status transition controls.
+Build `/vendors/[vendorId]` detail with overview, edit form for core vendor fields, and status transition controls.
 
 - [ ] **Step 4: Run WEB tests and lint**
 

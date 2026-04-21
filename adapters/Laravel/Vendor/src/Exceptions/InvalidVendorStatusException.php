@@ -1,15 +1,15 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Nexus\Adapter\Laravel\Vendor\Exceptions;
 
-use RuntimeException;
+use DomainException;
 
-final class InvalidVendorStatusException extends RuntimeException
+final class InvalidVendorStatusException extends DomainException
 {
-    public function __construct(
-        public readonly string $invalidStatus
-    ) {
-        parent::__construct("Invalid vendor status: {$invalidStatus}");
+    public function __construct(string $status)
+    {
+        parent::__construct(sprintf('Invalid vendor status value: %s.', $status));
     }
 }

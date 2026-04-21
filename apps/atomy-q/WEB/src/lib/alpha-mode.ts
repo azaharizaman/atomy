@@ -1,6 +1,6 @@
 export const ALPHA_DEFERRED_COPY = 'This feature will be available in future releases';
 
-const ALPHA_TOP_LEVEL_NAV_IDS = new Set(['dashboard', 'requisition']);
+const ALPHA_TOP_LEVEL_NAV_IDS = new Set(['dashboard', 'requisition', 'vendors']);
 
 const ALL_RFQ_SECTION_IDS = new Set([
   'overview',

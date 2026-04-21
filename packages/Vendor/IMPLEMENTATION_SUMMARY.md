@@ -1,25 +1,28 @@
 # Vendor Package – Implementation Summary
 
-**Status:** Layer 1 scaffold + Layer 3 Laravel adapter (v1)
+**Status:** Layer 1 vendor domain scaffold
 
 ## Implemented
 
-- **Contracts:** `VendorProfileInterface`, `VendorRepositoryInterface`
-- **Value object:** `VendorStatus` enum (`active` / `inactive`)
-- **Layer 3:** `adapters/Laravel/Vendor` — `VendorServiceProvider`, `EloquentVendorProfile`, `EloquentVendorRepository` (tenant-scoped `findById` / `save`), migration `nexus_vendor_profiles`
-- **Tests:** `adapters/Laravel/Vendor/tests/Feature/VendorProfileTest.php` (Orchestra Testbench, sqlite in-memory), including tenant isolation
+- **Primary contract surface:** `VendorInterface`, `VendorQueryInterface`, `VendorPersistInterface`, `VendorRepositoryInterface`, `VendorStatusTransitionPolicyInterface`
+- **Vendor identity/contact contract:** `VendorInterface` now carries primary contact name, email, and optional phone for Task 2 persistence
+- **Status model:** `Enums/VendorStatus` with `Draft`, `UnderReview`, `Approved`, `Restricted`, `Suspended`, `Archived`
+- **Value objects:** `VendorId`, `VendorDisplayName`, `VendorLegalName`, `RegistrationNumber`, `VendorApprovalRecord`
+- **Policy:** `Services/VendorStatusTransitionPolicy`
+- **Exception:** `Exceptions/InvalidVendorStatusTransition`
+- **Tests:** `tests/Unit/Services/VendorStatusTransitionPolicyTest.php`, `tests/Unit/Contracts/VendorInterfaceTest.php`
 
-## Deferred
+## Notes
 
-- Unique constraint on `(tenant_id, party_id)` if product rule requires one profile per party per tenant
-- Domain exceptions for invalid persisted `status` values (currently `VendorStatus::from()` may throw `ValueError`)
+- Legacy `VendorProfile*` abstractions were removed so the package surface centers on the new vendor domain model.
+- Task 2 adds contact-bearing persistence requirements for adapters; legacy row hydration is now expected to fail loudly if persisted data is unreadable.
 
 ## Verification
 
 ```bash
-cd adapters/Laravel/Vendor && composer install && ./vendor/bin/phpunit -c phpunit.xml
+cd /home/azaharizaman/dev/atomy && ./vendor/bin/phpunit packages/Vendor/tests/Unit/Services/VendorStatusTransitionPolicyTest.php
 ```
 
 ## Traceability
 
-Plan: `docs/superpowers/plans/2026-03-24-nexus-vendor-implementation.md`
+Plan: `docs/superpowers/plans/2026-04-21-vendor-master-foundation.md`

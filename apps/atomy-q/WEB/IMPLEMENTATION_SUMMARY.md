@@ -19,7 +19,7 @@
 | **E2E Testing** | ✅ | Playwright coverage is split by ownership: alpha shell/auth (`tests/auth.spec.ts`, `tests/dashboard-nav.spec.ts`, `tests/smoke.spec.ts`), RFQ alpha journeys (`tests/rfq-alpha-journeys.spec.ts`), adjacent projects/tasks smoke (`tests/projects-tasks-smoke.spec.ts`), adjacent settings/users smoke (`tests/settings-users-smoke.spec.ts`), and narrow live RFQ create/overview smoke (`tests/rfq-lifecycle-e2e.spec.ts`). |
 | **Routing** | ✅ | Added not-found page for undefined routes with design-system styling. |
 | **RFQ Management** | 🚧 | RFQ List + Workspace Overview done; other workspace sections are scaffolded via `/rfqs/[rfqId]/[section]`. **`/rfqs/new` and RFQ Details require `submission_deadline`** (aligned with API NOT NULL). |
-| **Vendor Management** | ❌ | Pending implementation. |
+| **Vendor Management** | ✅ | Vendor master foundation delivered: top-level `/vendors` workspace, create/list/detail/status controls, generated-client hooks, and alpha nav visibility. |
 | **Quote Intake** | ✅ | Quote list, detail, normalize, comparison freeze, comparison-run detail, award, and approvals screens now consume live API data when `NEXT_PUBLIC_USE_MOCKS=false`. Live quote rows preserve nullable fields, normalize confidence/blocks strictly, reject empty-string unit prices, scope normalization source lines to the active `quoteId`, and expose accessible controlled selection controls on normalization rows. Award debriefs now use user-entered draft text instead of a hard-coded template message. Mock/demo branches remain available for local seed mode. |
 | **Comparison Runs** | ✅ | `/rfqs/[rfqId]/comparison-runs` and the run detail page render live persisted run, matrix, readiness, and snapshot payloads; the snapshot banner only appears for real final runs and the retired lock/unlock controls are no longer shown in the alpha UI. |
 | **Approvals** | 🚧 | Global queue `/approvals` + detail `/approvals/[id]` call API; RFQ-scoped approval URLs now use the live pending-approval list, forward the RFQ filter to the hook, and normalize backend priority values before rendering. |
@@ -201,3 +201,21 @@
 - Verification:
   - `cd apps/atomy-q/WEB && npx vitest run src/hooks/use-create-rfq-line-item.test.ts` -> PASS (3 tests).
   - `cd apps/atomy-q/WEB && npx vitest run 'src/app/(dashboard)/rfqs/[rfqId]/line-items/line-item-drawer.test.tsx'` -> PASS (6 tests).
+
+## 2026-04-22 Vendor Master Foundation (Task 4/5)
+
+- Added top-level Vendors navigation entry (`/vendors`) and breadcrumb label wiring in `src/config/nav.ts`.
+- Enabled Vendors as an alpha-visible top-level surface in `src/lib/alpha-mode.ts`.
+- Added generated-client vendor hooks with strict live payload normalization and fail-loud behavior:
+  - `use-vendors.ts`
+  - `use-vendor.ts`
+  - `use-create-vendor.ts`
+  - `use-update-vendor.ts`
+  - `use-update-vendor-status.ts`
+- Added vendor workspace pages:
+  - `src/app/(dashboard)/vendors/page.tsx` for vendor list/filter/create states.
+  - `src/app/(dashboard)/vendors/[vendorId]/page.tsx` for overview, core field editing, approval metadata, and status transitions.
+- Added vendor page tests:
+  - `src/app/(dashboard)/vendors/page.test.tsx`
+  - `src/app/(dashboard)/vendors/[vendorId]/page.test.tsx`
+- Updated alpha policy test to include Vendors as alpha-visible top-level nav.
