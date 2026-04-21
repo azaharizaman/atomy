@@ -509,6 +509,12 @@ async function stubAuth(page: import('@playwright/test').Page) {
   });
 
   await page.context().route('**/api/v1/awards/award-e2e-1/debrief/**', async (route) => {
+    if (route.request().method() === 'OPTIONS') {
+      const origin = getRequestOrigin(route);
+      await route.fulfill({ status: 204, headers: buildCorsHeaders(origin) });
+      return;
+    }
+
     const payload = route.request().postDataJSON() as { message?: string };
     const vendorId = route.request().url().split('/').pop() ?? '';
     sentDebriefs.push({
@@ -518,22 +524,6 @@ async function stubAuth(page: import('@playwright/test').Page) {
     });
     await fulfillJsonRoute(route, { data: currentAward });
   });
-
-  await page.addInitScript((user) => {
-    window.localStorage.setItem(
-      'auth-storage',
-      JSON.stringify({
-        state: {
-          user,
-          token: 'playwright-access-token',
-          refreshToken: null,
-          isAuthenticated: true,
-          isLoading: false,
-        },
-        version: 0,
-      }),
-    );
-  }, mockUser);
 
   await page.goto('/');
   await expect(page).toHaveURL('/');
@@ -623,12 +613,15 @@ test.describe('RFQ lifecycle E2E (creation to award)', () => {
     await expect(page.getByText(/awarded to e2e vendor/i)).toBeVisible();
   });
 
-  test('full RFQ lifecycle with real API: create via API then navigate to award', async ({ page, request }) => {
+  const realApiLifecycleTest = process.env.RUN_REAL_API_TESTS === 'true' ? test : test.skip;
+
+  realApiLifecycleTest('full RFQ lifecycle with real API: create via API then navigate to award', async ({ page, request }) => {
     const apiBase = process.env.NEXT_PUBLIC_API_URL ?? process.env.E2E_API_URL ?? 'http://localhost:8000/api/v1';
     const email = process.env.E2E_EMAIL ?? 'user1@example.com';
     const password = process.env.E2E_PASSWORD ?? 'secret';
 
-    const title = `E2E RFQ ${Date.now()}`;
+    const title = 'E2E RFQ real API smoke';
+    const idempotencyKey = 'e2e-rfq-real-api-smoke';
 
     const loginRes = await request.post(`${apiBase}/auth/login`, {
       data: { email, password },
@@ -653,11 +646,11 @@ test.describe('RFQ lifecycle E2E (creation to award)', () => {
 
     const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-    const submissionDeadline = new Date(Date.now() + 14 * 86400000).toISOString();
+    const submissionDeadline = '2030-05-05T00:00:00.000Z';
     const createRes = await request.post(`${apiBase}/rfqs`, {
       headers: {
         ...headers,
-        'Idempotency-Key': `e2e-rfq-${Date.now()}`,
+        'Idempotency-Key': idempotencyKey,
       },
       data: {
         title,

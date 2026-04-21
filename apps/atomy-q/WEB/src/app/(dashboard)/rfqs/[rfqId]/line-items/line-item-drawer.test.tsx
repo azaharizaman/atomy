@@ -51,9 +51,11 @@ describe('LineItemDrawer', () => {
     renderWithProviders(<LineItemDrawer rfqId="rfq-1" onClose={onClose} isWritable={false} open />);
 
     fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Test item' } });
-    await fireEvent.click(screen.getByRole('button', { name: /save line item/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /save line item/i }));
+    });
 
-    expect(mockMutateAsync).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(mockMutateAsync).not.toHaveBeenCalled());
     expect(screen.getByText(/mock mode is read-only/i)).toBeInTheDocument();
   });
 
@@ -67,9 +69,11 @@ describe('LineItemDrawer', () => {
     fireEvent.change(screen.getByLabelText(/uom/i), { target: { value: 'ea' } });
     fireEvent.change(screen.getByLabelText(/unit price/i), { target: { value: '' } });
     fireEvent.change(screen.getByLabelText(/currency/i), { target: { value: 'USD' } });
-    await fireEvent.click(screen.getByRole('button', { name: /save line item/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /save line item/i }));
+    });
 
-    expect(mockMutateAsync).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(mockMutateAsync).not.toHaveBeenCalled());
     await vi.waitFor(() => expect(screen.getByText(/quantity is required/i)).toBeInTheDocument());
   });
 
@@ -83,9 +87,11 @@ describe('LineItemDrawer', () => {
     fireEvent.change(screen.getByLabelText(/uom/i), { target: { value: 'ea' } });
     fireEvent.change(screen.getByLabelText(/unit price/i), { target: { value: '' } });
     fireEvent.change(screen.getByLabelText(/currency/i), { target: { value: 'USD' } });
-    await fireEvent.click(screen.getByRole('button', { name: /save line item/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /save line item/i }));
+    });
 
-    expect(mockMutateAsync).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(mockMutateAsync).not.toHaveBeenCalled());
     await vi.waitFor(() => expect(screen.getByText(/unit price is required/i)).toBeInTheDocument());
   });
 
@@ -111,9 +117,11 @@ describe('LineItemDrawer', () => {
     fireEvent.change(screen.getByLabelText(/uom/i), { target: { value: 'ea' } });
     fireEvent.change(screen.getByLabelText(/unit price/i), { target: { value: '1200' } });
     fireEvent.change(screen.getByLabelText(/currency/i), { target: { value: 'USD' } });
-    await fireEvent.click(screen.getByRole('button', { name: /save line item/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /save line item/i }));
+    });
 
-    expect(mockMutateAsync).toHaveBeenCalledWith(
+    await vi.waitFor(() => expect(mockMutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({
         description: 'Nitrogen compressor',
         quantity: 2,
@@ -121,12 +129,12 @@ describe('LineItemDrawer', () => {
         unit_price: 1200,
         currency: 'USD',
       }),
-    );
-    expect(mockMutateAsync).toHaveBeenCalledWith(
+    ));
+    await vi.waitFor(() => expect(mockMutateAsync).toHaveBeenCalledWith(
       expect.objectContaining({
         description: expect.any(String),
       }),
-    );
+    ));
     await vi.waitFor(() => expect(onCreated).toHaveBeenCalled());
     await vi.waitFor(() => expect(onClose).toHaveBeenCalled());
   });

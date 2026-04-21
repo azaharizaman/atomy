@@ -87,25 +87,35 @@ final class PetrochemicalTenantSeeder extends Seeder
 
     private function seedTenant(): void
     {
-        DB::table('tenants')->updateOrInsert(
-            ['id' => $this->tenantId],
-            [
-                'code' => 'NORDFJORD',
-                'name' => 'Nordfjord Process Chemicals AS',
-                'email' => 'procurement@nordfjord.example.com',
-                'status' => 'active',
-                'timezone' => 'Europe/Oslo',
-                'locale' => 'en',
-                'currency' => 'NOK',
-                'date_format' => 'Y-m-d',
-                'time_format' => 'H:i',
-                'storage_used' => 0,
-                'is_readonly' => false,
-                'onboarding_progress' => 100,
-                'created_at' => $this->now,
-                'updated_at' => $this->now,
-            ]
-        );
+        $tenantData = [
+            'code' => 'NORDFJORD',
+            'name' => 'Nordfjord Process Chemicals AS',
+            'email' => 'procurement@nordfjord.example.com',
+            'status' => 'active',
+            'timezone' => 'Europe/Oslo',
+            'locale' => 'en',
+            'currency' => 'NOK',
+            'date_format' => 'Y-m-d',
+            'time_format' => 'H:i',
+            'storage_used' => 0,
+            'is_readonly' => false,
+            'onboarding_progress' => 100,
+            'updated_at' => $this->now,
+        ];
+
+        $tenantExists = DB::table('tenants')->where('id', $this->tenantId)->exists();
+        if ($tenantExists) {
+            DB::table('tenants')
+                ->where('id', $this->tenantId)
+                ->update($tenantData);
+            return;
+        }
+
+        DB::table('tenants')->insert([
+            'id' => $this->tenantId,
+            ...$tenantData,
+            'created_at' => $this->now,
+        ]);
     }
 
     private function seedUsers(): void

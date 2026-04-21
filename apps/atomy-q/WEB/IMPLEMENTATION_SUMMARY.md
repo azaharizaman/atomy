@@ -154,3 +154,7 @@
 - `use-create-project` payload contract no longer requires `client_id`, and response normalization accepts optional `client_id` / `project_manager_id`.
 - Verification:
   - `cd apps/atomy-q/WEB && npm run test:unit -- src/hooks/use-create-project.test.ts` -> PASS.
+  - `cd apps/atomy-q/WEB && npx vitest run 'src/app/(dashboard)/rfqs/[rfqId]/line-items/line-item-drawer.test.tsx' src/hooks/use-create-rfq-line-item.test.ts src/hooks/use-create-project.test.ts` -> PASS (10 tests).
+  - `cd apps/atomy-q/WEB && npx playwright test tests/auth.spec.ts tests/dashboard-nav.spec.ts tests/settings-users-smoke.spec.ts tests/rfq-workflow.spec.ts tests/rfq-line-items.spec.ts tests/smoke.spec.ts tests/screen-smoke.spec.ts` -> PASS (13 passed, 1 skipped).
+  - `cd apps/atomy-q/WEB && npm run lint` -> PASS with existing warnings outside `projects/page.tsx`, `projects/[projectId]/page.tsx`, and `src/hooks/use-create-project.test.ts`.
+  - `cd apps/atomy-q/WEB && npm run build` -> PASS.

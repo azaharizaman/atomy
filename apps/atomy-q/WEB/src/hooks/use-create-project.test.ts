@@ -58,6 +58,6 @@ describe('useCreateProject', () => {
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toMatchObject({ id: 'p1', name: 'Project' });
+    expect(result.current.data).toMatchObject({ id: 'p1', name: 'Project', project_manager_id: 'u1' });
   });
 });

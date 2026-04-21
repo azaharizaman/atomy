@@ -44,6 +44,7 @@ export default function ProjectDetailPage() {
   const [editEndDate, setEditEndDate] = React.useState('');
   const [editPmId, setEditPmId] = React.useState('');
   const authUser = useAuthStore((state) => state.user);
+  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
   const { data: project, isLoading: projectLoading, error: projectError } = useProject(projectId, {
     enabled: projectsQueryEnabled,
@@ -62,10 +63,10 @@ export default function ProjectDetailPage() {
     enabled: projectsQueryEnabled,
   });
   const { data: usersData } = useUsers();
-  const userOptions = usersData?.items ?? [];
+  const userOptions = React.useMemo(() => usersData?.items ?? [], [usersData?.items]);
   const managerOptions = React.useMemo(() => {
     if (userOptions.length > 0) return userOptions;
-    if (authUser == null) return [];
+    if (!useMocks || authUser == null) return [];
     return [
       {
         id: authUser.id,
@@ -77,7 +78,7 @@ export default function ProjectDetailPage() {
         lastLoginAt: null,
       },
     ];
-  }, [authUser, userOptions]);
+  }, [authUser, userOptions, useMocks]);
   const acl = aclData ?? EMPTY_PROJECT_ACL;
   const updateProject = useUpdateProject(projectId);
   const updateStatus = useUpdateProjectStatus(projectId);
@@ -96,7 +97,12 @@ export default function ProjectDetailPage() {
   }, [project, editMode]);
 
   React.useEffect(() => {
-    if (!editMode || editPmId !== '') {
+    if (!editMode) {
+      return;
+    }
+
+    const currentSelectionExists = editPmId !== '' && managerOptions.some((user) => user.id === editPmId);
+    if (currentSelectionExists) {
       return;
     }
 
@@ -108,7 +114,10 @@ export default function ProjectDetailPage() {
 
     if (managerOptions.length > 0) {
       setEditPmId(managerOptions[0].id);
+      return;
     }
+
+    setEditPmId('');
   }, [authUser?.id, editMode, editPmId, managerOptions]);
 
   const aclSyncKey = React.useMemo(

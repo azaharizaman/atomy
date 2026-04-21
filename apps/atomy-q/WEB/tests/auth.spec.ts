@@ -66,7 +66,9 @@ test('reset-password with mocked API completes and offers return to sign in', as
 /**
  * Login against the real test API (requires the backend at localhost:8000 and seeded DB).
  */
-test('login with real API redirects to dashboard', async ({ page, request }) => {
+const realApiTest = process.env.E2E_USE_REAL_API === 'true' ? test : test.skip;
+
+realApiTest('login with real API redirects to dashboard', async ({ page, request }) => {
   const email = 'user1@example.com';
   const password = 'secret';
 
@@ -76,9 +78,8 @@ test('login with real API redirects to dashboard', async ({ page, request }) => 
   expect(loginRes.ok()).toBe(true);
   const loginData = await loginRes.json();
   const user = loginData.user;
-  if (!user || typeof user !== 'object') {
-    throw new Error('Login response did not include a user payload.');
-  }
+  expect(user).toBeTruthy();
+  expect(typeof user).toBe('object');
 
   await seedAuthSession(page, user as Parameters<typeof seedAuthSession>[1], {
     token: String(loginData.access_token ?? ''),

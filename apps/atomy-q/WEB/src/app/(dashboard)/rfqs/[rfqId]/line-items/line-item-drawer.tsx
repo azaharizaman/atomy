@@ -30,19 +30,21 @@ function getFocusableElements(container: HTMLElement): HTMLElement[] {
   );
 }
 
+export interface LineItemDrawerProps {
+  rfqId: string;
+  open: boolean;
+  onClose: () => void;
+  onCreated?: () => Promise<void> | void;
+  isWritable: boolean;
+}
+
 export function LineItemDrawer({
   rfqId,
   open,
   onClose,
   onCreated,
   isWritable,
-}: {
-  rfqId: string;
-  open: boolean;
-  onClose: () => void;
-  onCreated?: () => Promise<void> | void;
-  isWritable: boolean;
-}) {
+}: LineItemDrawerProps) {
   const createLineItem = useCreateRfqLineItem(rfqId);
   const drawerRef = React.useRef<HTMLDivElement | null>(null);
   const onCloseRef = React.useRef(onClose);

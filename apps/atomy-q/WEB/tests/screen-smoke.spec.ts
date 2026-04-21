@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { seedAuthSession } from './playwright-auth-bootstrap';
+import { fulfillJsonRoute } from './playwright-cors-helpers';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -234,31 +235,11 @@ const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000';
 
 test.beforeEach(async ({ page }) => {
   await page.route('**/api/v1/feature-flags', async (route) => {
-    const corsHeaders = buildCorsHeaders('http://localhost:3000');
-    if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: corsHeaders });
-      return;
-    }
-    await route.fulfill({
-      status: 200,
-      headers: corsHeaders,
-      contentType: 'application/json',
-      body: JSON.stringify({ data: { projects: true, tasks: true } }),
-    });
+    await fulfillJsonRoute(route, { data: { projects: true, tasks: true } });
   });
   await page.route('**/api/v1/rfqs/counts', async (route) => {
-    const corsHeaders = buildCorsHeaders('http://localhost:3000');
-    if (route.request().method() === 'OPTIONS') {
-      await route.fulfill({ status: 204, headers: corsHeaders });
-      return;
-    }
-    await route.fulfill({
-      status: 200,
-      headers: corsHeaders,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        data: { draft: 0, published: 0, closed: 0, awarded: 0, cancelled: 0, active: 0, pending: 0, archived: 0 },
-      }),
+    await fulfillJsonRoute(route, {
+      data: { draft: 0, published: 0, closed: 0, awarded: 0, cancelled: 0, active: 0, pending: 0, archived: 0 },
     });
   });
   await stubProjectsApi(page, baseUrl);

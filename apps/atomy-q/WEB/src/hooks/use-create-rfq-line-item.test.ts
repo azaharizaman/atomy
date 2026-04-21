@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { createTestWrapper } from '@/test/utils';
 import { useCreateRfqLineItem } from './use-create-rfq-line-item';
@@ -12,6 +12,10 @@ vi.mock('@/generated/api', () => ({
 }));
 
 describe('useCreateRfqLineItem', () => {
+  beforeEach(() => {
+    mockRfQStoreLineItem.mockReset();
+  });
+
   it('calls the generated create mutation with the rfq id and payload', async () => {
     mockRfQStoreLineItem.mockResolvedValue({
       data: { id: 'li-1', rfq_id: 'rfq-1' },

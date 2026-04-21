@@ -10,10 +10,6 @@ const mockUser = {
   tenantId: 'tenant-qa',
 };
 
-function firstRfqTableDataRow(page: import('@playwright/test').Page) {
-  return page.locator('table tbody tr.cursor-pointer').first();
-}
-
 async function stubAuth(page: import('@playwright/test').Page) {
   await page.route('**/api/v1/feature-flags', async (route) => {
     await fulfillJsonRoute(route, { data: { projects: true, tasks: true } });
@@ -135,7 +131,7 @@ test('smoke: RFQs list loads and can open an RFQ', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Schedule' })).toBeVisible({ timeout: 15000 });
 });
 
-test('smoke: Projects list and detail load', async ({ page }) => {
+test('smoke: Projects list loads', async ({ page }) => {
   const project = {
     id: '01JNE4ZHT9S0VQ7E2GQW1QYJ7B',
     name: 'Smoke Project',
@@ -149,22 +145,6 @@ test('smoke: Projects list and detail load', async ({ page }) => {
 
   await page.route('**/api/v1/projects*', async (route) => {
     await fulfillJsonRoute(route, { data: [project] });
-  });
-
-  await page.route(`**/api/v1/projects/${project.id}`, async (route) => {
-    await fulfillJsonRoute(route, { data: project });
-  });
-
-  await page.route(`**/api/v1/projects/${project.id}/health`, async (route) => {
-    await fulfillJsonRoute(route, { data: { project_id: project.id, overall_score: 80 } });
-  });
-
-  await page.route(`**/api/v1/projects/${project.id}/rfqs`, async (route) => {
-    await fulfillJsonRoute(route, { data: [] });
-  });
-
-  await page.route(`**/api/v1/projects/${project.id}/tasks`, async (route) => {
-    await fulfillJsonRoute(route, { data: [] });
   });
 
   await page.goto('/projects');

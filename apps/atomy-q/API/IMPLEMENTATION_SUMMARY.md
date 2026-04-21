@@ -309,6 +309,7 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 ## 2026-04-21 Projects Client Field Optionality
 
 - `ProjectController::store` no longer requires `client_id` in request validation; missing values now default to internal sentinel `self`.
+- `projects.client_id` remains NOT NULL; the internal-project sentinel `"self"` is persisted as a literal string via `ProjectController::SELF_CLIENT_ID`, so downstream reports, joins, filters, and ACL checks must special-case it until nullable client IDs are migrated.
 - `ProjectController::update` now safely preserves/falls back `client_id` instead of requiring explicit client input for internal project grouping usage.
 - Project list/show/store/update responses now include `project_manager_id` to support WEB edit/create manager selection workflows.
 - Verification:

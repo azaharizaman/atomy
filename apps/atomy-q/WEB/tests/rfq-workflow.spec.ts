@@ -21,6 +21,12 @@ async function signInWithMockedAuth(page: import('@playwright/test').Page) {
   });
   await page.route('**/api/v1/rfqs**', async (route) => {
     const pathname = new URL(route.request().url()).pathname;
+    if (pathname.endsWith('/counts')) {
+      await fulfillJsonRoute(route, {
+        data: { draft: 0, published: 0, closed: 0, awarded: 0, cancelled: 0, active: 1, pending: 0, archived: 0 },
+      });
+      return;
+    }
     if (pathname.endsWith('/overview')) {
       await fulfillJsonRoute(route, {
         data: {

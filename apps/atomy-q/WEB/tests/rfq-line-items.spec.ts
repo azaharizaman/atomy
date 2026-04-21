@@ -6,6 +6,7 @@
  */
 import { expect, test } from '@playwright/test';
 import { fulfillJsonRoute } from './playwright-cors-helpers';
+import { seedAuthSession } from './playwright-auth-bootstrap';
 
 const rfqId = 'RFQ-E2E-LINE-1';
 
@@ -17,11 +18,24 @@ const mockUser = {
   tenantId: 'tenant-qa',
 };
 
+interface LineItemFixture {
+  id: string;
+  rfq_id: string;
+  description: string;
+  quantity: number;
+  uom: string;
+  unit_price: number;
+  currency: string;
+  specifications: string | null;
+  sort_order: number;
+  rowType: string;
+}
+
 test.describe('RFQ line-items screen', () => {
-  test.skip(process.env.NEXT_PUBLIC_USE_MOCKS !== 'false', 'Run with NEXT_PUBLIC_USE_MOCKS=false to exercise line-item creation.');
+  test.skip(process.env.NEXT_PUBLIC_USE_MOCKS === 'true', 'Run with NEXT_PUBLIC_USE_MOCKS=false to exercise line-item creation.');
 
   test.beforeEach(async ({ page }) => {
-    let lineItems = [
+    let lineItems: LineItemFixture[] = [
       {
         id: 'line-1',
         rfq_id: rfqId,
@@ -36,21 +50,7 @@ test.describe('RFQ line-items screen', () => {
       },
     ];
 
-    await page.addInitScript((user) => {
-      window.localStorage.setItem(
-        'auth-storage',
-        JSON.stringify({
-          state: {
-            user,
-            token: 'playwright-access-token',
-            refreshToken: null,
-            isAuthenticated: true,
-            isLoading: false,
-          },
-          version: 0,
-        }),
-      );
-    }, mockUser);
+    await seedAuthSession(page, mockUser, { token: 'playwright-access-token', refreshToken: null });
 
     await page.route('**/api/v1/feature-flags', async (route) => {
       await fulfillJsonRoute(route, { data: { projects: false, tasks: false } });

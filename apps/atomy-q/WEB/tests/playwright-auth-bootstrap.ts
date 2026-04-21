@@ -8,13 +8,18 @@ export interface AuthBootstrapUser {
   tenantId: string;
 }
 
+export interface AuthOptions {
+  token?: string;
+  refreshToken?: string | null;
+}
+
 export async function seedAuthSession(
   page: Page,
   user: AuthBootstrapUser,
-  options?: { token?: string; refreshToken?: string | null },
+  options?: AuthOptions,
 ): Promise<void> {
   const token = options?.token ?? 'test-token';
-  const refreshToken = options?.refreshToken ?? 'test-refresh';
+  const refreshToken = options?.refreshToken !== undefined ? options.refreshToken : 'test-refresh';
 
   await page.addInitScript(
     ({ authStorageKey, authState }) => {

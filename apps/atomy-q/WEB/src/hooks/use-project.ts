@@ -26,13 +26,16 @@ function normalizeProject(payload: unknown): ProjectDetail {
     depth++;
   }
 
+  const projectManagerIdRaw = raw?.project_manager_id ?? raw?.projectManagerId;
+  const projectManagerId = projectManagerIdRaw == null ? undefined : String(projectManagerIdRaw);
+
   return {
     id: String(raw?.id ?? ''),
     name: String(raw?.name ?? raw?.title ?? 'Project'),
     status: raw?.status ? String(raw.status) : undefined,
     clientId: (raw?.client_id ?? raw?.clientId) as string | undefined,
     clientName: (raw?.client_name ?? raw?.clientName) as string | undefined,
-    projectManagerId: (raw?.project_manager_id ?? raw?.projectManagerId) as string | undefined,
+    projectManagerId,
     startDate: (raw?.start_date ?? raw?.startDate) as string | undefined,
     endDate: (raw?.end_date ?? raw?.endDate) as string | undefined,
     budgetType: (raw?.budget_type ?? raw?.budgetType) as string | undefined,

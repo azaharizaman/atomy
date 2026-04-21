@@ -62,6 +62,7 @@ export default function ProjectsPage() {
   const [createEndDate, setCreateEndDate] = React.useState('');
   const [createPmId, setCreatePmId] = React.useState('');
   const authUser = useAuthStore((state) => state.user);
+  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
   const {
     data: flags,
     isLoading: flagsLoading,
@@ -73,10 +74,10 @@ export default function ProjectsPage() {
     enabled: !flagsLoading && projectsEnabled,
   });
   const { data: usersData } = useUsers();
-  const userOptions = usersData?.items ?? [];
+  const userOptions = React.useMemo(() => usersData?.items ?? [], [usersData?.items]);
   const managerOptions = React.useMemo(() => {
     if (userOptions.length > 0) return userOptions;
-    if (authUser == null) return [];
+    if (!useMocks || authUser == null) return [];
     return [
       {
         id: authUser.id,
@@ -88,7 +89,7 @@ export default function ProjectsPage() {
         lastLoginAt: null,
       },
     ];
-  }, [authUser, userOptions]);
+  }, [authUser, userOptions, useMocks]);
   const createProject = useCreateProject();
 
   React.useEffect(() => {

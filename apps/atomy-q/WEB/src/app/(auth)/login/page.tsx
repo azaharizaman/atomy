@@ -21,6 +21,20 @@ type FormData = z.infer<typeof schema>;
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
+function getSafeRedirectTarget(): string {
+  if (typeof window === 'undefined') return '/';
+
+  const redirect = new URLSearchParams(window.location.search).get('redirect');
+  if (!redirect || !redirect.startsWith('/') || redirect.startsWith('//')) return '/';
+
+  try {
+    const parsed = new URL(redirect, window.location.origin);
+    return parsed.origin === window.location.origin ? `${parsed.pathname}${parsed.search}${parsed.hash}` : '/';
+  } catch {
+    return '/';
+  }
+}
+
 async function readJsonResponse(response: Response): Promise<unknown> {
   const text = await response.text();
   if (!text.trim()) return null;
@@ -48,7 +62,7 @@ function LoginPageContent() {
   const persistAuthSession = React.useCallback(
     (accessToken: string, refreshToken: string | null, user: unknown) => {
       login(accessToken, refreshToken, user as Parameters<typeof login>[2]);
-      router.push('/');
+      router.push(getSafeRedirectTarget());
     },
     [login, router],
   );
