@@ -1,14 +1,18 @@
 'use client';
 
 import React from 'react';
-import { AlertTriangle, LayoutGrid, Package, Table2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { AlertTriangle, LayoutGrid, Package, Plus, Table2 } from 'lucide-react';
 
 import { PageHeader } from '@/components/ds/FilterBar';
+import { Button } from '@/components/ds/Button';
 import { Card, EmptyState, SectionCard } from '@/components/ds/Card';
 import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useRfq } from '@/hooks/use-rfq';
 import { useRfqLineItems, type RfqLineItemRow } from '@/hooks/use-rfq-line-items';
+
+import { LineItemDrawer } from './line-item-drawer';
 
 type ViewMode = 'table' | 'grid';
 
@@ -25,9 +29,18 @@ function formatMoney(amount: number, currency: string): string {
 }
 
 export function RfqLineItemsPageContent({ rfqId }: { rfqId: string }) {
+  const queryClient = useQueryClient();
   const { data: rfq, isError: rfqIsError, error: rfqError } = useRfq(rfqId);
   const { data: lineItems = [], isLoading: lineItemsIsLoading, isError: lineItemsIsError, error: lineItemsError } = useRfqLineItems(rfqId);
   const [viewMode, setViewMode] = React.useState<ViewMode>('table');
+  const [drawerOpen, setDrawerOpen] = React.useState(false);
+
+  const isWritable = rfq?.status === 'draft';
+  const canPersist = isWritable && process.env.NEXT_PUBLIC_USE_MOCKS !== 'true';
+
+  const handleCreated = React.useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ['rfqs', rfqId, 'line-items'] });
+  }, [queryClient, rfqId]);
 
   const breadcrumbItems = [
     { label: 'RFQs', href: '/rfqs' },
@@ -153,23 +166,31 @@ export function RfqLineItemsPageContent({ rfqId }: { rfqId: string }) {
             : 'Read-only operational view of target line items'
         }
         actions={
-          <div className="flex items-center gap-0.5 rounded-lg border border-slate-200 p-0.5 bg-slate-50/80">
-            <button
-              type="button"
-              onClick={() => setViewMode('table')}
-              title="Table view"
-              className={['rounded-md p-1.5 transition-colors', viewMode === 'table' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'].join(' ')}
-            >
-              <Table2 size={16} />
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('grid')}
-              title="Grid view"
-              className={['rounded-md p-1.5 transition-colors', viewMode === 'grid' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'].join(' ')}
-            >
-              <LayoutGrid size={16} />
-            </button>
+          <div className="flex items-center gap-2">
+            {isWritable && (
+              <Button size="sm" onClick={() => setDrawerOpen(true)}>
+                <Plus size={14} className="mr-1" />
+                Add line item
+              </Button>
+            )}
+            <div className="flex items-center gap-0.5 rounded-lg border border-slate-200 p-0.5 bg-slate-50/80">
+              <button
+                type="button"
+                onClick={() => setViewMode('table')}
+                title="Table view"
+                className={['rounded-md p-1.5 transition-colors', viewMode === 'table' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'].join(' ')}
+              >
+                <Table2 size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('grid')}
+                title="Grid view"
+                className={['rounded-md p-1.5 transition-colors', viewMode === 'grid' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'].join(' ')}
+              >
+                <LayoutGrid size={16} />
+              </button>
+            </div>
           </div>
         }
       />
@@ -182,13 +203,21 @@ export function RfqLineItemsPageContent({ rfqId }: { rfqId: string }) {
             columns={columns}
             rows={lineItems}
             rowClassName={(row) => (row.rowType === 'heading' ? 'bg-slate-50/80' : '')}
-            emptyState={<EmptyState icon={<Package size={20} />} title="No line items" description="Add line items to define the scope of this RFQ." />}
-          />
+            emptyState={
+            <EmptyState
+              icon={<Package size={20} />}
+              title="No line items"
+              description="Add line items to define the scope of this RFQ."
+              action={isWritable ? <Button size="sm" onClick={() => setDrawerOpen(true)}>Add line item</Button> : undefined}
+            />
+          }
+        />
         ) : lineItems.length === 0 ? (
           <EmptyState
             icon={<Package size={20} />}
             title="No line items"
             description="Add line items to define the scope of this RFQ."
+            action={isWritable ? <Button size="sm" onClick={() => setDrawerOpen(true)}>Add line item</Button> : undefined}
           />
         ) : (
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
@@ -241,6 +270,14 @@ export function RfqLineItemsPageContent({ rfqId }: { rfqId: string }) {
           </div>
         )}
       </SectionCard>
+
+      <LineItemDrawer
+        rfqId={rfqId}
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        onCreated={handleCreated}
+        isWritable={canPersist}
+      />
     </div>
   );
 }

@@ -78,7 +78,18 @@
 - Verification:
   - `cd apps/atomy-q/WEB && npx vitest run src/hooks/use-rfq.live.test.ts src/hooks/use-rfqs.live.test.ts src/hooks/use-rfq-vendors.live.test.ts src/hooks/use-quote-submissions.live.test.ts src/hooks/use-normalization-source-lines.live.test.ts src/hooks/use-normalization-review.live.test.ts src/hooks/use-comparison-runs.live.test.ts src/hooks/use-comparison-run.live.test.ts src/hooks/use-comparison-run-matrix.live.test.ts src/hooks/use-comparison-run-readiness.live.test.ts src/hooks/use-award.live.test.ts` -> PASS, 57 tests.
   - `cd apps/atomy-q/WEB && npx vitest run src/app/(dashboard)/rfqs/[rfqId]/vendors/page.test.tsx src/app/(dashboard)/rfqs/[rfqId]/quote-intake/page.test.tsx src/app/(dashboard)/rfqs/[rfqId]/quote-intake/[quoteId]/normalize/page.test.tsx src/app/(dashboard)/rfqs/[rfqId]/comparison-runs/page.test.tsx src/app/(dashboard)/rfqs/[rfqId]/award/page.test.tsx` -> PASS, 19 tests.
-  - `cd apps/atomy-q/WEB && npm run build` -> PASS.
+
+## 2026-04-19 Task 3 Line Items Inline Drawer
+
+- The line-items screen now has an "Add line item" CTA button in the header (visible for draft RFQs).
+- The empty state (both table and grid view) now has an inline "Add line item" action button.
+- Clicking any CTA opens the `<LineItemDrawer>` inline drawer.
+- The drawer uses the live `useCreateRfqLineItem` mutation and invalidates the line-items query on successful creation.
+- Mock mode blocks persistence with an explicit read-only message.
+- Verification:
+   - `cd apps/atomy-q/WEB && npx vitest run src/app/(dashboard)/rfqs/[rfqId]/line-items/page.test.tsx src/app/(dashboard)/rfqs/[rfqId]/line-items/line-item-drawer.test.tsx src/hooks/use-create-rfq-line-item.test.ts` -> PASS, 6 tests.
+   - `cd apps/atomy-q/WEB && npm run build` -> PASS.
+   - `cd apps/atomy-q/WEB && npm run lint` -> PASS (existing warnings).
 
 ## 2026-04-17 Alpha Task 5 Hide Or Defer Non-Alpha Surfaces
 
@@ -134,3 +145,16 @@
 - Seeded requisition line items now include section heading rows and line rows, so mock-mode requisition line items show grouped sections instead of a flat list.
 - The line-items page now renders section rows in both table and grid modes while keeping live API payloads unchanged.
 - Added page coverage for grouped mock rows so the section headings and nested line items stay visible in mock-mode UI.
+
+## 2026-04-21 Projects Form Field Simplification
+
+- Project create/edit forms no longer ask for `client_id`; projects are treated as tenant-internal grouping records for buyer-owned requisitions.
+- Project manager input on both create and edit views is now a select dropdown sourced from tenant users (with fallback to current authenticated user when needed).
+- Projects list/detail UI removed client-facing display rows tied to `client_id` to align with the internal-project model.
+- `use-create-project` payload contract no longer requires `client_id`, and response normalization accepts optional `client_id` / `project_manager_id`.
+- Verification:
+  - `cd apps/atomy-q/WEB && npm run test:unit -- src/hooks/use-create-project.test.ts` -> PASS.
+  - `cd apps/atomy-q/WEB && npx vitest run 'src/app/(dashboard)/rfqs/[rfqId]/line-items/line-item-drawer.test.tsx' src/hooks/use-create-rfq-line-item.test.ts src/hooks/use-create-project.test.ts` -> PASS (10 tests).
+  - `cd apps/atomy-q/WEB && npx playwright test tests/auth.spec.ts tests/dashboard-nav.spec.ts tests/settings-users-smoke.spec.ts tests/rfq-workflow.spec.ts tests/rfq-line-items.spec.ts tests/smoke.spec.ts tests/screen-smoke.spec.ts` -> PASS (13 passed, 1 skipped).
+  - `cd apps/atomy-q/WEB && npm run lint` -> PASS with existing warnings outside `projects/page.tsx`, `projects/[projectId]/page.tsx`, and `src/hooks/use-create-project.test.ts`.
+  - `cd apps/atomy-q/WEB && npm run build` -> PASS.

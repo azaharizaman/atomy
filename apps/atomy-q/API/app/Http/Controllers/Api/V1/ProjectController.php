@@ -24,6 +24,14 @@ use Nexus\ProjectManagementOperations\ProjectManagementOperationsCoordinator;
 final class ProjectController extends Controller
 {
     /**
+     * Sentinel persisted in projects.client_id for buyer-owned internal projects
+     * that have no external client. Until projects.client_id is nullable, reports,
+     * exports, ACL checks, joins, and client filters must special-case this literal
+     * value instead of treating it as a real client identifier.
+     */
+    private const SELF_CLIENT_ID = 'self';
+
+    /**
      * Canonical project ACL roles (Phase 2 plan): Owner > Admin > Editor > Viewer.
      *
      * Legacy role names are accepted for backwards compatibility and normalized
@@ -94,6 +102,7 @@ final class ProjectController extends Controller
                 'client_id' => $p->client_id,
                 'start_date' => $p->start_date?->format(DATE_ATOM),
                 'end_date' => $p->end_date?->format(DATE_ATOM),
+                'project_manager_id' => $p->project_manager_id,
             ]);
 
         return response()->json(['data' => $items]);
@@ -107,7 +116,7 @@ final class ProjectController extends Controller
 
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'client_id' => 'required|string',
+                'client_id' => 'sometimes|string|filled',
                 'start_date' => 'required|date',
                 'end_date' => 'required|date|after_or_equal:start_date',
                 'project_manager_id' => 'required|string',
@@ -117,7 +126,7 @@ final class ProjectController extends Controller
             $summary = new ProjectSummary(
                 id: $id,
                 name: $validated['name'],
-                clientId: $validated['client_id'],
+                clientId: (string) ($validated['client_id'] ?? self::SELF_CLIENT_ID),
                 startDate: new \DateTimeImmutable($validated['start_date']),
                 endDate: new \DateTimeImmutable($validated['end_date']),
                 projectManagerId: $validated['project_manager_id'],
@@ -138,6 +147,7 @@ final class ProjectController extends Controller
                     'client_id' => $project->clientId,
                     'start_date' => $project->startDate->format(DATE_ATOM),
                     'end_date' => $project->endDate->format(DATE_ATOM),
+                    'project_manager_id' => $project->projectManagerId,
                 ],
             ], 201);
 
@@ -171,6 +181,7 @@ final class ProjectController extends Controller
                 'client_id' => $project->clientId,
                 'start_date' => $project->startDate->format(DATE_ATOM),
                 'end_date' => $project->endDate->format(DATE_ATOM),
+                'project_manager_id' => $project->projectManagerId,
                 'budget_type' => $project->budgetType,
                 'completion_percentage' => $project->completionPercentage,
             ],
@@ -189,7 +200,7 @@ final class ProjectController extends Controller
 
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
-            'client_id' => 'sometimes|string',
+            'client_id' => 'sometimes|string|filled',
             'start_date' => 'sometimes|date',
             'end_date' => 'sometimes|date',
             'project_manager_id' => 'sometimes|string',
@@ -212,7 +223,7 @@ final class ProjectController extends Controller
         $summary = new ProjectSummary(
             id: $id,
             name: $validated['name'] ?? $project->name,
-            clientId: $validated['client_id'] ?? $project->clientId,
+            clientId: (string) ($validated['client_id'] ?? $project->clientId ?? self::SELF_CLIENT_ID),
             startDate: $effectiveStart,
             endDate: $effectiveEnd,
             projectManagerId: $validated['project_manager_id'] ?? $project->projectManagerId,
@@ -234,6 +245,7 @@ final class ProjectController extends Controller
                 'client_id' => $updated->clientId,
                 'start_date' => $updated->startDate->format(DATE_ATOM),
                 'end_date' => $updated->endDate->format(DATE_ATOM),
+                'project_manager_id' => $updated->projectManagerId,
             ],
         ]);
     }
@@ -476,4 +488,3 @@ final class ProjectController extends Controller
         }
     }
 }
-

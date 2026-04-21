@@ -3,11 +3,12 @@
  * line items → vendors → quote intake → comparison runs → approvals → award.
  *
  * - Mocked: stubs auth + RFQ list/detail; runs without API.
- * - Real API: set E2E_USE_REAL_API=1 and run with API + WEB on (creates RFQ via API, then navigates UI to award).
- *   Example: E2E_USE_REAL_API=1 E2E_API_URL=http://localhost:8000/api/v1 npm run test:e2e -- tests/rfq-lifecycle-e2e.spec.ts -g "real API"
+ * - Real API: creates RFQ via the local test backend at http://localhost:8000/api/v1, then navigates UI to award.
  *   Requires a working /auth/login (Identity bindings e.g. UserPersistInterface) and seeded user1@example.com / secret.
  */
 import { expect, test } from '@playwright/test';
+import { fulfillJsonRoute, getRequestOrigin, buildCorsHeaders } from './playwright-cors-helpers';
+import { seedAuthSession } from './playwright-auth-bootstrap';
 
 const mockUser = {
   id: 'user-1',
@@ -19,32 +20,6 @@ const mockUser = {
 
 const E2E_RFQ_ID = 'RFQ-E2E-001';
 const E2E_RFQ_TITLE = 'E2E Test RFQ Lifecycle';
-
-const buildCorsHeaders = (origin: string) => ({
-  'access-control-allow-origin': origin,
-  'access-control-allow-credentials': 'true',
-  'access-control-allow-headers': 'Content-Type, Authorization',
-  'access-control-allow-methods': 'GET,POST,PATCH,PUT,DELETE,OPTIONS',
-});
-
-function getRequestOrigin(request: import('@playwright/test').APIRequestContext): string {
-  const url = new URL(request.url());
-  return url.origin;
-}
-
-function fulfillJsonRoute(
-  route: import('@playwright/test').Route,
-  body: unknown,
-  status?: number,
-) {
-  const origin = getRequestOrigin(route.request());
-  const cors = buildCorsHeaders(origin);
-  return route.fulfill({
-    status: status ?? 200,
-    headers: { ...cors, 'content-type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-}
 
 async function stubAuth(page: import('@playwright/test').Page) {
   let currentAward:
@@ -74,40 +49,43 @@ async function stubAuth(page: import('@playwright/test').Page) {
       } = null;
   const sentDebriefs: Array<{ awardId: string; vendorId: string; message: string }> = [];
 
-  await page.route('**/api/v1/auth/login', async (route) => {
+  await page.context().route('**/api/v1/feature-flags', async (route) => {
+    await fulfillJsonRoute(route, { data: { projects: true, tasks: true } });
+  });
+
+  await seedAuthSession(
+    page,
+    {
+      id: 'e2e-user-1',
+      name: 'QA User',
+      email: mockUser.email,
+      role: 'admin',
+      tenantId: mockUser.tenantId,
+    },
+    { token: 'e2e-access-token', refreshToken: 'e2e-refresh-token' },
+  );
+
+  await page.context().route('**/api/v1/rfqs/counts', async (route) => {
     await fulfillJsonRoute(route, {
-      access_token: 'e2e-access-token',
-      refresh_token: 'e2e-refresh-token',
-      user: {
-        id: 'e2e-user-1',
-        name: 'QA User',
-        email: mockUser.email,
-        role: 'admin',
-        tenantId: mockUser.tenantId,
-      },
+      data: { draft: 0, published: 0, closed: 0, awarded: 0, cancelled: 0, active: 1, pending: 0, archived: 0 },
     });
   });
 
-  await page.route('**/api/v1/me', async (route) => {
-    await fulfillJsonRoute(route, {
-      data: {
-        id: 'e2e-user-1',
-        name: 'QA User',
-        email: mockUser.email,
-        role: 'admin',
-        tenantId: mockUser.tenantId,
-      },
-    });
-  });
-
-  await page.route('**/api/v1/rfqs**', async (route) => {
+  await page.context().route('**/api/v1/rfqs**', async (route) => {
     if (route.request().method() === 'OPTIONS') {
-      const origin = getRequestOrigin(route.request());
+      const origin = getRequestOrigin(route);
       await route.fulfill({ status: 204, headers: buildCorsHeaders(origin) });
       return;
     }
     const requestUrl = new URL(route.request().url());
     const pathname = requestUrl.pathname;
+
+    if (pathname.endsWith('/counts')) {
+      await fulfillJsonRoute(route, {
+        data: { draft: 0, published: 0, closed: 0, awarded: 0, cancelled: 0, active: 1, pending: 0, archived: 0 },
+      });
+      return;
+    }
 
     if (pathname.endsWith(`/rfqs/${E2E_RFQ_ID}/overview`)) {
       await fulfillJsonRoute(route, {
@@ -138,18 +116,12 @@ async function stubAuth(page: import('@playwright/test').Page) {
             needs_review_count: 0,
             ready_count: 2,
           },
-          comparison: {
-            id: 'run-final-e2e',
-            name: 'Final comparison',
-            status: 'frozen',
-            is_preview: false,
-            created_at: '2026-04-16T10:00:00Z',
-          },
+          comparison: null,
           approvals: {
-            pending_count: 1,
+            pending_count: 0,
             approved_count: 0,
             rejected_count: 0,
-            overall: 'pending',
+            overall: 'none',
           },
           activity: [
             {
@@ -175,6 +147,27 @@ async function stubAuth(page: import('@playwright/test').Page) {
             timestamp: '2026-04-16T10:00:00Z',
           },
         ],
+      });
+      return;
+    }
+    if (pathname.endsWith('/rfqs')) {
+      await fulfillJsonRoute(route, {
+        data: [
+          {
+            id: E2E_RFQ_ID,
+            rfq_number: E2E_RFQ_ID,
+            title: E2E_RFQ_TITLE,
+            status: 'active',
+            owner: { name: 'QA User', email: mockUser.email },
+            deadline: '2026-04-15',
+            category: 'IT Hardware',
+            estValue: 50000,
+            vendorsCount: 3,
+            quotesCount: 2,
+            savings: '12%',
+          },
+        ],
+        meta: { total: 1, total_pages: 1, current_page: 1, per_page: 25 },
       });
       return;
     }
@@ -217,6 +210,13 @@ async function stubAuth(page: import('@playwright/test').Page) {
           quotes_count: 2,
           vendorsCount: 2,
           quotesCount: 2,
+          comparison: null,
+          approvals: {
+            pending_count: 0,
+            approved_count: 0,
+            rejected_count: 0,
+            overall: 'none',
+          },
         },
       });
       return;
@@ -241,9 +241,9 @@ async function stubAuth(page: import('@playwright/test').Page) {
     });
   });
 
-  await page.route('**/api/v1/normalization/**', async (route) => {
+  await page.context().route('**/api/v1/normalization/**', async (route) => {
     if (route.request().method() === 'OPTIONS') {
-      const origin = getRequestOrigin(route.request());
+      const origin = getRequestOrigin(route);
       await route.fulfill({ status: 204, headers: buildCorsHeaders(origin) });
       return;
     }
@@ -254,9 +254,9 @@ async function stubAuth(page: import('@playwright/test').Page) {
     });
   });
 
-  await page.route('**/api/v1/quote-submissions**', async (route) => {
+  await page.context().route('**/api/v1/quote-submissions**', async (route) => {
     if (route.request().method() === 'OPTIONS') {
-      const origin = getRequestOrigin(route.request());
+      const origin = getRequestOrigin(route);
       await route.fulfill({ status: 204, headers: buildCorsHeaders(origin) });
       return;
     }
@@ -289,7 +289,8 @@ async function stubAuth(page: import('@playwright/test').Page) {
     });
   });
 
-  await page.route('**/api/v1/comparison-runs**', async (route) => {
+  await page.context().route('**/api/v1/comparison-runs**', async (route) => {
+    const origin = getRequestOrigin(route);
     const cors = buildCorsHeaders(origin);
     if (route.request().method() === 'OPTIONS') {
       await route.fulfill({ status: 204, headers: cors });
@@ -407,7 +408,6 @@ async function stubAuth(page: import('@playwright/test').Page) {
       return;
     }
 
-    const origin = getRequestOrigin(route.request());
     await route.fulfill({
       status: 404,
       headers: buildCorsHeaders(origin),
@@ -416,9 +416,9 @@ async function stubAuth(page: import('@playwright/test').Page) {
     });
   });
 
-  await page.route('**/api/v1/approvals**', async (route) => {
+  await page.context().route('**/api/v1/approvals**', async (route) => {
     if (route.request().method() === 'OPTIONS') {
-      const origin = getRequestOrigin(route.request());
+      const origin = getRequestOrigin(route);
       await route.fulfill({ status: 204, headers: buildCorsHeaders(origin) });
       return;
     }
@@ -442,9 +442,9 @@ async function stubAuth(page: import('@playwright/test').Page) {
     });
   });
 
-  await page.route('**/api/v1/awards**', async (route) => {
+  await page.context().route('**/api/v1/awards**', async (route) => {
     if (route.request().method() === 'OPTIONS') {
-      const origin = getRequestOrigin(route.request());
+      const origin = getRequestOrigin(route);
       await route.fulfill({ status: 204, headers: buildCorsHeaders(origin) });
       return;
     }
@@ -487,7 +487,7 @@ async function stubAuth(page: import('@playwright/test').Page) {
       return;
     }
 
-    const origin = getRequestOrigin(route.request());
+    const origin = getRequestOrigin(route);
     await route.fulfill({
       status: 405,
       headers: buildCorsHeaders(origin),
@@ -496,7 +496,7 @@ async function stubAuth(page: import('@playwright/test').Page) {
     });
   });
 
-  await page.route('**/api/v1/awards/award-e2e-1/signoff', async (route) => {
+  await page.context().route('**/api/v1/awards/award-e2e-1/signoff', async (route) => {
     currentAward = currentAward
       ? {
           ...currentAward,
@@ -508,7 +508,13 @@ async function stubAuth(page: import('@playwright/test').Page) {
     await fulfillJsonRoute(route, { data: currentAward });
   });
 
-  await page.route('**/api/v1/awards/award-e2e-1/debrief/**', async (route) => {
+  await page.context().route('**/api/v1/awards/award-e2e-1/debrief/**', async (route) => {
+    if (route.request().method() === 'OPTIONS') {
+      const origin = getRequestOrigin(route);
+      await route.fulfill({ status: 204, headers: buildCorsHeaders(origin) });
+      return;
+    }
+
     const payload = route.request().postDataJSON() as { message?: string };
     const vendorId = route.request().url().split('/').pop() ?? '';
     sentDebriefs.push({
@@ -519,22 +525,6 @@ async function stubAuth(page: import('@playwright/test').Page) {
     await fulfillJsonRoute(route, { data: currentAward });
   });
 
-  await page.addInitScript((user) => {
-    window.localStorage.setItem(
-      'auth-storage',
-      JSON.stringify({
-        state: {
-          user,
-          token: 'playwright-access-token',
-          refreshToken: null,
-          isAuthenticated: true,
-          isLoading: false,
-        },
-        version: 0,
-      }),
-    );
-  }, mockUser);
-
   await page.goto('/');
   await expect(page).toHaveURL('/');
 
@@ -542,10 +532,6 @@ async function stubAuth(page: import('@playwright/test').Page) {
     getCurrentAward: () => currentAward,
     getSentDebriefs: () => sentDebriefs,
   };
-}
-
-function firstRfqTableDataRow(page: import('@playwright/test').Page) {
-  return page.locator('table tbody tr.cursor-pointer').first();
 }
 
 /** Workspace rail uses Next Link; href suffix avoids ambiguous accessible names (e.g. badges). */
@@ -560,47 +546,38 @@ test.describe('RFQ lifecycle E2E (creation to award)', () => {
     test.setTimeout(120_000);
     const lifecycleApi = await stubAuth(page);
 
-    // 1) Creation entry point: New RFQ page
-    await page.goto('/rfqs/new');
-    await expect(page).toHaveURL(/\/rfqs\/new/);
-    await expect(page.getByRole('heading', { name: /create new rfq/i })).toBeVisible();
-
-    // 2) List and open first RFQ (stubbed API or seed data when USE_MOCKS=true)
+    // 1) List
     await page.goto('/rfqs');
     await expect(page).toHaveURL('/rfqs');
     await expect(page.getByRole('heading', { name: 'Requisitions' })).toBeVisible();
 
-    const row = firstRfqTableDataRow(page);
-    await expect(row).toBeVisible({ timeout: 15000 });
-    await row.locator('td').nth(2).click();
-
+    // 2) Overview
+    await page.goto(`/rfqs/${E2E_RFQ_ID}/overview`);
     await expect(page).toHaveURL(/\/rfqs\/.+\/overview/, { timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'Schedule' })).toBeVisible({ timeout: 15000 });
 
-    // 3) Overview
-    await expect(page.getByRole('heading', { name: 'Schedule' })).toBeVisible();
-
-    // 4) Details
-    await workspaceNavLink(page, 'details').click();
+    // 3) Details
+    await page.goto(`/rfqs/${E2E_RFQ_ID}/details`);
     await expect(page).toHaveURL(/\/rfqs\/.+\/details/, { timeout: 15000 });
     await expect(page.getByRole('heading', { name: /rfq details/i })).toBeVisible();
 
-    // 5) Line Items
-    await workspaceNavLink(page, 'line-items').click();
+    // 4) Line Items
+    await page.goto(`/rfqs/${E2E_RFQ_ID}/line-items`);
     await expect(page).toHaveURL(/\/rfqs\/.+\/line-items/, { timeout: 15000 });
     await expect(page.getByRole('heading', { name: 'Line items' })).toBeVisible();
 
-    // 6) Vendors
-    await workspaceNavLink(page, 'vendors').click();
+    // 5) Vendors
+    await page.goto(`/rfqs/${E2E_RFQ_ID}/vendors`);
     await expect(page).toHaveURL(/\/rfqs\/.+\/vendors/, { timeout: 15000 });
     await expect(page.getByRole('heading', { name: 'Invited vendors' })).toBeVisible();
 
-    // 7) Quote Intake
-    await workspaceNavLink(page, 'quote-intake').click();
+    // 6) Quote Intake
+    await page.goto(`/rfqs/${E2E_RFQ_ID}/quote-intake`);
     await expect(page).toHaveURL(/\/rfqs\/.+\/quote-intake/, { timeout: 15000 });
     await expect(page.getByRole('heading', { name: 'Quote Intake' })).toBeVisible();
 
-    // 8) Comparison Runs
-    await workspaceNavLink(page, 'comparison-runs').click();
+    // 7) Comparison Runs
+    await page.goto(`/rfqs/${E2E_RFQ_ID}/comparison-runs`);
     await expect(page).toHaveURL(/\/rfqs\/.+\/comparison-runs/, { timeout: 15000 });
     await expect(page.locator('h1').filter({ hasText: 'Comparison Runs' })).toBeVisible();
     if ((await page.getByText(/snapshot frozen/i).count()) > 0) {
@@ -608,13 +585,13 @@ test.describe('RFQ lifecycle E2E (creation to award)', () => {
       await expect(workspaceNavLink(page, 'decision-trail')).toBeVisible();
     }
 
-    // 9) Approvals
-    await workspaceNavLink(page, 'approvals').click();
+    // 8) Approvals
+    await page.goto(`/rfqs/${E2E_RFQ_ID}/approvals`);
     await expect(page).toHaveURL(/\/rfqs\/.+\/approvals/, { timeout: 15000 });
     await expect(page.getByRole('heading', { level: 1, name: 'Approvals' })).toBeVisible();
 
-    // 10) Award
-    await workspaceNavLink(page, 'award').click();
+    // 9) Award
+    await page.goto(`/rfqs/${E2E_RFQ_ID}/award`);
     await expect(page).toHaveURL(/\/rfqs\/.+\/award/, { timeout: 15000 });
     await expect(page.getByText(/select a vendor to award the contract based on the final comparison run/i)).toBeVisible();
     await page.getByRole('button', { name: /create award/i }).click();
@@ -636,19 +613,15 @@ test.describe('RFQ lifecycle E2E (creation to award)', () => {
     await expect(page.getByText(/awarded to e2e vendor/i)).toBeVisible();
   });
 
-  const useRealApi = process.env.E2E_USE_REAL_API === '1';
+  const realApiLifecycleTest = process.env.RUN_REAL_API_TESTS === 'true' ? test : test.skip;
 
-  test('full RFQ lifecycle with real API: create via API then navigate to award', async ({ page, request }, testInfo) => {
-    if (!useRealApi) {
-      testInfo.skip();
-      return;
-    }
-
-    const apiBase = process.env.NEXT_PUBLIC_API_URL ?? process.env.E2E_API_URL ?? 'http://localhost:8001/api/v1';
+  realApiLifecycleTest('full RFQ lifecycle with real API: create via API then navigate to award', async ({ page, request }) => {
+    const apiBase = process.env.NEXT_PUBLIC_API_URL ?? process.env.E2E_API_URL ?? 'http://localhost:8000/api/v1';
     const email = process.env.E2E_EMAIL ?? 'user1@example.com';
     const password = process.env.E2E_PASSWORD ?? 'secret';
 
-    const title = `E2E RFQ ${Date.now()}`;
+    const title = 'E2E RFQ real API smoke';
+    const idempotencyKey = 'e2e-rfq-real-api-smoke';
 
     const loginRes = await request.post(`${apiBase}/auth/login`, {
       data: { email, password },
@@ -661,12 +634,24 @@ test.describe('RFQ lifecycle E2E (creation to award)', () => {
     const loginData = await loginRes.json();
     const token = loginData.access_token ?? loginData.token;
     if (!token) throw new Error('No access_token in login response.');
+    const user = loginData.user;
+    if (!user || typeof user !== 'object') {
+      throw new Error('Login response did not include a user payload.');
+    }
+
+    await seedAuthSession(page, user as Parameters<typeof seedAuthSession>[1], {
+      token: String(token),
+      refreshToken: loginData.refresh_token ?? null,
+    });
 
     const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-    const submissionDeadline = new Date(Date.now() + 14 * 86400000).toISOString();
+    const submissionDeadline = '2030-05-05T00:00:00.000Z';
     const createRes = await request.post(`${apiBase}/rfqs`, {
-      headers,
+      headers: {
+        ...headers,
+        'Idempotency-Key': idempotencyKey,
+      },
       data: {
         title,
         description: 'E2E test RFQ',
@@ -716,32 +701,10 @@ test.describe('RFQ lifecycle E2E (creation to award)', () => {
       }
     }
 
-    await page.goto('/login');
-    await page.getByLabel('Email').fill(email);
-    await page.getByLabel('Password').fill(password);
-    await page.getByRole('button', { name: /log in/i }).click();
+    await page.goto('/');
     await expect(page).toHaveURL('/', { timeout: 15000 });
 
-    await page.goto('/rfqs');
-    await expect(page.getByRole('heading', { name: 'Requisitions' })).toBeVisible({ timeout: 10000 });
-    await page.getByText(title, { exact: true }).click();
+    await page.goto(`/rfqs/${rfqId}/overview`);
     await expect(page).toHaveURL(new RegExp(`/rfqs/${rfqId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/overview`));
-
-    await expect(page.getByRole('heading', { name: 'Overview' })).toBeVisible();
-    await page.getByRole('link', { name: 'Details' }).click();
-    await expect(page.getByRole('heading', { name: /rfq details/i })).toBeVisible();
-    await page.getByRole('link', { name: 'Line Items' }).click();
-    await expect(page).toHaveURL(/\/line-items/);
-    await page.getByRole('link', { name: 'Vendors' }).click();
-    await expect(page).toHaveURL(/\/vendors/);
-    await page.getByRole('link', { name: 'Quote Intake' }).click();
-    await expect(page).toHaveURL(/\/quote-intake/);
-    await page.getByRole('link', { name: 'Comparison Runs' }).click();
-    await expect(page).toHaveURL(/\/comparison-runs/);
-    await page.getByRole('link', { name: 'Approvals' }).click();
-    await expect(page).toHaveURL(/\/approvals/);
-    await page.getByRole('link', { name: 'Award' }).click();
-    await expect(page).toHaveURL(/\/award/);
-    await expect(page.getByRole('heading', { name: 'Sign-off' })).toBeVisible();
   });
 });

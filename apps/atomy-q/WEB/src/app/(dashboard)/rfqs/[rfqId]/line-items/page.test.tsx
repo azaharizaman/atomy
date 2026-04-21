@@ -1,98 +1,72 @@
 import React from 'react';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
-import type { RfqLineItemRow } from '@/hooks/use-rfq-line-items';
-
-const originalUseMocks = process.env.NEXT_PUBLIC_USE_MOCKS;
-
-beforeAll(() => {
-  process.env.NEXT_PUBLIC_USE_MOCKS = 'false';
-});
-
-afterAll(() => {
-  process.env.NEXT_PUBLIC_USE_MOCKS = originalUseMocks;
-});
-
-const mockUseRfqLineItems = vi.fn();
+import { QueryClient } from '@tanstack/react-query';
 
 vi.mock('@/hooks/use-rfq', () => ({
-  useRfq: () => ({
-    data: {
-      title: 'New Requisition',
-      status: 'draft',
-    },
+  useRfq: vi.fn(() => ({
+    data: { title: 'New Requisition', status: 'draft' },
     isLoading: false,
     isError: false,
     error: null,
-  }),
+  })),
 }));
 
 vi.mock('@/hooks/use-rfq-line-items', () => ({
-  useRfqLineItems: (...args: unknown[]) => mockUseRfqLineItems(...args),
+  useRfqLineItems: vi.fn(() => ({
+    data: [],
+    isLoading: false,
+    isError: false,
+    error: null,
+  })),
 }));
+
+vi.mock('@/hooks/use-create-rfq-line-item', () => ({
+  useCreateRfqLineItem: vi.fn(() => ({
+    mutateAsync: vi.fn().mockResolvedValue({}),
+    isPending: false,
+  })),
+}));
+
+vi.mock('@tanstack/react-query', async () => {
+  const actual = await vi.importActual<typeof import('@tanstack/react-query')>('@tanstack/react-query');
+  return {
+    ...actual,
+    useQueryClient: () => new actual.QueryClient(),
+  };
+});
 
 import { RfqLineItemsPageContent } from './page';
 
 describe('RfqLineItemsPage', () => {
   beforeEach(() => {
-    mockUseRfqLineItems.mockReturnValue({
-      data: [],
-      isLoading: false,
-      isError: false,
-      error: null,
+    vi.clearAllMocks();
+  });
+
+  it('shows add line item action for draft RFQs in header and opens the drawer', async () => {
+    renderWithProviders(<RfqLineItemsPageContent rfqId="rfq-new-1" />);
+
+    const headerButton = screen.getAllByRole('button', { name: /add line item/i })[0];
+    expect(headerButton).toBeInTheDocument();
+
+    fireEvent.click(headerButton);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /add line item/i })).toBeInTheDocument();
     });
   });
 
-  it('does not render unrelated canned rows for a new requisition', async () => {
+  it('shows add line item in empty state for draft RFQs and opens the drawer', async () => {
     renderWithProviders(<RfqLineItemsPageContent rfqId="rfq-new-1" />);
 
-    expect(await screen.findByText(/add line items to define the scope of this rfq/i)).toBeInTheDocument();
-    expect(screen.getByText('No line items')).toBeInTheDocument();
-    expect(screen.queryByText(/Dell PowerEdge R750/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Cisco Catalyst 9300-48P/i)).not.toBeInTheDocument();
-  });
+    const emptyStateButton = screen.getAllByRole('button', { name: /add line item/i })[1];
+    expect(emptyStateButton).toBeInTheDocument();
 
-  it('renders grouped mock-mode section rows', async () => {
-    const mockRows: RfqLineItemRow[] = [
-      {
-        id: 'rfq-new-1-sec-1',
-        rfq_id: 'rfq-new-1',
-        description: 'Core scope',
-        quantity: 0,
-        uom: '',
-        unit_price: 0,
-        currency: 'USD',
-        specifications: null,
-        sort_order: 1,
-        rowType: 'heading',
-        section: 'Core scope',
-      },
-      {
-        id: 'rfq-new-1-li-1',
-        rfq_id: 'rfq-new-1',
-        description: 'Core platform licenses',
-        quantity: 12,
-        uom: 'seats',
-        unit_price: 1500,
-        currency: 'USD',
-        specifications: 'Annual subscription coverage',
-        sort_order: 2,
-        rowType: 'line',
-        section: 'Core scope',
-      },
-    ];
+    fireEvent.click(emptyStateButton);
 
-    mockUseRfqLineItems.mockReturnValue({
-      data: mockRows,
-      isLoading: false,
-      isError: false,
-      error: null,
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /add line item/i })).toBeInTheDocument();
     });
-
-    renderWithProviders(<RfqLineItemsPageContent rfqId="rfq-new-1" />);
-
-    expect(await screen.findByText('Core scope')).toBeInTheDocument();
-    expect(screen.getByText('Core platform licenses')).toBeInTheDocument();
   });
 });

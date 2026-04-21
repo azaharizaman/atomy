@@ -1,79 +1,135 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { useForm, useWatch } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Mail, Lock } from 'lucide-react';
 import { toast } from 'sonner';
-import { api } from '@/lib/api';
-import { parseApiError } from '@/lib/api-error';
-import { useAuthStore } from '@/store/use-auth-store';
 import { Button } from '@/components/ds/Button';
-import { Checkbox, PasswordInput, TextInput } from '@/components/ds/Input';
+import { PasswordInput, TextInput } from '@/components/ds/Input';
+import { useAuthStore } from '@/store/use-auth-store';
 
 const schema = z.object({
   email: z.string().email('Enter a valid email'),
   password: z.string().min(1, 'Password is required'),
-  remember_device: z.boolean().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+
+function getSafeRedirectTarget(): string {
+  if (typeof window === 'undefined') return '/';
+
+  const redirect = new URLSearchParams(window.location.search).get('redirect');
+  if (!redirect || !redirect.startsWith('/') || redirect.startsWith('//')) return '/';
+
+  try {
+    const parsed = new URL(redirect, window.location.origin);
+    return parsed.origin === window.location.origin ? `${parsed.pathname}${parsed.search}${parsed.hash}` : '/';
+  } catch {
+    return '/';
+  }
+}
+
+async function readJsonResponse(response: Response): Promise<unknown> {
+  const text = await response.text();
+  if (!text.trim()) return null;
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return { message: text };
+  }
+}
+
 function LoginPageContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const sessionExpired = searchParams.get('session_expired') === '1';
+  const login = useAuthStore((state) => state.login);
   const [authError, setAuthError] = React.useState<string | null>(null);
-  const { login } = useAuthStore();
   const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
-  const { register, handleSubmit, control, formState: { errors, isSubmitting }, setValue } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       email: '',
       password: '',
-      remember_device: true,
     },
   });
 
-  const rememberDevice = useWatch({ control, name: 'remember_device' }) ?? true;
+  const persistAuthSession = React.useCallback(
+    (accessToken: string, refreshToken: string | null, user: unknown) => {
+      login(accessToken, refreshToken, user as Parameters<typeof login>[2]);
+      router.push(getSafeRedirectTarget());
+    },
+    [login, router],
+  );
 
   const onSubmit = async (payload: FormData) => {
     setAuthError(null);
     try {
-      const response = await api.post('/auth/login', {
-        email: payload.email.trim().toLowerCase(),
-        password: payload.password,
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: payload.email.trim().toLowerCase(),
+          password: payload.password,
+        }),
       });
-      const { access_token, refresh_token, user } = response.data ?? {};
+      const responseData = await readJsonResponse(response);
+      if (!response.ok) {
+        const payloadData = responseData && typeof responseData === 'object' ? (responseData as Record<string, unknown>) : null;
+        const messageRaw = payloadData?.message ?? payloadData?.error;
+        const message =
+          typeof messageRaw === 'string' && messageRaw.trim() !== ''
+            ? messageRaw
+            : response.status === 422
+              ? 'Please check email and password.'
+              : response.status === 401
+                ? 'Invalid credentials'
+                : response.status === 404
+                  ? 'API route not found. Ensure NEXT_PUBLIC_API_URL ends with /api/v1 (e.g. http://localhost:8000/api/v1).'
+                  : 'Sign-in failed. Check that the API is running and NEXT_PUBLIC_API_URL is correct.';
+        throw new Error(message);
+      }
+      const { access_token, refresh_token, user } =
+        (responseData && typeof responseData === 'object' ? (responseData as Record<string, unknown>) : {}) as {
+          access_token?: string;
+          refresh_token?: string | null;
+          user?: unknown;
+        };
       let userData = user;
       if (!userData && access_token) {
-        const meResponse = await api.get('/me', { headers: { Authorization: `Bearer ${access_token}` } });
-        userData = meResponse?.data?.data ?? meResponse?.data;
+        const meResponse = await fetch(`${API_URL}/me`, {
+          headers: {
+            Authorization: `Bearer ${access_token}`,
+            Accept: 'application/json',
+          },
+          credentials: 'include',
+        });
+        if (!meResponse.ok) {
+          throw new Error('Login succeeded but user data could not be loaded.');
+        }
+        const meData = await readJsonResponse(meResponse);
+        userData = (meData && typeof meData === 'object' && 'data' in meData
+          ? (meData as { data?: unknown }).data
+          : meData) as unknown;
       }
       if (!userData || !access_token) {
         setAuthError('Login succeeded but user data was missing. Please try again.');
         toast.error('Login response incomplete');
         return;
       }
-      login(access_token, refresh_token ?? null, userData);
+      persistAuthSession(access_token, refresh_token ?? null, userData);
       toast.success('Signed in successfully');
-      const redirect = searchParams.get('redirect');
-      router.push(redirect && redirect.startsWith('/') ? redirect : '/');
     } catch (error: unknown) {
-      const parsed = parseApiError(error);
-      const message =
-        parsed.message ??
-        (parsed.status === 422
-          ? 'Please check email and password.'
-          : parsed.status === 401
-            ? 'Invalid credentials'
-            : parsed.status === 404
-              ? 'API route not found. Ensure NEXT_PUBLIC_API_URL ends with /api/v1 (e.g. http://localhost:8000/api/v1).'
-              : 'Sign-in failed. Check that the API is running and NEXT_PUBLIC_API_URL is correct.');
+      const message = error instanceof Error ? error.message : 'Sign-in failed. Check that the API is running and NEXT_PUBLIC_API_URL is correct.';
       setAuthError(message);
       toast.error(message);
     }
@@ -87,12 +143,6 @@ function LoginPageContent() {
           Welcome back! Sign in with your workspace credentials.
         </p>
       </div>
-
-      {sessionExpired && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-          Your session expired. Please sign in again.
-        </div>
-      )}
 
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <TextInput
@@ -113,12 +163,7 @@ function LoginPageContent() {
           prefixIcon={<Lock size={16} className="shrink-0" />}
         />
 
-        <div className="flex items-center justify-between gap-3">
-          <Checkbox
-            label="Remember this device"
-            checked={rememberDevice}
-            onChange={(e) => setValue('remember_device', e.currentTarget.checked)}
-          />
+        <div className="flex items-center justify-end gap-3">
           <button
             type="button"
             className="text-sm font-medium text-indigo-600 hover:text-indigo-700 whitespace-nowrap"
@@ -147,7 +192,7 @@ function LoginPageContent() {
             onClick={() => {
               const tenantId =
                 process.env.NEXT_PUBLIC_TENANT_ID || '01KKH77M4R0V8QZ1M8NB3XWWWQ';
-              login('mock-access-token', null, {
+              persistAuthSession('mock-access-token', null, {
                 id: 'mock-user-1',
                 name: 'Alex Kumar',
                 email: 'user1@example.com',
@@ -155,7 +200,6 @@ function LoginPageContent() {
                 tenantId,
               });
               toast.success('Signed in with mock account');
-              router.push('/');
             }}
           >
             Use mock account
@@ -170,7 +214,16 @@ function LoginPageContent() {
             size="md"
             onClick={async () => {
               try {
-                await api.post('/auth/sso');
+                const response = await fetch(`${API_URL}/auth/sso`, {
+                  method: 'POST',
+                  headers: {
+                    Accept: 'application/json',
+                  },
+                  credentials: 'include',
+                });
+                if (!response.ok) {
+                  throw new Error('SSO is not enabled yet');
+                }
                 toast.success('SSO flow started');
               } catch {
                 toast.error('SSO is not enabled yet');
@@ -194,18 +247,5 @@ function LoginPageContent() {
 }
 
 export default function LoginPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="space-y-6 animate-pulse">
-          <div className="h-6 w-48 rounded bg-slate-200" />
-          <div className="h-4 w-full max-w-md rounded bg-slate-100" />
-          <div className="h-10 w-full rounded bg-slate-100" />
-          <div className="h-10 w-full rounded bg-slate-100" />
-        </div>
-      }
-    >
-      <LoginPageContent />
-    </Suspense>
-  );
+  return <LoginPageContent />;
 }

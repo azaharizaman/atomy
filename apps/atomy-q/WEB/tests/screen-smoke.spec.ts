@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+import { seedAuthSession } from './playwright-auth-bootstrap';
+import { fulfillJsonRoute } from './playwright-cors-helpers';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -24,8 +26,14 @@ function trackOriginOnNavigation(
 }
 
 async function stubAuth(page: import('@playwright/test').Page) {
-  await page.goto('/login');
-  await page.getByRole('button', { name: /use mock account/i }).click();
+  await seedAuthSession(page, {
+    id: 'user-1',
+    name: 'QA User',
+    email: 'qa.user@atomy.test',
+    role: 'buyer',
+    tenantId: 'tenant-qa',
+  });
+  await page.goto('/');
   await expect(page).toHaveURL('/', { timeout: 15000 });
 }
 
@@ -226,6 +234,14 @@ async function stubUsersRolesApi(
 const baseUrl = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000';
 
 test.beforeEach(async ({ page }) => {
+  await page.route('**/api/v1/feature-flags', async (route) => {
+    await fulfillJsonRoute(route, { data: { projects: true, tasks: true } });
+  });
+  await page.route('**/api/v1/rfqs/counts', async (route) => {
+    await fulfillJsonRoute(route, {
+      data: { draft: 0, published: 0, closed: 0, awarded: 0, cancelled: 0, active: 0, pending: 0, archived: 0 },
+    });
+  });
   await stubProjectsApi(page, baseUrl);
   await stubTasksApi(page, baseUrl);
   await stubUsersRolesApi(page, baseUrl);
