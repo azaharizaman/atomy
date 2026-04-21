@@ -381,6 +381,11 @@ async function routeAlphaRfqApi(page: Page) {
   });
 
   await page.route('**/api/v1/awards**', async (route) => {
+    if (route.request().method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: buildCorsHeaders(getRequestOrigin(route)) });
+      return;
+    }
+
     if (route.request().method() === 'GET') {
       await fulfillJsonRoute(route, { data: currentAward ? [currentAward] : [] });
       return;
@@ -413,6 +418,11 @@ async function routeAlphaRfqApi(page: Page) {
   });
 
   await page.route('**/api/v1/awards/award-alpha-1/signoff', async (route) => {
+    if (route.request().method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: buildCorsHeaders(getRequestOrigin(route)) });
+      return;
+    }
+
     currentAward = currentAward
       ? { ...currentAward, status: 'signed_off', signoff_at: '2026-04-16T10:10:00Z', signed_off_by: alphaMockUser.name }
       : null;
@@ -420,6 +430,11 @@ async function routeAlphaRfqApi(page: Page) {
   });
 
   await page.route('**/api/v1/awards/award-alpha-1/debrief/**', async (route) => {
+    if (route.request().method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: buildCorsHeaders(getRequestOrigin(route)) });
+      return;
+    }
+
     const payload = route.request().postDataJSON() as { message?: string };
     sentDebriefs.push({
       awardId: 'award-alpha-1',

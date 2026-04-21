@@ -66,8 +66,8 @@ npx cross-env E2E_USE_REAL_API=true NEXT_PUBLIC_USE_MOCKS=false playwright test 
 npx cross-env NEXT_PUBLIC_ALPHA_MODE=true playwright test tests/dashboard-nav.spec.ts
 
 # PowerShell-native form
-$env:E2E_USE_REAL_API=$true; $env:NEXT_PUBLIC_USE_MOCKS=$false; npx playwright test tests/auth.spec.ts
-$env:NEXT_PUBLIC_ALPHA_MODE=$true; npx playwright test tests/dashboard-nav.spec.ts
+$env:E2E_USE_REAL_API='true'; $env:NEXT_PUBLIC_USE_MOCKS='false'; npx playwright test tests/auth.spec.ts
+$env:NEXT_PUBLIC_ALPHA_MODE='true'; npx playwright test tests/dashboard-nav.spec.ts
 ```
 
 The RFQ alpha suite owns mocked browser journeys. Projects/tasks and settings/users are adjacent smoke coverage because those routes are hidden when `NEXT_PUBLIC_ALPHA_MODE=true`. The live RFQ lifecycle spec is intentionally narrow and should be run only with the local test API available.

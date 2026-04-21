@@ -183,3 +183,12 @@
 - Verification:
   - `cd apps/atomy-q/WEB && E2E_USE_REAL_API=true npx playwright test tests/rfq-lifecycle-e2e.spec.ts` -> PASS.
   - `cd apps/atomy-q/WEB && E2E_USE_REAL_API=true npm run test:e2e` -> PASS (18 passed, 0 skipped, 0 failed).
+
+## 2026-04-21 Review Follow-Up (E2E Stub/CORS Hygiene)
+
+- `tests/rfq-alpha-journeys.spec.ts`: added explicit `OPTIONS` preflight handling for `**/api/v1/awards**`, `**/api/v1/awards/award-alpha-1/signoff`, and `**/api/v1/awards/award-alpha-1/debrief/**` with `204` and request-origin CORS headers before any JSON parsing.
+- `tests/screen-smoke.spec.ts`: replaced inline auth/bootstrap setup with shared `stubAlphaSession(page)`; removed custom origin tracking/CORS header builders; refactored `/api/v1/users` and `/api/v1/roles` route stubs to use `fulfillJsonRoute`.
+- `tests/screen-smoke.spec.ts`: added a dedicated `/api/v1/rfqs` list stub (regex scoped so `/rfqs/counts` is not shadowed) for stable `/rfqs` navigation coverage.
+- `README.md`: updated PowerShell examples to pass lowercase string env values (`'true'` / `'false'`) so runtime comparisons like `process.env.X === 'true'` behave correctly.
+- Verification:
+  - `cd apps/atomy-q/WEB && npx playwright test tests/rfq-alpha-journeys.spec.ts tests/screen-smoke.spec.ts` -> PASS (7 passed).

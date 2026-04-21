@@ -319,3 +319,9 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 
 - Updated `config/cors.php` local allowed origins to include Playwright's default dev port (`http://localhost:3100`, `http://127.0.0.1:3100`) alongside existing `:3000` entries.
 - This removes browser-side CORS failures when WEB E2E tests run in real-API mode without custom port overrides.
+
+## 2026-04-21 Config Strict Types Compliance
+
+- Added `declare(strict_types=1);` to `config/cors.php` immediately after `<?php` to align with repository strict-types rules for PHP files.
+- Verification:
+  - `cd apps/atomy-q/API && php -l config/cors.php` -> PASS (no syntax errors).
