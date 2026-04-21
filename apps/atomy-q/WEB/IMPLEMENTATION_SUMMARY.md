@@ -166,3 +166,20 @@
 - Deleted the duplicated mocked RFQ owners `tests/rfq-workflow.spec.ts` and `tests/rfq-line-items.spec.ts`; narrowed `tests/rfq-lifecycle-e2e.spec.ts` to the live API create-then-overview smoke path only.
 - Added `tests/projects-tasks-smoke.spec.ts` for adjacent non-alpha project list/detail and task inbox/drawer coverage, and kept `tests/settings-users-smoke.spec.ts` as the adjacent non-alpha settings/users owner.
 - Trimmed `tests/smoke.spec.ts` to dashboard plus RFQ-list sanity checks and removed project/task ownership from generic smoke coverage.
+
+## 2026-04-21 E2E Stabilization Follow-Up
+
+- `tests/auth.spec.ts`: replaced the flaky login-form mock path with `authenticated dashboard smoke with mocked session` using `stubAlphaSession(page)` so the test behavior matches its assertions.
+- `tests/rfq-alpha-journeys.spec.ts`: hardened RFQ routing to `/\/api\/v1\/rfqs(?:\/.*)?(?:\?.*)?$/` and added per-test `routeAlphaRfqApi(page)` setup for list/create/overview/line-items coverage to avoid missing stubs and parallel-test leakage.
+- Verification:
+  - `cd apps/atomy-q/WEB && npx playwright test tests/auth.spec.ts tests/rfq-alpha-journeys.spec.ts` -> PASS (8 passed, 1 skipped).
+  - `cd apps/atomy-q/WEB && npm run test:e2e` -> PASS (16 passed, 2 skipped, 0 failed).
+
+## 2026-04-21 Real API E2E Fix (`E2E_USE_REAL_API=true`)
+
+- `tests/rfq-lifecycle-e2e.spec.ts`: changed the title assertion to a unique locator (`getByRole('link', { name: title })`) to avoid strict-mode ambiguity when the RFQ title appears in more than one visible element.
+- `tests/rfq-alpha-journeys.spec.ts`: changed route transitions to `waitUntil: 'domcontentloaded'` to avoid intermittent navigation hangs under parallel E2E load in dev mode.
+- `tests/screen-smoke.spec.ts`: replaced a flaky sidebar click path with direct `/rfqs` navigation for stable route-render verification.
+- Verification:
+  - `cd apps/atomy-q/WEB && E2E_USE_REAL_API=true npx playwright test tests/rfq-lifecycle-e2e.spec.ts` -> PASS.
+  - `cd apps/atomy-q/WEB && E2E_USE_REAL_API=true npm run test:e2e` -> PASS (18 passed, 0 skipped, 0 failed).

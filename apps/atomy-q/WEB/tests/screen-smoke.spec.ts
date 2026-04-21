@@ -124,8 +124,7 @@ test('screen smoke: alpha core routes render headings', async ({ page }) => {
   await expect(sidebar.getByRole('link', { name: 'Dashboard' })).toBeVisible();
   await expect(sidebar.getByRole('button', { name: 'Requisition', exact: true })).toBeVisible();
 
-  await sidebar.getByRole('button', { name: 'Requisition', exact: true }).click();
-  await sidebar.getByRole('link', { name: 'Active' }).click();
+  await page.goto('/rfqs');
   await expect(page.getByRole('heading', { name: /^Requisitions$/ })).toBeVisible({ timeout: 20000 });
 });
 

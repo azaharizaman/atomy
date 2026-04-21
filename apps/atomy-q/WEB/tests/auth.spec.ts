@@ -3,7 +3,7 @@ import { fulfillJsonRoute } from './playwright-cors-helpers';
 import { seedAuthSession } from './playwright-auth-bootstrap';
 import { stubAlphaSession } from './alpha-playwright-bootstrap';
 
-test('login with mocked API redirects to dashboard', async ({ page }) => {
+test('authenticated dashboard smoke with mocked session', async ({ page }) => {
   await stubAlphaSession(page);
 
   await expect(page).toHaveURL('/');

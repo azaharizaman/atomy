@@ -314,3 +314,8 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - Project list/show/store/update responses now include `project_manager_id` to support WEB edit/create manager selection workflows.
 - Verification:
   - `cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Feature/ProjectsApiTest.php` -> PASS (6 tests, 11 assertions).
+
+## 2026-04-21 Playwright Real-API CORS Support
+
+- Updated `config/cors.php` local allowed origins to include Playwright's default dev port (`http://localhost:3100`, `http://127.0.0.1:3100`) alongside existing `:3000` entries.
+- This removes browser-side CORS failures when WEB E2E tests run in real-API mode without custom port overrides.

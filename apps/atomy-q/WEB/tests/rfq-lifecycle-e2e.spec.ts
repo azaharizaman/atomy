@@ -8,7 +8,7 @@
 import { expect, test } from '@playwright/test';
 import { seedAuthSession } from './playwright-auth-bootstrap';
 
-const realApiLifecycleTest = process.env.RUN_REAL_API_TESTS === 'true' ? test : test.skip;
+const realApiLifecycleTest = process.env.E2E_USE_REAL_API === 'true' ? test : test.skip;
 
 test.describe('RFQ lifecycle live API smoke', () => {
   realApiLifecycleTest('creates an RFQ through the API and renders its overview in the browser', async ({
@@ -75,7 +75,7 @@ test.describe('RFQ lifecycle live API smoke', () => {
     await expect(page).toHaveURL(
       new RegExp(`/rfqs/${String(rfqId).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/overview`),
     );
-    await expect(page.getByText(title)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('link', { name: title })).toBeVisible({ timeout: 15000 });
     await expect(page.getByRole('heading', { name: 'Schedule' })).toBeVisible();
   });
 });

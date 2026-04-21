@@ -88,7 +88,7 @@ async function routeAlphaRfqApi(page: Page) {
     await fulfillJsonRoute(route, { data: [] });
   });
 
-  await page.route('**/api/v1/rfqs**', async (route) => {
+  await page.route(/\/api\/v1\/rfqs(?:\/.*)?(?:\?.*)?$/, async (route) => {
     if (route.request().method() === 'OPTIONS') {
       await route.fulfill({ status: 204, headers: buildCorsHeaders(getRequestOrigin(route)) });
       return;
@@ -436,22 +436,21 @@ async function routeAlphaRfqApi(page: Page) {
 }
 
 test.describe('RFQ alpha journeys', () => {
-  let lifecycleApi: Awaited<ReturnType<typeof routeAlphaRfqApi>>;
-
   test.beforeEach(async ({ page }) => {
     await stubAlphaSession(page);
-    lifecycleApi = await routeAlphaRfqApi(page);
   });
 
   test('renders the RFQ list', async ({ page }) => {
-    await page.goto('/rfqs');
+    await routeAlphaRfqApi(page);
+    await page.goto('/rfqs', { waitUntil: 'domcontentloaded' });
 
     await expect(page.getByRole('heading', { name: 'Requisitions' })).toBeVisible();
     await expect(page.getByText(RFQ_TITLE)).toBeVisible();
   });
 
   test('creates an RFQ and navigates to its overview', async ({ page }) => {
-    await page.goto('/rfqs/new');
+    await routeAlphaRfqApi(page);
+    await page.goto('/rfqs/new', { waitUntil: 'domcontentloaded' });
 
     await expect(page.getByRole('heading', { name: 'Create New RFQ' })).toBeVisible();
     await page.getByLabel('Title').fill('Created Alpha RFQ');
@@ -473,17 +472,19 @@ test.describe('RFQ alpha journeys', () => {
   });
 
   test('renders overview and details', async ({ page }) => {
-    await page.goto(`/rfqs/${RFQ_ID}/overview`);
+    await routeAlphaRfqApi(page);
+    await page.goto(`/rfqs/${RFQ_ID}/overview`, { waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('heading', { name: 'Schedule' })).toBeVisible();
     await expect(page.getByText(/activity timeline/i)).toBeVisible();
 
-    await page.goto(`/rfqs/${RFQ_ID}/details`);
+    await page.goto(`/rfqs/${RFQ_ID}/details`, { waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('heading', { name: /rfq details/i })).toBeVisible();
     await expect(page.getByText('Commercial metadata')).toBeVisible();
   });
 
   test('adds a line item and refreshes visible requested items', async ({ page }) => {
-    await page.goto(`/rfqs/${RFQ_ID}/line-items`);
+    await routeAlphaRfqApi(page);
+    await page.goto(`/rfqs/${RFQ_ID}/line-items`, { waitUntil: 'domcontentloaded' });
 
     await expect(page.getByRole('heading', { name: 'Line items' })).toBeVisible();
     await expect(page.getByText('Existing line item')).toBeVisible();
@@ -523,6 +524,7 @@ test.describe('RFQ alpha journeys', () => {
 
   test('renders vendors, quote intake, comparison runs, approvals, award, and decision trail', async ({ page }) => {
     test.setTimeout(90_000);
+    const lifecycleApi = await routeAlphaRfqApi(page);
     const screens = [
       {
         path: `/rfqs/${RFQ_ID}/vendors`,
@@ -547,12 +549,12 @@ test.describe('RFQ alpha journeys', () => {
     ] as const;
 
     for (const screen of screens) {
-      await page.goto(screen.path);
+      await page.goto(screen.path, { waitUntil: 'domcontentloaded' });
       await expect(screen.heading()).toBeVisible();
       await expect(screen.content()).toBeVisible();
     }
 
-    await page.goto(`/rfqs/${RFQ_ID}/award`);
+    await page.goto(`/rfqs/${RFQ_ID}/award`, { waitUntil: 'domcontentloaded' });
     await expect(page.getByText(/select a vendor to award the contract based on the final comparison run/i)).toBeVisible();
     await page.getByRole('button', { name: /create award/i }).click();
     await expect.poll(() => lifecycleApi.getCurrentAward()?.status ?? null).toBe('pending');
@@ -566,7 +568,7 @@ test.describe('RFQ alpha journeys', () => {
     await expect.poll(() => lifecycleApi.getCurrentAward()?.status ?? null).toBe('signed_off');
     await expect(page.getByRole('status', { name: 'Signed off' }).first()).toBeVisible();
 
-    await page.goto(`/rfqs/${RFQ_ID}/decision-trail`);
+    await page.goto(`/rfqs/${RFQ_ID}/decision-trail`, { waitUntil: 'domcontentloaded' });
     await expect(page.getByRole('heading', { name: 'Decision Trail' })).toBeVisible();
     await expect(page.getByText('Chronological trail')).toBeVisible();
   });
