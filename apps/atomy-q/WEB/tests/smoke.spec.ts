@@ -1,32 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { fulfillJsonRoute } from './playwright-cors-helpers';
-import { seedAuthSession } from './playwright-auth-bootstrap';
-
-const mockUser = {
-  id: 'user-1',
-  name: 'QA User',
-  email: 'qa.user@atomy.test',
-  role: 'buyer',
-  tenantId: 'tenant-qa',
-};
-
-async function stubAuth(page: import('@playwright/test').Page) {
-  await page.route('**/api/v1/feature-flags', async (route) => {
-    await fulfillJsonRoute(route, { data: { projects: true, tasks: true } });
-  });
-  await page.route('**/api/v1/rfqs/counts', async (route) => {
-    await fulfillJsonRoute(route, {
-      data: { draft: 0, published: 0, closed: 0, awarded: 0, cancelled: 0, active: 0, pending: 0, archived: 0 },
-    });
-  });
-
-  await seedAuthSession(page, mockUser);
-  await page.goto('/');
-  await expect(page).toHaveURL('/');
-}
+import { alphaMockUser, stubAlphaSession } from './alpha-playwright-bootstrap';
 
 test.beforeEach(async ({ page }) => {
-  await stubAuth(page);
+  await stubAlphaSession(page);
+  await expect(page).toHaveURL('/');
 });
 
 test('smoke: dashboard renders after login', async ({ page }) => {
@@ -40,7 +18,7 @@ test('smoke: RFQs list loads and can open an RFQ', async ({ page }) => {
     rfq_number: 'RFQ-E2E-001',
     title: 'Smoke RFQ',
     status: 'active',
-    owner: { name: 'QA User', email: mockUser.email },
+    owner: { name: 'QA User', email: alphaMockUser.email },
     deadline: '2026-04-15',
     category: 'IT Hardware',
     estValue: 50000,
@@ -60,7 +38,7 @@ test('smoke: RFQs list loads and can open an RFQ', async ({ page }) => {
             rfq_number: rfq.rfq_number,
             title: rfq.title,
             status: rfq.status,
-            owner: { id: 'u1', name: 'QA User', email: mockUser.email },
+            owner: { id: 'u1', name: 'QA User', email: alphaMockUser.email },
             deadline: rfq.deadline,
             category: rfq.category,
             estimated_value: rfq.estValue,
