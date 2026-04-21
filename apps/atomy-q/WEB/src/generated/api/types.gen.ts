@@ -112,6 +112,11 @@ export type RfqStatusTransitionRequest = {
     status: 'draft' | 'published' | 'closed' | 'awarded' | 'cancelled';
 };
 
+/**
+ * VendorStatus
+ */
+export type VendorStatus = 'draft' | 'under_review' | 'approved' | 'restricted' | 'suspended' | 'archived';
+
 export type V1AccountProfile0Data = {
     body?: never;
     path?: never;
@@ -565,7 +570,7 @@ export type ApprovalShowResponses = {
             assignee: string | '—';
             requested_at: string;
             rfq_number: string;
-            notes: string;
+            notes: string | null;
             comparison_run: {
                 id: string;
                 name: string;
@@ -1063,16 +1068,16 @@ export type AwardIndexResponses = {
             rfq_id: string;
             rfq_title: string;
             rfq_number: string;
-            comparison_run_id: string;
+            comparison_run_id: string | null;
             vendor_id: string;
             vendor_name: string;
             status: string;
             amount: string | null;
             currency: string;
-            split_details: string | Array<string>;
-            protest_id: string;
+            split_details: Array<unknown> | null | Array<string>;
+            protest_id: string | null;
             signoff_at: string;
-            signed_off_by: string;
+            signed_off_by: string | null;
             comparison: {
                 vendors: Array<unknown>;
             };
@@ -1136,16 +1141,16 @@ export type AwardStoreResponses = {
             rfq_id: string;
             rfq_title: string;
             rfq_number: string;
-            comparison_run_id: string;
+            comparison_run_id: string | null;
             vendor_id: string;
             vendor_name: string;
             status: string;
             amount: string | null;
             currency: string;
-            split_details: string | Array<string>;
-            protest_id: string;
+            split_details: Array<unknown> | null | Array<string>;
+            protest_id: string | null;
             signoff_at: string;
-            signed_off_by: string;
+            signed_off_by: string | null;
             comparison: {
                 vendors: Array<unknown>;
             };
@@ -1196,16 +1201,16 @@ export type AwardUpdateSplitResponses = {
             rfq_id: string;
             rfq_title: string;
             rfq_number: string;
-            comparison_run_id: string;
+            comparison_run_id: string | null;
             vendor_id: string;
             vendor_name: string;
             status: string;
             amount: string | null;
             currency: string;
-            split_details: string | Array<string>;
-            protest_id: string;
+            split_details: Array<unknown> | null | Array<string>;
+            protest_id: string | null;
             signoff_at: string;
-            signed_off_by: string;
+            signed_off_by: string | null;
             comparison: {
                 vendors: Array<unknown>;
             };
@@ -1334,16 +1339,16 @@ export type AwardResolveProtestResponses = {
             rfq_id: string;
             rfq_title: string;
             rfq_number: string;
-            comparison_run_id: string;
+            comparison_run_id: string | null;
             vendor_id: string;
             vendor_name: string;
             status: string;
             amount: string | null;
             currency: string;
-            split_details: string | Array<string>;
-            protest_id: string;
+            split_details: Array<unknown> | null | Array<string>;
+            protest_id: string | null;
             signoff_at: string;
-            signed_off_by: string;
+            signed_off_by: string | null;
             comparison: {
                 vendors: Array<unknown>;
             };
@@ -1377,16 +1382,16 @@ export type AwardSignoffResponses = {
             rfq_id: string;
             rfq_title: string;
             rfq_number: string;
-            comparison_run_id: string;
+            comparison_run_id: string | null;
             vendor_id: string;
             vendor_name: string;
             status: string;
             amount: string | null;
             currency: string;
-            split_details: string | Array<string>;
-            protest_id: string;
+            split_details: Array<unknown> | null | Array<string>;
+            protest_id: string | null;
             signoff_at: string;
-            signed_off_by: string;
+            signed_off_by: string | null;
             comparison: {
                 vendors: Array<unknown>;
             };
@@ -1472,9 +1477,9 @@ export type ComparisonRunPreviewResponses = {
             rfq_id: string;
             status: 'preview';
             is_preview: boolean;
-            matrix: string;
-            readiness: string;
-            approval: string;
+            matrix: Array<unknown> | null;
+            readiness: Array<unknown> | null;
+            approval: Array<unknown> | null;
             created_at: string;
         };
     };
@@ -3214,6 +3219,7 @@ export type ProjectIndexResponses = {
             client_id: string;
             start_date: string;
             end_date: string;
+            project_manager_id: string;
         }>;
     };
 };
@@ -3223,7 +3229,7 @@ export type ProjectIndexResponse = ProjectIndexResponses[keyof ProjectIndexRespo
 export type V1ProjectsStoreData = {
     body: {
         name: string;
-        client_id: string;
+        client_id?: string;
         start_date: string;
         end_date: string;
         project_manager_id: string;
@@ -3308,6 +3314,7 @@ export type ProjectShowResponses = {
             client_id: string;
             start_date: string;
             end_date: string;
+            project_manager_id: string;
             budget_type: string;
             completion_percentage: string;
         };
@@ -3371,6 +3378,7 @@ export type ProjectUpdateResponses = {
             client_id: string;
             start_date: string;
             end_date: string;
+            project_manager_id: string;
         };
     };
 };
@@ -3624,23 +3632,23 @@ export type QuoteSubmissionIndexResponses = {
         data: Array<{
             id: string;
             rfq_id: string;
-            vendor_id: string;
-            vendor_name: string;
-            uploaded_by: string;
+            vendor_id: string | null;
+            vendor_name: string | null;
+            uploaded_by: string | null;
             status: string;
-            file_path: string;
-            file_type: string;
-            original_filename: string;
+            file_path: string | null;
+            file_type: string | null;
+            original_filename: string | null;
             blocking_issue_count: number;
             submitted_at: string;
-            error_code: string;
-            error_message: string;
+            error_code: string | null;
+            error_message: string | null;
             processing_started_at: string;
             processing_completed_at: string;
             parsed_at: string;
-            retry_count: string;
-            line_items_count: string;
-            confidence: string;
+            retry_count: number;
+            line_items_count: number | null;
+            confidence: string | null;
         }>;
         meta: {
             current_page: number;
@@ -3689,23 +3697,23 @@ export type QuoteSubmissionUploadResponses = {
         data: {
             id: string;
             rfq_id: string;
-            vendor_id: string;
-            vendor_name: string;
-            uploaded_by: string;
+            vendor_id: string | null;
+            vendor_name: string | null;
+            uploaded_by: string | null;
             status: string;
-            file_path: string;
-            file_type: string;
-            original_filename: string;
+            file_path: string | null;
+            file_type: string | null;
+            original_filename: string | null;
             blocking_issue_count: number;
             submitted_at: string;
-            error_code: string;
-            error_message: string;
+            error_code: string | null;
+            error_message: string | null;
             processing_started_at: string;
             processing_completed_at: string;
             parsed_at: string;
-            retry_count: string;
-            line_items_count: string;
-            confidence: string;
+            retry_count: number;
+            line_items_count: number | null;
+            confidence: string | null;
         };
     };
 };
@@ -4219,14 +4227,14 @@ export type RfqIndexResponses = {
             rfq_number: string;
             title: string;
             status: string;
-            project_id: string;
+            project_id: string | null;
             owner: {
                 id: string;
                 name: string;
                 email: string;
             } | null;
             deadline: string;
-            category: string;
+            category: string | null;
             estimated_value: string;
             estValue: string;
             savings_percentage: string;
@@ -4445,7 +4453,7 @@ export type RfqUpdateResponses = {
             rfq_number: string;
             title: string;
             status: string;
-            project_id: string;
+            project_id: string | null;
         };
     };
 };
@@ -4606,9 +4614,9 @@ export type RfqUpdateStatusResponses = {
             tenant_id: string;
             rfq_number: string;
             title: string;
-            description: string;
+            description: string | null;
             status: string;
-            project_id: string;
+            project_id: string | null;
             project_name: string | null;
             estimated_value: string;
             savings_percentage: string;
@@ -4617,8 +4625,8 @@ export type RfqUpdateStatusResponses = {
             expected_award_at: string;
             technical_review_due_at: string;
             financial_review_due_at: string;
-            payment_terms: string;
-            evaluation_method: string;
+            payment_terms: string | null;
+            evaluation_method: string | null;
             created_at: string;
             updated_at: string;
         };
@@ -4705,9 +4713,9 @@ export type RfqSaveDraftResponses = {
             tenant_id: string;
             rfq_number: string;
             title: string;
-            description: string;
+            description: string | null;
             status: string;
-            project_id: string;
+            project_id: string | null;
             project_name: string | null;
             estimated_value: string;
             savings_percentage: string;
@@ -4716,8 +4724,8 @@ export type RfqSaveDraftResponses = {
             expected_award_at: string;
             technical_review_due_at: string;
             financial_review_due_at: string;
-            payment_terms: string;
-            evaluation_method: string;
+            payment_terms: string | null;
+            evaluation_method: string | null;
             created_at: string;
             updated_at: string;
         };
@@ -4788,7 +4796,7 @@ export type RfqStoreLineItemResponses = {
             uom: string;
             unit_price: string;
             currency: string;
-            sort_order: string;
+            sort_order: number;
         };
     };
 };
@@ -5761,7 +5769,7 @@ export type TaskIndexResponses = {
             title: string;
             status: string;
             due_date: string;
-            project_id: string;
+            project_id: string | null;
         }>;
     };
 };
@@ -5772,7 +5780,7 @@ export type V1TasksStoreData = {
     body: {
         title: string;
         description?: string;
-        project_id?: number | null;
+        project_id?: string | null;
         priority?: 'low' | 'medium' | 'high' | 'critical';
         due_date?: string | null;
         assignee_ids?: Array<string>;
@@ -5886,7 +5894,7 @@ export type TaskShowResponses = {
             predecessor_ids: string;
             due_date: string;
             completed_at: string;
-            project_id: string;
+            project_id: string | null;
         };
     };
 };
@@ -6340,9 +6348,9 @@ export type VendorIndexData = {
     body?: never;
     path?: never;
     query?: {
-        status?: string;
         q?: string;
         search?: string;
+        status?: string;
     };
     url: '/vendors';
 };
@@ -6351,17 +6359,26 @@ export type VendorIndexResponses = {
     200: {
         data: Array<{
             id: string;
+            legal_name: string;
+            display_name: string;
+            registration_number: string;
+            country_of_registration: string;
+            primary_contact_name: string;
+            primary_contact_email: string;
+            primary_contact_phone: string | null;
+            status: string;
+            approval_record: {
+                approved_by_user_id: string;
+                approved_at: string;
+                approval_note: string;
+            } | null;
+            created_at: string;
+            updated_at: string;
             name: string;
             trading_name: string;
-            registration_number: string;
-            tax_id: string;
             country_code: string;
             email: string;
             phone: string;
-            status: string;
-            onboarded_at: string;
-            created_at: string;
-            updated_at: string;
         }>;
         meta: {
             current_page: number;
@@ -6373,6 +6390,71 @@ export type VendorIndexResponses = {
 };
 
 export type VendorIndexResponse = VendorIndexResponses[keyof VendorIndexResponses];
+
+export type VendorStoreData = {
+    body: {
+        legal_name: string;
+        display_name: string;
+        registration_number: string;
+        country_of_registration: string;
+        primary_contact_name: string;
+        primary_contact_email: string;
+        primary_contact_phone?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/vendors';
+};
+
+export type VendorStoreErrors = {
+    /**
+     * Validation error
+     */
+    422: {
+        /**
+         * Errors overview.
+         */
+        message: string;
+        /**
+         * A detailed description of each field that failed validation.
+         */
+        errors: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type VendorStoreError = VendorStoreErrors[keyof VendorStoreErrors];
+
+export type VendorStoreResponses = {
+    201: {
+        data: {
+            id: string;
+            legal_name: string;
+            display_name: string;
+            registration_number: string;
+            country_of_registration: string;
+            primary_contact_name: string;
+            primary_contact_email: string;
+            primary_contact_phone: string | null;
+            status: string;
+            approval_record: {
+                approved_by_user_id: string;
+                approved_at: string;
+                approval_note: string;
+            } | null;
+            created_at: string;
+            updated_at: string;
+            name: string;
+            trading_name: string;
+            country_code: string;
+            email: string;
+            phone: string | null;
+        };
+    };
+};
+
+export type VendorStoreResponse = VendorStoreResponses[keyof VendorStoreResponses];
 
 export type VendorShowData = {
     body?: never;
@@ -6395,22 +6477,168 @@ export type VendorShowResponses = {
     200: {
         data: {
             id: string;
-            name: string;
-            trading_name: string;
+            legal_name: string;
+            display_name: string;
             registration_number: string;
-            tax_id: string;
-            country_code: string;
-            email: string;
-            phone: string;
+            country_of_registration: string;
+            primary_contact_name: string;
+            primary_contact_email: string;
+            primary_contact_phone: string | null;
             status: string;
-            onboarded_at: string;
+            approval_record: {
+                approved_by_user_id: string;
+                approved_at: string;
+                approval_note: string;
+            } | null;
             created_at: string;
             updated_at: string;
+            name: string;
+            trading_name: string;
+            country_code: string;
+            email: string;
+            phone: string | null;
         };
     };
 };
 
 export type VendorShowResponse = VendorShowResponses[keyof VendorShowResponses];
+
+export type VendorUpdateData = {
+    body: {
+        legal_name: string;
+        display_name: string;
+        registration_number: string;
+        country_of_registration: string;
+        primary_contact_name: string;
+        primary_contact_email: string;
+        primary_contact_phone?: string | null;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/vendors/{id}';
+};
+
+export type VendorUpdateErrors = {
+    404: {
+        message: 'Vendor not found';
+    };
+    /**
+     * Validation error
+     */
+    422: {
+        /**
+         * Errors overview.
+         */
+        message: string;
+        /**
+         * A detailed description of each field that failed validation.
+         */
+        errors: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type VendorUpdateError = VendorUpdateErrors[keyof VendorUpdateErrors];
+
+export type VendorUpdateResponses = {
+    200: {
+        data: {
+            id: string;
+            legal_name: string;
+            display_name: string;
+            registration_number: string;
+            country_of_registration: string;
+            primary_contact_name: string;
+            primary_contact_email: string;
+            primary_contact_phone: string | null;
+            status: string;
+            approval_record: {
+                approved_by_user_id: string;
+                approved_at: string;
+                approval_note: string;
+            } | null;
+            created_at: string;
+            updated_at: string;
+            name: string;
+            trading_name: string;
+            country_code: string;
+            email: string;
+            phone: string | null;
+        };
+    };
+};
+
+export type VendorUpdateResponse = VendorUpdateResponses[keyof VendorUpdateResponses];
+
+export type VendorUpdateStatusData = {
+    body: {
+        status: VendorStatus;
+        approval_note?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/vendors/{id}/status';
+};
+
+export type VendorUpdateStatusErrors = {
+    404: {
+        message: 'Vendor not found';
+    };
+    /**
+     * Validation error or vendor status transition error
+     */
+    422: {
+        /**
+         * Errors overview.
+         */
+        message: string;
+        /**
+         * A detailed description of each field that failed validation.
+         */
+        errors: {
+            [key: string]: Array<string>;
+        };
+    } | {
+        message: string;
+    };
+};
+
+export type VendorUpdateStatusError = VendorUpdateStatusErrors[keyof VendorUpdateStatusErrors];
+
+export type VendorUpdateStatusResponses = {
+    200: {
+        data: {
+            id: string;
+            legal_name: string;
+            display_name: string;
+            registration_number: string;
+            country_of_registration: string;
+            primary_contact_name: string;
+            primary_contact_email: string;
+            primary_contact_phone: string | null;
+            status: string;
+            approval_record: {
+                approved_by_user_id: string;
+                approved_at: string;
+                approval_note: string;
+            } | null;
+            created_at: string;
+            updated_at: string;
+            name: string;
+            trading_name: string;
+            country_code: string;
+            email: string;
+            phone: string | null;
+        };
+    };
+};
+
+export type VendorUpdateStatusResponse = VendorUpdateStatusResponses[keyof VendorUpdateStatusResponses];
 
 export type VendorPerformanceData = {
     body?: never;
@@ -6496,7 +6724,15 @@ export type VendorHistoryError = VendorHistoryErrors[keyof VendorHistoryErrors];
 
 export type VendorHistoryResponses = {
     200: {
-        data: Array<string>;
+        data: Array<{
+            award_id: string;
+            rfq_id: string;
+            status: string;
+            amount: number | null;
+            currency: string;
+            signed_off_at: string | null;
+            created_at: string | null;
+        }>;
     };
 };
 

@@ -5,46 +5,52 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
+use App\Http\Controllers\Api\V1\Concerns\NormalizesVendorStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Idempotency\IdempotencyCompletion;
 use App\Models\Award;
 use App\Models\QuoteSubmission;
 use App\Models\Vendor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Nexus\Idempotency\Contracts\IdempotencyServiceInterface;
+use Nexus\Vendor\Enums\VendorStatus;
 
 /**
  * Vendor API controller.
  *
- * SECURITY: When implementing real data, all queries MUST be scoped by
- * $this->tenantId($request) to prevent cross-tenant data leakage.
- * Do not use tenant_id from request body or query.
+ * SECURITY: all queries are tenant-scoped to prevent cross-tenant data leakage.
  */
 final class VendorController extends Controller
 {
     use ExtractsAuthContext;
+    use NormalizesVendorStatus;
 
     public function index(Request $request): JsonResponse
     {
         $tenantId = $this->tenantId($request);
+        $normalizedTenantId = $this->normalizeIdentifier($tenantId);
         $pagination = $this->paginationParams($request);
 
         $query = Vendor::query()
-            ->where('tenant_id', $tenantId)
-            ->orderBy('name');
+            ->whereRaw('lower(tenant_id) = ?', [$normalizedTenantId])
+            ->orderBy('display_name')
+            ->orderBy('id');
 
-        $status = $request->query('status');
-        if (is_string($status) && $status !== '') {
-            $query->where('status', $status);
+        if (is_string($status = $request->query('status')) && trim($status) !== '') {
+            $query->where('status', trim($status));
         }
 
         $search = $request->query('search', $request->query('q'));
         if (is_string($search) && trim($search) !== '') {
             $needle = '%' . trim($search) . '%';
             $query->where(static function ($builder) use ($needle): void {
-                $builder->where('name', 'like', $needle)
-                    ->orWhere('trading_name', 'like', $needle)
+                $builder
+                    ->where('legal_name', 'like', $needle)
+                    ->orWhere('display_name', 'like', $needle)
                     ->orWhere('registration_number', 'like', $needle)
-                    ->orWhere('email', 'like', $needle);
+                    ->orWhere('primary_contact_email', 'like', $needle);
             });
         }
 
@@ -64,9 +70,38 @@ final class VendorController extends Controller
         ]);
     }
 
+    public function store(Request $request, IdempotencyServiceInterface $idempotency): JsonResponse
+    {
+        try {
+            $tenantId = $this->tenantId($request);
+
+            $validated = $this->validateVendorAttributes($request);
+
+            $vendor = new Vendor();
+            $vendor->tenant_id = $this->normalizeIdentifier($tenantId);
+            $vendor->tax_id = null;
+            $this->applyVendorAttributes($vendor, $validated);
+            $vendor->status = VendorStatus::Draft->value;
+            $vendor->save();
+
+            $response = response()->json([
+                'data' => $this->serializeVendor($vendor),
+            ], 201);
+
+            return IdempotencyCompletion::succeed($request, $idempotency, $response);
+        } catch (ValidationException $exception) {
+            IdempotencyCompletion::fail($request, $idempotency);
+            throw $exception;
+        } catch (\Throwable $exception) {
+            IdempotencyCompletion::fail($request, $idempotency);
+            throw $exception;
+        }
+    }
+
     public function show(Request $request, string $id): JsonResponse
     {
         $vendor = $this->findVendor($this->tenantId($request), $id);
+
         if ($vendor === null) {
             return response()->json(['message' => 'Vendor not found'], 404);
         }
@@ -76,16 +111,36 @@ final class VendorController extends Controller
         ]);
     }
 
+    public function update(Request $request, string $id): JsonResponse
+    {
+        $tenantId = $this->tenantId($request);
+        $vendor = $this->findVendor($tenantId, $id);
+
+        if ($vendor === null) {
+            return response()->json(['message' => 'Vendor not found'], 404);
+        }
+
+        $validated = $this->validateVendorAttributes($request);
+
+        $this->applyVendorAttributes($vendor, $validated);
+        $vendor->save();
+
+        return response()->json([
+            'data' => $this->serializeVendor($vendor),
+        ]);
+    }
+
     public function performance(Request $request, string $id): JsonResponse
     {
         $tenantId = $this->tenantId($request);
+        $normalizedTenantId = $this->normalizeIdentifier($tenantId);
         $vendor = $this->findVendor($tenantId, $id);
         if ($vendor === null) {
             return response()->json(['message' => 'Vendor not found'], 404);
         }
 
         $quoteMetrics = QuoteSubmission::query()
-            ->where('tenant_id', $tenantId)
+            ->whereRaw('lower(tenant_id) = ?', [$normalizedTenantId])
             ->where('vendor_id', $vendor->id)
             ->selectRaw('COUNT(*) AS quotes_submitted')
             ->selectRaw("SUM(CASE WHEN status = 'ready' THEN 1 ELSE 0 END) AS quotes_ready")
@@ -95,7 +150,7 @@ final class VendorController extends Controller
         $quotesSubmitted = (int) ($quoteMetrics?->quotes_submitted ?? 0);
         $quotesReady = (int) ($quoteMetrics?->quotes_ready ?? 0);
         $awardsWon = Award::query()
-            ->where('tenant_id', $tenantId)
+            ->whereRaw('lower(tenant_id) = ?', [$normalizedTenantId])
             ->where('vendor_id', $vendor->id)
             ->count();
         $averageConfidence = $quoteMetrics?->average_confidence;
@@ -126,7 +181,9 @@ final class VendorController extends Controller
         $metadata = is_array($vendor->metadata) ? $vendor->metadata : [];
         $status = $metadata['compliance_status'] ?? null;
         if (! is_string($status) || $status === '') {
-            $status = $vendor->status === 'active' ? 'compliant' : 'review_required';
+            $status = $this->normalizeVendorStatus((string) $vendor->status) === VendorStatus::Approved
+                ? 'compliant'
+                : 'review_required';
         }
 
         return response()->json([
@@ -145,13 +202,14 @@ final class VendorController extends Controller
     public function history(Request $request, string $id): JsonResponse
     {
         $tenantId = $this->tenantId($request);
+        $normalizedTenantId = $this->normalizeIdentifier($tenantId);
         $vendor = $this->findVendor($tenantId, $id);
         if ($vendor === null) {
             return response()->json(['message' => 'Vendor not found'], 404);
         }
 
         $awards = Award::query()
-            ->where('tenant_id', $tenantId)
+            ->whereRaw('lower(tenant_id) = ?', [$normalizedTenantId])
             ->where('vendor_id', $vendor->id)
             ->orderByDesc('created_at')
             ->limit(50)
@@ -173,30 +231,106 @@ final class VendorController extends Controller
     private function findVendor(string $tenantId, string $vendorId): ?Vendor
     {
         return Vendor::query()
-            ->where('tenant_id', $tenantId)
-            ->where('id', $vendorId)
+            ->whereRaw('lower(tenant_id) = ?', [$this->normalizeIdentifier($tenantId)])
+            ->whereRaw('lower(id) = ?', [$this->normalizeIdentifier($vendorId)])
             ->first();
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     private function serializeVendor(Vendor $vendor): array
     {
+        $status = $this->normalizeVendorStatus((string) $vendor->status);
+        $approvalRecord = $this->serializeApprovalRecord($vendor);
+
         return [
             'id' => (string) $vendor->id,
-            'name' => (string) $vendor->name,
-            'trading_name' => $vendor->trading_name,
-            'registration_number' => $vendor->registration_number,
-            'tax_id' => $vendor->tax_id,
-            'country_code' => (string) $vendor->country_code,
-            'email' => (string) $vendor->email,
-            'phone' => $vendor->phone,
-            'status' => (string) $vendor->status,
-            'onboarded_at' => $vendor->onboarded_at?->toAtomString(),
+            'legal_name' => (string) $vendor->legal_name,
+            'display_name' => (string) $vendor->display_name,
+            'registration_number' => (string) $vendor->registration_number,
+            'country_of_registration' => (string) $vendor->country_of_registration,
+            'primary_contact_name' => (string) $vendor->primary_contact_name,
+            'primary_contact_email' => (string) $vendor->primary_contact_email,
+            'primary_contact_phone' => $this->nullableString($vendor->primary_contact_phone),
+            'status' => $status->value,
+            'approval_record' => $approvalRecord,
             'created_at' => $vendor->created_at?->toAtomString(),
             'updated_at' => $vendor->updated_at?->toAtomString(),
+            'name' => (string) $vendor->legal_name,
+            'trading_name' => (string) $vendor->display_name,
+            'country_code' => (string) $vendor->country_of_registration,
+            'email' => (string) $vendor->primary_contact_email,
+            'phone' => $this->nullableString($vendor->primary_contact_phone),
         ];
+    }
+
+    private function serializeApprovalRecord(Vendor $vendor): ?array
+    {
+        if ($vendor->approved_by_user_id === null && $vendor->approved_at === null && $vendor->approval_note === null) {
+            return null;
+        }
+
+        return [
+            'approved_by_user_id' => $vendor->approved_by_user_id,
+            'approved_at' => $vendor->approved_at?->toAtomString(),
+            'approval_note' => $vendor->approval_note,
+        ];
+    }
+
+    /**
+     * @return array{
+     *     legal_name:mixed,
+     *     display_name:mixed,
+     *     registration_number:mixed,
+     *     country_of_registration:mixed,
+     *     primary_contact_name:mixed,
+     *     primary_contact_email:mixed,
+     *     primary_contact_phone?:mixed
+     * }
+     */
+    private function validateVendorAttributes(Request $request): array
+    {
+        return $request->validate([
+            'legal_name' => ['required', 'string'],
+            'display_name' => ['required', 'string'],
+            'registration_number' => ['required', 'string'],
+            'country_of_registration' => ['required', 'string'],
+            'primary_contact_name' => ['required', 'string'],
+            'primary_contact_email' => ['required', 'email'],
+            'primary_contact_phone' => ['nullable', 'string'],
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $validated
+     */
+    private function applyVendorAttributes(Vendor $vendor, array $validated): void
+    {
+        $phone = $validated['primary_contact_phone'] ?? null;
+        $normalizedPhone = $phone !== null ? (string) $phone : '';
+
+        $vendor->name = (string) $validated['legal_name'];
+        $vendor->trading_name = (string) $validated['display_name'];
+        $vendor->registration_number = (string) $validated['registration_number'];
+        $vendor->country_code = (string) $validated['country_of_registration'];
+        $vendor->email = (string) $validated['primary_contact_email'];
+        $vendor->phone = $normalizedPhone;
+        $vendor->legal_name = (string) $validated['legal_name'];
+        $vendor->display_name = (string) $validated['display_name'];
+        $vendor->country_of_registration = (string) $validated['country_of_registration'];
+        $vendor->primary_contact_name = (string) $validated['primary_contact_name'];
+        $vendor->primary_contact_email = (string) $validated['primary_contact_email'];
+        $vendor->primary_contact_phone = $normalizedPhone;
+    }
+
+    private function nullableString(mixed $value): ?string
+    {
+        $normalized = trim((string) $value);
+
+        return $normalized === '' ? null : $normalized;
+    }
+
+    private function normalizeIdentifier(string $value): string
+    {
+        return strtolower(trim($value));
     }
 
     private function performanceScore(int $quotesSubmitted, int $quotesReady, int $awardsWon): float

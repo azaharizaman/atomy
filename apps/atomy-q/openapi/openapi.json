@@ -3,7 +3,7 @@
     "info": {
         "title": "Atomy-Q API",
         "version": "0.0.1",
-        "description": "Atomy-Q Quote Comparison API \u2014 generated OpenAPI for client tooling (design-partner alpha).\n\n### Idempotency error `code` values\n\nJSON error bodies may include a string `code` for clients and tooling. Idempotency-related values:\n\n| `code` | HTTP | Meaning |\n|--------|------|---------|\n| `idempotency_key_required` | 400 | `Idempotency-Key` header missing or empty |\n| `idempotency_key_invalid` | 400 | Key failed validation (e.g. length) |\n| `idempotency_fingerprint_conflict` | 409 | Same key, different request body |\n| `idempotency_in_progress` | 409 | Same key; prior attempt not finished |\n| `idempotency_operation_ref_missing` | 500 | Route has no name (misconfiguration) |\n| `idempotency_tenant_missing` | 500 | Tenant not on request after auth |\n| `idempotency_replay_missing` | 500 | Replay outcome without stored payload |\n| `idempotency_record_missing` | 500 | Internal idempotency state inconsistency |\n| `idempotency_envelope_too_large` | 500 | Response too large to store for replay |\n"
+        "description": "Atomy-Q Quote Comparison API — generated OpenAPI for client tooling (design-partner alpha).\n\n### Idempotency error `code` values\n\nJSON error bodies may include a string `code` for clients and tooling. Idempotency-related values:\n\n| `code` | HTTP | Meaning |\n|--------|------|---------|\n| `idempotency_key_required` | 400 | `Idempotency-Key` header missing or empty |\n| `idempotency_key_invalid` | 400 | Key failed validation (e.g. length) |\n| `idempotency_fingerprint_conflict` | 409 | Same key, different request body |\n| `idempotency_in_progress` | 409 | Same key; prior attempt not finished |\n| `idempotency_operation_ref_missing` | 500 | Route has no name (misconfiguration) |\n| `idempotency_tenant_missing` | 500 | Tenant not on request after auth |\n| `idempotency_replay_missing` | 500 | Replay outcome without stored payload |\n| `idempotency_record_missing` | 500 | Internal idempotency state inconsistency |\n| `idempotency_envelope_too_large` | 500 | Response too large to store for replay |\n"
     },
     "servers": [
         {
@@ -881,7 +881,7 @@
                                                     },
                                                     "sla": {
                                                         "type": "string",
-                                                        "const": "\u2014"
+                                                        "const": "—"
                                                     },
                                                     "sla_variant": {
                                                         "type": "string",
@@ -895,7 +895,7 @@
                                                             {
                                                                 "type": "string",
                                                                 "enum": [
-                                                                    "\u2014"
+                                                                    "—"
                                                                 ]
                                                             }
                                                         ]
@@ -1168,7 +1168,7 @@
                                                 },
                                                 "sla": {
                                                     "type": "string",
-                                                    "const": "\u2014"
+                                                    "const": "—"
                                                 },
                                                 "sla_variant": {
                                                     "type": "string",
@@ -1182,7 +1182,7 @@
                                                         {
                                                             "type": "string",
                                                             "enum": [
-                                                                "\u2014"
+                                                                "—"
                                                             ]
                                                         }
                                                     ]
@@ -1194,7 +1194,10 @@
                                                     "type": "string"
                                                 },
                                                 "notes": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "comparison_run": {
                                                     "type": [
@@ -1347,9 +1350,6 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "404": {
                         "description": "",
                         "content": {
@@ -1368,6 +1368,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -1444,9 +1447,6 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "404": {
                         "description": "",
                         "content": {
@@ -1465,6 +1465,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -1763,64 +1766,6 @@
                     }
                 },
                 "responses": {
-                    "500": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Internal server error"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "anyOf": [
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string",
-                                                    "const": "Invalid credentials"
-                                                }
-                                            },
-                                            "required": [
-                                                "message"
-                                            ]
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "message": {
-                                                    "type": "string",
-                                                    "const": "Multi-factor authentication required"
-                                                },
-                                                "challenge_id": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "message",
-                                                "challenge_id"
-                                            ]
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
                     "200": {
                         "description": "",
                         "content": {
@@ -1890,6 +1835,45 @@
                             }
                         }
                     },
+                    "401": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "Invalid credentials"
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "const": "Multi-factor authentication required"
+                                                },
+                                                "challenge_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "message",
+                                                "challenge_id"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "description": "",
                         "content": {
@@ -1903,6 +1887,25 @@
                                     },
                                     "required": [
                                         "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Internal server error"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -1953,62 +1956,6 @@
                     }
                 },
                 "responses": {
-                    "401": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "SSO authentication failed"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "SSO provider unavailable"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
                     "200": {
                         "description": "",
                         "content": {
@@ -2104,6 +2051,43 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "SSO authentication failed"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "description": "",
                         "content": {
@@ -2117,6 +2101,25 @@
                                     },
                                     "required": [
                                         "errors"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "SSO provider unavailable"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -2228,33 +2231,6 @@
                             }
                         }
                     },
-                    "403": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Invalid login session or tenant mismatch"
-                                        },
-                                        "error": {
-                                            "type": "string"
-                                        },
-                                        "challenge_id": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "message",
-                                        "error",
-                                        "challenge_id"
-                                    ]
-                                }
-                            }
-                        }
-                    },
                     "401": {
                         "description": "",
                         "content": {
@@ -2290,6 +2266,33 @@
                             }
                         }
                     },
+                    "403": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Invalid login session or tenant mismatch"
+                                        },
+                                        "error": {
+                                            "type": "string"
+                                        },
+                                        "challenge_id": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "message",
+                                        "error",
+                                        "challenge_id"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "description": "",
                         "content": {
@@ -2314,7 +2317,7 @@
         "/auth/forgot-password": {
             "post": {
                 "operationId": "auth.forgotPassword",
-                "description": "POST /auth/forgot-password \u2014 body: `email` only. Reset tokens are stored per user tenant (from the user row).",
+                "description": "POST /auth/forgot-password — body: `email` only. Reset tokens are stored per user tenant (from the user row).",
                 "summary": "Request password reset",
                 "tags": [
                     "Auth"
@@ -2441,25 +2444,6 @@
                             }
                         }
                     },
-                    "500": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Unable to complete password reset. Please try again later."
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
                     "422": {
                         "description": "",
                         "content": {
@@ -2489,6 +2473,25 @@
                                                 "errors"
                                             ]
                                         }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Unable to complete password reset. Please try again later."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
                                     ]
                                 }
                             }
@@ -2761,7 +2764,10 @@
                                                         "type": "string"
                                                     },
                                                     "comparison_run_id": {
-                                                        "type": "string"
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "vendor_id": {
                                                         "type": "string"
@@ -2784,7 +2790,11 @@
                                                     "split_details": {
                                                         "anyOf": [
                                                             {
-                                                                "type": "string"
+                                                                "type": "array",
+                                                                "items": {}
+                                                            },
+                                                            {
+                                                                "type": "null"
                                                             },
                                                             {
                                                                 "type": "array",
@@ -2798,13 +2808,19 @@
                                                         ]
                                                     },
                                                     "protest_id": {
-                                                        "type": "string"
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "signoff_at": {
                                                         "type": "string"
                                                     },
                                                     "signed_off_by": {
-                                                        "type": "string"
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "comparison": {
                                                         "type": "object",
@@ -2949,7 +2965,10 @@
                                                     "type": "string"
                                                 },
                                                 "comparison_run_id": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "vendor_id": {
                                                     "type": "string"
@@ -2972,7 +2991,11 @@
                                                 "split_details": {
                                                     "anyOf": [
                                                         {
-                                                            "type": "string"
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        {
+                                                            "type": "null"
                                                         },
                                                         {
                                                             "type": "array",
@@ -2986,13 +3009,19 @@
                                                     ]
                                                 },
                                                 "protest_id": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "signoff_at": {
                                                     "type": "string"
                                                 },
                                                 "signed_off_by": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "comparison": {
                                                     "type": "object",
@@ -3032,9 +3061,6 @@
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     },
                     "404": {
                         "description": "",
@@ -3082,6 +3108,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -3114,7 +3143,8 @@
                                         "type": "array",
                                         "items": {
                                             "type": "string"
-                                        }
+                                        },
+                                        "minItems": 1
                                     }
                                 },
                                 "required": [
@@ -3148,7 +3178,10 @@
                                                     "type": "string"
                                                 },
                                                 "comparison_run_id": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "vendor_id": {
                                                     "type": "string"
@@ -3171,7 +3204,11 @@
                                                 "split_details": {
                                                     "anyOf": [
                                                         {
-                                                            "type": "string"
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        {
+                                                            "type": "null"
                                                         },
                                                         {
                                                             "type": "array",
@@ -3185,13 +3222,19 @@
                                                     ]
                                                 },
                                                 "protest_id": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "signoff_at": {
                                                     "type": "string"
                                                 },
                                                 "signed_off_by": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "comparison": {
                                                     "type": "object",
@@ -3516,7 +3559,10 @@
                                                     "type": "string"
                                                 },
                                                 "comparison_run_id": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "vendor_id": {
                                                     "type": "string"
@@ -3539,7 +3585,11 @@
                                                 "split_details": {
                                                     "anyOf": [
                                                         {
-                                                            "type": "string"
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        {
+                                                            "type": "null"
                                                         },
                                                         {
                                                             "type": "array",
@@ -3553,13 +3603,19 @@
                                                     ]
                                                 },
                                                 "protest_id": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "signoff_at": {
                                                     "type": "string"
                                                 },
                                                 "signed_off_by": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "comparison": {
                                                     "type": "object",
@@ -3663,7 +3719,10 @@
                                                     "type": "string"
                                                 },
                                                 "comparison_run_id": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "vendor_id": {
                                                     "type": "string"
@@ -3686,7 +3745,11 @@
                                                 "split_details": {
                                                     "anyOf": [
                                                         {
-                                                            "type": "string"
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        {
+                                                            "type": "null"
                                                         },
                                                         {
                                                             "type": "array",
@@ -3700,13 +3763,19 @@
                                                     ]
                                                 },
                                                 "protest_id": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "signoff_at": {
                                                     "type": "string"
                                                 },
                                                 "signed_off_by": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "comparison": {
                                                     "type": "object",
@@ -3893,13 +3962,25 @@
                                                     "type": "boolean"
                                                 },
                                                 "matrix": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "array",
+                                                        "null"
+                                                    ],
+                                                    "items": {}
                                                 },
                                                 "readiness": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "array",
+                                                        "null"
+                                                    ],
+                                                    "items": {}
                                                 },
                                                 "approval": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "array",
+                                                        "null"
+                                                    ],
+                                                    "items": {}
                                                 },
                                                 "created_at": {
                                                     "type": "string"
@@ -3924,8 +4005,8 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "404": {
                         "description": "",
@@ -3946,8 +4027,8 @@
                             }
                         }
                     },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -4106,9 +4187,6 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "404": {
                         "description": "",
                         "content": {
@@ -4127,6 +4205,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -4408,6 +4489,25 @@
                     }
                 ],
                 "responses": {
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Comparison run not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "description": "",
                         "content": {
@@ -4439,25 +4539,6 @@
                                         "code",
                                         "error",
                                         "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Comparison run not found"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
                                     ]
                                 }
                             }
@@ -4484,6 +4565,25 @@
                     }
                 ],
                 "responses": {
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Comparison run not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "description": "",
                         "content": {
@@ -4515,25 +4615,6 @@
                                         "code",
                                         "error",
                                         "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Comparison run not found"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
                                     ]
                                 }
                             }
@@ -4560,6 +4641,25 @@
                     }
                 ],
                 "responses": {
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Comparison run not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "description": "",
                         "content": {
@@ -4591,25 +4691,6 @@
                                         "code",
                                         "error",
                                         "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Comparison run not found"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
                                     ]
                                 }
                             }
@@ -7321,9 +7402,6 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "404": {
                         "description": "",
                         "content": {
@@ -7342,6 +7420,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -8471,6 +8552,9 @@
                                                     },
                                                     "end_date": {
                                                         "type": "string"
+                                                    },
+                                                    "project_manager_id": {
+                                                        "type": "string"
                                                     }
                                                 },
                                                 "required": [
@@ -8479,7 +8563,8 @@
                                                     "status",
                                                     "client_id",
                                                     "start_date",
-                                                    "end_date"
+                                                    "end_date",
+                                                    "project_manager_id"
                                                 ]
                                             }
                                         }
@@ -8539,7 +8624,6 @@
                                 },
                                 "required": [
                                     "name",
-                                    "client_id",
                                     "start_date",
                                     "end_date",
                                     "project_manager_id"
@@ -8558,6 +8642,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     },
                     "500": {
                         "description": "An error",
@@ -8578,9 +8665,6 @@
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -8630,6 +8714,9 @@
                                                 "end_date": {
                                                     "type": "string"
                                                 },
+                                                "project_manager_id": {
+                                                    "type": "string"
+                                                },
                                                 "budget_type": {
                                                     "type": "string"
                                                 },
@@ -8644,6 +8731,7 @@
                                                 "client_id",
                                                 "start_date",
                                                 "end_date",
+                                                "project_manager_id",
                                                 "budget_type",
                                                 "completion_percentage"
                                             ]
@@ -8741,6 +8829,9 @@
                                                 },
                                                 "end_date": {
                                                     "type": "string"
+                                                },
+                                                "project_manager_id": {
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
@@ -8749,7 +8840,8 @@
                                                 "status",
                                                 "client_id",
                                                 "start_date",
-                                                "end_date"
+                                                "end_date",
+                                                "project_manager_id"
                                             ]
                                         }
                                     },
@@ -9217,7 +9309,8 @@
                                                 "user_id",
                                                 "role"
                                             ]
-                                        }
+                                        },
+                                        "minItems": 1
                                     }
                                 },
                                 "required": [
@@ -9293,25 +9386,43 @@
                                                         "type": "string"
                                                     },
                                                     "vendor_id": {
-                                                        "type": "string"
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "vendor_name": {
-                                                        "type": "string"
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "uploaded_by": {
-                                                        "type": "string"
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "status": {
                                                         "type": "string"
                                                     },
                                                     "file_path": {
-                                                        "type": "string"
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "file_type": {
-                                                        "type": "string"
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "original_filename": {
-                                                        "type": "string"
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "blocking_issue_count": {
                                                         "type": "integer"
@@ -9320,10 +9431,16 @@
                                                         "type": "string"
                                                     },
                                                     "error_code": {
-                                                        "type": "string"
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "error_message": {
-                                                        "type": "string"
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "processing_started_at": {
                                                         "type": "string"
@@ -9335,13 +9452,19 @@
                                                         "type": "string"
                                                     },
                                                     "retry_count": {
-                                                        "type": "string"
+                                                        "type": "integer"
                                                     },
                                                     "line_items_count": {
-                                                        "type": "string"
+                                                        "type": [
+                                                            "integer",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "confidence": {
-                                                        "type": "string"
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     }
                                                 },
                                                 "required": [
@@ -9447,25 +9570,43 @@
                                                     "type": "string"
                                                 },
                                                 "vendor_id": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "vendor_name": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "uploaded_by": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "status": {
                                                     "type": "string"
                                                 },
                                                 "file_path": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "file_type": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "original_filename": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "blocking_issue_count": {
                                                     "type": "integer"
@@ -9474,10 +9615,16 @@
                                                     "type": "string"
                                                 },
                                                 "error_code": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "error_message": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "processing_started_at": {
                                                     "type": "string"
@@ -9489,13 +9636,19 @@
                                                     "type": "string"
                                                 },
                                                 "retry_count": {
-                                                    "type": "string"
+                                                    "type": "integer"
                                                 },
                                                 "line_items_count": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "confidence": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 }
                                             },
                                             "required": [
@@ -10255,6 +10408,9 @@
                             }
                         }
                     },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
                     "500": {
                         "description": "",
                         "content": {
@@ -10273,9 +10429,6 @@
                                 }
                             }
                         }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -10855,7 +11008,10 @@
                                                         "type": "string"
                                                     },
                                                     "project_id": {
-                                                        "type": "string"
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "owner": {
                                                         "type": [
@@ -10883,7 +11039,10 @@
                                                         "type": "string"
                                                     },
                                                     "category": {
-                                                        "type": "string"
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     },
                                                     "estimated_value": {
                                                         "type": "string"
@@ -11003,8 +11162,8 @@
         "/rfqs/counts": {
             "get": {
                 "operationId": "rfq.counts",
-                "description": "Keys align with WEB sidebar filters: active \u2248 published, archived \u2248 cancelled.",
-                "summary": "GET /rfqs/counts \u2014 tenant-scoped RFQ counts for dashboard nav badges",
+                "description": "Keys align with WEB sidebar filters: active ≈ published, archived ≈ cancelled.",
+                "summary": "GET /rfqs/counts — tenant-scoped RFQ counts for dashboard nav badges",
                 "tags": [
                     "Rfq"
                 ],
@@ -11096,9 +11255,6 @@
                     }
                 },
                 "responses": {
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "200": {
                         "description": "",
                         "content": {
@@ -11127,6 +11283,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -11336,7 +11495,10 @@
                                                     "type": "string"
                                                 },
                                                 "project_id": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 }
                                             },
                                             "required": [
@@ -11364,7 +11526,7 @@
         "/rfqs/{id}/overview": {
             "get": {
                 "operationId": "rfq.overview",
-                "summary": "GET /rfqs/:id/overview \u2014 aggregated summary for the RFQ overview screen",
+                "summary": "GET /rfqs/:id/overview — aggregated summary for the RFQ overview screen",
                 "tags": [
                     "Rfq"
                 ],
@@ -11729,7 +11891,7 @@
         "/rfqs/{rfqId}/activity": {
             "get": {
                 "operationId": "rfq.activity",
-                "summary": "GET /rfqs/:rfqId/activity?limit=20 \u2014 tenant-scoped activity feed (lighter than full overview)",
+                "summary": "GET /rfqs/:rfqId/activity?limit=20 — tenant-scoped activity feed (lighter than full overview)",
                 "tags": [
                     "Rfq"
                 ],
@@ -11851,13 +12013,19 @@
                                                     "type": "string"
                                                 },
                                                 "description": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "status": {
                                                     "type": "string"
                                                 },
                                                 "project_id": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "project_name": {
                                                     "type": [
@@ -11887,10 +12055,16 @@
                                                     "type": "string"
                                                 },
                                                 "payment_terms": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "evaluation_method": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "created_at": {
                                                     "type": "string"
@@ -11982,6 +12156,35 @@
                     }
                 ],
                 "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "RFQ not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
                     "422": {
                         "description": "",
                         "content": {
@@ -12017,35 +12220,6 @@
                                         "error",
                                         "details"
                                     ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "RFQ not found"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object"
                                 }
                             }
                         }
@@ -12102,13 +12276,19 @@
                                                     "type": "string"
                                                 },
                                                 "description": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "status": {
                                                     "type": "string"
                                                 },
                                                 "project_id": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "project_name": {
                                                     "type": [
@@ -12138,10 +12318,16 @@
                                                     "type": "string"
                                                 },
                                                 "payment_terms": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "evaluation_method": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 },
                                                 "created_at": {
                                                     "type": "string"
@@ -12361,7 +12547,7 @@
                                                     "type": "string"
                                                 },
                                                 "sort_order": {
-                                                    "type": "string"
+                                                    "type": "integer"
                                                 }
                                             },
                                             "required": [
@@ -12383,24 +12569,6 @@
                             }
                         }
                     },
-                    "422": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "errors": {
-                                            "$ref": "#/components/schemas/MessageBag"
-                                        }
-                                    },
-                                    "required": [
-                                        "errors"
-                                    ]
-                                }
-                            }
-                        }
-                    },
                     "404": {
                         "description": "",
                         "content": {
@@ -12415,6 +12583,24 @@
                                     },
                                     "required": [
                                         "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "errors": {
+                                            "$ref": "#/components/schemas/MessageBag"
+                                        }
+                                    },
+                                    "required": [
+                                        "errors"
                                     ]
                                 }
                             }
@@ -15037,7 +15223,10 @@
                                                         "type": "string"
                                                     },
                                                     "project_id": {
-                                                        "type": "string"
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     }
                                                 },
                                                 "required": [
@@ -15093,7 +15282,7 @@
                                     },
                                     "project_id": {
                                         "type": [
-                                            "integer",
+                                            "string",
                                             "null"
                                         ]
                                     },
@@ -15138,6 +15327,9 @@
                             }
                         }
                     },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     },
@@ -15159,9 +15351,6 @@
                                 }
                             }
                         }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
                     }
                 }
             }
@@ -15258,7 +15447,10 @@
                                                     "type": "string"
                                                 },
                                                 "project_id": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 }
                                             },
                                             "required": [
@@ -15589,11 +15781,11 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -16295,13 +16487,6 @@
                 ],
                 "parameters": [
                     {
-                        "name": "status",
-                        "in": "query",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
                         "name": "q",
                         "in": "query",
                         "schema": {
@@ -16310,6 +16495,13 @@
                     },
                     {
                         "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
                         "in": "query",
                         "schema": {
                             "type": "string"
@@ -16332,16 +16524,65 @@
                                                     "id": {
                                                         "type": "string"
                                                     },
-                                                    "name": {
+                                                    "legal_name": {
                                                         "type": "string"
                                                     },
-                                                    "trading_name": {
+                                                    "display_name": {
                                                         "type": "string"
                                                     },
                                                     "registration_number": {
                                                         "type": "string"
                                                     },
-                                                    "tax_id": {
+                                                    "country_of_registration": {
+                                                        "type": "string"
+                                                    },
+                                                    "primary_contact_name": {
+                                                        "type": "string"
+                                                    },
+                                                    "primary_contact_email": {
+                                                        "type": "string"
+                                                    },
+                                                    "primary_contact_phone": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "approval_record": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "approved_by_user_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "approved_at": {
+                                                                "type": "string"
+                                                            },
+                                                            "approval_note": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "approved_by_user_id",
+                                                            "approved_at",
+                                                            "approval_note"
+                                                        ]
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "updated_at": {
+                                                        "type": "string"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "trading_name": {
                                                         "type": "string"
                                                     },
                                                     "country_code": {
@@ -16352,33 +16593,26 @@
                                                     },
                                                     "phone": {
                                                         "type": "string"
-                                                    },
-                                                    "status": {
-                                                        "type": "string"
-                                                    },
-                                                    "onboarded_at": {
-                                                        "type": "string"
-                                                    },
-                                                    "created_at": {
-                                                        "type": "string"
-                                                    },
-                                                    "updated_at": {
-                                                        "type": "string"
                                                     }
                                                 },
                                                 "required": [
                                                     "id",
+                                                    "legal_name",
+                                                    "display_name",
+                                                    "registration_number",
+                                                    "country_of_registration",
+                                                    "primary_contact_name",
+                                                    "primary_contact_email",
+                                                    "primary_contact_phone",
+                                                    "status",
+                                                    "approval_record",
+                                                    "created_at",
+                                                    "updated_at",
                                                     "name",
                                                     "trading_name",
-                                                    "registration_number",
-                                                    "tax_id",
                                                     "country_code",
                                                     "email",
-                                                    "phone",
-                                                    "status",
-                                                    "onboarded_at",
-                                                    "created_at",
-                                                    "updated_at"
+                                                    "phone"
                                                 ]
                                             }
                                         },
@@ -16415,6 +16649,177 @@
                         }
                     }
                 }
+            },
+            "post": {
+                "operationId": "vendor.store",
+                "tags": [
+                    "Vendor"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "legal_name": {
+                                        "type": "string"
+                                    },
+                                    "display_name": {
+                                        "type": "string"
+                                    },
+                                    "registration_number": {
+                                        "type": "string"
+                                    },
+                                    "country_of_registration": {
+                                        "type": "string"
+                                    },
+                                    "primary_contact_name": {
+                                        "type": "string"
+                                    },
+                                    "primary_contact_email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "primary_contact_phone": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "legal_name",
+                                    "display_name",
+                                    "registration_number",
+                                    "country_of_registration",
+                                    "primary_contact_name",
+                                    "primary_contact_email"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "legal_name": {
+                                                    "type": "string"
+                                                },
+                                                "display_name": {
+                                                    "type": "string"
+                                                },
+                                                "registration_number": {
+                                                    "type": "string"
+                                                },
+                                                "country_of_registration": {
+                                                    "type": "string"
+                                                },
+                                                "primary_contact_name": {
+                                                    "type": "string"
+                                                },
+                                                "primary_contact_email": {
+                                                    "type": "string"
+                                                },
+                                                "primary_contact_phone": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "approval_record": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "approved_by_user_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "approved_at": {
+                                                            "type": "string"
+                                                        },
+                                                        "approval_note": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "approved_by_user_id",
+                                                        "approved_at",
+                                                        "approval_note"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "trading_name": {
+                                                    "type": "string"
+                                                },
+                                                "country_code": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "phone": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "legal_name",
+                                                "display_name",
+                                                "registration_number",
+                                                "country_of_registration",
+                                                "primary_contact_name",
+                                                "primary_contact_email",
+                                                "primary_contact_phone",
+                                                "status",
+                                                "approval_record",
+                                                "created_at",
+                                                "updated_at",
+                                                "name",
+                                                "trading_name",
+                                                "country_code",
+                                                "email",
+                                                "phone"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
             }
         },
         "/vendors/{id}": {
@@ -16447,16 +16852,65 @@
                                                 "id": {
                                                     "type": "string"
                                                 },
-                                                "name": {
+                                                "legal_name": {
                                                     "type": "string"
                                                 },
-                                                "trading_name": {
+                                                "display_name": {
                                                     "type": "string"
                                                 },
                                                 "registration_number": {
                                                     "type": "string"
                                                 },
-                                                "tax_id": {
+                                                "country_of_registration": {
+                                                    "type": "string"
+                                                },
+                                                "primary_contact_name": {
+                                                    "type": "string"
+                                                },
+                                                "primary_contact_email": {
+                                                    "type": "string"
+                                                },
+                                                "primary_contact_phone": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "approval_record": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "approved_by_user_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "approved_at": {
+                                                            "type": "string"
+                                                        },
+                                                        "approval_note": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "approved_by_user_id",
+                                                        "approved_at",
+                                                        "approval_note"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "trading_name": {
                                                     "type": "string"
                                                 },
                                                 "country_code": {
@@ -16466,34 +16920,30 @@
                                                     "type": "string"
                                                 },
                                                 "phone": {
-                                                    "type": "string"
-                                                },
-                                                "status": {
-                                                    "type": "string"
-                                                },
-                                                "onboarded_at": {
-                                                    "type": "string"
-                                                },
-                                                "created_at": {
-                                                    "type": "string"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string"
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 }
                                             },
                                             "required": [
                                                 "id",
+                                                "legal_name",
+                                                "display_name",
+                                                "registration_number",
+                                                "country_of_registration",
+                                                "primary_contact_name",
+                                                "primary_contact_email",
+                                                "primary_contact_phone",
+                                                "status",
+                                                "approval_record",
+                                                "created_at",
+                                                "updated_at",
                                                 "name",
                                                 "trading_name",
-                                                "registration_number",
-                                                "tax_id",
                                                 "country_code",
                                                 "email",
-                                                "phone",
-                                                "status",
-                                                "onboarded_at",
-                                                "created_at",
-                                                "updated_at"
+                                                "phone"
                                             ]
                                         }
                                     },
@@ -16518,6 +16968,426 @@
                                     },
                                     "required": [
                                         "message"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "vendor.update",
+                "tags": [
+                    "Vendor"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "legal_name": {
+                                        "type": "string"
+                                    },
+                                    "display_name": {
+                                        "type": "string"
+                                    },
+                                    "registration_number": {
+                                        "type": "string"
+                                    },
+                                    "country_of_registration": {
+                                        "type": "string"
+                                    },
+                                    "primary_contact_name": {
+                                        "type": "string"
+                                    },
+                                    "primary_contact_email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "primary_contact_phone": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "legal_name",
+                                    "display_name",
+                                    "registration_number",
+                                    "country_of_registration",
+                                    "primary_contact_name",
+                                    "primary_contact_email"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "legal_name": {
+                                                    "type": "string"
+                                                },
+                                                "display_name": {
+                                                    "type": "string"
+                                                },
+                                                "registration_number": {
+                                                    "type": "string"
+                                                },
+                                                "country_of_registration": {
+                                                    "type": "string"
+                                                },
+                                                "primary_contact_name": {
+                                                    "type": "string"
+                                                },
+                                                "primary_contact_email": {
+                                                    "type": "string"
+                                                },
+                                                "primary_contact_phone": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "approval_record": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "approved_by_user_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "approved_at": {
+                                                            "type": "string"
+                                                        },
+                                                        "approval_note": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "approved_by_user_id",
+                                                        "approved_at",
+                                                        "approval_note"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "trading_name": {
+                                                    "type": "string"
+                                                },
+                                                "country_code": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "phone": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "legal_name",
+                                                "display_name",
+                                                "registration_number",
+                                                "country_of_registration",
+                                                "primary_contact_name",
+                                                "primary_contact_email",
+                                                "primary_contact_phone",
+                                                "status",
+                                                "approval_record",
+                                                "created_at",
+                                                "updated_at",
+                                                "name",
+                                                "trading_name",
+                                                "country_code",
+                                                "email",
+                                                "phone"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Vendor not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/vendors/{id}/status": {
+            "patch": {
+                "operationId": "vendor.updateStatus",
+                "tags": [
+                    "Vendor"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "status": {
+                                        "$ref": "#/components/schemas/VendorStatus"
+                                    },
+                                    "approval_note": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "status"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "legal_name": {
+                                                    "type": "string"
+                                                },
+                                                "display_name": {
+                                                    "type": "string"
+                                                },
+                                                "registration_number": {
+                                                    "type": "string"
+                                                },
+                                                "country_of_registration": {
+                                                    "type": "string"
+                                                },
+                                                "primary_contact_name": {
+                                                    "type": "string"
+                                                },
+                                                "primary_contact_email": {
+                                                    "type": "string"
+                                                },
+                                                "primary_contact_phone": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "approval_record": {
+                                                    "type": [
+                                                        "object",
+                                                        "null"
+                                                    ],
+                                                    "properties": {
+                                                        "approved_by_user_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "approved_at": {
+                                                            "type": "string"
+                                                        },
+                                                        "approval_note": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "approved_by_user_id",
+                                                        "approved_at",
+                                                        "approval_note"
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": "string"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "trading_name": {
+                                                    "type": "string"
+                                                },
+                                                "country_code": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "phone": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "legal_name",
+                                                "display_name",
+                                                "registration_number",
+                                                "country_of_registration",
+                                                "primary_contact_name",
+                                                "primary_contact_email",
+                                                "primary_contact_phone",
+                                                "status",
+                                                "approval_record",
+                                                "created_at",
+                                                "updated_at",
+                                                "name",
+                                                "trading_name",
+                                                "country_code",
+                                                "email",
+                                                "phone"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Vendor not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error or vendor status transition error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string",
+                                                    "description": "Errors overview."
+                                                },
+                                                "errors": {
+                                                    "type": "object",
+                                                    "description": "A detailed description of each field that failed validation.",
+                                                    "additionalProperties": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "message",
+                                                "errors"
+                                            ]
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "message": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "message"
+                                            ]
+                                        }
                                     ]
                                 }
                             }
@@ -16738,7 +17608,48 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "type": "string"
+                                                "type": "object",
+                                                "properties": {
+                                                    "award_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "rfq_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "amount": {
+                                                        "type": [
+                                                            "number",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "currency": {
+                                                        "type": "string"
+                                                    },
+                                                    "signed_off_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    },
+                                                    "created_at": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
+                                                    }
+                                                },
+                                                "required": [
+                                                    "award_id",
+                                                    "rfq_id",
+                                                    "status",
+                                                    "amount",
+                                                    "currency",
+                                                    "signed_off_at",
+                                                    "created_at"
+                                                ]
                                             }
                                         }
                                     },
@@ -16904,24 +17815,6 @@
                             }
                         }
                     },
-                    "422": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "errors": {
-                                            "$ref": "#/components/schemas/MessageBag"
-                                        }
-                                    },
-                                    "required": [
-                                        "errors"
-                                    ]
-                                }
-                            }
-                        }
-                    },
                     "404": {
                         "description": "",
                         "content": {
@@ -16936,6 +17829,24 @@
                                     },
                                     "required": [
                                         "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "errors": {
+                                            "$ref": "#/components/schemas/MessageBag"
+                                        }
+                                    },
+                                    "required": [
+                                        "errors"
                                     ]
                                 }
                             }
@@ -16980,25 +17891,12 @@
                     }
                 ],
                 "responses": {
-                    "412": {
+                    "200": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "error": {
-                                            "type": "string",
-                                            "const": "Precondition failed"
-                                        },
-                                        "message": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "error",
-                                        "message"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
@@ -17038,12 +17936,25 @@
                             }
                         }
                     },
-                    "200": {
+                    "412": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "const": "Precondition failed"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "error",
+                                        "message"
+                                    ]
                                 }
                             }
                         }
@@ -17095,7 +18006,8 @@
                         "type": "array",
                         "items": {
                             "type": "string"
-                        }
+                        },
+                        "minItems": 1
                     },
                     "issue_code": {
                         "type": [
@@ -17415,6 +18327,18 @@
                     "status"
                 ],
                 "title": "RfqStatusTransitionRequest"
+            },
+            "VendorStatus": {
+                "type": "string",
+                "enum": [
+                    "draft",
+                    "under_review",
+                    "approved",
+                    "restricted",
+                    "suspended",
+                    "archived"
+                ],
+                "title": "VendorStatus"
             }
         },
         "responses": {

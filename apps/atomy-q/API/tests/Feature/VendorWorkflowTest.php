@@ -186,6 +186,21 @@ final class VendorWorkflowTest extends ApiTestCase
         $response->assertJsonPath('data.last_checked_at', '2026-04-01T00:00:00+00:00');
     }
 
+    public function testExplicitClearDoesNotGetRehydratedFromLegacyPhone(): void
+    {
+        $user = $this->createUser();
+        $vendor = $this->createVendor((string) $user->tenant_id, [
+            'phone' => '+60-11111111',
+        ]);
+
+        $vendor->primary_contact_phone = null;
+        $vendor->save();
+        $vendor->refresh();
+
+        $this->assertNull($vendor->primary_contact_phone);
+        $this->assertSame('+60-11111111', $vendor->phone);
+    }
+
     public function testHistoryReturnsTenantScopedAwardRows(): void
     {
         $user = $this->createUser();

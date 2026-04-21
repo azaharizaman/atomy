@@ -42,6 +42,7 @@ use App\Services\SourcingOperations\AtomySourcingRfqStatusTransitionPolicy;
 use App\Services\SourcingOperations\AtomySourcingTransactionManager;
 use App\Services\Task\AtomyTaskPersist;
 use App\Services\Task\AtomyTaskQuery;
+use Nexus\Adapter\Laravel\Vendor\Repositories\EloquentVendorRepository;
 use App\Services\Tenant\RequestTenantContext;
 use App\OpenApi\IdempotencyErrorCodesDocumentTransformer;
 use Dedoc\Scramble\Scramble;
@@ -93,6 +94,10 @@ use Nexus\Task\Contracts\TaskManagerInterface;
 use Nexus\Task\Contracts\TaskPersistInterface;
 use Nexus\Task\Contracts\TaskQueryInterface;
 use Nexus\Tenant\Contracts\TenantContextInterface;
+use Nexus\Vendor\Contracts\VendorPersistInterface;
+use Nexus\Vendor\Contracts\VendorQueryInterface;
+use Nexus\Vendor\Contracts\VendorStatusTransitionPolicyInterface;
+use Nexus\Vendor\Services\VendorStatusTransitionPolicy;
 use Nexus\TenantOperations\Contracts\AdminCreatorAdapterInterface;
 use Nexus\TenantOperations\Contracts\TenantCompanyOnboardingCoordinatorInterface;
 use Nexus\TenantOperations\Contracts\TenantCompanyOnboardingServiceInterface;
@@ -173,6 +178,11 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(ReplayResponseFactoryInterface::class, IdempotencyReplayResponseFactory::class);
+
+        $this->app->singleton(EloquentVendorRepository::class);
+        $this->app->bind(VendorQueryInterface::class, EloquentVendorRepository::class);
+        $this->app->bind(VendorPersistInterface::class, EloquentVendorRepository::class);
+        $this->app->singleton(VendorStatusTransitionPolicyInterface::class, VendorStatusTransitionPolicy::class);
 
         // Nexus ApprovalOperations (operational approvals — distinct from RFQ quote flows).
         $this->app->singleton(AtomyApprovalPolicyRegistry::class);

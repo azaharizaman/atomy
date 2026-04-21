@@ -26,6 +26,7 @@ export interface NavGroupConfig {
 export const MAIN_NAV_ITEMS: NavItemConfig[] = [
   { id: 'dashboard', label: 'Dashboard', href: '/', path: '/' },
   { id: 'requisition', label: 'Requisition', href: '/rfqs', path: '/rfqs' },
+  { id: 'vendors', label: 'Vendors', href: '/vendors', path: '/vendors' },
   { id: 'documents', label: 'Documents', href: '/documents', path: '/documents' },
   { id: 'reporting', label: 'Reporting', href: '/reporting', path: '/reporting' },
   { id: 'approvals', label: 'Approval Queue', href: '/approvals', path: '/approvals' },
@@ -63,6 +64,7 @@ export function isSettingsNavVisible(): boolean {
 const pathToLabel: Record<string, string> = {
   '/': 'Dashboard',
   '/rfqs': 'Requisition',
+  '/vendors': 'Vendors',
   '/documents': 'Documents',
   '/reporting': 'Reporting',
   '/approvals': 'Approval Queue',
