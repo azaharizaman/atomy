@@ -192,3 +192,12 @@
 - `README.md`: updated PowerShell examples to pass lowercase string env values (`'true'` / `'false'`) so runtime comparisons like `process.env.X === 'true'` behave correctly.
 - Verification:
   - `cd apps/atomy-q/WEB && npx playwright test tests/rfq-alpha-journeys.spec.ts tests/screen-smoke.spec.ts` -> PASS (7 passed).
+
+## 2026-04-21 Line Item Create Error Handling (Dev Runtime)
+
+- `use-create-rfq-line-item` now forwards auth/session context to the generated API call (`Authorization` bearer header from auth store + `credentials: 'include'`) so line-item create requests do not silently fail due missing auth context.
+- Added generated-client error normalization in `use-create-rfq-line-item` so object-shaped API failures are surfaced as readable `Error` messages instead of falling back to the generic drawer message.
+- Added regression coverage in `use-create-rfq-line-item.test.ts` for auth header propagation and object error normalization.
+- Verification:
+  - `cd apps/atomy-q/WEB && npx vitest run src/hooks/use-create-rfq-line-item.test.ts` -> PASS (3 tests).
+  - `cd apps/atomy-q/WEB && npx vitest run 'src/app/(dashboard)/rfqs/[rfqId]/line-items/line-item-drawer.test.tsx'` -> PASS (6 tests).

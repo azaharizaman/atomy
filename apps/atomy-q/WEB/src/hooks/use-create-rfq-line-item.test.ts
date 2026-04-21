@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { createTestWrapper } from '@/test/utils';
+import { useAuthStore } from '@/store/use-auth-store';
 import { useCreateRfqLineItem } from './use-create-rfq-line-item';
 
 const { mockRfQStoreLineItem } = vi.hoisted(() => ({
@@ -14,6 +15,19 @@ vi.mock('@/generated/api', () => ({
 describe('useCreateRfqLineItem', () => {
   beforeEach(() => {
     mockRfQStoreLineItem.mockReset();
+    useAuthStore.setState({
+      token: 'test-token',
+      refreshToken: null,
+      isAuthenticated: true,
+      isLoading: false,
+      user: {
+        id: 'user-1',
+        name: 'QA User',
+        email: 'qa.user@atomy.test',
+        role: 'buyer',
+        tenantId: 'tenant-qa',
+      },
+    });
   });
 
   it('calls the generated create mutation with the rfq id and payload', async () => {
@@ -45,6 +59,10 @@ describe('useCreateRfqLineItem', () => {
           currency: 'USD',
           specifications: 'Spare set',
         }),
+        credentials: 'include',
+        headers: expect.objectContaining({
+          Authorization: 'Bearer test-token',
+        }),
         throwOnError: true,
       }),
     );
@@ -70,5 +88,26 @@ describe('useCreateRfqLineItem', () => {
 
     await waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['rfqs', 'rfq-1'] }));
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['rfqs', 'rfq-1', 'line-items'] });
+  });
+
+  it('maps object-shaped API errors into readable Error messages', async () => {
+    mockRfQStoreLineItem.mockRejectedValue({
+      message: 'Validation failed',
+      errors: {
+        description: ['Description is required.'],
+      },
+    });
+
+    const { Wrapper } = createTestWrapper();
+    const { result } = renderHook(() => useCreateRfqLineItem('rfq-1'), { wrapper: Wrapper });
+
+    await expect(result.current.mutateAsync({
+      description: '',
+      quantity: 2,
+      uom: 'ea',
+      unit_price: 1200,
+      currency: 'USD',
+      specifications: null,
+    })).rejects.toThrow('Validation failed');
   });
 });
