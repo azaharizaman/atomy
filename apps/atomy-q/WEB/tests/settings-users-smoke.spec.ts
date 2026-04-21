@@ -62,11 +62,16 @@ test.beforeEach(async ({ page }) => {
 test('settings users and roles page renders tenant data', async ({ page }) => {
   await page.goto('/settings');
 
+  await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
   const usersAndRolesLink = page.getByRole('link', { name: 'Users & Roles', exact: true });
   await expect(usersAndRolesLink).toBeVisible();
   await usersAndRolesLink.click();
 
   await expect(page).toHaveURL(/\/settings\/users/);
   await expect(page.getByRole('heading', { name: 'Users & Roles' })).toBeVisible();
+  const usersTable = page.getByRole('table');
+  await expect(usersTable.getByText('QA User')).toBeVisible();
+  await expect(usersTable.getByText('qa.user@atomy.test')).toBeVisible();
+  await expect(usersTable.getByText('Buyer')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Invite user' })).toBeVisible();
 });

@@ -1,26 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { fulfillJsonRoute } from './playwright-cors-helpers';
 import { seedAuthSession } from './playwright-auth-bootstrap';
+import { stubAlphaSession } from './alpha-playwright-bootstrap';
 
-const mockUser = {
-  id: 'user-1',
-  name: 'QA User',
-  email: 'qa.user@atomy.test',
-  role: 'buyer',
-  tenantId: 'tenant-qa',
-};
-
-test('login with mocked API redirects to dashboard', async ({ page }) => {
-  await page.route('**/api/v1/feature-flags', async (route) => {
-    await fulfillJsonRoute(route, { data: { projects: true, tasks: true } });
-  });
-  await page.route('**/api/v1/rfqs/counts', async (route) => {
-    await fulfillJsonRoute(route, {
-      data: { draft: 0, published: 0, closed: 0, awarded: 0, cancelled: 0, active: 0, pending: 0, archived: 0 },
-    });
-  });
-  await seedAuthSession(page, mockUser);
-  await page.goto('/');
+test('authenticated dashboard smoke with mocked session', async ({ page }) => {
+  await stubAlphaSession(page);
 
   await expect(page).toHaveURL('/');
   await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();

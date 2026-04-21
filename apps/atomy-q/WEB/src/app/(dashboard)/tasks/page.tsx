@@ -51,9 +51,15 @@ function TaskDetailDrawer({
   const updateStatus = useUpdateTaskStatus(taskId);
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full max-w-md bg-white border-l border-slate-200 shadow-lg z-30 flex flex-col">
+    <div
+      data-testid="task-drawer"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="task-detail-heading"
+      className="fixed inset-y-0 right-0 w-full max-w-md bg-white border-l border-slate-200 shadow-lg z-30 flex flex-col"
+    >
       <div className="flex items-center justify-between p-4 border-b border-slate-200">
-        <h2 className="text-sm font-semibold text-slate-900">Task detail</h2>
+        <h2 id="task-detail-heading" className="text-sm font-semibold text-slate-900">Task detail</h2>
         <Button size="sm" variant="secondary" onClick={onClose}>
           Close
         </Button>

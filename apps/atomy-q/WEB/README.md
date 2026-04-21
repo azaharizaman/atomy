@@ -49,6 +49,29 @@ npm run test:e2e                        # full browser regression pass before CI
 npm run test:e2e -- tests/screen-smoke.spec.ts  # quick deployed/local smoke validation
 ```
 
+E2E ownership is split by surface:
+
+```bash
+npx playwright test tests/dashboard-nav.spec.ts tests/rfq-alpha-journeys.spec.ts
+npx playwright test tests/projects-tasks-smoke.spec.ts tests/settings-users-smoke.spec.ts
+E2E_USE_REAL_API=true NEXT_PUBLIC_USE_MOCKS=false npx playwright test tests/auth.spec.ts tests/rfq-lifecycle-e2e.spec.ts
+NEXT_PUBLIC_ALPHA_MODE=true npx playwright test tests/dashboard-nav.spec.ts tests/rfq-alpha-journeys.spec.ts
+```
+
+On Windows, inline environment-variable prefixes differ by shell. Use `cross-env` or the shell-native form instead of the Unix examples above:
+
+```bash
+# cross-env (PowerShell/CMD compatible)
+npx cross-env E2E_USE_REAL_API=true NEXT_PUBLIC_USE_MOCKS=false playwright test tests/auth.spec.ts
+npx cross-env NEXT_PUBLIC_ALPHA_MODE=true playwright test tests/dashboard-nav.spec.ts
+
+# PowerShell-native form
+$env:E2E_USE_REAL_API='true'; $env:NEXT_PUBLIC_USE_MOCKS='false'; npx playwright test tests/auth.spec.ts
+$env:NEXT_PUBLIC_ALPHA_MODE='true'; npx playwright test tests/dashboard-nav.spec.ts
+```
+
+The RFQ alpha suite owns mocked browser journeys. Projects/tasks and settings/users are adjacent smoke coverage because those routes are hidden when `NEXT_PUBLIC_ALPHA_MODE=true`. The live RFQ lifecycle spec is intentionally narrow and should be run only with the local test API available.
+
 For E2E runs that need browser installation:
 
 ```bash
