@@ -436,9 +436,11 @@ async function routeAlphaRfqApi(page: Page) {
 }
 
 test.describe('RFQ alpha journeys', () => {
+  let lifecycleApi: Awaited<ReturnType<typeof routeAlphaRfqApi>>;
+
   test.beforeEach(async ({ page }) => {
     await stubAlphaSession(page);
-    await routeAlphaRfqApi(page);
+    lifecycleApi = await routeAlphaRfqApi(page);
   });
 
   test('renders the RFQ list', async ({ page }) => {
@@ -521,23 +523,34 @@ test.describe('RFQ alpha journeys', () => {
 
   test('renders vendors, quote intake, comparison runs, approvals, award, and decision trail', async ({ page }) => {
     test.setTimeout(90_000);
-    const lifecycleApi = await routeAlphaRfqApi(page);
+    const screens = [
+      {
+        path: `/rfqs/${RFQ_ID}/vendors`,
+        heading: () => page.getByRole('heading', { name: 'Invited vendors' }),
+        content: () => page.getByText('Alpha Vendor'),
+      },
+      {
+        path: `/rfqs/${RFQ_ID}/quote-intake`,
+        heading: () => page.getByRole('heading', { name: 'Quote Intake' }),
+        content: () => page.getByText('alpha-vendor.pdf'),
+      },
+      {
+        path: `/rfqs/${RFQ_ID}/comparison-runs`,
+        heading: () => page.locator('h1').filter({ hasText: 'Comparison Runs' }),
+        content: () => page.getByText(/snapshot frozen/i),
+      },
+      {
+        path: `/rfqs/${RFQ_ID}/approvals`,
+        heading: () => page.getByRole('heading', { level: 1, name: 'Approvals' }),
+        content: () => page.getByText('Final award decision awaiting sign-off'),
+      },
+    ] as const;
 
-    await page.goto(`/rfqs/${RFQ_ID}/vendors`);
-    await expect(page.getByRole('heading', { name: 'Invited vendors' })).toBeVisible();
-    await expect(page.getByText('Alpha Vendor')).toBeVisible();
-
-    await page.goto(`/rfqs/${RFQ_ID}/quote-intake`);
-    await expect(page.getByRole('heading', { name: 'Quote Intake' })).toBeVisible();
-    await expect(page.getByText('alpha-vendor.pdf')).toBeVisible();
-
-    await page.goto(`/rfqs/${RFQ_ID}/comparison-runs`);
-    await expect(page.locator('h1').filter({ hasText: 'Comparison Runs' })).toBeVisible();
-    await expect(page.getByText(/snapshot frozen/i)).toBeVisible();
-
-    await page.goto(`/rfqs/${RFQ_ID}/approvals`);
-    await expect(page.getByRole('heading', { level: 1, name: 'Approvals' })).toBeVisible();
-    await expect(page.getByText('Final award decision awaiting sign-off')).toBeVisible();
+    for (const screen of screens) {
+      await page.goto(screen.path);
+      await expect(screen.heading()).toBeVisible();
+      await expect(screen.content()).toBeVisible();
+    }
 
     await page.goto(`/rfqs/${RFQ_ID}/award`);
     await expect(page.getByText(/select a vendor to award the contract based on the final comparison run/i)).toBeVisible();

@@ -1,8 +1,8 @@
 import type { Page } from '@playwright/test';
-import { seedAuthSession } from './playwright-auth-bootstrap';
+import { seedAuthSession, type AuthBootstrapUser } from './playwright-auth-bootstrap';
 import { fulfillJsonRoute } from './playwright-cors-helpers';
 
-export const alphaMockUser = {
+export const alphaMockUser: AuthBootstrapUser = {
   id: 'user-1',
   name: 'QA User',
   email: 'qa.user@atomy.test',

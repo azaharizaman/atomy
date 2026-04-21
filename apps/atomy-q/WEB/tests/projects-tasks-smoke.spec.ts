@@ -147,9 +147,10 @@ test('tasks inbox opens and closes the selected task detail drawer', async ({ pa
 
   await page.getByRole('table').getByText(linkedTask.title).click();
   await expect(page.getByText('Task detail')).toBeVisible();
-  await expect(page.locator('div.fixed.inset-y-0.right-0').getByText(linkedTask.title)).toBeVisible();
-  await expect(page.getByText(linkedTask.description)).toBeVisible();
+  const taskDrawer = page.getByTestId('task-drawer');
+  await expect(taskDrawer.getByText(linkedTask.title)).toBeVisible();
+  await expect(taskDrawer.getByText(linkedTask.description)).toBeVisible();
 
   await page.getByRole('button', { name: 'Close', exact: true }).click();
-  await expect(page.locator('div.fixed.inset-y-0.right-0')).toBeHidden();
+  await expect(taskDrawer).toBeHidden();
 });

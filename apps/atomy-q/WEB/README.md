@@ -58,6 +58,13 @@ RUN_REAL_API_TESTS=true NEXT_PUBLIC_USE_MOCKS=false npx playwright test tests/au
 NEXT_PUBLIC_ALPHA_MODE=true npx playwright test tests/dashboard-nav.spec.ts tests/rfq-alpha-journeys.spec.ts
 ```
 
+On Windows, inline environment-variable prefixes differ by shell. Use `cross-env` or the shell-native form instead of the Unix examples above:
+
+```bash
+npx cross-env RUN_REAL_API_TESTS=true NEXT_PUBLIC_USE_MOCKS=false npx playwright test tests/auth.spec.ts tests/rfq-lifecycle-e2e.spec.ts
+npx cross-env NEXT_PUBLIC_ALPHA_MODE=true npx playwright test tests/dashboard-nav.spec.ts tests/rfq-alpha-journeys.spec.ts
+```
+
 The RFQ alpha suite owns mocked browser journeys. Projects/tasks and settings/users are adjacent smoke coverage because those routes are hidden when `NEXT_PUBLIC_ALPHA_MODE=true`. The live RFQ lifecycle spec is intentionally narrow and should be run only with the local test API available.
 
 For E2E runs that need browser installation:

@@ -44,12 +44,13 @@ test.describe('RFQ lifecycle live API smoke', () => {
       refreshToken: loginData.refresh_token ?? null,
     });
 
-    const title = `E2E RFQ real API smoke ${Date.now()}`;
+    const timestamp = Date.now();
+    const title = `E2E RFQ real API smoke ${timestamp}`;
     const createRes = await request.post(`${apiBase}/rfqs`, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
-        'Idempotency-Key': `e2e-rfq-real-api-smoke-${Date.now()}`,
+        'Idempotency-Key': `e2e-rfq-real-api-smoke-${timestamp}`,
       },
       data: {
         title,
