@@ -4,7 +4,7 @@
 
 ## Implemented
 
-- **Primary contract surface:** `VendorInterface`, `VendorQueryInterface`, `VendorPersistInterface`, `VendorRepositoryInterface`, `VendorStatusTransitionPolicyInterface`
+- **Primary contract surface:** `VendorInterface`, `VendorQueryInterface`, `VendorPersistInterface`, `VendorStatusTransitionPolicyInterface`
 - **Vendor identity/contact contract:** `VendorInterface` now carries primary contact name, email, and optional phone for Task 2 persistence
 - **Status model:** `Enums/VendorStatus` with `Draft`, `UnderReview`, `Approved`, `Restricted`, `Suspended`, `Archived`
 - **Value objects:** `VendorId`, `VendorDisplayName`, `VendorLegalName`, `RegistrationNumber`, `VendorApprovalRecord`
@@ -20,7 +20,7 @@
 ## Verification
 
 ```bash
-cd /home/azaharizaman/dev/atomy && ./vendor/bin/phpunit packages/Vendor/tests/Unit/Services/VendorStatusTransitionPolicyTest.php
+./vendor/bin/phpunit packages/Vendor/tests/Unit/Services/VendorStatusTransitionPolicyTest.php
 ```
 
 ## Traceability

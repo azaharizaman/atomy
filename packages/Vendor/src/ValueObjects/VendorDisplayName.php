@@ -4,19 +4,22 @@ declare(strict_types=1);
 
 namespace Nexus\Vendor\ValueObjects;
 
+use Nexus\Vendor\Internal\BoundedStringValidator;
+
 final readonly class VendorDisplayName
 {
+    private const MAX_LENGTH = 255;
+
     private string $value;
 
     public function __construct(string $value)
     {
-        $normalized = trim($value);
-
-        if ($normalized === '') {
-            throw new \InvalidArgumentException('Vendor display name cannot be empty.');
-        }
-
-        $this->value = $normalized;
+        $this->value = BoundedStringValidator::requireTrimmedNonEmpty(
+            $value,
+            self::MAX_LENGTH,
+            'Vendor display name cannot be empty.',
+            'Vendor display name exceeds maximum length.',
+        );
     }
 
     public static function fromString(string $value): self

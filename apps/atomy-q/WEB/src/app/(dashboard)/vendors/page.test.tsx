@@ -124,4 +124,29 @@ describe('VendorsPage', () => {
       expect.any(Object),
     );
   });
+
+  it('rejects unsupported country codes before creating a vendor', () => {
+    const createVendor = vi.fn();
+    mockUseVendors.mockReturnValue({
+      data: { items: [], meta: { currentPage: 1, perPage: 25, total: 0, totalPages: 1 } },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    mockUseCreateVendor.mockReturnValue({ mutate: createVendor, isPending: false, isError: false, error: null });
+
+    renderWithProviders(<VendorsPageContent />);
+
+    fireEvent.click(screen.getAllByRole('button', { name: /create vendor/i })[0]);
+    fireEvent.change(screen.getByLabelText(/legal name/i), { target: { value: 'Acme Manufacturing' } });
+    fireEvent.change(screen.getByLabelText(/display name/i), { target: { value: 'Acme' } });
+    fireEvent.change(screen.getByLabelText(/registration number/i), { target: { value: 'REG-200' } });
+    fireEvent.change(screen.getByLabelText(/country of registration/i), { target: { value: 'Malaysia' } });
+    fireEvent.change(screen.getByLabelText(/primary contact name/i), { target: { value: 'Rina Tan' } });
+    fireEvent.change(screen.getByLabelText(/primary contact email/i), { target: { value: 'rina@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: /submit vendor/i }));
+
+    expect(createVendor).not.toHaveBeenCalled();
+    expect(screen.getByText(/country of registration must be a valid two-letter iso 3166-1 alpha-2 code/i)).toBeInTheDocument();
+  });
 });

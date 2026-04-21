@@ -128,7 +128,9 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
     // --- Section 5: Vendor Management (8 endpoints) ---
     Route::prefix('vendors')->group(function (): void {
         Route::get('/', [VendorController::class, 'index']);
-        Route::post('/', [VendorController::class, 'store']);
+        Route::post('/', [VendorController::class, 'store'])
+            ->middleware('idempotency')
+            ->name('v1.vendors.store');
         Route::get('{id}', [VendorController::class, 'show']);
         Route::patch('{id}', [VendorController::class, 'update']);
         Route::patch('{id}/status', [VendorStatusController::class, 'update']);

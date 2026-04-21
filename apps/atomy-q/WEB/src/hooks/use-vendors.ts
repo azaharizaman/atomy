@@ -163,7 +163,7 @@ function normalizeApprovalRecord(value: unknown, context: string): VendorApprova
   };
 }
 
-function normalizeVendorRow(row: unknown, index: number, options?: { allowNullPhone?: boolean }): VendorRow {
+function normalizeVendorRow(row: unknown, index: number): VendorRow {
   const item = requireObject(row, `Invalid vendor row at index ${index}: expected object`);
   const context = `Invalid vendor row at index ${index}`;
   const approvalRecordValue = pickField(item, 'approval_record', 'approvalRecord');
@@ -214,9 +214,7 @@ function normalizeVendorRow(row: unknown, index: number, options?: { allowNullPh
     tradingName: requireText(pickField(item, 'trading_name', 'tradingName'), 'trading_name', context),
     countryCode: requireText(pickField(item, 'country_code', 'countryCode'), 'country_code', context),
     email: requireText(pickField(item, 'email'), 'email', context),
-    phone: options?.allowNullPhone === true
-      ? normalizeNullableText(phoneValue, 'phone', context)
-      : requireText(phoneValue, 'phone', context),
+    phone: normalizeNullableText(phoneValue, 'phone', context),
   };
 }
 
@@ -229,7 +227,7 @@ function normalizeVendorListResponse(payload: unknown): VendorListResult {
   const meta = requireObject(envelope.meta, 'Invalid vendors payload: expected meta object.');
 
   return {
-    items: envelope.data.map((row: unknown, index: number) => normalizeVendorRow(row, index, { allowNullPhone: true })),
+    items: envelope.data.map((row: unknown, index: number) => normalizeVendorRow(row, index)),
     meta: {
       currentPage: requireFiniteInteger(pickField(meta, 'current_page', 'currentPage'), 'current_page', 'Invalid vendors payload'),
       perPage: requireFiniteInteger(pickField(meta, 'per_page', 'perPage'), 'per_page', 'Invalid vendors payload'),
@@ -245,7 +243,7 @@ export function normalizeVendorResponse(payload: unknown): VendorRow {
     throw new Error('Invalid vendor payload: expected non-null data object.');
   }
 
-  return normalizeVendorRow(envelope.data, 0, { allowNullPhone: true });
+  return normalizeVendorRow(envelope.data, 0);
 }
 
 export function normalizeVendorListFilters(filters: VendorListFilters = {}): Record<string, string> {

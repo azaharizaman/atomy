@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
@@ -47,6 +47,10 @@ describe('VendorDetailPage', () => {
     email: 'alicia@example.com',
     phone: '+65 9000 1111',
   } as const;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it('renders approval metadata and status controls for an approved vendor', () => {
     const mutate = vi.fn();
@@ -178,5 +182,30 @@ describe('VendorDetailPage', () => {
       },
       expect.any(Object),
     );
+  });
+
+  it('requires an approval note before approving a vendor', async () => {
+    const mutate = vi.fn();
+    const user = userEvent.setup();
+
+    mockUseVendor.mockReturnValue({
+      data: {
+        ...baseVendor,
+        status: 'under_review',
+        approvalRecord: null,
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    mockUseUpdateVendor.mockReturnValue({ mutate: vi.fn(), isPending: false, isError: false, error: null });
+    mockUseUpdateVendorStatus.mockReturnValue({ mutate, isPending: false, isError: false, error: null });
+
+    renderWithProviders(<VendorDetailPageContent vendorId="ven-1" />);
+
+    await user.click(screen.getByRole('button', { name: /^approve$/i }));
+
+    expect(mutate).not.toHaveBeenCalled();
+    expect(screen.getByText(/approval note is required/i)).toBeInTheDocument();
   });
 });

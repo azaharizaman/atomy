@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class RegistrationNumberTest extends TestCase
 {
-    public function test_it_rejects_empty_input(): void
+    public function testItRejectsEmptyInput(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Registration number cannot be empty.');
@@ -17,7 +17,7 @@ final class RegistrationNumberTest extends TestCase
         new RegistrationNumber('   ');
     }
 
-    public function test_it_trims_input(): void
+    public function testItTrimsInput(): void
     {
         $registrationNumber = new RegistrationNumber("  202401234567  ");
 

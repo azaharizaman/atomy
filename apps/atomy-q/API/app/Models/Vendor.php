@@ -50,7 +50,7 @@ class Vendor extends Model
 
     protected static function booted(): void
     {
-        static::saving(function (self $vendor): void {
+        static::creating(function (self $vendor): void {
             self::syncLegacyField($vendor, 'legal_name', ['name']);
             self::syncLegacyField($vendor, 'display_name', ['trading_name', 'name']);
             self::syncLegacyField($vendor, 'country_of_registration', ['country_code']);

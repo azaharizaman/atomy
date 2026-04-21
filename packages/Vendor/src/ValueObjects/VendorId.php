@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nexus\Vendor\ValueObjects;
 
+use Nexus\Vendor\Internal\BoundedStringValidator;
+
 final readonly class VendorId
 {
     private const ULID_LENGTH = 26;
@@ -13,11 +15,12 @@ final readonly class VendorId
 
     public function __construct(string $value)
     {
-        $normalized = strtoupper(trim($value));
-
-        if ($normalized === '') {
-            throw new \InvalidArgumentException('Vendor ID cannot be empty.');
-        }
+        $normalized = strtoupper(BoundedStringValidator::requireTrimmedNonEmpty(
+            $value,
+            self::ULID_LENGTH,
+            'Vendor ID cannot be empty.',
+            sprintf('Vendor ID must be a valid ULID, got: %s', $value),
+        ));
 
         if (strlen($normalized) !== self::ULID_LENGTH || !preg_match(self::ULID_PATTERN, $normalized)) {
             throw new \InvalidArgumentException(sprintf('Vendor ID must be a valid ULID, got: %s', $value));

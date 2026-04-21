@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
+use App\Http\Controllers\Api\V1\Concerns\NormalizesVendorStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Idempotency\IdempotencyCompletion;
 use App\Models\Award;
 use App\Models\QuoteSubmission;
 use App\Models\Vendor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Nexus\Idempotency\Contracts\IdempotencyServiceInterface;
 use Nexus\Vendor\Enums\VendorStatus;
 
 /**
@@ -21,6 +25,7 @@ use Nexus\Vendor\Enums\VendorStatus;
 final class VendorController extends Controller
 {
     use ExtractsAuthContext;
+    use NormalizesVendorStatus;
 
     public function index(Request $request): JsonResponse
     {
@@ -65,49 +70,32 @@ final class VendorController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, IdempotencyServiceInterface $idempotency): JsonResponse
     {
-        $tenantId = $this->tenantId($request);
+        try {
+            $tenantId = $this->tenantId($request);
 
-        $validated = $request->validate([
-            'legal_name' => ['required', 'string'],
-            'display_name' => ['required', 'string'],
-            'registration_number' => ['required', 'string'],
-            'country_of_registration' => ['required', 'string'],
-            'primary_contact_name' => ['required', 'string'],
-            'primary_contact_email' => ['required', 'email'],
-            'primary_contact_phone' => ['nullable', 'string'],
-        ]);
+            $validated = $this->validateVendorAttributes($request);
 
-        $vendor = new Vendor();
-        $vendor->tenant_id = $this->normalizeIdentifier($tenantId);
-        $vendor->name = (string) $validated['legal_name'];
-        $vendor->trading_name = (string) $validated['display_name'];
-        $vendor->registration_number = (string) $validated['registration_number'];
-        $vendor->tax_id = null;
-        $vendor->country_code = (string) $validated['country_of_registration'];
-        $vendor->email = (string) $validated['primary_contact_email'];
-        $vendor->phone = array_key_exists('primary_contact_phone', $validated)
-            ? $validated['primary_contact_phone'] !== null
-                ? (string) $validated['primary_contact_phone']
-                : null
-            : null;
-        $vendor->legal_name = (string) $validated['legal_name'];
-        $vendor->display_name = (string) $validated['display_name'];
-        $vendor->country_of_registration = (string) $validated['country_of_registration'];
-        $vendor->primary_contact_name = (string) $validated['primary_contact_name'];
-        $vendor->primary_contact_email = (string) $validated['primary_contact_email'];
-        $vendor->primary_contact_phone = array_key_exists('primary_contact_phone', $validated)
-            ? $validated['primary_contact_phone'] !== null
-                ? (string) $validated['primary_contact_phone']
-                : null
-            : null;
-        $vendor->status = VendorStatus::Draft->value;
-        $vendor->save();
+            $vendor = new Vendor();
+            $vendor->tenant_id = $this->normalizeIdentifier($tenantId);
+            $vendor->tax_id = null;
+            $this->applyVendorAttributes($vendor, $validated);
+            $vendor->status = VendorStatus::Draft->value;
+            $vendor->save();
 
-        return response()->json([
-            'data' => $this->serializeVendor($vendor),
-        ], 201);
+            $response = response()->json([
+                'data' => $this->serializeVendor($vendor),
+            ], 201);
+
+            return IdempotencyCompletion::succeed($request, $idempotency, $response);
+        } catch (ValidationException $exception) {
+            IdempotencyCompletion::fail($request, $idempotency);
+            throw $exception;
+        } catch (\Throwable $exception) {
+            IdempotencyCompletion::fail($request, $idempotency);
+            throw $exception;
+        }
     }
 
     public function show(Request $request, string $id): JsonResponse
@@ -132,36 +120,9 @@ final class VendorController extends Controller
             return response()->json(['message' => 'Vendor not found'], 404);
         }
 
-        $validated = $request->validate([
-            'legal_name' => ['required', 'string'],
-            'display_name' => ['required', 'string'],
-            'registration_number' => ['required', 'string'],
-            'country_of_registration' => ['required', 'string'],
-            'primary_contact_name' => ['required', 'string'],
-            'primary_contact_email' => ['required', 'email'],
-            'primary_contact_phone' => ['nullable', 'string'],
-        ]);
+        $validated = $this->validateVendorAttributes($request);
 
-        $vendor->legal_name = (string) $validated['legal_name'];
-        $vendor->display_name = (string) $validated['display_name'];
-        $vendor->registration_number = (string) $validated['registration_number'];
-        $vendor->name = (string) $validated['legal_name'];
-        $vendor->trading_name = (string) $validated['display_name'];
-        $vendor->country_code = (string) $validated['country_of_registration'];
-        $vendor->email = (string) $validated['primary_contact_email'];
-        $vendor->phone = array_key_exists('primary_contact_phone', $validated)
-            ? $validated['primary_contact_phone'] !== null
-                ? (string) $validated['primary_contact_phone']
-                : null
-            : null;
-        $vendor->country_of_registration = (string) $validated['country_of_registration'];
-        $vendor->primary_contact_name = (string) $validated['primary_contact_name'];
-        $vendor->primary_contact_email = (string) $validated['primary_contact_email'];
-        $vendor->primary_contact_phone = array_key_exists('primary_contact_phone', $validated)
-            ? $validated['primary_contact_phone'] !== null
-                ? (string) $validated['primary_contact_phone']
-                : null
-            : null;
+        $this->applyVendorAttributes($vendor, $validated);
         $vendor->save();
 
         return response()->json([
@@ -220,7 +181,9 @@ final class VendorController extends Controller
         $metadata = is_array($vendor->metadata) ? $vendor->metadata : [];
         $status = $metadata['compliance_status'] ?? null;
         if (! is_string($status) || $status === '') {
-            $status = $vendor->status === 'active' ? 'compliant' : 'review_required';
+            $status = $this->normalizeVendorStatus((string) $vendor->status) === VendorStatus::Approved
+                ? 'compliant'
+                : 'review_required';
         }
 
         return response()->json([
@@ -275,7 +238,7 @@ final class VendorController extends Controller
 
     private function serializeVendor(Vendor $vendor): array
     {
-        $status = $this->normalizeStatus((string) $vendor->status);
+        $status = $this->normalizeVendorStatus((string) $vendor->status);
         $approvalRecord = $this->serializeApprovalRecord($vendor);
 
         return [
@@ -286,7 +249,7 @@ final class VendorController extends Controller
             'country_of_registration' => (string) $vendor->country_of_registration,
             'primary_contact_name' => (string) $vendor->primary_contact_name,
             'primary_contact_email' => (string) $vendor->primary_contact_email,
-            'primary_contact_phone' => $vendor->primary_contact_phone,
+            'primary_contact_phone' => $this->nullableString($vendor->primary_contact_phone),
             'status' => $status->value,
             'approval_record' => $approvalRecord,
             'created_at' => $vendor->created_at?->toAtomString(),
@@ -295,7 +258,7 @@ final class VendorController extends Controller
             'trading_name' => (string) $vendor->display_name,
             'country_code' => (string) $vendor->country_of_registration,
             'email' => (string) $vendor->primary_contact_email,
-            'phone' => $vendor->primary_contact_phone,
+            'phone' => $this->nullableString($vendor->primary_contact_phone),
         ];
     }
 
@@ -312,19 +275,57 @@ final class VendorController extends Controller
         ];
     }
 
-    private function normalizeStatus(string $status): VendorStatus
+    /**
+     * @return array{
+     *     legal_name:mixed,
+     *     display_name:mixed,
+     *     registration_number:mixed,
+     *     country_of_registration:mixed,
+     *     primary_contact_name:mixed,
+     *     primary_contact_email:mixed,
+     *     primary_contact_phone?:mixed
+     * }
+     */
+    private function validateVendorAttributes(Request $request): array
     {
-        return match (trim(strtolower($status))) {
-            'active' => VendorStatus::Approved,
-            'inactive' => VendorStatus::Suspended,
-            'draft' => VendorStatus::Draft,
-            'under_review' => VendorStatus::UnderReview,
-            'approved' => VendorStatus::Approved,
-            'restricted' => VendorStatus::Restricted,
-            'suspended' => VendorStatus::Suspended,
-            'archived' => VendorStatus::Archived,
-            default => VendorStatus::Draft,
-        };
+        return $request->validate([
+            'legal_name' => ['required', 'string'],
+            'display_name' => ['required', 'string'],
+            'registration_number' => ['required', 'string'],
+            'country_of_registration' => ['required', 'string'],
+            'primary_contact_name' => ['required', 'string'],
+            'primary_contact_email' => ['required', 'email'],
+            'primary_contact_phone' => ['nullable', 'string'],
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $validated
+     */
+    private function applyVendorAttributes(Vendor $vendor, array $validated): void
+    {
+        $phone = $validated['primary_contact_phone'] ?? null;
+        $normalizedPhone = $phone !== null ? (string) $phone : '';
+
+        $vendor->name = (string) $validated['legal_name'];
+        $vendor->trading_name = (string) $validated['display_name'];
+        $vendor->registration_number = (string) $validated['registration_number'];
+        $vendor->country_code = (string) $validated['country_of_registration'];
+        $vendor->email = (string) $validated['primary_contact_email'];
+        $vendor->phone = $normalizedPhone;
+        $vendor->legal_name = (string) $validated['legal_name'];
+        $vendor->display_name = (string) $validated['display_name'];
+        $vendor->country_of_registration = (string) $validated['country_of_registration'];
+        $vendor->primary_contact_name = (string) $validated['primary_contact_name'];
+        $vendor->primary_contact_email = (string) $validated['primary_contact_email'];
+        $vendor->primary_contact_phone = $normalizedPhone;
+    }
+
+    private function nullableString(mixed $value): ?string
+    {
+        $normalized = trim((string) $value);
+
+        return $normalized === '' ? null : $normalized;
     }
 
     private function normalizeIdentifier(string $value): string

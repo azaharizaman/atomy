@@ -11,13 +11,12 @@ use Nexus\Adapter\Laravel\Vendor\Models\EloquentVendor;
 use Nexus\Vendor\Contracts\VendorInterface;
 use Nexus\Vendor\Contracts\VendorPersistInterface;
 use Nexus\Vendor\Contracts\VendorQueryInterface;
-use Nexus\Vendor\Contracts\VendorRepositoryInterface;
 use Nexus\Vendor\Contracts\VendorStatusTransitionPolicyInterface;
 use Nexus\Vendor\Enums\VendorStatus;
 use Nexus\Vendor\ValueObjects\VendorApprovalRecord;
 use Nexus\Vendor\ValueObjects\VendorId;
 
-final readonly class EloquentVendorRepository implements VendorRepositoryInterface, VendorQueryInterface, VendorPersistInterface
+final readonly class EloquentVendorRepository implements VendorQueryInterface, VendorPersistInterface
 {
     public function __construct(
         private VendorStatusTransitionPolicyInterface $statusTransitionPolicy,
@@ -80,7 +79,7 @@ final readonly class EloquentVendorRepository implements VendorRepositoryInterfa
             'status' => $vendor->getStatus()->value,
             'primary_contact_name' => $vendor->getPrimaryContactName(),
             'primary_contact_email' => $vendor->getPrimaryContactEmail(),
-            'primary_contact_phone' => $vendor->getPrimaryContactPhone(),
+            'primary_contact_phone' => $vendor->getPrimaryContactPhone() ?? '',
             'name' => $vendor->getLegalName()->getValue(),
             'trading_name' => $vendor->getDisplayName()->getValue(),
             'country_code' => $vendor->getCountryOfRegistration(),
@@ -88,7 +87,8 @@ final readonly class EloquentVendorRepository implements VendorRepositoryInterfa
             'phone' => $vendor->getPrimaryContactPhone(),
         ]);
 
-        if (($approvalRecord = $vendor->getApprovalRecord()) !== null) {
+        $approvalRecord = $vendor->getApprovalRecord();
+        if ($approvalRecord !== null) {
             $model->approved_by_user_id = $approvalRecord->getApprovedByUserId();
             $model->approved_at = $approvalRecord->getApprovedAt();
             $model->approval_note = $approvalRecord->getApprovalNote();
@@ -96,7 +96,7 @@ final readonly class EloquentVendorRepository implements VendorRepositoryInterfa
 
         $model->save();
 
-        return $model;
+        return LaravelVendorMapper::fromModel($model);
     }
 
     public function updateStatus(
@@ -135,7 +135,7 @@ final readonly class EloquentVendorRepository implements VendorRepositoryInterfa
 
         $vendor->save();
 
-        return $vendor;
+        return LaravelVendorMapper::fromModel($vendor);
     }
 
     /**

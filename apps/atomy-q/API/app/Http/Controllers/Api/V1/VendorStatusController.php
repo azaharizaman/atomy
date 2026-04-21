@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
+use App\Http\Controllers\Api\V1\Concerns\NormalizesVendorStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Vendor;
 use Illuminate\Http\JsonResponse;
@@ -17,6 +18,7 @@ use Nexus\Vendor\Exceptions\InvalidVendorStatusTransition;
 final class VendorStatusController extends Controller
 {
     use ExtractsAuthContext;
+    use NormalizesVendorStatus;
 
     public function __construct(
         private readonly VendorStatusTransitionPolicyInterface $statusTransitionPolicy,
@@ -37,7 +39,7 @@ final class VendorStatusController extends Controller
             'approval_note' => ['required_if:status,approved', 'string'],
         ]);
 
-        $currentStatus = $this->resolveStatusForPolicy((string) $vendor->status);
+        $currentStatus = $this->normalizeVendorStatus((string) $vendor->status);
         $targetStatus = VendorStatus::from((string) $validated['status']);
 
         try {
@@ -51,9 +53,7 @@ final class VendorStatusController extends Controller
         if ($targetStatus === VendorStatus::Approved) {
             $vendor->approved_by_user_id = $this->userId($request);
             $vendor->approved_at = now();
-            $vendor->approval_note = array_key_exists('approval_note', $validated)
-                ? (string) $validated['approval_note']
-                : null;
+            $vendor->approval_note = (string) $validated['approval_note'];
         }
 
         $vendor->save();
@@ -81,8 +81,8 @@ final class VendorStatusController extends Controller
             'country_of_registration' => (string) $vendor->country_of_registration,
             'primary_contact_name' => (string) $vendor->primary_contact_name,
             'primary_contact_email' => (string) $vendor->primary_contact_email,
-            'primary_contact_phone' => $vendor->primary_contact_phone,
-            'status' => $this->normalizeStatus((string) $vendor->status)->value,
+            'primary_contact_phone' => $this->nullableString($vendor->primary_contact_phone),
+            'status' => $this->normalizeVendorStatus((string) $vendor->status)->value,
             'approval_record' => $this->serializeApprovalRecord($vendor),
             'created_at' => $vendor->created_at?->toAtomString(),
             'updated_at' => $vendor->updated_at?->toAtomString(),
@@ -90,7 +90,7 @@ final class VendorStatusController extends Controller
             'trading_name' => (string) $vendor->display_name,
             'country_code' => (string) $vendor->country_of_registration,
             'email' => (string) $vendor->primary_contact_email,
-            'phone' => $vendor->phone,
+            'phone' => $this->nullableString($vendor->phone),
         ];
     }
 
@@ -107,28 +107,15 @@ final class VendorStatusController extends Controller
         ];
     }
 
-    private function normalizeStatus(string $status): VendorStatus
-    {
-        return match (trim(strtolower($status))) {
-            'active' => VendorStatus::Approved,
-            'inactive' => VendorStatus::Suspended,
-            'draft' => VendorStatus::Draft,
-            'under_review' => VendorStatus::UnderReview,
-            'approved' => VendorStatus::Approved,
-            'restricted' => VendorStatus::Restricted,
-            'suspended' => VendorStatus::Suspended,
-            'archived' => VendorStatus::Archived,
-            default => VendorStatus::Draft,
-        };
-    }
-
-    private function resolveStatusForPolicy(string $status): VendorStatus
-    {
-        return $this->normalizeStatus($status);
-    }
-
     private function normalizeIdentifier(string $value): string
     {
         return strtolower(trim($value));
+    }
+
+    private function nullableString(mixed $value): ?string
+    {
+        $normalized = trim((string) $value);
+
+        return $normalized === '' ? null : $normalized;
     }
 }

@@ -96,7 +96,6 @@ use Nexus\Task\Contracts\TaskQueryInterface;
 use Nexus\Tenant\Contracts\TenantContextInterface;
 use Nexus\Vendor\Contracts\VendorPersistInterface;
 use Nexus\Vendor\Contracts\VendorQueryInterface;
-use Nexus\Vendor\Contracts\VendorRepositoryInterface;
 use Nexus\Vendor\Contracts\VendorStatusTransitionPolicyInterface;
 use Nexus\Vendor\Services\VendorStatusTransitionPolicy;
 use Nexus\TenantOperations\Contracts\AdminCreatorAdapterInterface;
@@ -181,7 +180,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ReplayResponseFactoryInterface::class, IdempotencyReplayResponseFactory::class);
 
         $this->app->singleton(EloquentVendorRepository::class);
-        $this->app->bind(VendorRepositoryInterface::class, EloquentVendorRepository::class);
         $this->app->bind(VendorQueryInterface::class, EloquentVendorRepository::class);
         $this->app->bind(VendorPersistInterface::class, EloquentVendorRepository::class);
         $this->app->singleton(VendorStatusTransitionPolicyInterface::class, VendorStatusTransitionPolicy::class);

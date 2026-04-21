@@ -56,7 +56,8 @@ export function VendorDetailPageContent({ vendorId }: { vendorId: string }) {
   const updateVendorMutation = useUpdateVendor(vendorId);
   const statusMutation = useUpdateVendorStatus(vendorId);
 
-  const [approvalNote, setApprovalNote] = React.useState('Approved via vendor master review.');
+  const [approvalNote, setApprovalNote] = React.useState('');
+  const [statusError, setStatusError] = React.useState('');
   const [isEditing, setIsEditing] = React.useState(false);
   const [editError, setEditError] = React.useState('');
   const [editForm, setEditForm] = React.useState<VendorEditForm | null>(null);
@@ -80,7 +81,7 @@ export function VendorDetailPageContent({ vendorId }: { vendorId: string }) {
 
   const vendor = vendorQuery.data;
   const badge = getBadgeVariant(vendor.status);
-  const availableStatusActions = STATUS_ACTIONS_BY_STATUS[vendor.status];
+  const availableStatusActions = STATUS_ACTIONS_BY_STATUS[vendor.status] ?? [];
   const currentEditForm = editForm ?? {
     legalName: vendor.legalName,
     displayName: vendor.displayName,
@@ -125,6 +126,21 @@ export function VendorDetailPageContent({ vendorId }: { vendorId: string }) {
         },
       },
     );
+  };
+
+  const submitStatusAction = (action: StatusAction) => {
+    setStatusError('');
+    const normalizedApprovalNote = approvalNote.trim();
+
+    if (action.status === 'approved' && normalizedApprovalNote === '') {
+      setStatusError('Approval note is required before approving a vendor.');
+      return;
+    }
+
+    statusMutation.mutate({
+      status: action.status,
+      approvalNote: action.status === 'approved' ? normalizedApprovalNote : undefined,
+    });
   };
 
   return (
@@ -234,7 +250,12 @@ export function VendorDetailPageContent({ vendorId }: { vendorId: string }) {
             Approval note
             <textarea
               value={approvalNote}
-              onChange={(event) => setApprovalNote(event.target.value)}
+              onChange={(event) => {
+                setApprovalNote(event.target.value);
+                if (statusError !== '') {
+                  setStatusError('');
+                }
+              }}
               className="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
               rows={3}
             />
@@ -246,12 +267,7 @@ export function VendorDetailPageContent({ vendorId }: { vendorId: string }) {
                 size="sm"
                 variant="secondary"
                 disabled={statusMutation.isPending}
-                onClick={() =>
-                  statusMutation.mutate({
-                    status: action.status,
-                    approvalNote: action.status === 'approved' ? approvalNote.trim() : undefined,
-                  })
-                }
+                onClick={() => submitStatusAction(action)}
               >
                 {action.label}
               </Button>
@@ -265,6 +281,7 @@ export function VendorDetailPageContent({ vendorId }: { vendorId: string }) {
               {statusMutation.error instanceof Error ? statusMutation.error.message : 'Status update failed.'}
             </p>
           ) : null}
+          {statusError !== '' ? <p className="text-xs text-red-600">{statusError}</p> : null}
         </div>
       </SectionCard>
     </div>

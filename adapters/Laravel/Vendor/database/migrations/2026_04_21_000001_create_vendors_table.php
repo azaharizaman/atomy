@@ -48,13 +48,13 @@ return new class extends Migration
         $table->string('status')->default('draft');
         $table->timestamp('onboarded_at')->nullable();
         $table->json('metadata')->nullable();
-        $table->string('legal_name');
-        $table->string('display_name');
-        $table->string('country_of_registration', 2);
-        $table->string('primary_contact_name');
-        $table->string('primary_contact_email');
-        $table->string('primary_contact_phone')->nullable();
-        $table->string('approved_by_user_id')->nullable();
+        $table->string('legal_name')->default('');
+        $table->string('display_name')->default('');
+        $table->string('country_of_registration', 2)->default('');
+        $table->string('primary_contact_name')->default('');
+        $table->string('primary_contact_email')->default('');
+        $table->string('primary_contact_phone')->default('');
+        $table->string('approved_by_user_id')->default('');
         $table->timestamp('approved_at')->nullable();
         $table->text('approval_note')->nullable();
         $table->timestamps();
@@ -66,25 +66,25 @@ return new class extends Migration
     private function addMissingVendorColumns(Blueprint $table): void
     {
         $this->addColumnIfMissing($table, 'legal_name', static function (Blueprint $table): void {
-            $table->string('legal_name')->nullable();
+            $table->string('legal_name')->default('');
         });
         $this->addColumnIfMissing($table, 'display_name', static function (Blueprint $table): void {
-            $table->string('display_name')->nullable();
+            $table->string('display_name')->default('');
         });
         $this->addColumnIfMissing($table, 'country_of_registration', static function (Blueprint $table): void {
-            $table->string('country_of_registration', 2)->nullable();
+            $table->string('country_of_registration', 2)->default('');
         });
         $this->addColumnIfMissing($table, 'primary_contact_name', static function (Blueprint $table): void {
-            $table->string('primary_contact_name')->nullable();
+            $table->string('primary_contact_name')->default('');
         });
         $this->addColumnIfMissing($table, 'primary_contact_email', static function (Blueprint $table): void {
-            $table->string('primary_contact_email')->nullable();
+            $table->string('primary_contact_email')->default('');
         });
         $this->addColumnIfMissing($table, 'primary_contact_phone', static function (Blueprint $table): void {
-            $table->string('primary_contact_phone')->nullable();
+            $table->string('primary_contact_phone')->default('');
         });
         $this->addColumnIfMissing($table, 'approved_by_user_id', static function (Blueprint $table): void {
-            $table->string('approved_by_user_id')->nullable();
+            $table->string('approved_by_user_id')->default('');
         });
         $this->addColumnIfMissing($table, 'approved_at', static function (Blueprint $table): void {
             $table->timestamp('approved_at')->nullable();
@@ -114,9 +114,7 @@ return new class extends Migration
 
     private function backfillLegacyVendorRows(): void
     {
-        $rows = DB::table('vendors')->orderBy('id')->get();
-
-        foreach ($rows as $row) {
+        foreach (DB::table('vendors')->orderBy('id')->cursor() as $row) {
             $legacyStatus = $this->normalizeLegacyStatus((string) $row->status, (string) $row->id);
             $legalName = $this->firstNonBlank([
                 (string) $row->name,
@@ -152,7 +150,7 @@ return new class extends Migration
                     'registration_number' => $registrationNumber,
                     'primary_contact_name' => $primaryContactName,
                     'primary_contact_email' => $primaryContactEmail,
-                    'primary_contact_phone' => $primaryContactPhone,
+                    'primary_contact_phone' => $primaryContactPhone ?? '',
                 ]);
         }
     }

@@ -10,15 +10,15 @@ use PHPUnit\Framework\TestCase;
 
 final class VendorApprovalRecordTest extends TestCase
 {
-    public function test_it_rejects_empty_approver_id(): void
+    public function testItRejectsEmptyApproverId(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Approved by user ID cannot be empty.');
 
-        new VendorApprovalRecord('   ', new DateTimeImmutable());
+        new VendorApprovalRecord('   ', new DateTimeImmutable('2026-04-21 08:15:00 UTC'));
     }
 
-    public function test_it_trims_approver_id_and_preserves_note(): void
+    public function testItTrimsApproverIdAndPreservesNote(): void
     {
         $approvedAt = new DateTimeImmutable('2026-04-21 08:15:00 UTC');
         $record = new VendorApprovalRecord('  user-123  ', $approvedAt, '  approved after manual review  ');
@@ -28,10 +28,18 @@ final class VendorApprovalRecordTest extends TestCase
         self::assertSame('approved after manual review', $record->getApprovalNote());
     }
 
-    public function test_it_normalizes_blank_note_to_null(): void
+    public function testItNormalizesBlankNoteToNull(): void
     {
-        $recordWithBlankNote = new VendorApprovalRecord('user-123', new DateTimeImmutable(), '   ');
-        $recordWithNullNote = new VendorApprovalRecord('user-123', new DateTimeImmutable(), null);
+        $recordWithBlankNote = new VendorApprovalRecord(
+            'user-123',
+            new DateTimeImmutable('2026-04-21 08:15:00 UTC'),
+            '   ',
+        );
+        $recordWithNullNote = new VendorApprovalRecord(
+            'user-123',
+            new DateTimeImmutable('2026-04-21 08:15:00 UTC'),
+            null,
+        );
 
         self::assertNull($recordWithBlankNote->getApprovalNote());
         self::assertNull($recordWithNullNote->getApprovalNote());

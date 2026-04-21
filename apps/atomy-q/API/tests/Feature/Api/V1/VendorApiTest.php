@@ -87,7 +87,7 @@ final class VendorApiTest extends ApiTestCase
         ];
     }
 
-    public function test_list_vendors_for_current_tenant(): void
+    public function testListVendorsForCurrentTenant(): void
     {
         $tenantId = (string) Str::ulid();
         $user = $this->createUser($tenantId);
@@ -105,7 +105,7 @@ final class VendorApiTest extends ApiTestCase
         $response->assertJsonMissing(['display_name' => 'Other Tenant Vendor']);
     }
 
-    public function test_create_draft_vendor(): void
+    public function testCreateDraftVendor(): void
     {
         $tenantId = (string) Str::ulid();
         $user = $this->createUser($tenantId);
@@ -135,7 +135,7 @@ final class VendorApiTest extends ApiTestCase
         ]);
     }
 
-    public function test_create_vendor_allows_null_contact_phone(): void
+    public function testCreateVendorAllowsNullContactPhone(): void
     {
         $tenantId = (string) Str::ulid();
         $user = $this->createUser($tenantId);
@@ -155,7 +155,7 @@ final class VendorApiTest extends ApiTestCase
         $response->assertJsonPath('data.phone', null);
     }
 
-    public function test_show_vendor_for_current_tenant(): void
+    public function testShowVendorForCurrentTenant(): void
     {
         $tenantId = (string) Str::ulid();
         $user = $this->createUser($tenantId);
@@ -173,7 +173,7 @@ final class VendorApiTest extends ApiTestCase
         $response->assertJsonPath('data.status', 'draft');
     }
 
-    public function test_patch_vendor_core_fields(): void
+    public function testPatchVendorCoreFields(): void
     {
         $tenantId = (string) Str::ulid();
         $user = $this->createUser($tenantId);
@@ -198,7 +198,7 @@ final class VendorApiTest extends ApiTestCase
         $response->assertJsonPath('data.status', 'draft');
     }
 
-    public function test_approve_vendor(): void
+    public function testApproveVendor(): void
     {
         $tenantId = (string) Str::ulid();
         $user = $this->createUser($tenantId);
@@ -225,7 +225,7 @@ final class VendorApiTest extends ApiTestCase
     }
 
     #[DataProvider('crossTenantEndpointProvider')]
-    public function test_cross_tenant_access_returns_404_semantics(string $action): void
+    public function testCrossTenantAccessReturns404Semantics(string $action): void
     {
         $tenantA = (string) Str::ulid();
         $tenantB = (string) Str::ulid();
@@ -252,7 +252,7 @@ final class VendorApiTest extends ApiTestCase
         $response->assertNotFound();
     }
 
-    public function test_invalid_status_transition_returns_422(): void
+    public function testInvalidStatusTransitionReturns422(): void
     {
         $tenantId = (string) Str::ulid();
         $user = $this->createUser($tenantId);
@@ -264,5 +264,20 @@ final class VendorApiTest extends ApiTestCase
 
         $response->assertUnprocessable();
         $response->assertJsonPath('message', 'Cannot transition vendor status from Draft to Archived.');
+    }
+
+    public function testComplianceFallbackTreatsApprovedVendorAsCompliant(): void
+    {
+        $tenantId = (string) Str::ulid();
+        $user = $this->createUser($tenantId);
+        $vendor = $this->createVendor($tenantId, ['status' => 'approved']);
+
+        $response = $this->getJson(
+            '/api/v1/vendors/' . $vendor->id . '/compliance',
+            $this->authHeaders($tenantId, (string) $user->id),
+        );
+
+        $response->assertOk();
+        $response->assertJsonPath('data.status', 'compliant');
     }
 }

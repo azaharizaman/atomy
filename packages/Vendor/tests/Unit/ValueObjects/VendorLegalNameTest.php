@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class VendorLegalNameTest extends TestCase
 {
-    public function test_it_rejects_empty_input(): void
+    public function testItRejectsEmptyInput(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Vendor legal name cannot be empty.');
@@ -17,7 +17,7 @@ final class VendorLegalNameTest extends TestCase
         new VendorLegalName('   ');
     }
 
-    public function test_it_trims_input(): void
+    public function testItTrimsInput(): void
     {
         $legalName = new VendorLegalName("  Alpha Supplies Sdn Bhd  ");
 

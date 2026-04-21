@@ -62,14 +62,14 @@ final class VendorStatusTransitionPolicyTest extends TestCase
     }
 
     #[DataProvider('allowedTransitionsProvider')]
-    public function test_allowed_transitions_do_not_throw(VendorStatus $from, VendorStatus $to): void
+    public function testAllowedTransitionsDoNotThrow(VendorStatus $from, VendorStatus $to): void
     {
         $this->policy->assertCanTransition($from, $to);
         self::addToAssertionCount(1);
     }
 
     #[DataProvider('rejectedTransitionsProvider')]
-    public function test_rejected_transitions_throw(VendorStatus $from, VendorStatus $to, string $message): void
+    public function testRejectedTransitionsThrow(VendorStatus $from, VendorStatus $to, string $message): void
     {
         $this->expectException(InvalidVendorStatusTransition::class);
         $this->expectExceptionMessage($message);

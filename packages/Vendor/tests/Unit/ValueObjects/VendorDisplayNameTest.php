@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class VendorDisplayNameTest extends TestCase
 {
-    public function test_it_rejects_empty_input(): void
+    public function testItRejectsEmptyInput(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Vendor display name cannot be empty.');
@@ -17,7 +17,7 @@ final class VendorDisplayNameTest extends TestCase
         new VendorDisplayName('   ');
     }
 
-    public function test_it_trims_input(): void
+    public function testItTrimsInput(): void
     {
         $displayName = new VendorDisplayName("  Alpha Supplies  ");
 

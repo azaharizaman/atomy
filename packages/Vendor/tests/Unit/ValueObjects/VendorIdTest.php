@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class VendorIdTest extends TestCase
 {
-    public function test_it_rejects_empty_input(): void
+    public function testItRejectsEmptyInput(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Vendor ID cannot be empty.');
@@ -17,7 +17,7 @@ final class VendorIdTest extends TestCase
         new VendorId('   ');
     }
 
-    public function test_it_trims_and_normalizes_to_uppercase(): void
+    public function testItTrimsAndNormalizesToUppercase(): void
     {
         $vendorId = new VendorId('  01j8z8v7k2m9c4a5b6d7e8f9g0  ');
 

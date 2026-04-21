@@ -129,7 +129,7 @@ final readonly class LaravelVendorMapper
             'status' => $status,
             'primary_contact_name' => $primaryContactName,
             'primary_contact_email' => $primaryContactEmail,
-            'primary_contact_phone' => $primaryContactPhone,
+            'primary_contact_phone' => $primaryContactPhone ?? '',
             'approved_by_user_id' => $approvalRecord?->getApprovedByUserId(),
             'approved_at' => $approvalRecord?->getApprovedAt(),
             'approval_note' => $approvalRecord?->getApprovalNote(),

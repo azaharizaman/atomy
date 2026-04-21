@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
 
 final class VendorInterfaceTest extends TestCase
 {
-    public function test_contract_includes_required_contact_fields(): void
+    public function testContractIncludesRequiredContactFields(): void
     {
         $vendor = new class implements VendorInterface {
             public function getId(): VendorId

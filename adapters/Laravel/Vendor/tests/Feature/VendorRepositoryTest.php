@@ -10,11 +10,13 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
-use Nexus\Adapter\Laravel\Vendor\Models\EloquentVendor;
 use Nexus\Adapter\Laravel\Vendor\Exceptions\UnreadableVendorRecordException;
+use Nexus\Adapter\Laravel\Vendor\Models\EloquentVendor;
+use Nexus\Adapter\Laravel\Vendor\Repositories\EloquentVendorRepository;
 use Nexus\Adapter\Laravel\Vendor\Tests\TestCase;
 use Nexus\Vendor\Contracts\VendorInterface;
-use Nexus\Vendor\Contracts\VendorRepositoryInterface;
+use Nexus\Vendor\Contracts\VendorPersistInterface;
+use Nexus\Vendor\Contracts\VendorQueryInterface;
 use Nexus\Vendor\Enums\VendorStatus;
 use Nexus\Vendor\Exceptions\InvalidVendorStatusTransition;
 use Nexus\Vendor\ValueObjects\RegistrationNumber;
@@ -27,11 +29,11 @@ final class VendorRepositoryTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_save_and_fetch_vendor_by_tenant_and_id(): void
+    public function testSaveAndFetchVendorByTenantAndId(): void
     {
         $tenantId = (string) Str::ulid();
 
-        $repo = $this->app->make(VendorRepositoryInterface::class);
+        $repo = $this->repository();
         $saved = $repo->save($tenantId, $this->makeVendor());
 
         $found = $repo->findByTenantAndId($tenantId, (string) $saved->getId());
@@ -45,12 +47,12 @@ final class VendorRepositoryTest extends TestCase
         $this->assertSame($saved->getStatus(), $found->getStatus());
     }
 
-    public function test_search_filters_vendors_by_tenant(): void
+    public function testSearchFiltersVendorsByTenant(): void
     {
         $tenantA = (string) Str::ulid();
         $tenantB = (string) Str::ulid();
 
-        $repo = $this->app->make(VendorRepositoryInterface::class);
+        $repo = $this->repository();
 
         $repo->save($tenantA, $this->makeVendor(displayName: 'Alpha Sdn Bhd'));
         $repo->save($tenantA, $this->makeVendor(displayName: 'Bravo Trading Sdn Bhd'));
@@ -67,19 +69,19 @@ final class VendorRepositoryTest extends TestCase
         }
     }
 
-    public function test_cross_tenant_lookup_returns_null(): void
+    public function testCrossTenantLookupReturnsNull(): void
     {
         $tenantA = (string) Str::ulid();
         $tenantB = (string) Str::ulid();
 
-        $repo = $this->app->make(VendorRepositoryInterface::class);
+        $repo = $this->repository();
         $saved = $repo->save($tenantA, $this->makeVendor());
 
         $this->assertNull($repo->findByTenantAndId($tenantB, (string) $saved->getId()));
         $this->assertNotNull($repo->findByTenantAndId($tenantA, (string) $saved->getId()));
     }
 
-    public function test_repository_reads_api_created_lowercase_tenant_rows(): void
+    public function testRepositoryReadsApiCreatedLowercaseTenantRows(): void
     {
         $tenantId = (string) Str::ulid();
         $vendorId = (string) Str::ulid();
@@ -102,15 +104,15 @@ final class VendorRepositoryTest extends TestCase
             'country_of_registration' => 'MY',
             'primary_contact_name' => 'API Created',
             'primary_contact_email' => 'api-created@example.com',
-            'primary_contact_phone' => null,
-            'approved_by_user_id' => null,
+            'primary_contact_phone' => '',
+            'approved_by_user_id' => '',
             'approved_at' => null,
             'approval_note' => null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        $repo = $this->app->make(VendorRepositoryInterface::class);
+        $repo = $this->repository();
 
         $found = $repo->findByTenantAndId($tenantId, $vendorId);
 
@@ -118,10 +120,10 @@ final class VendorRepositoryTest extends TestCase
         $this->assertSame($vendorId, (string) $found->getId());
     }
 
-    public function test_status_update_persists_approval_metadata(): void
+    public function testStatusUpdatePersistsApprovalMetadata(): void
     {
         $tenantId = (string) Str::ulid();
-        $repo = $this->app->make(VendorRepositoryInterface::class);
+        $repo = $this->repository();
         $saved = $repo->save($tenantId, $this->makeVendor(status: VendorStatus::UnderReview));
 
         $approvalRecord = new VendorApprovalRecord(
@@ -147,10 +149,10 @@ final class VendorRepositoryTest extends TestCase
         $this->assertSame('Approved after compliance review', $retained->getApprovalRecord()->getApprovalNote());
     }
 
-    public function test_status_update_rejects_invalid_transition(): void
+    public function testStatusUpdateRejectsInvalidTransition(): void
     {
         $tenantId = (string) Str::ulid();
-        $repo = $this->app->make(VendorRepositoryInterface::class);
+        $repo = $this->repository();
         $saved = $repo->save($tenantId, $this->makeVendor(status: VendorStatus::Draft));
 
         $approvalRecord = new VendorApprovalRecord(
@@ -165,7 +167,7 @@ final class VendorRepositoryTest extends TestCase
         $repo->updateStatus($tenantId, (string) $saved->getId(), VendorStatus::Approved, $approvalRecord);
     }
 
-    public function test_find_throws_for_partially_populated_approval_metadata(): void
+    public function testFindThrowsForPartiallyPopulatedApprovalMetadata(): void
     {
         Schema::dropIfExists('vendors');
         $this->createLegacyVendorsTable();
@@ -200,16 +202,16 @@ final class VendorRepositoryTest extends TestCase
             'updated_at' => now(),
         ]);
 
-        $repo = $this->app->make(VendorRepositoryInterface::class);
+        $repo = $this->repository();
 
         $this->expectException(UnreadableVendorRecordException::class);
         $repo->findByTenantAndId($tenantId, $vendorId);
     }
 
-    public function test_save_accepts_plain_vendor_interface_implementations(): void
+    public function testSaveAcceptsPlainVendorInterfaceImplementations(): void
     {
         $tenantId = (string) Str::ulid();
-        $repo = $this->app->make(VendorRepositoryInterface::class);
+        $repo = $this->repository();
         $vendor = $this->makePlainVendor();
 
         $saved = $repo->save($tenantId, $vendor);
@@ -220,10 +222,10 @@ final class VendorRepositoryTest extends TestCase
         $this->assertSame(VendorStatus::Draft, $saved->getStatus());
     }
 
-    public function test_save_preserves_existing_approval_metadata_when_not_replaced(): void
+    public function testSavePreservesExistingApprovalMetadataWhenNotReplaced(): void
     {
         $tenantId = (string) Str::ulid();
-        $repo = $this->app->make(VendorRepositoryInterface::class);
+        $repo = $this->repository();
         $vendorId = (string) Str::ulid();
 
         $saved = $repo->save($tenantId, $this->makePlainVendor(
@@ -249,7 +251,7 @@ final class VendorRepositoryTest extends TestCase
         $this->assertSame('Plain Vendor Holdings Updated', $updated->getLegalName()->getValue());
     }
 
-    public function test_vendor_migration_is_idempotent_and_backfills_legacy_rows(): void
+    public function testVendorMigrationIsIdempotentAndBackfillsLegacyRows(): void
     {
         Schema::dropIfExists('vendors');
         $this->createLegacyVendorsTable();
@@ -315,7 +317,7 @@ final class VendorRepositoryTest extends TestCase
         $this->assertTrue(Schema::hasIndex('vendors', ['tenant_id', 'display_name']));
     }
 
-    public function test_vendor_create_from_scratch_uses_required_core_columns(): void
+    public function testVendorCreateFromScratchUsesRequiredCoreColumns(): void
     {
         Schema::dropIfExists('vendors');
 
@@ -329,12 +331,12 @@ final class VendorRepositoryTest extends TestCase
         $this->assertSame(1, $columns['country_of_registration']->notnull);
         $this->assertSame(1, $columns['primary_contact_name']->notnull);
         $this->assertSame(1, $columns['primary_contact_email']->notnull);
-        $this->assertSame(0, $columns['approved_by_user_id']->notnull);
+        $this->assertSame(1, $columns['approved_by_user_id']->notnull);
         $this->assertSame(0, $columns['approved_at']->notnull);
         $this->assertSame(0, $columns['approval_note']->notnull);
     }
 
-    public function test_find_throws_for_unreadable_row(): void
+    public function testFindThrowsForUnreadableRow(): void
     {
         Schema::dropIfExists('vendors');
         $this->createLegacyVendorsTable();
@@ -362,15 +364,15 @@ final class VendorRepositoryTest extends TestCase
             'country_of_registration' => 'MY',
             'primary_contact_name' => '',
             'primary_contact_email' => '',
-            'primary_contact_phone' => null,
-            'approved_by_user_id' => null,
+            'primary_contact_phone' => '',
+            'approved_by_user_id' => '',
             'approved_at' => null,
             'approval_note' => null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        $repo = $this->app->make(VendorRepositoryInterface::class);
+        $repo = $this->repository();
 
         $this->expectException(UnreadableVendorRecordException::class);
         $repo->findByTenantAndId($tenantId, $vendorId);
@@ -392,6 +394,15 @@ final class VendorRepositoryTest extends TestCase
         $vendor->primary_contact_phone = '+60123456789';
 
         return $vendor;
+    }
+
+    private function repository(): VendorQueryInterface&VendorPersistInterface
+    {
+        $repository = $this->app->make(EloquentVendorRepository::class);
+        self::assertInstanceOf(VendorQueryInterface::class, $repository);
+        self::assertInstanceOf(VendorPersistInterface::class, $repository);
+
+        return $repository;
     }
 
     private function makePlainVendor(
