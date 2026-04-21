@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { fulfillJsonRoute } from './playwright-cors-helpers';
-import { alphaMockUser, stubAlphaSession } from './alpha-playwright-bootstrap';
+import { stubAlphaSession } from './alpha-playwright-bootstrap';
 
 test.beforeEach(async ({ page }) => {
   await stubAlphaSession(page);
@@ -12,13 +12,13 @@ test('smoke: dashboard renders after login', async ({ page }) => {
   await expect(page.getByText('Active RFQs')).toBeVisible();
 });
 
-test('smoke: RFQs list loads and can open an RFQ', async ({ page }) => {
+test('smoke: RFQs list loads', async ({ page }) => {
   const rfq = {
     id: 'RFQ-E2E-001',
     rfq_number: 'RFQ-E2E-001',
     title: 'Smoke RFQ',
     status: 'active',
-    owner: { name: 'QA User', email: alphaMockUser.email },
+    owner: { name: 'QA User', email: 'qa.user@atomy.test' },
     deadline: '2026-04-15',
     category: 'IT Hardware',
     estValue: 50000,
@@ -28,71 +28,6 @@ test('smoke: RFQs list loads and can open an RFQ', async ({ page }) => {
   };
 
   await page.route('**/api/v1/rfqs**', async (route) => {
-    const url = new URL(route.request().url());
-    const pathname = url.pathname;
-    if (pathname.endsWith('/overview')) {
-      await fulfillJsonRoute(route, {
-        data: {
-          rfq: {
-            id: rfq.id,
-            rfq_number: rfq.rfq_number,
-            title: rfq.title,
-            status: rfq.status,
-            owner: { id: 'u1', name: 'QA User', email: alphaMockUser.email },
-            deadline: rfq.deadline,
-            category: rfq.category,
-            estimated_value: rfq.estValue,
-            estValue: rfq.estValue,
-            savings_percentage: 12,
-            savings: rfq.savings,
-            vendors_count: rfq.vendorsCount,
-            quotes_count: rfq.quotesCount,
-            vendorsCount: rfq.vendorsCount,
-            quotesCount: rfq.quotesCount,
-          },
-          expected_quotes: 2,
-          normalization: {
-            accepted_count: 2,
-            total_quotes: 2,
-            progress_pct: 100,
-            uploaded_count: 0,
-            needs_review_count: 0,
-            ready_count: 2,
-          },
-          comparison: null,
-          approvals: {
-            pending_count: 0,
-            approved_count: 0,
-            rejected_count: 0,
-            overall: 'none',
-          },
-          activity: [
-            {
-              id: 'activity-1',
-              type: 'comparison',
-              actor: 'QA User',
-              action: 'Comparison snapshot frozen',
-              timestamp: '2026-04-16T10:00:00Z',
-            },
-          ],
-        },
-      });
-      return;
-    }
-    if (pathname.endsWith('/activity')) {
-      await fulfillJsonRoute(route, {
-        data: [
-          {
-            id: 'activity-1',
-            type: 'comparison',
-            actor: 'QA User',
-            action: 'Comparison snapshot frozen',
-            timestamp: '2026-04-16T10:00:00Z',
-          },
-        ],
-      });
-      return;
-    }
     await fulfillJsonRoute(route, {
       data: [rfq],
       meta: { total: 1, total_pages: 1, current_page: 1, per_page: 25 },
@@ -102,9 +37,5 @@ test('smoke: RFQs list loads and can open an RFQ', async ({ page }) => {
   await page.goto('/rfqs');
   await expect(page).toHaveURL('/rfqs');
   await expect(page.getByRole('heading', { name: 'Requisitions' })).toBeVisible();
-
-  // Clicking the RFQ workspace route should render the overview view.
-  await page.goto('/rfqs/RFQ-E2E-001/overview');
-  await expect(page).toHaveURL(/\/rfqs\/.+\/overview$/);
-  await expect(page.getByRole('heading', { name: 'Schedule' })).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText('Smoke RFQ')).toBeVisible();
 });

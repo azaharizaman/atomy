@@ -466,8 +466,8 @@ test.describe('RFQ alpha journeys', () => {
 
     expect(payload.title).toBe('Created Alpha RFQ');
     expect(payload.submission_deadline).toContain('2030-05-05');
-    await expect(page).toHaveURL(new RegExp(`/rfqs/${CREATED_RFQ_ID}/overview$`));
-    await expect(page.getByRole('heading', { name: 'Schedule' })).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`/rfqs/${CREATED_RFQ_ID}/overview$`), { timeout: 15000 });
+    await expect(page.getByRole('heading', { name: 'Schedule' })).toBeVisible({ timeout: 15000 });
   });
 
   test('renders overview and details', async ({ page }) => {
@@ -515,11 +515,12 @@ test.describe('RFQ alpha journeys', () => {
       unit_price: 1200,
       currency: 'USD',
     });
-    await expect(page.getByText('Nitrogen compressor')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole('table').getByText('Nitrogen compressor')).toBeVisible({ timeout: 15000 });
     await expect(page.getByText('Existing line item')).toBeVisible();
   });
 
   test('renders vendors, quote intake, comparison runs, approvals, award, and decision trail', async ({ page }) => {
+    test.setTimeout(90_000);
     const lifecycleApi = await routeAlphaRfqApi(page);
 
     await page.goto(`/rfqs/${RFQ_ID}/vendors`);

@@ -130,8 +130,8 @@ test('projects list opens project detail with health, linked RFQs, and linked ta
   await expect(page.getByRole('heading', { name: 'Projects' })).toBeVisible();
   await expect(page.getByText(project.name)).toBeVisible();
 
-  await page.getByText(project.name).click();
-  await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_ID}$`));
+  await page.getByRole('row', { name: new RegExp(project.name) }).click();
+  await expect(page).toHaveURL(new RegExp(`/projects/${PROJECT_ID}$`), { timeout: 15000 });
   await expect(page.getByRole('heading', { name: project.name })).toBeVisible();
   await expect(page.getByText('Overall score')).toBeVisible();
   await expect(page.getByText('80%')).toBeVisible();

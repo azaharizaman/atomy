@@ -16,7 +16,7 @@
 | **RFQ bulk toolbar scope** | ✅ | Live mode now only exposes backend-supported RFQ bulk actions (`Close Selected`, `Cancel Selected`); broader mock-only actions remain available when `NEXT_PUBLIC_USE_MOCKS=true`. |
 | **Workspace Layout (Blueprint Screen 2 frame)** | ✅ | `/rfqs/[rfqId]/*` uses collapsed rail + Active Record Menu + work surface. |
 | **RFQ Workspace Overview (Blueprint Screen 2)** | ✅ | `/rfqs/[rfqId]/overview` with KPI scorecards; **Schedule** uses `HorizontalProcessTrack` (date = title, event = subtitle, equal-width columns, no horizontal scroll); live mode loads activity via `GET .../activity` merged into overview hook. |
-| **E2E Testing** | ✅ | Playwright: RFQ list → workspace overview (`tests/rfq-workflow.spec.ts`); auth forgot/reset with mocked API (`tests/auth.spec.ts`). Full suite not signed off on Fedora — run on Ubuntu or CI before partner invite. |
+| **E2E Testing** | ✅ | Playwright coverage is split by ownership: alpha shell/auth (`tests/auth.spec.ts`, `tests/dashboard-nav.spec.ts`, `tests/smoke.spec.ts`), RFQ alpha journeys (`tests/rfq-alpha-journeys.spec.ts`), adjacent projects/tasks smoke (`tests/projects-tasks-smoke.spec.ts`), adjacent settings/users smoke (`tests/settings-users-smoke.spec.ts`), and narrow live RFQ create/overview smoke (`tests/rfq-lifecycle-e2e.spec.ts`). |
 | **Routing** | ✅ | Added not-found page for undefined routes with design-system styling. |
 | **RFQ Management** | 🚧 | RFQ List + Workspace Overview done; other workspace sections are scaffolded via `/rfqs/[rfqId]/[section]`. **`/rfqs/new` and RFQ Details require `submission_deadline`** (aligned with API NOT NULL). |
 | **Vendor Management** | ❌ | Pending implementation. |
@@ -158,3 +158,11 @@
   - `cd apps/atomy-q/WEB && npx playwright test tests/auth.spec.ts tests/dashboard-nav.spec.ts tests/settings-users-smoke.spec.ts tests/rfq-workflow.spec.ts tests/rfq-line-items.spec.ts tests/smoke.spec.ts tests/screen-smoke.spec.ts` -> PASS (13 passed, 1 skipped).
   - `cd apps/atomy-q/WEB && npm run lint` -> PASS with existing warnings outside `projects/page.tsx`, `projects/[projectId]/page.tsx`, and `src/hooks/use-create-project.test.ts`.
   - `cd apps/atomy-q/WEB && npm run build` -> PASS.
+
+## 2026-04-21 Alpha E2E Coverage Split
+
+- Added `tests/alpha-playwright-bootstrap.ts` as the shared authenticated alpha shell bootstrap for feature flags and RFQ count stubs.
+- Moved alpha-visible RFQ browser ownership into `tests/rfq-alpha-journeys.spec.ts`, covering list, create, overview, details, line items with save/refresh assertion, vendors, quote intake, comparison runs, approvals, award, and decision trail.
+- Deleted the duplicated mocked RFQ owners `tests/rfq-workflow.spec.ts` and `tests/rfq-line-items.spec.ts`; narrowed `tests/rfq-lifecycle-e2e.spec.ts` to the live API create-then-overview smoke path only.
+- Added `tests/projects-tasks-smoke.spec.ts` for adjacent non-alpha project list/detail and task inbox/drawer coverage, and kept `tests/settings-users-smoke.spec.ts` as the adjacent non-alpha settings/users owner.
+- Trimmed `tests/smoke.spec.ts` to dashboard plus RFQ-list sanity checks and removed project/task ownership from generic smoke coverage.
