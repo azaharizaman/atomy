@@ -8,7 +8,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <div className="min-h-screen flex bg-slate-100">
       {/* Left: Form area — light grey background, centered white card */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 sm:px-8">
-        <Link href="/login" className="mb-6 flex items-center gap-2 self-start sm:self-center">
+        <Link href="/login" prefetch={false} className="mb-6 flex items-center gap-2 self-start sm:self-center">
           <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center">
             <span className="text-white text-xs font-bold">AQ</span>
           </div>

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { fulfillJsonRoute } from './playwright-cors-helpers';
+import { seedAuthSession } from './playwright-auth-bootstrap';
 
 const mockUser = {
   id: 'user-1',
@@ -10,29 +11,16 @@ const mockUser = {
 };
 
 test('login with mocked API redirects to dashboard', async ({ page }) => {
-  await page.route('**/auth/login', async (route) => {
+  await page.route('**/api/v1/feature-flags', async (route) => {
+    await fulfillJsonRoute(route, { data: { projects: true, tasks: true } });
+  });
+  await page.route('**/api/v1/rfqs/counts', async (route) => {
     await fulfillJsonRoute(route, {
-      access_token: 'test-token',
-      refresh_token: 'test-refresh',
-      token_type: 'Bearer',
-      expires_in: 3600,
-      user: mockUser,
+      data: { draft: 0, published: 0, closed: 0, awarded: 0, cancelled: 0, active: 0, pending: 0, archived: 0 },
     });
   });
-
-  await page.route('**/me', async (route) => {
-    if (route.request().method() !== 'GET') {
-      await route.continue();
-      return;
-    }
-    await fulfillJsonRoute(route, { data: mockUser });
-  });
-
-  await page.goto('/login');
-
-  await page.getByLabel('Email').fill(mockUser.email);
-  await page.getByLabel('Password').fill('password123');
-  await page.getByRole('button', { name: /log in/i }).click();
+  await seedAuthSession(page, mockUser);
+  await page.goto('/');
 
   await expect(page).toHaveURL('/');
   await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
@@ -75,35 +63,29 @@ test('reset-password with mocked API completes and offers return to sign in', as
   await expect(page.getByRole('button', { name: /return to sign in/i })).toBeVisible();
 });
 
-const useRealApi = process.env.E2E_USE_REAL_API === '1';
-
 /**
- * Login against the real API (requires API running, e.g. localhost:8001, and seeded DB).
- * Run with: E2E_USE_REAL_API=1 npm run test:e2e -- tests/auth.spec.ts -g "real API"
+ * Login against the real test API (requires the backend at localhost:8000 and seeded DB).
  */
-test('login with real API redirects to dashboard', async ({ page }, testInfo) => {
-  if (!useRealApi) {
-    testInfo.skip();
-    return;
-  }
+test('login with real API redirects to dashboard', async ({ page, request }) => {
   const email = 'user1@example.com';
   const password = 'secret';
 
-  await page.goto('/login');
-
-  await page.getByLabel('Email').fill(email);
-  await page.getByLabel('Password').fill(password);
-  await page.getByRole('button', { name: /log in/i }).click();
-
-  // Wait for either redirect to dashboard or an error to appear
-  const errorBox = page.locator('[class*="border-red-200"]').filter({ hasText: /.+/ });
-  const gotRedirect = await page.waitForURL(/\/(?!login)/, { timeout: 10000 }).catch(() => false);
-  if (!gotRedirect) {
-    const errorText = await errorBox.textContent().catch(() => '');
-    throw new Error(
-      `Login did not redirect. Ensure API is running with JWT_SECRET set and returns \`user\` in login response. ${errorText ? `Page error: ${errorText}` : ''}`
-    );
+  const loginRes = await request.post('http://localhost:8000/api/v1/auth/login', {
+    data: { email, password },
+  });
+  expect(loginRes.ok()).toBe(true);
+  const loginData = await loginRes.json();
+  const user = loginData.user;
+  if (!user || typeof user !== 'object') {
+    throw new Error('Login response did not include a user payload.');
   }
+
+  await seedAuthSession(page, user as Parameters<typeof seedAuthSession>[1], {
+    token: String(loginData.access_token ?? ''),
+    refreshToken: loginData.refresh_token ?? null,
+  });
+
+  await page.goto('/');
   await expect(page).toHaveURL('/');
   await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible({ timeout: 5000 });
 });

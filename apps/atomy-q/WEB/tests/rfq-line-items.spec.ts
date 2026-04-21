@@ -18,7 +18,7 @@ const mockUser = {
 };
 
 test.describe('RFQ line-items screen', () => {
-  test.skip(process.env.NEXT_PUBLIC_USE_MOCKS === 'true', 'Run with NEXT_PUBLIC_USE_MOCKS=false to exercise line-item creation.');
+  test.skip(process.env.NEXT_PUBLIC_USE_MOCKS !== 'false', 'Run with NEXT_PUBLIC_USE_MOCKS=false to exercise line-item creation.');
 
   test.beforeEach(async ({ page }) => {
     let lineItems = [

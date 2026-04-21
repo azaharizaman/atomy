@@ -41,8 +41,8 @@ describe('useCreateRfqLineItem', () => {
           currency: 'USD',
           specifications: 'Spare set',
         }),
+        throwOnError: true,
       }),
-      expect.objectContaining({ throwOnError: true }),
     );
   });
 

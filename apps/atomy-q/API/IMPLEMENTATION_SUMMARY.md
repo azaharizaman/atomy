@@ -213,7 +213,7 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - Added quote intake workflow validation contracts for upload payload shape, supported quote submission status values, and normalization/comparison mutation requests.
 - Auth feature tests now validate token semantics and refresh tokens via the login flow using an in-memory SQLite database; protected endpoint auth checks run per-route with unique IDs and assert non-401/403 responses, JWT issuance in API tests resolves via `JwtServiceInterface`, and example tests create users directly without model factories.
 - Added unit tests for `JwtService`, `ExtractsAuthContext`, and core model relationships.
-- **`DatabaseSeeder`** delegates to **`PetrochemicalTenantSeeder`**: single fixed tenant (default ULID `01KKH77M4R0V8QZ1M8NB3XWWWQ` or `ATOMY_SEED_TENANT_ID`), fictional buyer **Nordfjord Process Chemicals AS**, **12** capital projects with **`project_acl`**, **56** RFQs (mix of draft / published / closed / awarded / cancelled), **150+** quote submissions, petrochemical-style line items (tiny through large bundles), vendor pool with **risk-flagged** suppliers, **`risk_items`** on risky bids, quote statuses along the real intake pipeline (`uploaded` → … → `ready`), normalization source lines + optional **open conflicts** for stuck RFQs, preview + **`final`** comparison runs with **tight vs spread** `scoring_payload`, approvals (**pending** on closed, **approved** on awarded), **awards** + **handoffs** where appropriate. Login: `user1@example.com` … `user8@example.com` / `secret`.
+- **`DatabaseSeeder`** delegates to **`PetrochemicalTenantSeeder`**: creates the fixed tenant row first (default ULID `01KKH77M4R0V8QZ1M8NB3XWWWQ` or `ATOMY_SEED_TENANT_ID`), then seeds fictional buyer **Nordfjord Process Chemicals AS**, **12** capital projects with **`project_acl`**, **56** RFQs (mix of draft / published / closed / awarded / cancelled), **150+** quote submissions, petrochemical-style line items (tiny through large bundles), vendor pool with **risk-flagged** suppliers, **`risk_items`** on risky bids, quote statuses along the real intake pipeline (`uploaded` → … → `ready`), normalization source lines + optional **open conflicts** for stuck RFQs, preview + **`final`** comparison runs with **tight vs spread** `scoring_payload`, approvals (**pending** on closed, **approved** on awarded), **awards** + **handoffs** where appropriate. Login: `user1@example.com` … `user8@example.com` / `secret`.
 - Seeder aligned with `approval_history.metadata` column (replacing legacy `payload` field).
 - Seeder aligned with `report_runs` columns (`schedule_id`, `report_type`, `file_path`, `parameters`).
 - RFQ index endpoint now reads from `rfqs` table with tenant scoping and basic filters.
@@ -305,3 +305,11 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 
 - `UserController::roles` now declares an explicit `@response` shape for Scramble so `/roles` exports a concrete `data[]` item schema instead of `Array<unknown>`.
 - Regenerating `apps/atomy-q/openapi/openapi.json` from the API source now preserves typed role fields (`id`, `name`, `description`, `tenant_id`, `is_system_role`) for downstream client generation.
+
+## 2026-04-21 Projects Client Field Optionality
+
+- `ProjectController::store` no longer requires `client_id` in request validation; missing values now default to internal sentinel `self`.
+- `ProjectController::update` now safely preserves/falls back `client_id` instead of requiring explicit client input for internal project grouping usage.
+- Project list/show/store/update responses now include `project_manager_id` to support WEB edit/create manager selection workflows.
+- Verification:
+  - `cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Feature/ProjectsApiTest.php` -> PASS (6 tests, 11 assertions).

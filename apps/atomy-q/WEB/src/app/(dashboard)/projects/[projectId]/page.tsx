@@ -15,6 +15,8 @@ import { useUpdateProjectStatus, PROJECT_STATUSES } from '@/hooks/use-update-pro
 import { useProjectAcl, type ProjectAclEntry, type ProjectAclRole } from '@/hooks/use-project-acl';
 import { useUpdateProjectAcl } from '@/hooks/use-update-project-acl';
 import { useFeatureFlags } from '@/hooks/use-feature-flags';
+import { useUsers } from '@/hooks/use-users';
+import { useAuthStore } from '@/store/use-auth-store';
 
 type AclDraftEntry = ProjectAclEntry & { draftId: string };
 
@@ -38,10 +40,10 @@ export default function ProjectDetailPage() {
 
   const [editMode, setEditMode] = React.useState(false);
   const [editName, setEditName] = React.useState('');
-  const [editClientId, setEditClientId] = React.useState('');
   const [editStartDate, setEditStartDate] = React.useState('');
   const [editEndDate, setEditEndDate] = React.useState('');
   const [editPmId, setEditPmId] = React.useState('');
+  const authUser = useAuthStore((state) => state.user);
 
   const { data: project, isLoading: projectLoading, error: projectError } = useProject(projectId, {
     enabled: projectsQueryEnabled,
@@ -59,6 +61,23 @@ export default function ProjectDetailPage() {
   const { data: aclData, isLoading: aclLoading, isError: aclIsError, error: aclError } = useProjectAcl(projectId, {
     enabled: projectsQueryEnabled,
   });
+  const { data: usersData } = useUsers();
+  const userOptions = usersData?.items ?? [];
+  const managerOptions = React.useMemo(() => {
+    if (userOptions.length > 0) return userOptions;
+    if (authUser == null) return [];
+    return [
+      {
+        id: authUser.id,
+        name: authUser.name,
+        email: authUser.email,
+        status: 'active',
+        role: authUser.role,
+        createdAt: null,
+        lastLoginAt: null,
+      },
+    ];
+  }, [authUser, userOptions]);
   const acl = aclData ?? EMPTY_PROJECT_ACL;
   const updateProject = useUpdateProject(projectId);
   const updateStatus = useUpdateProjectStatus(projectId);
@@ -70,12 +89,27 @@ export default function ProjectDetailPage() {
   React.useEffect(() => {
     if (project && !editMode) {
       setEditName(project.name ?? '');
-      setEditClientId(project.clientId ?? '');
       setEditStartDate(project.startDate?.slice(0, 10) ?? '');
       setEditEndDate(project.endDate?.slice(0, 10) ?? '');
-      setEditPmId('');
+      setEditPmId(project.projectManagerId ?? '');
     }
   }, [project, editMode]);
+
+  React.useEffect(() => {
+    if (!editMode || editPmId !== '') {
+      return;
+    }
+
+    const currentUserId = authUser?.id ?? '';
+    if (currentUserId !== '' && managerOptions.some((user) => user.id === currentUserId)) {
+      setEditPmId(currentUserId);
+      return;
+    }
+
+    if (managerOptions.length > 0) {
+      setEditPmId(managerOptions[0].id);
+    }
+  }, [authUser?.id, editMode, editPmId, managerOptions]);
 
   const aclSyncKey = React.useMemo(
     () => acl.map((e) => `${e.userId}:${e.role}`).join('|'),
@@ -199,7 +233,6 @@ export default function ProjectDetailPage() {
               updateProject.mutate(
                 {
                   name: editName.trim(),
-                  client_id: editClientId.trim(),
                   start_date: editStartDate || undefined,
                   end_date: editEndDate || undefined,
                   project_manager_id: editPmId.trim() || undefined,
@@ -215,15 +248,6 @@ export default function ProjectDetailPage() {
                 type="text"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
-                className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Client ID</label>
-              <input
-                type="text"
-                value={editClientId}
-                onChange={(e) => setEditClientId(e.target.value)}
                 className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
               />
             </div>
@@ -246,14 +270,21 @@ export default function ProjectDetailPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Project manager ID</label>
-              <input
-                type="text"
+              <label className="block text-xs font-medium text-slate-600 mb-1">Project manager</label>
+              <select
                 value={editPmId}
                 onChange={(e) => setEditPmId(e.target.value)}
-                placeholder="Optional"
                 className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
-              />
+              >
+                <option value="" disabled>
+                  Select a user
+                </option>
+                {managerOptions.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name ?? user.email} ({user.email})
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="flex gap-2">
               <Button type="submit" size="sm" variant="primary" disabled={updateProject.isPending}>
@@ -341,7 +372,6 @@ export default function ProjectDetailPage() {
         ) : (
           <InlineDetailPanel
             items={[
-              { label: 'Client', value: (project?.clientName ?? project?.clientId) ?? '—' },
               { label: 'Start', value: project?.startDate ?? '—' },
               { label: 'End', value: project?.endDate ?? '—' },
               { label: 'Budget type', value: project?.budgetType ?? '—' },
@@ -535,4 +565,3 @@ export default function ProjectDetailPage() {
     </div>
   );
 }
-

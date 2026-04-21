@@ -5,7 +5,6 @@ import { api } from '@/lib/api';
 
 export interface UpdateProjectPayload {
   name?: string;
-  client_id?: string;
   start_date?: string;
   end_date?: string;
   project_manager_id?: string;

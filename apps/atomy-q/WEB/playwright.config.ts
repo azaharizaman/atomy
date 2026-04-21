@@ -1,5 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
+process.env.NEXT_PUBLIC_USE_MOCKS ??= 'false';
+process.env.NEXT_PUBLIC_API_URL ??= 'http://localhost:8000/api/v1';
+process.env.E2E_API_URL ??= process.env.NEXT_PUBLIC_API_URL;
+
 const isCI = Boolean(process.env.CI);
 // Use 3100 by default so Playwright-started server doesn't conflict with dev on 3000.
 const port = process.env.PLAYWRIGHT_PORT ?? '3100';
@@ -31,7 +35,9 @@ export default defineConfig({
           reuseExistingServer: !isCI,
           timeout: 120000,
           env: {
-            NEXT_PUBLIC_USE_MOCKS: process.env.NEXT_PUBLIC_USE_MOCKS ?? 'true',
+            NEXT_PUBLIC_USE_MOCKS: process.env.NEXT_PUBLIC_USE_MOCKS ?? 'false',
+            NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+            E2E_API_URL: process.env.E2E_API_URL,
           },
         },
       }),

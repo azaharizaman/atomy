@@ -19,8 +19,18 @@ export function useCreateRfqLineItem(rfqId: string) {
   return useMutation({
     mutationFn: async (input: CreateRfqLineItemInput) => {
       return rfqStoreLineItem(
-        { path: { rfqId }, body: { description: input.description, quantity: input.quantity, uom: input.uom, unit_price: input.unit_price, currency: input.currency, specifications: input.specifications ?? null } },
-        { throwOnError: true },
+        {
+          path: { rfqId },
+          body: {
+            description: input.description,
+            quantity: input.quantity,
+            uom: input.uom,
+            unit_price: input.unit_price,
+            currency: input.currency,
+            specifications: input.specifications ?? null,
+          },
+          throwOnError: true,
+        },
       );
     },
     onSuccess: async () => {

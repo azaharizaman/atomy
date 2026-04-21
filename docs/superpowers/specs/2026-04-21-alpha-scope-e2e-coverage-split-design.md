@@ -8,11 +8,12 @@
 
 The current Playwright suite already proves several important flows, but the coverage is organized around mixed smoke/lifecycle tests rather than a clear alpha-scope journey map. That makes it harder to tell whether the user-facing alpha surface is actually covered end to end.
 
-The intended alpha surface in this app is narrower than the full route tree:
+The intended alpha surface in this app is narrower than the full route tree and is defined by `apps/atomy-q/WEB/src/lib/alpha-mode.ts` plus the dashboard/workspace layouts:
 
 - Alpha top-level navigation only exposes `dashboard` and `requisition`.
 - Alpha RFQ navigation exposes `overview`, `details`, `line-items`, `vendors`, `award`, `quote-intake`, `comparison-runs`, `approvals`, and `decision-trail`.
-- Deferred routes such as `/documents`, `/reporting`, `/settings/*` other than the alpha-visible user management path, and RFQ sections `negotiations`, `documents`, and `risk` remain out of scope for this e2e effort.
+- Deferred routes such as `/documents`, `/reporting`, `/settings`, `/settings/*`, and RFQ sections `negotiations`, `documents`, and `risk` remain out of scope for alpha e2e coverage.
+- `Projects`, `Task Inbox`, and `Settings` are hidden from the alpha dashboard shell. They may keep their own smoke coverage, but they are not alpha-scope acceptance criteria unless the alpha policy changes.
 
 The test suite should reflect that alpha boundary instead of trying to cover the entire application.
 
@@ -20,7 +21,7 @@ The test suite should reflect that alpha boundary instead of trying to cover the
 
 1. Cover the full alpha-visible browser surface with deterministic Playwright tests.
 2. Keep each e2e spec focused on one journey family so failures are easy to localize.
-3. Preserve a small real-API smoke path for the parts of the app that must prove live backend integration.
+3. Preserve a small real test-API smoke path for the parts of the app that must prove live backend integration.
 4. Avoid adding coverage for deferred alpha routes or hidden sections that are not part of the alpha product surface.
 
 ## Non-Goals
@@ -32,7 +33,7 @@ The test suite should reflect that alpha boundary instead of trying to cover the
 
 ## Proposed Split
 
-The suite should be organized into five journey families:
+The alpha suite should be organized into three required journey families, with two optional adjacent smoke families for non-alpha surfaces that still matter to local verification.
 
 ### 1. `auth.spec.ts`
 
@@ -43,7 +44,7 @@ Coverage:
 - Mocked login redirect to dashboard.
 - Mocked forgot-password success state.
 - Mocked reset-password completion state.
-- Real test-API login smoke path, if the local test backend is available.
+- Real test-API login smoke path against `http://localhost:8000/api/v1` when the local test backend is running.
 
 Why this stays separate:
 
@@ -58,7 +59,7 @@ Coverage:
 
 - Dashboard landing after auth.
 - Alpha sidebar visibility and top-level nav behavior.
-- Entry points into requisition and settings/users from the shell.
+- Entry points into requisition from the shell.
 
 Why this stays separate:
 
@@ -72,7 +73,7 @@ Owns the browser-visible alpha RFQ journeys.
 Coverage:
 
 - RFQ list rendering.
-- RFQ creation entry at `/rfqs/new`.
+- RFQ creation through `/rfqs/new`, including form submission and navigation to the created RFQ overview or refreshed list.
 - RFQ overview.
 - RFQ details.
 - RFQ line items, including add-item and refresh behavior.
@@ -94,9 +95,9 @@ Design note:
 - Shared setup should stub the alpha shell and RFQ data once per group, then each subtest should assert one journey segment.
 - The real-API path should stay narrow: create an RFQ through the live backend, then verify at least the RFQ list and overview render from that created record. The deep workflow remains mocked for stability.
 
-### 4. `projects-tasks-alpha.spec.ts`
+### 4. `projects-tasks-smoke.spec.ts` (adjacent, non-alpha)
 
-Owns the alpha-visible operational work surfaces.
+Owns project and task browser smoke coverage outside strict alpha mode.
 
 Coverage:
 
@@ -107,12 +108,13 @@ Coverage:
 
 Why this stays separate:
 
+- Projects and tasks are currently hidden when `NEXT_PUBLIC_ALPHA_MODE=true`.
 - Projects and tasks share the dashboard shell but not the RFQ data model.
 - Their API fixtures and assertions are different enough that combining them with RFQ flows would make the suite harder to reason about.
 
-### 5. `settings-users-alpha.spec.ts`
+### 5. `settings-users-smoke.spec.ts` (adjacent, non-alpha)
 
-Owns the alpha-visible settings journey.
+Owns settings/users browser smoke coverage outside strict alpha mode.
 
 Coverage:
 
@@ -121,8 +123,8 @@ Coverage:
 
 Why this stays separate:
 
-- The alpha settings surface is small and should remain a lightweight navigation/render check.
-- Hidden settings routes remain out of scope unless the alpha nav changes later.
+- Settings routes are currently deferred when `NEXT_PUBLIC_ALPHA_MODE=true`.
+- Keeping this separate prevents admin smoke coverage from being mistaken for alpha-scope coverage.
 
 ## Coverage Contract
 
@@ -132,7 +134,7 @@ The alpha e2e suite should satisfy these rules:
 2. Every alpha-visible RFQ section must have at least one e2e assertion for navigation or content rendering.
 3. The RFQ create path must be covered as a browser journey, not only as an API call.
 4. The line-item add flow must continue to verify that saving an item refreshes the visible section.
-5. Project detail and task drawer behavior must be covered in browser form, not just by list rendering.
+5. Project detail, task drawer, and settings/users behavior may be covered as adjacent smoke tests, but they must not be counted as strict alpha coverage while hidden in alpha mode.
 6. Deferred routes must not become accidental coverage targets.
 
 ## Shared Test Infrastructure
@@ -150,7 +152,7 @@ Shared fixtures should be centralized by journey family:
 
 - RFQ fixtures should live with RFQ tests.
 - Project fixtures should live with project/task tests.
-- Settings fixtures should live with settings tests.
+- Adjacent project/task/settings fixtures should live with their own smoke tests.
 - Auth fixtures should remain minimal and isolated.
 
 ## Stability Rules
@@ -162,6 +164,7 @@ The alpha e2e suite should be written to avoid brittle false positives.
 - Keep real-API coverage narrow and deterministic.
 - Avoid depending on deferred routes to “hop” into alpha-visible pages.
 - Do not assert live data fields that the local test API does not guarantee.
+- Run strict alpha coverage at least once with `NEXT_PUBLIC_ALPHA_MODE=true` so hidden-route policy is actually exercised.
 
 ## Expected File Layout
 
@@ -170,8 +173,8 @@ Target Playwright layout:
 - `apps/atomy-q/WEB/tests/auth.spec.ts`
 - `apps/atomy-q/WEB/tests/dashboard-nav.spec.ts`
 - `apps/atomy-q/WEB/tests/rfq-alpha-journeys.spec.ts`
-- `apps/atomy-q/WEB/tests/projects-tasks-alpha.spec.ts`
-- `apps/atomy-q/WEB/tests/settings-users-alpha.spec.ts`
+- `apps/atomy-q/WEB/tests/projects-tasks-smoke.spec.ts` for adjacent non-alpha browser smoke coverage.
+- `apps/atomy-q/WEB/tests/settings-users-smoke.spec.ts` for adjacent non-alpha browser smoke coverage.
 
 Existing support files should stay shared:
 
@@ -183,17 +186,18 @@ Existing support files should stay shared:
 The work is complete when:
 
 - The alpha-visible browser journeys are split into the proposed spec families.
-- The RFQ journey coverage includes create, list, overview, details, line items, vendors, quote intake, comparison runs, approvals, award, and decision trail.
-- The project/task/settings journeys each have at least one stable e2e path.
+- The RFQ journey coverage includes browser create, list, overview, details, line items, vendors, quote intake, comparison runs, approvals, award, and decision trail.
+- Project/task/settings smoke tests are either retained separately as non-alpha coverage or explicitly left to existing smoke specs.
 - The test suite still passes in the default test mode.
-- The real test API path still has at least one live smoke check.
+- The strict alpha subset passes with `NEXT_PUBLIC_ALPHA_MODE=true`.
+- The real test API path still has at least one live smoke check against the local test API.
 
 ## Suggested Implementation Order
 
 1. Lock down the RFQ alpha journey spec first, because it is the biggest and most critical alpha workflow.
-2. Add the projects/tasks alpha spec next.
-3. Add the settings/users alpha spec last.
-4. Re-run the full Playwright suite and trim any overlapping assertions from smoke tests if needed.
+2. Add or preserve the adjacent projects/tasks smoke spec next.
+3. Add or preserve the adjacent settings/users smoke spec last.
+4. Re-run the full Playwright suite and the strict alpha subset, then trim any overlapping assertions from smoke tests if needed.
 
 ## Notes on Scope Boundaries
 
@@ -205,6 +209,10 @@ The following are intentionally not part of this alpha e2e pass:
 - `/settings/templates`
 - `/settings/integrations`
 - `/settings/feature-flags`
+- `/settings/users`
+- `/projects`
+- `/projects/:projectId`
+- `/tasks`
 - RFQ sections `negotiations`, `documents`, and `risk`
 
 If any of those routes later become alpha-visible, they should be added in a separate follow-up spec update rather than being folded into the initial alpha coverage split.

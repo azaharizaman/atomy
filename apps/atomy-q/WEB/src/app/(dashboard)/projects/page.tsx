@@ -10,6 +10,8 @@ import { FilterBar, PageHeader } from '@/components/ds/FilterBar';
 import { Card } from '@/components/ds/Card';
 import { useProjects, type ProjectListItem } from '@/hooks/use-projects';
 import { useCreateProject } from '@/hooks/use-create-project';
+import { useUsers } from '@/hooks/use-users';
+import { useAuthStore } from '@/store/use-auth-store';
 
 const PROJECT_COLUMNS: ColumnDef<ProjectListItem>[] = [
   {
@@ -26,9 +28,6 @@ const PROJECT_COLUMNS: ColumnDef<ProjectListItem>[] = [
     render: (row) => (
       <div>
         <div className="text-sm font-medium text-slate-800 leading-tight">{row.name}</div>
-        <div className="text-[11px] text-slate-400 mt-0.5">
-          {row.clientName ? `Client: ${row.clientName}` : row.clientId ? `Client: ${row.clientId}` : '—'}
-        </div>
       </div>
     ),
   },
@@ -59,10 +58,10 @@ export default function ProjectsPage() {
   const [q, setQ] = React.useState('');
   const [showCreateForm, setShowCreateForm] = React.useState(false);
   const [createName, setCreateName] = React.useState('');
-  const [createClientId, setCreateClientId] = React.useState('');
   const [createStartDate, setCreateStartDate] = React.useState('');
   const [createEndDate, setCreateEndDate] = React.useState('');
   const [createPmId, setCreatePmId] = React.useState('');
+  const authUser = useAuthStore((state) => state.user);
   const {
     data: flags,
     isLoading: flagsLoading,
@@ -73,15 +72,47 @@ export default function ProjectsPage() {
   const { data: projects = [], isLoading, isError, error } = useProjects({
     enabled: !flagsLoading && projectsEnabled,
   });
+  const { data: usersData } = useUsers();
+  const userOptions = usersData?.items ?? [];
+  const managerOptions = React.useMemo(() => {
+    if (userOptions.length > 0) return userOptions;
+    if (authUser == null) return [];
+    return [
+      {
+        id: authUser.id,
+        name: authUser.name,
+        email: authUser.email,
+        status: 'active',
+        role: authUser.role,
+        createdAt: null,
+        lastLoginAt: null,
+      },
+    ];
+  }, [authUser, userOptions]);
   const createProject = useCreateProject();
+
+  React.useEffect(() => {
+    if (createPmId !== '') {
+      return;
+    }
+
+    const currentUserId = authUser?.id ?? '';
+    if (currentUserId !== '' && managerOptions.some((user) => user.id === currentUserId)) {
+      setCreatePmId(currentUserId);
+      return;
+    }
+
+    if (managerOptions.length > 0) {
+      setCreatePmId(managerOptions[0].id);
+    }
+  }, [authUser?.id, createPmId, managerOptions]);
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!createName.trim() || !createClientId.trim() || !createStartDate || !createEndDate || !createPmId.trim()) return;
+    if (!createName.trim() || !createStartDate || !createEndDate || !createPmId.trim()) return;
     createProject.mutate(
       {
         name: createName.trim(),
-        client_id: createClientId.trim(),
         start_date: createStartDate,
         end_date: createEndDate,
         project_manager_id: createPmId.trim(),
@@ -90,7 +121,6 @@ export default function ProjectsPage() {
         onSuccess: (result) => {
           setShowCreateForm(false);
           setCreateName('');
-          setCreateClientId('');
           setCreateStartDate('');
           setCreateEndDate('');
           setCreatePmId('');
@@ -182,16 +212,6 @@ export default function ProjectsPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Client ID</label>
-              <input
-                type="text"
-                value={createClientId}
-                onChange={(e) => setCreateClientId(e.target.value)}
-                className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
-                required
-              />
-            </div>
-            <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Start date</label>
               <input
                 type="date"
@@ -212,14 +232,22 @@ export default function ProjectsPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Project manager ID</label>
-              <input
-                type="text"
+              <label className="block text-xs font-medium text-slate-600 mb-1">Project manager</label>
+              <select
                 value={createPmId}
                 onChange={(e) => setCreatePmId(e.target.value)}
                 className="w-full rounded border border-slate-300 px-2 py-1.5 text-sm"
                 required
-              />
+              >
+                <option value="" disabled>
+                  Select a user
+                </option>
+                {managerOptions.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name ?? user.email} ({user.email})
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="flex gap-2">
               <Button type="submit" size="sm" variant="primary" disabled={createProject.isPending}>
@@ -263,4 +291,3 @@ export default function ProjectsPage() {
     </div>
   );
 }
-

@@ -145,3 +145,12 @@
 - Seeded requisition line items now include section heading rows and line rows, so mock-mode requisition line items show grouped sections instead of a flat list.
 - The line-items page now renders section rows in both table and grid modes while keeping live API payloads unchanged.
 - Added page coverage for grouped mock rows so the section headings and nested line items stay visible in mock-mode UI.
+
+## 2026-04-21 Projects Form Field Simplification
+
+- Project create/edit forms no longer ask for `client_id`; projects are treated as tenant-internal grouping records for buyer-owned requisitions.
+- Project manager input on both create and edit views is now a select dropdown sourced from tenant users (with fallback to current authenticated user when needed).
+- Projects list/detail UI removed client-facing display rows tied to `client_id` to align with the internal-project model.
+- `use-create-project` payload contract no longer requires `client_id`, and response normalization accepts optional `client_id` / `project_manager_id`.
+- Verification:
+  - `cd apps/atomy-q/WEB && npm run test:unit -- src/hooks/use-create-project.test.ts` -> PASS.

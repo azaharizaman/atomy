@@ -24,7 +24,6 @@ describe('useCreateProject', () => {
 
     result.current.mutate({
       name: 'N',
-      client_id: 'C',
       start_date: '2026-01-01',
       end_date: '2026-02-01',
       project_manager_id: 'u1',
@@ -41,9 +40,9 @@ describe('useCreateProject', () => {
           id: 'p1',
           name: 'Project',
           status: 'planning',
-          client_id: 'c1',
           start_date: '2026-01-01',
           end_date: '2026-02-01',
+          project_manager_id: 'u1',
         },
       },
     });
@@ -53,7 +52,6 @@ describe('useCreateProject', () => {
 
     result.current.mutate({
       name: 'Project',
-      client_id: 'c1',
       start_date: '2026-01-01',
       end_date: '2026-02-01',
       project_manager_id: 'u1',
@@ -63,4 +61,3 @@ describe('useCreateProject', () => {
     expect(result.current.data).toMatchObject({ id: 'p1', name: 'Project' });
   });
 });
-
