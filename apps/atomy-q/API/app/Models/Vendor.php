@@ -60,6 +60,16 @@ class Vendor extends Model
         });
     }
 
+    public function getPrimaryContactPhoneAttribute(mixed $value): ?string
+    {
+        return self::trimmedOrNull($value);
+    }
+
+    public function setPrimaryContactPhoneAttribute(mixed $value): void
+    {
+        $this->attributes['primary_contact_phone'] = self::trimmedOrNull($value) ?? '';
+    }
+
     /**
      * @param list<string> $legacyAttributes
      */

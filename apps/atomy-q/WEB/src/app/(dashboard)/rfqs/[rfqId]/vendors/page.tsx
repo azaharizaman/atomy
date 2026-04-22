@@ -12,6 +12,7 @@ import { useRequisitionVendorSelection } from '@/hooks/use-requisition-vendor-se
 import { useRfq } from '@/hooks/use-rfq';
 import { useRfqVendors } from '@/hooks/use-rfq-vendors';
 import { useUpdateRequisitionVendorSelection } from '@/hooks/use-update-requisition-vendor-selection';
+import { formatVendorGovernanceWarning, useVendorGovernanceMap } from '@/hooks/use-vendor-governance';
 import { useVendorRecommendations, type VendorRecommendationCandidate } from '@/hooks/use-vendor-recommendations';
 import { useVendors, type VendorRow } from '@/hooks/use-vendors';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
@@ -32,6 +33,7 @@ export function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
   const recommendationsQuery = useVendorRecommendations(rfqId);
   const updateSelection = useUpdateRequisitionVendorSelection(rfqId);
   const approvedVendors = (vendorsQuery.data?.items ?? []).filter((vendor) => vendor.status === 'approved');
+  const governanceByVendor = useVendorGovernanceMap(approvedVendors.map((vendor) => vendor.id));
   const selectedVendorIds = React.useMemo(
     () => new Set((selectedQuery.data ?? []).map((row) => row.vendorId)),
     [selectedQuery.data],
@@ -147,6 +149,8 @@ export function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
             {approvedVendors.map((vendor) => {
               const checked = draftSelected.has(vendor.id);
               const recommendation = recommendedById.get(vendor.id);
+              const governance = governanceByVendor.data.get(vendor.id);
+              const governanceWarnings = governance?.warningFlags ?? [];
               const expanded = expandedRecommendationId === vendor.id;
               return (
                 <div key={vendor.id} className="rounded-md border border-slate-200 hover:bg-slate-50">
@@ -169,6 +173,18 @@ export function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
                           ) : null}
                         </span>
                         <span className="block truncate text-xs text-slate-500">{vendorEmail(vendor)}</span>
+                        {governanceWarnings.length > 0 ? (
+                          <span className="mt-1 flex flex-wrap gap-1">
+                            {governanceWarnings.slice(0, 2).map((flag) => (
+                              <span
+                                key={flag}
+                                className="rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-800"
+                              >
+                                {formatVendorGovernanceWarning(flag)}
+                              </span>
+                            ))}
+                          </span>
+                        ) : null}
                       </span>
                     </span>
                     <span className="flex shrink-0 items-center gap-2">
@@ -230,6 +246,13 @@ export function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
             {recommendationsQuery.error instanceof Error
               ? recommendationsQuery.error.message
               : 'Vendor recommendations could not be loaded.'}
+          </p>
+        ) : null}
+        {governanceByVendor.isError ? (
+          <p className="text-sm text-red-600">
+            {governanceByVendor.error instanceof Error
+              ? governanceByVendor.error.message
+              : 'Vendor governance warnings could not be loaded.'}
           </p>
         ) : null}
         {updateSelection.isError ? (

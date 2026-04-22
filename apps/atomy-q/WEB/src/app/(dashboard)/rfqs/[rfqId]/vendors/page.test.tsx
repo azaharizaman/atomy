@@ -7,6 +7,7 @@ const mockUseVendors = vi.fn();
 const mockUseRequisitionVendorSelection = vi.fn();
 const mockUseUpdateRequisitionVendorSelection = vi.fn();
 const mockUseInviteSelectedVendors = vi.fn();
+const mockUseVendorGovernanceMap = vi.fn();
 const mockUseVendorRecommendations = vi.fn();
 
 beforeAll(() => {
@@ -41,6 +42,14 @@ vi.mock('@/hooks/use-update-requisition-vendor-selection', () => ({
 vi.mock('@/hooks/use-invite-selected-vendors', () => ({
   useInviteSelectedVendors: (...args: unknown[]) => mockUseInviteSelectedVendors(...args),
 }));
+
+vi.mock('@/hooks/use-vendor-governance', async () => {
+  const actual = await vi.importActual<typeof import('@/hooks/use-vendor-governance')>('@/hooks/use-vendor-governance');
+  return {
+    ...actual,
+    useVendorGovernanceMap: (...args: unknown[]) => mockUseVendorGovernanceMap(...args),
+  };
+});
 
 vi.mock('@/hooks/use-vendor-recommendations', () => ({
   useVendorRecommendations: (...args: unknown[]) => mockUseVendorRecommendations(...args),
@@ -77,6 +86,12 @@ describe('RfqVendorsPage', () => {
     });
     mockUseVendorRecommendations.mockReturnValue({
       data: { candidates: [], excludedReasons: [] },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    mockUseVendorGovernanceMap.mockReturnValue({
+      data: new Map(),
       isLoading: false,
       isError: false,
       error: null,

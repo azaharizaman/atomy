@@ -4213,6 +4213,75 @@ export type ReportRunScheduleNowResponses = {
 
 export type ReportRunScheduleNowResponse = ReportRunScheduleNowResponses[keyof ReportRunScheduleNowResponses];
 
+export type RequisitionVendorSelectionIndexData = {
+    body?: never;
+    path: {
+        rfqId: string;
+    };
+    query?: never;
+    url: '/rfqs/{rfqId}/selected-vendors';
+};
+
+export type RequisitionVendorSelectionIndexErrors = {
+    404: {
+        message: 'RFQ not found';
+    };
+};
+
+export type RequisitionVendorSelectionIndexError = RequisitionVendorSelectionIndexErrors[keyof RequisitionVendorSelectionIndexErrors];
+
+export type RequisitionVendorSelectionIndexResponses = {
+    200: {
+        data: Array<string>;
+    };
+};
+
+export type RequisitionVendorSelectionIndexResponse = RequisitionVendorSelectionIndexResponses[keyof RequisitionVendorSelectionIndexResponses];
+
+export type RequisitionVendorSelectionUpdateData = {
+    body: {
+        vendor_ids: Array<string>;
+    };
+    path: {
+        rfqId: string;
+    };
+    query?: never;
+    url: '/rfqs/{rfqId}/selected-vendors';
+};
+
+export type RequisitionVendorSelectionUpdateErrors = {
+    404: {
+        message: 'Vendor not found';
+    } | {
+        message: 'RFQ not found';
+    };
+    /**
+     * Validation error
+     */
+    422: {
+        /**
+         * Errors overview.
+         */
+        message: string;
+        /**
+         * A detailed description of each field that failed validation.
+         */
+        errors: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type RequisitionVendorSelectionUpdateError = RequisitionVendorSelectionUpdateErrors[keyof RequisitionVendorSelectionUpdateErrors];
+
+export type RequisitionVendorSelectionUpdateResponses = {
+    200: {
+        data: string;
+    };
+};
+
+export type RequisitionVendorSelectionUpdateResponse = RequisitionVendorSelectionUpdateResponses[keyof RequisitionVendorSelectionUpdateResponses];
+
 export type RfqIndexData = {
     body?: never;
     path?: never;
@@ -5029,90 +5098,6 @@ export type V1RfqTemplatesApplyResponses = {
 };
 
 export type V1RfqTemplatesApplyResponse = V1RfqTemplatesApplyResponses[keyof V1RfqTemplatesApplyResponses];
-
-export type RiskComplianceSanctionsScreeningData = {
-    body?: never;
-    path: {
-        vendorId: string;
-    };
-    query?: never;
-    url: '/vendors/{vendorId}/sanctions-screening';
-};
-
-export type RiskComplianceSanctionsScreeningResponses = {
-    200: {
-        data: {
-            vendor_id: string;
-            screening_status: 'completed';
-            matches: Array<string>;
-        };
-    };
-};
-
-export type RiskComplianceSanctionsScreeningResponse = RiskComplianceSanctionsScreeningResponses[keyof RiskComplianceSanctionsScreeningResponses];
-
-export type RiskComplianceSanctionsHistoryData = {
-    body?: never;
-    path: {
-        vendorId: string;
-    };
-    query?: never;
-    url: '/vendors/{vendorId}/sanctions-history';
-};
-
-export type RiskComplianceSanctionsHistoryResponses = {
-    200: {
-        data: {
-            vendor_id: string;
-            history: Array<string>;
-        };
-    };
-};
-
-export type RiskComplianceSanctionsHistoryResponse = RiskComplianceSanctionsHistoryResponses[keyof RiskComplianceSanctionsHistoryResponses];
-
-export type RiskComplianceDueDiligenceData = {
-    body?: never;
-    path: {
-        vendorId: string;
-    };
-    query?: never;
-    url: '/vendors/{vendorId}/due-diligence';
-};
-
-export type RiskComplianceDueDiligenceResponses = {
-    200: {
-        data: {
-            vendor_id: string;
-            items: Array<string>;
-            overall_status: 'pending';
-        };
-    };
-};
-
-export type RiskComplianceDueDiligenceResponse = RiskComplianceDueDiligenceResponses[keyof RiskComplianceDueDiligenceResponses];
-
-export type RiskComplianceUpdateDueDiligenceData = {
-    body?: never;
-    path: {
-        vendorId: string;
-        itemId: string;
-    };
-    query?: never;
-    url: '/vendors/{vendorId}/due-diligence/{itemId}';
-};
-
-export type RiskComplianceUpdateDueDiligenceResponses = {
-    200: {
-        data: {
-            vendor_id: string;
-            item_id: string;
-            status: 'completed';
-        };
-    };
-};
-
-export type RiskComplianceUpdateDueDiligenceResponse = RiskComplianceUpdateDueDiligenceResponses[keyof RiskComplianceUpdateDueDiligenceResponses];
 
 export type RiskComplianceIndexData = {
     body?: never;
@@ -6350,7 +6335,6 @@ export type VendorIndexData = {
     query?: {
         q?: string;
         search?: string;
-        status?: string;
     };
     url: '/vendors';
 };
@@ -6368,9 +6352,9 @@ export type VendorIndexResponses = {
             primary_contact_phone: string | null;
             status: string;
             approval_record: {
-                approved_by_user_id: string;
+                approved_by_user_id: string | null;
                 approved_at: string;
-                approval_note: string;
+                approval_note: string | null;
             } | null;
             created_at: string;
             updated_at: string;
@@ -6378,7 +6362,7 @@ export type VendorIndexResponses = {
             trading_name: string;
             country_code: string;
             email: string;
-            phone: string;
+            phone: string | null;
         }>;
         meta: {
             current_page: number;
@@ -6391,70 +6375,20 @@ export type VendorIndexResponses = {
 
 export type VendorIndexResponse = VendorIndexResponses[keyof VendorIndexResponses];
 
-export type VendorStoreData = {
-    body: {
-        legal_name: string;
-        display_name: string;
-        registration_number: string;
-        country_of_registration: string;
-        primary_contact_name: string;
-        primary_contact_email: string;
-        primary_contact_phone?: string | null;
-    };
+export type V1VendorsStoreData = {
+    body?: never;
     path?: never;
     query?: never;
     url: '/vendors';
 };
 
-export type VendorStoreErrors = {
-    /**
-     * Validation error
-     */
-    422: {
-        /**
-         * Errors overview.
-         */
-        message: string;
-        /**
-         * A detailed description of each field that failed validation.
-         */
-        errors: {
-            [key: string]: Array<string>;
-        };
+export type V1VendorsStoreResponses = {
+    200: {
+        [key: string]: unknown;
     };
 };
 
-export type VendorStoreError = VendorStoreErrors[keyof VendorStoreErrors];
-
-export type VendorStoreResponses = {
-    201: {
-        data: {
-            id: string;
-            legal_name: string;
-            display_name: string;
-            registration_number: string;
-            country_of_registration: string;
-            primary_contact_name: string;
-            primary_contact_email: string;
-            primary_contact_phone: string | null;
-            status: string;
-            approval_record: {
-                approved_by_user_id: string;
-                approved_at: string;
-                approval_note: string;
-            } | null;
-            created_at: string;
-            updated_at: string;
-            name: string;
-            trading_name: string;
-            country_code: string;
-            email: string;
-            phone: string | null;
-        };
-    };
-};
-
-export type VendorStoreResponse = VendorStoreResponses[keyof VendorStoreResponses];
+export type V1VendorsStoreResponse = V1VendorsStoreResponses[keyof V1VendorsStoreResponses];
 
 export type VendorShowData = {
     body?: never;
@@ -6486,9 +6420,9 @@ export type VendorShowResponses = {
             primary_contact_phone: string | null;
             status: string;
             approval_record: {
-                approved_by_user_id: string;
+                approved_by_user_id: string | null;
                 approved_at: string;
-                approval_note: string;
+                approval_note: string | null;
             } | null;
             created_at: string;
             updated_at: string;
@@ -6504,15 +6438,7 @@ export type VendorShowResponses = {
 export type VendorShowResponse = VendorShowResponses[keyof VendorShowResponses];
 
 export type VendorUpdateData = {
-    body: {
-        legal_name: string;
-        display_name: string;
-        registration_number: string;
-        country_of_registration: string;
-        primary_contact_name: string;
-        primary_contact_email: string;
-        primary_contact_phone?: string | null;
-    };
+    body?: never;
     path: {
         id: string;
     };
@@ -6523,21 +6449,6 @@ export type VendorUpdateData = {
 export type VendorUpdateErrors = {
     404: {
         message: 'Vendor not found';
-    };
-    /**
-     * Validation error
-     */
-    422: {
-        /**
-         * Errors overview.
-         */
-        message: string;
-        /**
-         * A detailed description of each field that failed validation.
-         */
-        errors: {
-            [key: string]: Array<string>;
-        };
     };
 };
 
@@ -6556,9 +6467,9 @@ export type VendorUpdateResponses = {
             primary_contact_phone: string | null;
             status: string;
             approval_record: {
-                approved_by_user_id: string;
+                approved_by_user_id: string | null;
                 approved_at: string;
-                approval_note: string;
+                approval_note: string | null;
             } | null;
             created_at: string;
             updated_at: string;
@@ -6572,73 +6483,6 @@ export type VendorUpdateResponses = {
 };
 
 export type VendorUpdateResponse = VendorUpdateResponses[keyof VendorUpdateResponses];
-
-export type VendorUpdateStatusData = {
-    body: {
-        status: VendorStatus;
-        approval_note?: string;
-    };
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/vendors/{id}/status';
-};
-
-export type VendorUpdateStatusErrors = {
-    404: {
-        message: 'Vendor not found';
-    };
-    /**
-     * Validation error or vendor status transition error
-     */
-    422: {
-        /**
-         * Errors overview.
-         */
-        message: string;
-        /**
-         * A detailed description of each field that failed validation.
-         */
-        errors: {
-            [key: string]: Array<string>;
-        };
-    } | {
-        message: string;
-    };
-};
-
-export type VendorUpdateStatusError = VendorUpdateStatusErrors[keyof VendorUpdateStatusErrors];
-
-export type VendorUpdateStatusResponses = {
-    200: {
-        data: {
-            id: string;
-            legal_name: string;
-            display_name: string;
-            registration_number: string;
-            country_of_registration: string;
-            primary_contact_name: string;
-            primary_contact_email: string;
-            primary_contact_phone: string | null;
-            status: string;
-            approval_record: {
-                approved_by_user_id: string;
-                approved_at: string;
-                approval_note: string;
-            } | null;
-            created_at: string;
-            updated_at: string;
-            name: string;
-            trading_name: string;
-            country_code: string;
-            email: string;
-            phone: string | null;
-        };
-    };
-};
-
-export type VendorUpdateStatusResponse = VendorUpdateStatusResponses[keyof VendorUpdateStatusResponses];
 
 export type VendorPerformanceData = {
     body?: never;
@@ -6724,129 +6568,64 @@ export type VendorHistoryError = VendorHistoryErrors[keyof VendorHistoryErrors];
 
 export type VendorHistoryResponses = {
     200: {
-        data: Array<{
-            award_id: string;
-            rfq_id: string;
-            status: string;
-            amount: number | null;
-            currency: string;
-            signed_off_at: string | null;
-            created_at: string | null;
-        }>;
+        data: Array<string>;
     };
 };
 
 export type VendorHistoryResponse = VendorHistoryResponses[keyof VendorHistoryResponses];
 
-export type RequisitionVendorSelectionIndexData = {
+export type VendorGovernanceShowData = {
     body?: never;
     path: {
-        rfqId: string;
+        id: string;
     };
     query?: never;
-    url: '/rfqs/{rfqId}/selected-vendors';
+    url: '/vendors/{id}/governance';
 };
 
-export type RequisitionVendorSelectionIndexErrors = {
+export type VendorGovernanceShowErrors = {
     404: {
-        message: 'RFQ not found';
+        message: 'Vendor not found';
     };
 };
 
-export type RequisitionVendorSelectionIndexError = RequisitionVendorSelectionIndexErrors[keyof RequisitionVendorSelectionIndexErrors];
+export type VendorGovernanceShowError = VendorGovernanceShowErrors[keyof VendorGovernanceShowErrors];
 
-export type RequisitionVendorSelectionIndexResponses = {
+export type VendorGovernanceShowResponses = {
     200: {
-        data: Array<{
-            id: string;
-            rfq_id: string;
+        data: {
             vendor_id: string;
-            vendor_name: string | null;
-            vendor_display_name: string | null;
-            vendor_email: string | null;
-            status: string | null;
-            selected_at: string;
-            selected_by_user_id: string | null;
-        }>;
+            evidence: Array<string>;
+            findings: Array<string>;
+            summary_scores: {
+                esg_score: number;
+                compliance_health_score: number;
+                risk_watch_score: number;
+                evidence_freshness_score: number;
+            };
+            warning_flags: Array<unknown>;
+        };
     };
 };
 
-export type RequisitionVendorSelectionIndexResponse = RequisitionVendorSelectionIndexResponses[keyof RequisitionVendorSelectionIndexResponses];
+export type VendorGovernanceShowResponse = VendorGovernanceShowResponses[keyof VendorGovernanceShowResponses];
 
-export type RequisitionVendorSelectionUpdateData = {
-    body: {
-        vendor_ids: Array<string>;
-    };
-    path: {
-        rfqId: string;
-    };
-    query?: never;
-    url: '/rfqs/{rfqId}/selected-vendors';
-};
-
-export type RequisitionVendorSelectionUpdateErrors = {
-    404: {
-        message: 'RFQ not found';
-    };
-    422: {
-        errors: MessageBag;
-    };
-};
-
-export type RequisitionVendorSelectionUpdateError = RequisitionVendorSelectionUpdateErrors[keyof RequisitionVendorSelectionUpdateErrors];
-
-export type RequisitionVendorSelectionUpdateResponses = {
-    200: {
-        data: Array<{
-            id: string;
-            rfq_id: string;
-            vendor_id: string;
-            vendor_name: string | null;
-            vendor_display_name: string | null;
-            vendor_email: string | null;
-            status: string | null;
-            selected_at: string;
-            selected_by_user_id: string | null;
-        }>;
-    };
-};
-
-export type RequisitionVendorSelectionUpdateResponse = RequisitionVendorSelectionUpdateResponses[keyof RequisitionVendorSelectionUpdateResponses];
-
-export type VendorRecommendationStoreData = {
+export type VendorGovernanceSanctionsScreeningData = {
     body?: {
-        categories?: Array<string>;
-        description?: string;
-        geography?: string | null;
-        spend_band?: string | null;
-        line_item_summary?: Array<string>;
-        candidate_limit?: number;
+        title?: string;
+        source?: string;
+        notes?: string | null;
     };
     path: {
-        rfqId: string;
+        id: string;
     };
     query?: never;
-    url: '/rfqs/{rfqId}/vendor-recommendations';
+    url: '/vendors/{id}/sanctions-screening';
 };
 
-export type VendorRecommendationStoreErrors = {
-    /**
-     * Unauthorized
-     */
-    401: {
-        message: 'Unauthorized';
-    };
-    /**
-     * Forbidden
-     */
-    403: {
-        message: 'Forbidden';
-    };
-    /**
-     * RFQ not found
-     */
+export type VendorGovernanceSanctionsScreeningErrors = {
     404: {
-        message: 'RFQ not found';
+        message: 'Vendor not found';
     };
     /**
      * Validation error
@@ -6865,44 +6644,153 @@ export type VendorRecommendationStoreErrors = {
     };
 };
 
-export type VendorRecommendationStoreError = VendorRecommendationStoreErrors[keyof VendorRecommendationStoreErrors];
+export type VendorGovernanceSanctionsScreeningError = VendorGovernanceSanctionsScreeningErrors[keyof VendorGovernanceSanctionsScreeningErrors];
 
-export type VendorRecommendationStoreResponses = {
-    /**
-     * Vendor recommendations retrieved successfully.
-     */
-    200: {
+export type VendorGovernanceSanctionsScreeningResponses = {
+    201: {
         data: {
-            tenant_id: string;
-            rfq_id: string;
-            candidates: Array<{
+            vendor_id: string;
+            screening_status: 'completed';
+            matches: Array<string>;
+            evidence: {
+                id: string;
                 vendor_id: string;
-                vendor_name: string;
-                fit_score: number;
-                confidence_band: 'low' | 'medium' | 'high';
-                recommended_reason_summary: string;
-                deterministic_reasons: Array<string>;
-                llm_insights: Array<string>;
-                /**
-                 * Machine-readable warning identifiers used for filtering, analytics, and programmatic handling.
-                 */
-                warning_flags: Array<string>;
-                /**
-                 * Human-readable warning messages shown to users when reviewing recommendation explanations.
-                 */
-                warnings: Array<string>;
-            }>;
-            excluded_reasons: Array<{
-                vendor_id: string;
-                vendor_name: string;
-                reason: string;
-                status: string | null;
-            }>;
+                domain: string;
+                type: string;
+                title: string;
+                source: string;
+                observed_at: string;
+                expires_at: string;
+                review_status: string;
+                reviewed_by: string;
+                notes: string;
+            };
         };
     };
 };
 
-export type VendorRecommendationStoreResponse = VendorRecommendationStoreResponses[keyof VendorRecommendationStoreResponses];
+export type VendorGovernanceSanctionsScreeningResponse = VendorGovernanceSanctionsScreeningResponses[keyof VendorGovernanceSanctionsScreeningResponses];
+
+export type VendorGovernanceSanctionsHistoryData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/vendors/{id}/sanctions-history';
+};
+
+export type VendorGovernanceSanctionsHistoryErrors = {
+    404: {
+        message: 'Vendor not found';
+    };
+};
+
+export type VendorGovernanceSanctionsHistoryError = VendorGovernanceSanctionsHistoryErrors[keyof VendorGovernanceSanctionsHistoryErrors];
+
+export type VendorGovernanceSanctionsHistoryResponses = {
+    200: {
+        data: {
+            vendor_id: string;
+            history: Array<string>;
+        };
+    };
+};
+
+export type VendorGovernanceSanctionsHistoryResponse = VendorGovernanceSanctionsHistoryResponses[keyof VendorGovernanceSanctionsHistoryResponses];
+
+export type VendorGovernanceDueDiligenceData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/vendors/{id}/due-diligence';
+};
+
+export type VendorGovernanceDueDiligenceErrors = {
+    404: {
+        message: 'Vendor not found';
+    };
+};
+
+export type VendorGovernanceDueDiligenceError = VendorGovernanceDueDiligenceErrors[keyof VendorGovernanceDueDiligenceErrors];
+
+export type VendorGovernanceDueDiligenceResponses = {
+    200: {
+        data: {
+            vendor_id: string;
+            items: Array<string>;
+            overall_status: 'attention_required' | 'current';
+        };
+    };
+};
+
+export type VendorGovernanceDueDiligenceResponse = VendorGovernanceDueDiligenceResponses[keyof VendorGovernanceDueDiligenceResponses];
+
+export type VendorGovernanceUpdateDueDiligenceData = {
+    body: {
+        review_status: 'pending' | 'reviewed' | 'accepted' | 'approved' | 'rejected';
+        reviewed_by?: string | null;
+        notes?: string | null;
+    };
+    path: {
+        id: string;
+        itemId: string;
+    };
+    query?: never;
+    url: '/vendors/{id}/due-diligence/{itemId}';
+};
+
+export type VendorGovernanceUpdateDueDiligenceErrors = {
+    404: {
+        message: 'Due diligence item not found';
+    } | {
+        message: 'Vendor not found';
+    };
+    /**
+     * Validation error
+     */
+    422: {
+        /**
+         * Errors overview.
+         */
+        message: string;
+        /**
+         * A detailed description of each field that failed validation.
+         */
+        errors: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type VendorGovernanceUpdateDueDiligenceError = VendorGovernanceUpdateDueDiligenceErrors[keyof VendorGovernanceUpdateDueDiligenceErrors];
+
+export type VendorGovernanceUpdateDueDiligenceResponses = {
+    200: {
+        data: {
+            vendor_id: string;
+            item_id: string;
+            status: string;
+            item: {
+                id: string;
+                vendor_id: string;
+                domain: string;
+                type: string;
+                title: string;
+                source: string;
+                observed_at: string;
+                expires_at: string;
+                review_status: string;
+                reviewed_by: string;
+                notes: string;
+            };
+        };
+    };
+};
+
+export type VendorGovernanceUpdateDueDiligenceResponse = VendorGovernanceUpdateDueDiligenceResponses[keyof VendorGovernanceUpdateDueDiligenceResponses];
 
 export type VendorInvitationIndexData = {
     body?: never;
@@ -6923,17 +6811,7 @@ export type VendorInvitationIndexError = VendorInvitationIndexErrors[keyof Vendo
 
 export type VendorInvitationIndexResponses = {
     200: {
-        data: Array<{
-            id: string;
-            rfq_id: string;
-            vendor_id: string | null;
-            vendor_email: string | null;
-            vendor_name: string | null;
-            status: string;
-            invited_at: string | null;
-            responded_at: string | null;
-            reminded_at: string | null;
-        }>;
+        data: Array<string>;
     };
 };
 
@@ -6959,27 +6837,32 @@ export type V1RfqsInvitationsStoreData = {
 
 export type V1RfqsInvitationsStoreErrors = {
     404: {
+        message: 'Vendor not found';
+    } | {
         message: 'RFQ not found';
     };
+    /**
+     * Validation error
+     */
     422: {
-        errors: MessageBag;
+        /**
+         * Errors overview.
+         */
+        message: string;
+        /**
+         * A detailed description of each field that failed validation.
+         */
+        errors: {
+            [key: string]: Array<string>;
+        };
     };
 };
 
 export type V1RfqsInvitationsStoreError = V1RfqsInvitationsStoreErrors[keyof V1RfqsInvitationsStoreErrors];
 
 export type V1RfqsInvitationsStoreResponses = {
-    201: {
-        data: {
-            id: string;
-            rfq_id: string;
-            vendor_id: string;
-            vendor_email: string | null;
-            vendor_name: string | null;
-            status: string;
-            invited_at: string | null;
-            channel: string | null;
-        };
+    200: {
+        [key: string]: unknown;
     };
 };
 
@@ -7022,3 +6905,120 @@ export type V1RfqsInvitationsRemindResponses = {
 };
 
 export type V1RfqsInvitationsRemindResponse = V1RfqsInvitationsRemindResponses[keyof V1RfqsInvitationsRemindResponses];
+
+export type V1RfqsVendorRecommendationsStoreData = {
+    body?: {
+        description?: string;
+        geography?: string | null;
+        spend_band?: string | null;
+        candidate_limit?: number;
+        categories?: Array<string>;
+        line_item_summary?: Array<string>;
+    };
+    path: {
+        rfqId: string;
+    };
+    query?: never;
+    url: '/rfqs/{rfqId}/vendor-recommendations';
+};
+
+export type V1RfqsVendorRecommendationsStoreErrors = {
+    404: {
+        message: 'RFQ not found';
+    };
+    /**
+     * Validation error
+     */
+    422: {
+        /**
+         * Errors overview.
+         */
+        message: string;
+        /**
+         * A detailed description of each field that failed validation.
+         */
+        errors: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type V1RfqsVendorRecommendationsStoreError = V1RfqsVendorRecommendationsStoreErrors[keyof V1RfqsVendorRecommendationsStoreErrors];
+
+export type V1RfqsVendorRecommendationsStoreResponses = {
+    200: {
+        data: {
+            tenant_id: string;
+            rfq_id: string;
+            candidates: Array<unknown>;
+            excluded_reasons: Array<unknown>;
+        };
+    };
+};
+
+export type V1RfqsVendorRecommendationsStoreResponse = V1RfqsVendorRecommendationsStoreResponses[keyof V1RfqsVendorRecommendationsStoreResponses];
+
+export type VendorStatusUpdateData = {
+    body: {
+        status: VendorStatus;
+        approval_note?: string;
+    };
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/vendors/{id}/status';
+};
+
+export type VendorStatusUpdateErrors = {
+    404: {
+        message: 'Vendor not found';
+    };
+    /**
+     * Validation error
+     */
+    422: {
+        /**
+         * Errors overview.
+         */
+        message: string;
+        /**
+         * A detailed description of each field that failed validation.
+         */
+        errors: {
+            [key: string]: Array<string>;
+        };
+    };
+};
+
+export type VendorStatusUpdateError = VendorStatusUpdateErrors[keyof VendorStatusUpdateErrors];
+
+export type VendorStatusUpdateResponses = {
+    200: {
+        data: {
+            id: string;
+            legal_name: string;
+            display_name: string;
+            registration_number: string;
+            country_of_registration: string;
+            primary_contact_name: string;
+            primary_contact_email: string;
+            primary_contact_phone: string | null;
+            status: string;
+            approval_record: {
+                approved_by_user_id: string | null;
+                approved_at: string;
+                approval_note: string | null;
+            } | null;
+            created_at: string;
+            updated_at: string;
+            name: string;
+            trading_name: string;
+            country_code: string;
+            email: string;
+            phone: string | null;
+        };
+    };
+};
+
+export type VendorStatusUpdateResponse = VendorStatusUpdateResponses[keyof VendorStatusUpdateResponses];

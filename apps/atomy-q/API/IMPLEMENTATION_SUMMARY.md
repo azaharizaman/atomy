@@ -1,5 +1,14 @@
 # Implementation Summary - Atomy-Q Backend API
 
+## 2026-04-22 Vendor Governance Monitoring
+
+- Added persistent `vendor_evidence` and `vendor_findings` tables plus app models for tenant-scoped ESG, compliance, and risk monitoring records.
+- Added `VendorGovernanceScoreService` to compute `esg_score`, `compliance_health_score`, `risk_watch_score`, `evidence_freshness_score`, and separate warning flags without mutating vendor eligibility or status.
+- Added `GET /api/v1/vendors/{id}/governance` and replaced vendor due-diligence/sanctions stubs with tenant-scoped evidence-backed reads/writes.
+- Updated the petrochemical tenant seeder to create detailed vendor master rows, approved selected-vendor associations, monitoring evidence, and risk findings that support the new vendor workspace and RFQ warning surfaces.
+- Verification:
+  - `cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Unit/Services/VendorGovernanceScoreServiceTest.php tests/Feature/Api/V1/VendorGovernanceApiTest.php` -> PASS (6 tests, 33 assertions).
+
 ## 2026-04-22 Vendor Recommendation API
 
 - Added `POST /api/v1/rfqs/{id}/vendor-recommendations` in the RFQ route group.

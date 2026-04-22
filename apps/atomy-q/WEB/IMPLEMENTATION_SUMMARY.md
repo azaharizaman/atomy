@@ -1,5 +1,14 @@
 # Implementation Summary
 
+## 2026-04-22 Vendor Governance Monitoring
+
+- Added `use-vendor-governance.ts` with strict live payload normalization for vendor evidence, findings, score summaries, and warning flags.
+- Added `/vendors/[vendorId]/esg-compliance` as the vendor governance workspace for ESG, compliance, risk scores, evidence registry rows, and findings.
+- Vendor detail now surfaces advisory governance warning chips with a direct review link; these warnings do not change the manual vendor status model.
+- The RFQ vendor selection panel now shows non-blocking governance warning chips for approved vendors while preserving user-controlled shortlist save behavior.
+- Verification:
+  - `cd apps/atomy-q/WEB && npx vitest run src/app/'(dashboard)'/vendors/[vendorId]/esg-compliance/page.test.tsx src/app/'(dashboard)'/vendors/[vendorId]/page.test.tsx src/app/'(dashboard)'/rfqs/[rfqId]/vendors/vendor-selection-panel.test.tsx src/app/'(dashboard)'/rfqs/[rfqId]/vendors/page.test.tsx` -> PASS (14 tests).
+
 ## 2026-04-22 Vendor Recommendation Shortlist Prefill
 
 - Added `use-vendor-recommendations.ts` with strict live payload normalization for ranked candidates, deterministic reasons, LLM insights, warning flags, and excluded reasons.

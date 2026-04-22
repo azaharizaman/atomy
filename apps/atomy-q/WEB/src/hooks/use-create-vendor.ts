@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { vendorStore } from '@/generated/api/sdk.gen';
+import { v1VendorsStore } from '@/generated/api/sdk.gen';
 import { extractResponseErrorMessage, normalizeVendorResponse, type VendorRow, type VendorUpsertInput } from '@/hooks/use-vendors';
 import { useAuthStore } from '@/store/use-auth-store';
 
@@ -11,7 +11,7 @@ async function invokeVendorStore(input: VendorUpsertInput): Promise<VendorRow> {
   const token = useAuthStore.getState().token;
 
   try {
-    const response = await vendorStore({
+    const response = await v1VendorsStore({
       body: {
         legal_name: input.legalName,
         display_name: input.displayName,
