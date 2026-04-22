@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Http\Idempotency\IdempotencyCompletion;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
+use App\Http\Idempotency\IdempotencyCompletion;
+use App\Models\RequisitionSelectedVendor;
 use App\Models\Rfq;
+use App\Models\Vendor;
 use App\Models\VendorInvitation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,6 +18,7 @@ use Nexus\Idempotency\Contracts\IdempotencyServiceInterface;
 use Nexus\Sourcing\Exceptions\RfqLifecyclePreconditionException;
 use Nexus\SourcingOperations\Contracts\RfqLifecycleCoordinatorInterface;
 use Nexus\SourcingOperations\DTOs\RemindRfqInvitationCommand;
+use Nexus\Vendor\Enums\VendorStatus;
 
 final class VendorInvitationController extends Controller
 {
@@ -82,9 +85,8 @@ final class VendorInvitationController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'vendor_email' => ['required', 'string', 'email'],
-            'vendor_name' => ['nullable', 'string', 'max:255'],
-            'vendor_id' => ['nullable', 'string', 'max:26'],
+            'vendor_id' => ['required', 'string', 'max:26'],
+            'channel' => ['nullable', 'string', 'in:email'],
         ]);
 
         if ($validator->fails()) {
@@ -93,25 +95,90 @@ final class VendorInvitationController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        $vendorId = (string) $validator->validated()['vendor_id'];
+        $vendor = $this->findVendor($tenantId, $vendorId);
+
+        if ($vendor === null) {
+            IdempotencyCompletion::fail($request, $idempotency);
+
+            return response()->json(['message' => 'Vendor not found'], 404);
+        }
+
+        $vendorStatus = $this->normalizeVendorStatus((string) $vendor->status);
+        if ($vendorStatus === null) {
+            IdempotencyCompletion::fail($request, $idempotency);
+
+            return response()->json([
+                'message' => 'Vendor has an unrecognized status.',
+                'errors' => [
+                    'vendor_id' => ['Vendor has an unrecognized status.'],
+                ],
+            ], 422);
+        }
+
+        if ($vendorStatus !== VendorStatus::Approved) {
+            IdempotencyCompletion::fail($request, $idempotency);
+
+            return response()->json([
+                'message' => 'Vendor must be approved before invitation.',
+                'errors' => [
+                    'vendor_id' => ['Vendor must be approved before invitation.'],
+                ],
+            ], 422);
+        }
+
+        $selectedVendor = RequisitionSelectedVendor::query()
+            ->where('tenant_id', $tenantId)
+            ->where('rfq_id', $rfq->id)
+            ->where('vendor_id', $vendor->id)
+            ->first();
+
+        if ($selectedVendor === null) {
+            IdempotencyCompletion::fail($request, $idempotency);
+
+            return response()->json([
+                'message' => 'Vendor must be selected before invitation.',
+                'errors' => [
+                    'vendor_id' => ['Vendor must be selected before invitation.'],
+                ],
+            ], 422);
+        }
+
+        $vendorEmail = $this->vendorEmail($vendor);
+        $vendorName = $this->vendorName($vendor);
+
+        if ($vendorEmail === null || $vendorName === null) {
+            IdempotencyCompletion::fail($request, $idempotency);
+
+            return response()->json([
+                'message' => 'Vendor is missing contact details required for invitation.',
+                'errors' => [
+                    'vendor_id' => ['Vendor is missing a contact email or name.'],
+                ],
+            ], 422);
+        }
+
         $inv = new VendorInvitation();
         $inv->tenant_id = $tenantId;
         $inv->rfq_id = $rfq->id;
-        $inv->vendor_id = $request->input('vendor_id');
-        $inv->vendor_email = $request->input('vendor_email');
-        $inv->vendor_name = $request->input('vendor_name');
+        $inv->vendor_id = $vendor->id;
+        $inv->vendor_email = $vendorEmail;
+        $inv->vendor_name = $vendorName;
         $inv->status = 'pending';
-        $inv->invited_at = now();
-        $inv->channel = $request->input('channel', 'email');
+        $inv->invited_at = now('UTC');
+        $inv->channel = $validator->validated()['channel'] ?? 'email';
         $inv->save();
 
         $response = response()->json([
             'data' => [
                 'id' => $inv->id,
                 'rfq_id' => $inv->rfq_id,
+                'vendor_id' => $inv->vendor_id,
                 'vendor_email' => $inv->vendor_email,
                 'vendor_name' => $inv->vendor_name,
                 'status' => $inv->status,
                 'invited_at' => $inv->invited_at?->toAtomString(),
+                'channel' => $inv->channel,
             ],
         ], 201);
 
@@ -179,5 +246,51 @@ final class VendorInvitationController extends Controller
             IdempotencyCompletion::fail($request, $idempotency);
             throw $e;
         }
+    }
+
+    private function findVendor(string $tenantId, string $vendorId): ?Vendor
+    {
+        return Vendor::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $this->normalizeIdentifier($vendorId))
+            ->first();
+    }
+
+    private function vendorEmail(Vendor $vendor): ?string
+    {
+        foreach ([$vendor->primary_contact_email, $vendor->email] as $candidate) {
+            $value = trim((string) $candidate);
+
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    private function vendorName(Vendor $vendor): ?string
+    {
+        foreach ([$vendor->display_name, $vendor->legal_name, $vendor->name] as $candidate) {
+            $value = trim((string) $candidate);
+
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    private function normalizeIdentifier(string $value): string
+    {
+        return strtolower(trim($value));
+    }
+
+    private function normalizeVendorStatus(string $status): ?VendorStatus
+    {
+        $normalized = trim(strtolower($status));
+
+        return VendorStatus::tryFrom($normalized);
     }
 }

@@ -3,7 +3,7 @@
 ## Status
 - **Phase**: Foundation complete, quote lifecycle productionized
 - **Framework**: Laravel 12 (PHP 8.3)
-- **Database**: PostgreSQL (25 tables migrated)
+- **Database**: PostgreSQL (26 tables migrated)
 - **Cache/Queue**: Redis via `REDIS_URL`
 - **Auth**: JWT (Bearer token) via `firebase/php-jwt`
 
@@ -81,6 +81,14 @@
 - Duplicate RFQs now create `rfq_number` and insert inside a single transaction with retry on unique-key conflicts, closing the atomicity gap between number generation and persistence.
 - Bulk-action execution now rejects preloaded record sets that do not exactly match the requested RFQ ids, preventing writes against unvalidated identifiers.
 
+## Vendor selection and RFQ handoff (2026-04-22)
+
+- `requisition_selected_vendors` persists the approved vendor shortlist for an RFQ/requisition with tenant, RFQ, vendor, selecting user, and selected-at metadata plus a tenant/RFQ/vendor uniqueness guard.
+- `GET /api/v1/rfqs/{id}/selected-vendors` returns the tenant-scoped selected vendor projection; `PUT /api/v1/rfqs/{id}/selected-vendors` replaces the shortlist atomically and requires a non-empty distinct set of same-tenant `approved` vendor IDs.
+- `POST /api/v1/rfqs/{id}/invitations` now requires `vendor_id`, derives vendor name/email from the approved vendor master, and rejects approved-but-unselected vendors with `422` so invitation creation cannot bypass requisition selection.
+- RFQ invitation reminders remain tenant-scoped through the existing lifecycle coordinator path; roster reads continue to return only real invitation rows, not synthetic selected-vendor rows.
+- Verification: `cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Feature/Api/V1/RequisitionVendorSelectionApiTest.php tests/Feature/Api/V1/RfqInvitationApiTest.php` -> PASS, 6 tests / 32 assertions.
+
 ## Alpha Task 1 rectification (2026-04-15)
 
 - Quote upload happy-path tests now include a valid RFQ line-item fixture, proving the mock processor can mark uploads `ready`; no-line upload coverage proves missing RFQ line context does not masquerade as ready.
@@ -152,15 +160,15 @@ All **203 endpoints** from `API_ENDPOINTS.md` are registered. The quote lifecycl
 - `nexus/laravel-tenant-adapter`
 - `nexus/laravel-setting-adapter`
 
-## Database Tables (25)
+## Database Tables (26)
 
-`users`, `rfqs`, `rfq_line_items`, `rfq_templates`, `vendor_invitations`, `quote_submissions`, `normalization_source_lines`, `normalization_conflicts`, `comparison_runs`, `scoring_models`, `scoring_policies`, `scenarios`, `approvals`, `approval_history`, `negotiation_rounds`, `awards`, `handoffs`, `decision_trail_entries`, `evidence_bundles`, `report_schedules`, `report_runs`, `integrations`, `integration_jobs`, `notifications`, `risk_items`
+`users`, `rfqs`, `rfq_line_items`, `rfq_templates`, `vendor_invitations`, `requisition_selected_vendors`, `quote_submissions`, `normalization_source_lines`, `normalization_conflicts`, `comparison_runs`, `scoring_models`, `scoring_policies`, `scenarios`, `approvals`, `approval_history`, `negotiation_rounds`, `awards`, `handoffs`, `decision_trail_entries`, `evidence_bundles`, `report_schedules`, `report_runs`, `integrations`, `integration_jobs`, `notifications`, `risk_items`
 
 All tables include `tenant_id` (indexed) for multi-tenant isolation.
 
-## Eloquent Models (26)
+## Eloquent Models (27)
 
-One model per table plus a `Tenant` model. All use ULID primary keys via `HasUlids` trait.
+One model per table plus a `Tenant` model, including `RequisitionSelectedVendor` for approved-vendor RFQ selection. All use ULID primary keys via `HasUlids` trait.
 
 ## Configuration
 

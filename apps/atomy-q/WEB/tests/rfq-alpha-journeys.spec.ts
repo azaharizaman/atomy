@@ -47,6 +47,86 @@ function rfqFixture(id = RFQ_ID, title = RFQ_TITLE, status = 'active') {
 
 async function routeAlphaRfqApi(page: Page) {
   let rfqs = [rfqFixture(RFQ_ID, RFQ_TITLE, 'draft')];
+  const approvedVendors = [
+    {
+      id: 'vendor-alpha-1',
+      legal_name: 'Alpha Vendor Holdings',
+      display_name: 'Alpha Vendor',
+      registration_number: 'REG-ALPHA-1',
+      country_of_registration: 'SG',
+      primary_contact_name: 'Alpha Contact',
+      primary_contact_email: 'alpha.vendor@atomy.test',
+      primary_contact_phone: '+65 8000 0001',
+      status: 'approved',
+      approval_record: {
+        approved_by_user_id: alphaMockUser.id,
+        approved_at: '2026-04-16T10:00:00Z',
+        approval_note: 'Approved for alpha journey',
+      },
+      created_at: '2026-04-15T10:00:00Z',
+      updated_at: '2026-04-16T10:00:00Z',
+      name: 'Alpha Vendor Holdings',
+      trading_name: 'Alpha Vendor',
+      country_code: 'SG',
+      email: 'alpha.vendor@atomy.test',
+      phone: '+65 8000 0001',
+    },
+    {
+      id: 'vendor-alpha-2',
+      legal_name: 'Backup Vendor Pte Ltd',
+      display_name: 'Backup Vendor',
+      registration_number: 'REG-ALPHA-2',
+      country_of_registration: 'SG',
+      primary_contact_name: 'Backup Contact',
+      primary_contact_email: 'backup.vendor@atomy.test',
+      primary_contact_phone: '+65 8000 0002',
+      status: 'approved',
+      approval_record: {
+        approved_by_user_id: alphaMockUser.id,
+        approved_at: '2026-04-16T10:00:00Z',
+        approval_note: 'Approved for alpha journey',
+      },
+      created_at: '2026-04-15T10:00:00Z',
+      updated_at: '2026-04-16T10:00:00Z',
+      name: 'Backup Vendor Pte Ltd',
+      trading_name: 'Backup Vendor',
+      country_code: 'SG',
+      email: 'backup.vendor@atomy.test',
+      phone: '+65 8000 0002',
+    },
+    {
+      id: 'vendor-alpha-3',
+      legal_name: 'Restricted Vendor Pte Ltd',
+      display_name: 'Restricted Vendor',
+      registration_number: 'REG-ALPHA-3',
+      country_of_registration: 'SG',
+      primary_contact_name: 'Restricted Contact',
+      primary_contact_email: 'restricted.vendor@atomy.test',
+      primary_contact_phone: '+65 8000 0003',
+      status: 'restricted',
+      approval_record: null,
+      created_at: '2026-04-15T10:00:00Z',
+      updated_at: '2026-04-16T10:00:00Z',
+      name: 'Restricted Vendor Pte Ltd',
+      trading_name: 'Restricted Vendor',
+      country_code: 'SG',
+      email: 'restricted.vendor@atomy.test',
+      phone: '+65 8000 0003',
+    },
+  ];
+  let selectedVendorRows = [
+    {
+      id: 'selected-1',
+      rfq_id: RFQ_ID,
+      vendor_id: 'vendor-alpha-1',
+      vendor_name: 'Alpha Vendor Holdings',
+      vendor_display_name: 'Alpha Vendor',
+      vendor_email: 'alpha.vendor@atomy.test',
+      status: 'approved',
+      selected_at: '2026-04-16T10:30:00Z',
+      selected_by_user_id: alphaMockUser.id,
+    },
+  ];
   let lineItems: LineItemFixture[] = [
     {
       id: 'line-1',
@@ -86,6 +166,64 @@ async function routeAlphaRfqApi(page: Page) {
 
   await page.route('**/api/v1/projects*', async (route) => {
     await fulfillJsonRoute(route, { data: [] });
+  });
+
+  await page.route('**/api/v1/vendors*', async (route) => {
+    if (route.request().method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: buildCorsHeaders(getRequestOrigin(route)) });
+      return;
+    }
+
+    const requestUrl = new URL(route.request().url());
+    const status = requestUrl.searchParams.get('status');
+    const q = (requestUrl.searchParams.get('q') ?? requestUrl.searchParams.get('search') ?? '').trim().toLowerCase();
+    const filtered = approvedVendors.filter((vendor) => {
+      if (status && vendor.status !== status) {
+        return false;
+      }
+
+      if (q === '') {
+        return true;
+      }
+
+      return [vendor.display_name, vendor.email, vendor.name].some((value) =>
+        String(value).toLowerCase().includes(q),
+      );
+    });
+
+    await fulfillJsonRoute(route, {
+      data: filtered,
+      meta: { total: filtered.length, total_pages: 1, current_page: 1, per_page: 25 },
+    });
+  });
+
+  await page.route(/\/api\/v1\/rfqs\/[^/]+\/selected-vendors(?:\?.*)?$/, async (route) => {
+    if (route.request().method() === 'OPTIONS') {
+      await route.fulfill({ status: 204, headers: buildCorsHeaders(getRequestOrigin(route)) });
+      return;
+    }
+
+    if (route.request().method() === 'PUT') {
+      const payload = route.request().postDataJSON() as { vendor_ids?: string[] };
+      const nextVendorIds = Array.isArray(payload.vendor_ids) ? payload.vendor_ids : [];
+      selectedVendorRows = approvedVendors
+        .filter((vendor) => nextVendorIds.includes(vendor.id))
+        .map((vendor, index) => ({
+          id: `selected-${index + 1}`,
+          rfq_id: RFQ_ID,
+          vendor_id: vendor.id,
+          vendor_name: vendor.name,
+          vendor_display_name: vendor.display_name,
+          vendor_email: vendor.email,
+          status: vendor.status,
+          selected_at: '2026-04-16T11:00:00Z',
+          selected_by_user_id: alphaMockUser.id,
+        }));
+      await fulfillJsonRoute(route, { data: selectedVendorRows });
+      return;
+    }
+
+    await fulfillJsonRoute(route, { data: selectedVendorRows });
   });
 
   await page.route(/\/api\/v1\/rfqs(?:\/.*)?(?:\?.*)?$/, async (route) => {
@@ -543,8 +681,8 @@ test.describe('RFQ alpha journeys', () => {
     const screens = [
       {
         path: `/rfqs/${RFQ_ID}/vendors`,
-        heading: () => page.getByRole('heading', { name: 'Invited vendors' }),
-        content: () => page.getByText('Alpha Vendor'),
+        heading: () => page.getByRole('heading', { name: 'Approved vendor selection' }),
+        content: () => page.getByText('Alpha Vendor').first(),
       },
       {
         path: `/rfqs/${RFQ_ID}/quote-intake`,

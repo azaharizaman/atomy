@@ -19,7 +19,7 @@
 | **E2E Testing** | ✅ | Playwright coverage is split by ownership: alpha shell/auth (`tests/auth.spec.ts`, `tests/dashboard-nav.spec.ts`, `tests/smoke.spec.ts`), RFQ alpha journeys (`tests/rfq-alpha-journeys.spec.ts`), adjacent projects/tasks smoke (`tests/projects-tasks-smoke.spec.ts`), adjacent settings/users smoke (`tests/settings-users-smoke.spec.ts`), and narrow live RFQ create/overview smoke (`tests/rfq-lifecycle-e2e.spec.ts`). |
 | **Routing** | ✅ | Added not-found page for undefined routes with design-system styling. |
 | **RFQ Management** | 🚧 | RFQ List + Workspace Overview done; other workspace sections are scaffolded via `/rfqs/[rfqId]/[section]`. **`/rfqs/new` and RFQ Details require `submission_deadline`** (aligned with API NOT NULL). |
-| **Vendor Management** | ✅ | Vendor master foundation delivered: top-level `/vendors` workspace, create/list/detail/status controls, generated-client hooks, and alpha nav visibility. |
+| **Vendor Management** | ✅ | Vendor master foundation plus approved-vendor RFQ selection delivered: top-level `/vendors` workspace, create/list/detail/status controls, generated-client hooks, RFQ selected-vendor panel, and alpha nav visibility. |
 | **Quote Intake** | ✅ | Quote list, detail, normalize, comparison freeze, comparison-run detail, award, and approvals screens now consume live API data when `NEXT_PUBLIC_USE_MOCKS=false`. Live quote rows preserve nullable fields, normalize confidence/blocks strictly, reject empty-string unit prices, scope normalization source lines to the active `quoteId`, and expose accessible controlled selection controls on normalization rows. Award debriefs now use user-entered draft text instead of a hard-coded template message. Mock/demo branches remain available for local seed mode. |
 | **Comparison Runs** | ✅ | `/rfqs/[rfqId]/comparison-runs` and the run detail page render live persisted run, matrix, readiness, and snapshot payloads; the snapshot banner only appears for real final runs and the retired lock/unlock controls are no longer shown in the alpha UI. |
 | **Approvals** | 🚧 | Global queue `/approvals` + detail `/approvals/[id]` call API; RFQ-scoped approval URLs now use the live pending-approval list, forward the RFQ filter to the hook, and normalize backend priority values before rendering. |
@@ -28,7 +28,7 @@
 ## Next Steps
 1.  Replace mocked RFQ list/detail data with real payload mapping (see `BACKEND_API_GAPS.md` for required fields/params).
 2.  Continue refining quote intake, comparison, award, and approval screens as the remaining beta-only controls are productized.
-3.  Implement Vendor Management and Invitation lifecycle on top of the now-live quote flow.
+3.  Complete live invitation-send controls on top of the approved-vendor selection guardrail.
 4.  Expand Playwright coverage per workflow slice.
 
 ## 2026-03-19 PR Remediation
@@ -48,6 +48,16 @@
 - Added seeded fallbacks for mock mode in quote submissions and RFQ invitations so normalizers always receive valid payloads.
 - Corrected `FetchResponseType` to use Axios-compatible `'arraybuffer'`.
 - Cleaned unused imports and fixed assertion indentation consistency in comparison run test files.
+
+## 2026-04-22 Vendor Selection And RFQ Handoff
+
+- Added live hooks for `GET/PUT /rfqs/{rfqId}/selected-vendors` with strict response normalization and query invalidation for selected vendors, invited vendors, RFQ detail, and RFQ overview after save.
+- The RFQ vendors page now includes an approved-vendor selection panel that searches the vendor master with `status=approved`, shows controlled checkbox selection, saves selected vendor IDs, and directs users to `/vendors` when no approved vendors are available.
+- The RFQ invitation roster is visually separated from the approved shortlist, and invite actions stay disabled until selected vendors exist. Inline vendor creation remains intentionally absent from the requisition/RFQ flow.
+- `tests/rfq-alpha-journeys.spec.ts` stubs approved vendor master rows and selected-vendor persistence so the browser journey exercises the approved-selection handoff before downstream quote/comparison/award screens.
+- Verification:
+  - `cd apps/atomy-q/WEB && npx vitest run src/app/'(dashboard)'/rfqs/[rfqId]/vendors/vendor-selection-panel.test.tsx src/app/'(dashboard)'/rfqs/[rfqId]/vendors/page.test.tsx` -> PASS, 4 tests.
+  - `cd apps/atomy-q/WEB && npx playwright test tests/rfq-alpha-journeys.spec.ts --grep "vendors"` -> PASS, 1 test.
 
 ## 2026-04-15 Alpha Task 1 Rectification
 
