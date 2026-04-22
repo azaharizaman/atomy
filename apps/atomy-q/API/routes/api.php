@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\V1\RecommendationController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\RfqController;
 use App\Http\Controllers\Api\V1\RfqTemplateController;
+use App\Http\Controllers\Api\V1\RequisitionVendorSelectionController;
 use App\Http\Controllers\Api\V1\RegisterCompanyController;
 use App\Http\Controllers\Api\V1\RiskComplianceController;
 use App\Http\Controllers\Api\V1\ScenarioController;
@@ -96,6 +97,9 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
             Route::post('line-items', [RfqController::class, 'storeLineItem']);
             Route::put('line-items/{itemId}', [RfqController::class, 'updateLineItem']);
             Route::delete('line-items/{itemId}', [RfqController::class, 'destroyLineItem']);
+
+            Route::get('selected-vendors', [RequisitionVendorSelectionController::class, 'index']);
+            Route::put('selected-vendors', [RequisitionVendorSelectionController::class, 'update']);
 
             // --- Section 6: Vendor Invitations (3 endpoints) ---
             Route::get('invitations', [VendorInvitationController::class, 'index']);

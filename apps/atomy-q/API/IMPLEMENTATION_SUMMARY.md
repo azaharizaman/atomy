@@ -3,7 +3,7 @@
 ## Status
 - **Phase**: Foundation complete, quote lifecycle productionized
 - **Framework**: Laravel 12 (PHP 8.3)
-- **Database**: PostgreSQL (25 tables migrated)
+- **Database**: PostgreSQL (26 tables migrated)
 - **Cache/Queue**: Redis via `REDIS_URL`
 - **Auth**: JWT (Bearer token) via `firebase/php-jwt`
 
@@ -80,6 +80,14 @@
 - Draft saves now preserve explicit nulls for nullable fields that are actually present in the request instead of falling back through `??` to old values.
 - Duplicate RFQs now create `rfq_number` and insert inside a single transaction with retry on unique-key conflicts, closing the atomicity gap between number generation and persistence.
 - Bulk-action execution now rejects preloaded record sets that do not exactly match the requested RFQ ids, preventing writes against unvalidated identifiers.
+
+## Vendor selection and RFQ handoff (2026-04-22)
+
+- `requisition_selected_vendors` persists the approved vendor shortlist for an RFQ/requisition with tenant, RFQ, vendor, selecting user, and selected-at metadata plus a tenant/RFQ/vendor uniqueness guard.
+- `GET /api/v1/rfqs/{id}/selected-vendors` returns the tenant-scoped selected vendor projection; `PUT /api/v1/rfqs/{id}/selected-vendors` replaces the shortlist atomically and requires a non-empty distinct set of same-tenant `approved` vendor IDs.
+- `POST /api/v1/rfqs/{id}/invitations` now requires `vendor_id`, derives vendor name/email from the approved vendor master, and rejects approved-but-unselected vendors with `422` so invitation creation cannot bypass requisition selection.
+- RFQ invitation reminders remain tenant-scoped through the existing lifecycle coordinator path; roster reads continue to return only real invitation rows, not synthetic selected-vendor rows.
+- Verification: `cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Feature/Api/V1/RequisitionVendorSelectionApiTest.php tests/Feature/Api/V1/RfqInvitationApiTest.php` -> PASS, 6 tests / 32 assertions.
 
 ## Alpha Task 1 rectification (2026-04-15)
 
