@@ -1,5 +1,11 @@
 # Implementation Summary
 
+## 2026-04-22 Vendor Generated Client Build Fix
+
+- Bridged a generated OpenAPI typing defect where `POST /vendors` and `PUT /vendors/{id}` were emitted with `body?: never` despite the runtime API requiring vendor payloads.
+- `use-create-vendor.ts` and `use-update-vendor.ts` now centralize vendor mutation body mapping and apply a narrow request-option cast at the SDK call boundary so the production build can type-check without changing runtime behavior.
+- Follow-up: regenerate the vendor OpenAPI contract once the backend spec exports request bodies correctly, then remove the temporary cast bridge.
+
 ## 2026-04-22 Vendor Governance Monitoring
 
 - Added `use-vendor-governance.ts` with strict live payload normalization for vendor evidence, findings, score summaries, and warning flags.
