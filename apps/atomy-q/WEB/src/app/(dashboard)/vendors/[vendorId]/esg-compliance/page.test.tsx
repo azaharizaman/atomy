@@ -61,7 +61,7 @@ describe('VendorEsgCompliancePage', () => {
           riskWatchScore: 45,
           evidenceFreshnessScore: 25,
         },
-        warningFlags: ['compliance_document_expired', 'open_severe_risk_finding'],
+        warningFlags: ['compliance_document_expired', 'open_severe_risk_finding', 'esg_review_stale'],
       },
       isLoading: false,
       isError: false,
@@ -73,7 +73,9 @@ describe('VendorEsgCompliancePage', () => {
     expect(screen.getByText('ESG / Compliance')).toBeInTheDocument();
     expect(screen.getByText('Compliance Document Expired')).toBeInTheDocument();
     expect(screen.getByText('Open Severe Risk Finding')).toBeInTheDocument();
+    expect(screen.getByText('ESG Review Stale')).toBeInTheDocument();
     expect(screen.getByText('ISO 14001 certificate')).toBeInTheDocument();
+    expect(screen.getByText('Observed Jan 1, 2025 · Expires Jan 1, 2026')).toBeInTheDocument();
     expect(screen.getByText('financial_watch')).toBeInTheDocument();
     expect(screen.getByText('55')).toBeInTheDocument();
     expect(screen.getAllByText('45')).toHaveLength(2);

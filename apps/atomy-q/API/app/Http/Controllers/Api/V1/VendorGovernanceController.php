@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
+use App\Http\Idempotency\IdempotencyCompletion;
 use App\Models\Vendor;
 use App\Models\VendorEvidence;
 use App\Models\VendorFinding;
@@ -13,6 +14,8 @@ use App\Services\VendorGovernanceScoreService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
+use Nexus\Idempotency\Contracts\IdempotencyServiceInterface;
 
 final class VendorGovernanceController extends Controller
 {
@@ -87,14 +90,16 @@ final class VendorGovernanceController extends Controller
         ]);
 
         $record = $this->evidenceQuery($tenantId, $id)
-            ->whereRaw('lower(id) = ?', [$this->normalizeIdentifier($itemId)])
+            ->where('id', $this->normalizeIdentifier($itemId))
             ->first();
         if ($record === null) {
             return response()->json(['message' => 'Due diligence item not found'], 404);
         }
 
         $record->review_status = strtolower(trim((string) $validated['review_status']));
-        $record->reviewed_by = $this->nullableString($validated['reviewed_by'] ?? null);
+        $record->reviewed_by = array_key_exists('reviewed_by', $validated)
+            ? $this->nullableString($validated['reviewed_by'])
+            : $record->reviewed_by;
         $record->notes = array_key_exists('notes', $validated) ? $this->nullableString($validated['notes']) : $record->notes;
         $record->save();
 
@@ -108,42 +113,56 @@ final class VendorGovernanceController extends Controller
         ]);
     }
 
-    public function sanctionsScreening(Request $request, string $id): JsonResponse
+    public function sanctionsScreening(
+        Request $request,
+        string $id,
+        IdempotencyServiceInterface $idempotency,
+    ): JsonResponse
     {
-        $tenantId = $this->tenantId($request);
-        $vendor = $this->findVendor($tenantId, $id);
-        if ($vendor === null) {
-            return response()->json(['message' => 'Vendor not found'], 404);
+        try {
+            $tenantId = $this->tenantId($request);
+            $vendor = $this->findVendor($tenantId, $id);
+            if ($vendor === null) {
+                return response()->json(['message' => 'Vendor not found'], 404);
+            }
+
+            $validated = $request->validate([
+                'title' => ['sometimes', 'string', 'max:255'],
+                'source' => ['sometimes', 'string', 'max:128'],
+                'notes' => ['nullable', 'string', 'max:2000'],
+            ]);
+
+            $record = VendorEvidence::query()->create([
+                'tenant_id' => $this->normalizeIdentifier($tenantId),
+                'vendor_id' => $this->normalizeIdentifier((string) $vendor->id),
+                'domain' => 'compliance',
+                'type' => 'sanctions_screening',
+                'title' => trim((string) ($validated['title'] ?? 'Manual sanctions screening')),
+                'source' => trim((string) ($validated['source'] ?? 'manual')),
+                'observed_at' => Carbon::now('UTC'),
+                'expires_at' => Carbon::now('UTC')->addMonths(6),
+                'review_status' => 'reviewed',
+                'reviewed_by' => $this->userId($request),
+                'notes' => $this->nullableString($validated['notes'] ?? null),
+            ]);
+
+            $response = response()->json([
+                'data' => [
+                    'vendor_id' => (string) $vendor->id,
+                    'screening_status' => 'completed',
+                    'matches' => [],
+                    'evidence' => $this->serializeEvidence($record),
+                ],
+            ], 201);
+
+            return IdempotencyCompletion::succeed($request, $idempotency, $response);
+        } catch (ValidationException $exception) {
+            IdempotencyCompletion::fail($request, $idempotency);
+            throw $exception;
+        } catch (\Throwable $exception) {
+            IdempotencyCompletion::fail($request, $idempotency);
+            throw $exception;
         }
-
-        $validated = $request->validate([
-            'title' => ['sometimes', 'string', 'max:255'],
-            'source' => ['sometimes', 'string', 'max:128'],
-            'notes' => ['nullable', 'string', 'max:2000'],
-        ]);
-
-        $record = VendorEvidence::query()->create([
-            'tenant_id' => $this->normalizeIdentifier($tenantId),
-            'vendor_id' => (string) $vendor->id,
-            'domain' => 'compliance',
-            'type' => 'sanctions_screening',
-            'title' => trim((string) ($validated['title'] ?? 'Manual sanctions screening')),
-            'source' => trim((string) ($validated['source'] ?? 'manual')),
-            'observed_at' => Carbon::now('UTC'),
-            'expires_at' => Carbon::now('UTC')->addMonths(6),
-            'review_status' => 'reviewed',
-            'reviewed_by' => $this->userId($request),
-            'notes' => $this->nullableString($validated['notes'] ?? null),
-        ]);
-
-        return response()->json([
-            'data' => [
-                'vendor_id' => (string) $vendor->id,
-                'screening_status' => 'completed',
-                'matches' => [],
-                'evidence' => $this->serializeEvidence($record),
-            ],
-        ], 201);
     }
 
     public function sanctionsHistory(Request $request, string $id): JsonResponse
@@ -170,23 +189,23 @@ final class VendorGovernanceController extends Controller
     private function findVendor(string $tenantId, string $vendorId): ?Vendor
     {
         return Vendor::query()
-            ->whereRaw('lower(tenant_id) = ?', [$this->normalizeIdentifier($tenantId)])
-            ->whereRaw('lower(id) = ?', [$this->normalizeIdentifier($vendorId)])
+            ->where('tenant_id', $this->normalizeIdentifier($tenantId))
+            ->where('id', $this->normalizeIdentifier($vendorId))
             ->first();
     }
 
     private function evidenceQuery(string $tenantId, string $vendorId): \Illuminate\Database\Eloquent\Builder
     {
         return VendorEvidence::query()
-            ->whereRaw('lower(tenant_id) = ?', [$this->normalizeIdentifier($tenantId)])
-            ->whereRaw('lower(vendor_id) = ?', [$this->normalizeIdentifier($vendorId)]);
+            ->where('tenant_id', $this->normalizeIdentifier($tenantId))
+            ->where('vendor_id', $this->normalizeIdentifier($vendorId));
     }
 
     private function findingQuery(string $tenantId, string $vendorId): \Illuminate\Database\Eloquent\Builder
     {
         return VendorFinding::query()
-            ->whereRaw('lower(tenant_id) = ?', [$this->normalizeIdentifier($tenantId)])
-            ->whereRaw('lower(vendor_id) = ?', [$this->normalizeIdentifier($vendorId)]);
+            ->where('tenant_id', $this->normalizeIdentifier($tenantId))
+            ->where('vendor_id', $this->normalizeIdentifier($vendorId));
     }
 
     private function serializeEvidence(VendorEvidence $record): array

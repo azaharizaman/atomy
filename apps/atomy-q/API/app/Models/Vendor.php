@@ -51,12 +51,19 @@ class Vendor extends Model
     protected static function booted(): void
     {
         static::creating(function (self $vendor): void {
+            self::normalizeIdentifier($vendor, 'id');
+            self::normalizeIdentifier($vendor, 'tenant_id');
             self::syncLegacyField($vendor, 'legal_name', ['name']);
             self::syncLegacyField($vendor, 'display_name', ['trading_name', 'name']);
             self::syncLegacyField($vendor, 'country_of_registration', ['country_code']);
             self::syncLegacyField($vendor, 'primary_contact_name', ['trading_name', 'name']);
             self::syncLegacyField($vendor, 'primary_contact_email', ['email']);
             self::syncLegacyField($vendor, 'primary_contact_phone', ['phone']);
+        });
+
+        static::saving(function (self $vendor): void {
+            self::normalizeIdentifier($vendor, 'id');
+            self::normalizeIdentifier($vendor, 'tenant_id');
         });
     }
 
@@ -92,6 +99,14 @@ class Vendor extends Model
                 $vendor->setAttribute($canonicalAttribute, $legacyValue);
                 return;
             }
+        }
+    }
+
+    private static function normalizeIdentifier(self $vendor, string $attribute): void
+    {
+        $value = self::trimmedOrNull($vendor->getAttribute($attribute));
+        if ($value !== null) {
+            $vendor->setAttribute($attribute, strtolower($value));
         }
     }
 

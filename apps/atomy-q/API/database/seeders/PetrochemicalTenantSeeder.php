@@ -373,7 +373,7 @@ final class PetrochemicalTenantSeeder extends Seeder
                 'primary_contact_name' => $contactName,
                 'primary_contact_email' => $vendor['email'],
                 'primary_contact_phone' => '+47 ' . (22000000 + $index * 137),
-                'approved_by_user_id' => $isApproved ? $this->userIds[$index % count($this->userIds)] : '',
+                'approved_by_user_id' => $isApproved ? $this->userIds[$index % count($this->userIds)] : null,
                 'approved_at' => $isApproved ? $this->now->copy()->subDays(180 - ($index % 90)) : null,
                 'approval_note' => $isApproved ? 'Seeded approval after petrochemical supplier qualification review.' : null,
                 'created_at' => $this->now,

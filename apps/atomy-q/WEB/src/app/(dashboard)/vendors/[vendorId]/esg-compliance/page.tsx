@@ -15,6 +15,19 @@ function scoreLabel(label: string, score: number) {
   );
 }
 
+function formatDisplayDate(value: string | null): string {
+  if (value === null) {
+    return 'n/a';
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return 'n/a';
+  }
+
+  return date.toLocaleDateString(undefined, { dateStyle: 'medium' });
+}
+
 export function VendorEsgCompliancePageContent({ vendorId }: { vendorId: string }) {
   const governanceQuery = useVendorGovernance(vendorId);
 
@@ -85,7 +98,7 @@ export function VendorEsgCompliancePageContent({ vendorId }: { vendorId: string 
                   {record.domain} / {record.type} / {record.source}
                 </p>
                 <p className="mt-1 text-xs text-slate-500">
-                  Observed {record.observedAt ?? 'n/a'} · Expires {record.expiresAt ?? 'n/a'}
+                  Observed {formatDisplayDate(record.observedAt)} · Expires {formatDisplayDate(record.expiresAt)}
                 </p>
               </div>
             ))}

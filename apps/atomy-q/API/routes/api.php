@@ -149,7 +149,9 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::get('{id}/governance', [VendorGovernanceController::class, 'show']);
 
         // Risk-related vendor endpoints (Section 14)
-        Route::post('{id}/sanctions-screening', [VendorGovernanceController::class, 'sanctionsScreening']);
+        Route::post('{id}/sanctions-screening', [VendorGovernanceController::class, 'sanctionsScreening'])
+            ->middleware('idempotency')
+            ->name('v1.vendors.sanctions-screening');
         Route::get('{id}/sanctions-history', [VendorGovernanceController::class, 'sanctionsHistory']);
         Route::get('{id}/due-diligence', [VendorGovernanceController::class, 'dueDiligence']);
         Route::patch('{id}/due-diligence/{itemId}', [VendorGovernanceController::class, 'updateDueDiligence']);

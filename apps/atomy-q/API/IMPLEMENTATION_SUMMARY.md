@@ -2,12 +2,12 @@
 
 ## 2026-04-22 Vendor Governance Monitoring
 
-- Added persistent `vendor_evidence` and `vendor_findings` tables plus app models for tenant-scoped ESG, compliance, and risk monitoring records.
-- Added `VendorGovernanceScoreService` to compute `esg_score`, `compliance_health_score`, `risk_watch_score`, `evidence_freshness_score`, and separate warning flags without mutating vendor eligibility or status.
-- Added `GET /api/v1/vendors/{id}/governance` and replaced vendor due-diligence/sanctions stubs with tenant-scoped evidence-backed reads/writes.
+- Added persistent `vendor_evidence` and `vendor_findings` tables plus `VendorEvidence` and `VendorFinding` app models for tenant-scoped ESG, compliance, and risk monitoring records.
+- Added `VendorGovernanceScoreService` to summarize `VendorEvidence` and `VendorFinding` records into `esg_score`, `compliance_health_score`, `risk_watch_score`, `evidence_freshness_score`, and separate warning flags without mutating vendor eligibility or status.
+- Added `GET /api/v1/vendors/{id}/governance` and replaced vendor due-diligence/sanctions stubs with tenant-scoped `VendorEvidence`/`VendorFinding` backed reads plus idempotent sanctions-screening writes.
 - Updated the petrochemical tenant seeder to create detailed vendor master rows, approved selected-vendor associations, monitoring evidence, and risk findings that support the new vendor workspace and RFQ warning surfaces.
 - Verification:
-  - `cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Unit/Services/VendorGovernanceScoreServiceTest.php tests/Feature/Api/V1/VendorGovernanceApiTest.php` -> PASS (6 tests, 33 assertions).
+  - `cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Unit/Services/VendorGovernanceScoreServiceTest.php tests/Feature/Api/V1/VendorGovernanceApiTest.php` -> PASS (7 tests, 38 assertions).
 
 ## 2026-04-22 Vendor Recommendation API
 
@@ -22,7 +22,7 @@
 ## Status
 - **Phase**: Foundation complete, quote lifecycle productionized
 - **Framework**: Laravel 12 (PHP 8.3)
-- **Database**: PostgreSQL (26 tables migrated)
+- **Database**: PostgreSQL (28 tables migrated, including `vendor_evidence` and `vendor_findings`)
 - **Cache/Queue**: Redis via `REDIS_URL`
 - **Auth**: JWT (Bearer token) via `firebase/php-jwt`
 

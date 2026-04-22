@@ -54,7 +54,7 @@ return new class extends Migration
         $table->string('primary_contact_name')->default('');
         $table->string('primary_contact_email')->default('');
         $table->string('primary_contact_phone')->default('');
-        $table->string('approved_by_user_id')->default('');
+        $table->string('approved_by_user_id')->nullable();
         $table->timestamp('approved_at')->nullable();
         $table->text('approval_note')->nullable();
         $table->timestamps();
@@ -84,7 +84,7 @@ return new class extends Migration
             $table->string('primary_contact_phone')->default('');
         });
         $this->addColumnIfMissing($table, 'approved_by_user_id', static function (Blueprint $table): void {
-            $table->string('approved_by_user_id')->default('');
+            $table->string('approved_by_user_id')->nullable();
         });
         $this->addColumnIfMissing($table, 'approved_at', static function (Blueprint $table): void {
             $table->timestamp('approved_at')->nullable();

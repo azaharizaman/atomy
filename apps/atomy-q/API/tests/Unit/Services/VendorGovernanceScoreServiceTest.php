@@ -66,9 +66,10 @@ final class VendorGovernanceScoreServiceTest extends TestCase
             ],
         ], $now);
 
-        $this->assertLessThan(100, $summary['scores']['compliance_health_score']);
-        $this->assertLessThan(100, $summary['scores']['risk_watch_score']);
-        $this->assertLessThan(100, $summary['scores']['evidence_freshness_score']);
+        $this->assertEquals(55, $summary['scores']['esg_score']);
+        $this->assertEquals(45, $summary['scores']['compliance_health_score']);
+        $this->assertEquals(45, $summary['scores']['risk_watch_score']);
+        $this->assertEquals(25, $summary['scores']['evidence_freshness_score']);
         $this->assertContains('esg_review_stale', $summary['warning_flags']);
         $this->assertContains('sanctions_check_due', $summary['warning_flags']);
         $this->assertContains('compliance_document_expired', $summary['warning_flags']);

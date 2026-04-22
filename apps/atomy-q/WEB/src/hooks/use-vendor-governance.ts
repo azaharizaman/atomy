@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { isObject, toText } from '@/hooks/normalize-utils';
@@ -49,6 +48,8 @@ export interface VendorGovernanceSummary {
 }
 
 export type VendorGovernanceMap = Map<string, VendorGovernanceSummary>;
+
+const GOVERNANCE_WARNING_ACRONYMS = new Set(['esg']);
 
 function pickField(item: Record<string, unknown>, ...keys: string[]): unknown {
   for (const key of keys) {
@@ -169,7 +170,14 @@ function normalizeFinding(row: unknown, index: number): VendorGovernanceFinding 
 export function formatVendorGovernanceWarning(flag: string): string {
   return flag
     .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .map((part) => {
+      const normalized = part.toLowerCase();
+      if (GOVERNANCE_WARNING_ACRONYMS.has(normalized)) {
+        return normalized.toUpperCase();
+      }
+
+      return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+    })
     .join(' ');
 }
 
@@ -242,21 +250,19 @@ export function useVendorGovernanceMap(vendorIds: string[]) {
     })),
   });
 
-  return React.useMemo(() => {
-    const data: VendorGovernanceMap = new Map();
-    let isLoading = false;
-    let isError = false;
-    let error: unknown = null;
+  const data: VendorGovernanceMap = new Map();
+  let isLoading = false;
+  let isError = false;
+  let error: unknown = null;
 
-    results.forEach((result, index) => {
-      isLoading = isLoading || result.isLoading;
-      isError = isError || result.isError;
-      error ??= result.error;
-      if (result.data) {
-        data.set(uniqueVendorIds[index], result.data);
-      }
-    });
+  results.forEach((result, index) => {
+    isLoading = isLoading || result.isLoading;
+    isError = isError || result.isError;
+    error ??= result.error;
+    if (result.data) {
+      data.set(uniqueVendorIds[index], result.data);
+    }
+  });
 
-    return { data, isLoading, isError, error };
-  }, [results, uniqueVendorIds]);
+  return { data, isLoading, isError, error };
 }

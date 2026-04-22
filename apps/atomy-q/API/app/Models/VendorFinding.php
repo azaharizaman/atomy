@@ -37,4 +37,21 @@ final class VendorFinding extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $record): void {
+            self::normalizeIdentifier($record, 'id');
+            self::normalizeIdentifier($record, 'tenant_id');
+            self::normalizeIdentifier($record, 'vendor_id');
+        });
+    }
+
+    private static function normalizeIdentifier(self $record, string $attribute): void
+    {
+        $value = trim((string) $record->getAttribute($attribute));
+        if ($value !== '') {
+            $record->setAttribute($attribute, strtolower($value));
+        }
+    }
 }

@@ -105,7 +105,7 @@ final class VendorRepositoryTest extends TestCase
             'primary_contact_name' => 'API Created',
             'primary_contact_email' => 'api-created@example.com',
             'primary_contact_phone' => '',
-            'approved_by_user_id' => '',
+            'approved_by_user_id' => null,
             'approved_at' => null,
             'approval_note' => null,
             'created_at' => now(),
@@ -331,7 +331,7 @@ final class VendorRepositoryTest extends TestCase
         $this->assertSame(1, $columns['country_of_registration']->notnull);
         $this->assertSame(1, $columns['primary_contact_name']->notnull);
         $this->assertSame(1, $columns['primary_contact_email']->notnull);
-        $this->assertSame(1, $columns['approved_by_user_id']->notnull);
+        $this->assertSame(0, $columns['approved_by_user_id']->notnull);
         $this->assertSame(0, $columns['approved_at']->notnull);
         $this->assertSame(0, $columns['approval_note']->notnull);
     }
@@ -365,7 +365,7 @@ final class VendorRepositoryTest extends TestCase
             'primary_contact_name' => '',
             'primary_contact_email' => '',
             'primary_contact_phone' => '',
-            'approved_by_user_id' => '',
+            'approved_by_user_id' => null,
             'approved_at' => null,
             'approval_note' => null,
             'created_at' => now(),

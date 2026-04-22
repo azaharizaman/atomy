@@ -18,6 +18,12 @@ final class VendorGovernanceApiTest extends ApiTestCase
 {
     use RefreshDatabase;
 
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
+    }
+
     public function createApplication(): \Illuminate\Foundation\Application
     {
         $app = parent::createApplication();
@@ -68,7 +74,6 @@ final class VendorGovernanceApiTest extends ApiTestCase
         $response->assertJsonPath('data.summary_scores.evidence_freshness_score', 25);
         $this->assertContains('compliance_document_expired', $response->json('data.warning_flags'));
         $this->assertContains('open_severe_risk_finding', $response->json('data.warning_flags'));
-        Carbon::setTestNow();
     }
 
     public function testGovernanceCrossTenantAccessReturnsNotFound(): void
@@ -131,7 +136,42 @@ final class VendorGovernanceApiTest extends ApiTestCase
         $history = $this->getJson('/api/v1/vendors/' . $vendor->id . '/sanctions-history', $this->authHeaders($tenantId, (string) $user->id));
         $history->assertOk();
         $history->assertJsonPath('data.history.0.title', 'April sanctions screening');
-        Carbon::setTestNow();
+    }
+
+    public function testSanctionsScreeningReplaysForSameIdempotencyKey(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-04-22T00:00:00Z'));
+        $tenantId = (string) Str::ulid();
+        $user = $this->createUser($tenantId);
+        $vendor = $this->createVendor($tenantId);
+        $headers = array_merge(
+            $this->authHeaders($tenantId, (string) $user->id),
+            ['Idempotency-Key' => 'vendor-governance-screening-key'],
+        );
+
+        $first = $this->postJson('/api/v1/vendors/' . $vendor->id . '/sanctions-screening', [
+            'title' => 'April sanctions screening',
+            'source' => 'manual-review',
+        ], $headers);
+        $second = $this->postJson('/api/v1/vendors/' . $vendor->id . '/sanctions-screening', [
+            'title' => 'April sanctions screening',
+            'source' => 'manual-review',
+        ], $headers);
+
+        $first->assertCreated();
+        $second->assertCreated();
+        $this->assertSame(
+            $first->json('data.evidence.id'),
+            $second->json('data.evidence.id'),
+        );
+        $this->assertSame(
+            1,
+            VendorEvidence::query()
+                ->where('tenant_id', strtolower($tenantId))
+                ->where('vendor_id', strtolower((string) $vendor->id))
+                ->where('type', 'sanctions_screening')
+                ->count(),
+        );
     }
 
     /**
