@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Http\Idempotency\IdempotencyCompletion;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
+use App\Http\Idempotency\IdempotencyCompletion;
 use App\Models\RequisitionSelectedVendor;
 use App\Models\Rfq;
 use App\Models\Vendor;
@@ -128,7 +128,7 @@ final class VendorInvitationController extends Controller
         }
 
         $selectedVendor = RequisitionSelectedVendor::query()
-            ->where('tenant_id', $rfq->tenant_id)
+            ->where('tenant_id', $tenantId)
             ->where('rfq_id', $rfq->id)
             ->where('vendor_id', $vendor->id)
             ->first();
@@ -147,6 +147,17 @@ final class VendorInvitationController extends Controller
         $vendorEmail = $this->vendorEmail($vendor);
         $vendorName = $this->vendorName($vendor);
 
+        if ($vendorEmail === null || $vendorName === null) {
+            IdempotencyCompletion::fail($request, $idempotency);
+
+            return response()->json([
+                'message' => 'Vendor is missing contact details required for invitation.',
+                'errors' => [
+                    'vendor_id' => ['Vendor is missing a contact email or name.'],
+                ],
+            ], 422);
+        }
+
         $inv = new VendorInvitation();
         $inv->tenant_id = $tenantId;
         $inv->rfq_id = $rfq->id;
@@ -154,7 +165,7 @@ final class VendorInvitationController extends Controller
         $inv->vendor_email = $vendorEmail;
         $inv->vendor_name = $vendorName;
         $inv->status = 'pending';
-        $inv->invited_at = now();
+        $inv->invited_at = now('UTC');
         $inv->channel = $validator->validated()['channel'] ?? 'email';
         $inv->save();
 
@@ -240,8 +251,8 @@ final class VendorInvitationController extends Controller
     private function findVendor(string $tenantId, string $vendorId): ?Vendor
     {
         return Vendor::query()
-            ->whereRaw('lower(tenant_id) = ?', [$this->normalizeIdentifier($tenantId)])
-            ->whereRaw('lower(id) = ?', [$this->normalizeIdentifier($vendorId)])
+            ->where('tenant_id', $tenantId)
+            ->where('id', $this->normalizeIdentifier($vendorId))
             ->first();
     }
 

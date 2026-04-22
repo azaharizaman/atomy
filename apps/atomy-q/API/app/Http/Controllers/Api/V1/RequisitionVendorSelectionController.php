@@ -14,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Nexus\Vendor\Enums\VendorStatus;
 
 final class RequisitionVendorSelectionController extends Controller
@@ -30,7 +31,7 @@ final class RequisitionVendorSelectionController extends Controller
         }
 
         $selections = RequisitionSelectedVendor::query()
-            ->where('tenant_id', $rfq->tenant_id)
+            ->where('tenant_id', $tenantId)
             ->where('rfq_id', $rfq->id)
             ->with(['vendor'])
             ->orderBy('selected_at')
@@ -60,7 +61,7 @@ final class RequisitionVendorSelectionController extends Controller
         $vendorIds = array_values(array_map('strval', $validated['vendor_ids']));
 
         $vendors = Vendor::query()
-            ->whereRaw('lower(tenant_id) = ?', [$this->normalizeIdentifier((string) $rfq->tenant_id)])
+            ->where('tenant_id', $tenantId)
             ->whereIn('id', $vendorIds)
             ->get()
             ->keyBy(fn (Vendor $vendor): string => (string) $vendor->id);
@@ -79,24 +80,33 @@ final class RequisitionVendorSelectionController extends Controller
             ], 422);
         }
 
-        $rows = DB::transaction(function () use ($rfq, $vendorIds, $request, $vendors): Collection {
+        $rows = DB::transaction(function () use ($rfq, $tenantId, $vendorIds, $request, $vendors): Collection {
             RequisitionSelectedVendor::query()
-                ->where('tenant_id', $rfq->tenant_id)
+                ->where('tenant_id', $tenantId)
                 ->where('rfq_id', $rfq->id)
                 ->delete();
 
-            $selections = new Collection();
-
-            foreach ($vendorIds as $vendorId) {
-                $selection = RequisitionSelectedVendor::query()->create([
-                    'tenant_id' => $rfq->tenant_id,
+            $now = now('UTC');
+            $userId = $this->userId($request);
+            $payload = array_map(
+                static fn (string $vendorId): array => [
+                    'id' => (string) Str::ulid(),
+                    'tenant_id' => $tenantId,
                     'rfq_id' => $rfq->id,
                     'vendor_id' => $vendorId,
-                    'selected_by_user_id' => $this->userId($request),
-                    'selected_at' => now(),
-                ]);
+                    'selected_by_user_id' => $userId,
+                    'selected_at' => $now,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ],
+                $vendorIds,
+            );
 
-                $selection->setRelation('vendor', $vendors->get($vendorId));
+            RequisitionSelectedVendor::query()->insert($payload);
+
+            $selections = new Collection();
+            foreach (RequisitionSelectedVendor::hydrate($payload) as $selection) {
+                $selection->setRelation('vendor', $vendors->get((string) $selection->vendor_id));
                 $selections->push($selection);
             }
 
@@ -153,7 +163,7 @@ final class RequisitionVendorSelectionController extends Controller
             'vendor_email' => $this->vendorEmail($vendor),
             'status' => $vendor !== null ? (string) $vendor->status : null,
             'selected_at' => $selection->selected_at?->toAtomString(),
-            'selected_by_user_id' => (string) $selection->selected_by_user_id,
+            'selected_by_user_id' => $selection->selected_by_user_id !== null ? (string) $selection->selected_by_user_id : null,
         ];
     }
 

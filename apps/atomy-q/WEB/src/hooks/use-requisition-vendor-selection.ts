@@ -55,13 +55,17 @@ function normalizeSelectionRow(row: unknown, index: number): RequisitionVendorSe
 
   const context = `Invalid selected vendor row at index ${index}`;
   const vendorDisplayNameValue = pickField(row, 'vendor_display_name', 'vendorDisplayName', 'display_name', 'displayName');
+  const vendorNameValue = pickField(row, 'vendor_name', 'vendorName');
   const vendorEmailValue = pickField(row, 'vendor_email', 'vendorEmail', 'email');
 
   return {
     id: requireText(pickField(row, 'id'), 'id', context),
     rfqId: requireText(pickField(row, 'rfq_id', 'rfqId'), 'rfq_id', context),
     vendorId: requireText(pickField(row, 'vendor_id', 'vendorId'), 'vendor_id', context),
-    vendorName: requireText(pickField(row, 'vendor_name', 'vendorName'), 'vendor_name', context),
+    vendorName:
+      normalizeNullableText(vendorNameValue, 'vendor_name', context) ??
+      normalizeNullableText(vendorDisplayNameValue, 'vendor_display_name', context) ??
+      '',
     vendorDisplayName: normalizeNullableText(vendorDisplayNameValue, 'vendor_display_name', context),
     vendorEmail: normalizeNullableText(vendorEmailValue, 'vendor_email', context),
     status: requireText(pickField(row, 'status'), 'status', context),
@@ -84,15 +88,12 @@ export function normalizeRequisitionVendorSelectionPayload(payload: unknown): Re
 }
 
 export function useRequisitionVendorSelection(rfqId: string) {
+  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
+
   return useQuery({
     queryKey: ['rfqs', rfqId, 'selected-vendors'],
-    enabled: Boolean(rfqId),
+    enabled: !useMocks && Boolean(rfqId),
     queryFn: async (): Promise<RequisitionVendorSelectionRow[]> => {
-      const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-      if (useMocks) {
-        return [];
-      }
-
       const data = await fetchLiveOrFail<unknown>(
         `/rfqs/${encodeURIComponent(rfqId)}/selected-vendors`,
       );

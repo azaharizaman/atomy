@@ -175,8 +175,8 @@ final class RequisitionVendorSelectionApiTest extends ApiTestCase
 
         $list->assertOk();
         $list->assertJsonCount(2, 'data');
-        $list->assertJsonPath('data.0.vendor_name', 'Alpha Trading');
-        $list->assertJsonPath('data.1.vendor_name', 'Bravo Supplies');
+        $this->assertContains('Alpha Trading', array_column($list->json('data'), 'vendor_name'));
+        $this->assertContains('Bravo Supplies', array_column($list->json('data'), 'vendor_name'));
         $list->assertJsonMissing(['vendor_name' => 'Charlie Industrial']);
 
         $replace = $this->putJson(

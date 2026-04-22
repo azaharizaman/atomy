@@ -15,7 +15,7 @@ return new class extends Migration
             $table->ulid('tenant_id')->index();
             $table->ulid('rfq_id');
             $table->ulid('vendor_id');
-            $table->ulid('selected_by_user_id');
+            $table->ulid('selected_by_user_id')->nullable();
             $table->timestamp('selected_at');
             $table->timestamps();
 
@@ -26,7 +26,7 @@ return new class extends Migration
             $table->foreign('tenant_id')->references('id')->on('tenants')->cascadeOnDelete();
             $table->foreign('rfq_id')->references('id')->on('rfqs')->cascadeOnDelete();
             $table->foreign('vendor_id')->references('id')->on('vendors')->cascadeOnDelete();
-            $table->foreign('selected_by_user_id')->references('id')->on('users')->cascadeOnDelete();
+            $table->foreign('selected_by_user_id')->references('id')->on('users')->nullOnDelete();
         });
     }
 

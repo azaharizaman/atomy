@@ -78,7 +78,7 @@ describe('RfqVendorSelectionPanel', () => {
           vendorName: 'Alpha Procurement',
           vendorDisplayName: 'Alpha Procurement',
           vendorEmail: 'alicia@example.com',
-          status: 'selected',
+          status: 'approved',
           selectedAt: '2026-04-22T10:00:00Z',
           selectedByUserId: 'user-1',
         },

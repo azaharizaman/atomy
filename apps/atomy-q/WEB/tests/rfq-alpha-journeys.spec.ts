@@ -122,7 +122,7 @@ async function routeAlphaRfqApi(page: Page) {
       vendor_name: 'Alpha Vendor Holdings',
       vendor_display_name: 'Alpha Vendor',
       vendor_email: 'alpha.vendor@atomy.test',
-      status: 'selected',
+      status: 'approved',
       selected_at: '2026-04-16T10:30:00Z',
       selected_by_user_id: alphaMockUser.id,
     },
@@ -215,7 +215,7 @@ async function routeAlphaRfqApi(page: Page) {
           vendor_name: vendor.name,
           vendor_display_name: vendor.display_name,
           vendor_email: vendor.email,
-          status: 'selected',
+          status: vendor.status,
           selected_at: '2026-04-16T11:00:00Z',
           selected_by_user_id: alphaMockUser.id,
         }));

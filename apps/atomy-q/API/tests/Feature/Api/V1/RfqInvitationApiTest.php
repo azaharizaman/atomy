@@ -167,4 +167,37 @@ final class RfqInvitationApiTest extends ApiTestCase
 
         $response->assertUnprocessable();
     }
+
+    public function testItRejectsSelectedVendorsWithoutInvitationContactDetails(): void
+    {
+        $tenantId = (string) Str::ulid();
+        $user = $this->createUser($tenantId);
+        $rfq = $this->createRfq($user);
+        $vendor = $this->createVendor($tenantId, [
+            'display_name' => '',
+            'legal_name' => '',
+            'name' => '',
+            'primary_contact_email' => '',
+            'email' => '',
+        ]);
+
+        $this->putJson(
+            '/api/v1/rfqs/' . $rfq->id . '/selected-vendors',
+            [
+                'vendor_ids' => [(string) $vendor->id],
+            ],
+            $this->authHeaders($tenantId, (string) $user->id, 'selection-key-contact'),
+        )->assertOk();
+
+        $response = $this->postJson(
+            '/api/v1/rfqs/' . $rfq->id . '/invitations',
+            [
+                'vendor_id' => (string) $vendor->id,
+            ],
+            $this->authHeaders($tenantId, (string) $user->id, 'invite-key-contact'),
+        );
+
+        $response->assertUnprocessable();
+        $response->assertJsonPath('errors.vendor_id.0', 'Vendor is missing a contact email or name.');
+    }
 }

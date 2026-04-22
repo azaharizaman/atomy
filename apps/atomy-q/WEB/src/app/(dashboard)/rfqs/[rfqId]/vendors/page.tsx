@@ -7,6 +7,7 @@ import { StatusBadge } from '@/components/ds/Badge';
 import { Button } from '@/components/ds/Button';
 import { EmptyState, SectionCard } from '@/components/ds/Card';
 import { PageHeader } from '@/components/ds/FilterBar';
+import { useInviteSelectedVendors } from '@/hooks/use-invite-selected-vendors';
 import { useRequisitionVendorSelection } from '@/hooks/use-requisition-vendor-selection';
 import { useRfq } from '@/hooks/use-rfq';
 import { useRfqVendors } from '@/hooks/use-rfq-vendors';
@@ -57,8 +58,12 @@ export function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
   };
 
   const saveSelection = async () => {
-    await updateSelection.mutateAsync({ vendor_ids: Array.from(draftSelected) });
-    setIsDirty(false);
+    try {
+      await updateSelection.mutateAsync({ vendor_ids: Array.from(draftSelected) });
+      setIsDirty(false);
+    } catch {
+      // Error state is exposed by the mutation; keep the draft intact for retry.
+    }
   };
 
   const isLoading = vendorsQuery.isLoading || selectedQuery.isLoading;
@@ -149,6 +154,9 @@ export function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
             {updateSelection.error instanceof Error ? updateSelection.error.message : 'Vendor selection could not be saved.'}
           </p>
         ) : null}
+        {draftSelected.size === 0 ? (
+          <p className="text-sm text-slate-500">At least one approved vendor is required before the selection can be saved.</p>
+        ) : null}
       </div>
     </SectionCard>
   );
@@ -158,12 +166,32 @@ export function RfqVendorsPageContent({ rfqId }: { rfqId: string }) {
   const rfqQuery = useRfq(rfqId);
   const vendorsQuery = useRfqVendors(rfqId);
   const selectedQuery = useRequisitionVendorSelection(rfqId);
+  const inviteSelected = useInviteSelectedVendors(rfqId);
   const rfq = rfqQuery.data;
-  const vendors = vendorsQuery.data ?? [];
-  const selectedVendors = selectedQuery.data ?? [];
+  const vendors = React.useMemo(() => vendorsQuery.data ?? [], [vendorsQuery.data]);
+  const selectedVendors = React.useMemo(() => selectedQuery.data ?? [], [selectedQuery.data]);
   const isLoading = vendorsQuery.isLoading;
-  const inviteDisabled = selectedQuery.isError || selectedVendors.length === 0;
+  const invitedVendorIds = React.useMemo(
+    () => new Set(vendors.map((vendor) => vendor.vendor_id).filter((vendorId): vendorId is string => vendorId !== null)),
+    [vendors],
+  );
+  const pendingInviteVendorIds = React.useMemo(
+    () => selectedVendors.map((vendor) => vendor.vendorId).filter((vendorId) => !invitedVendorIds.has(vendorId)),
+    [invitedVendorIds, selectedVendors],
+  );
+  const inviteDisabled = selectedQuery.isError || pendingInviteVendorIds.length === 0;
   const selectedSubtitle = selectedQuery.isLoading ? 'Loading...' : `${selectedVendors.length} ready for invitation`;
+  const inviteSelectedVendors = async () => {
+    if (inviteDisabled) {
+      return;
+    }
+
+    try {
+      await inviteSelected.mutateAsync({ vendorIds: pendingInviteVendorIds });
+    } catch {
+      // Error state is rendered below; keep the action available for retry.
+    }
+  };
 
   const breadcrumbItems = [
     { label: 'RFQs', href: '/rfqs' },
@@ -214,14 +242,27 @@ export function RfqVendorsPageContent({ rfqId }: { rfqId: string }) {
         title="Invited vendors"
         subtitle="Selected approved vendors, invitation state, and quick outreach actions"
         actions={
-          <Button size="sm" variant="outline" disabled={inviteDisabled}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={inviteSelectedVendors}
+            loading={inviteSelected.isPending}
+            disabled={inviteDisabled}
+          >
             <Mail size={14} className="mr-1.5" />
             Invite vendors
           </Button>
         }
       />
       {inviteDisabled ? (
-        <p className="text-sm text-slate-500">Select approved vendors to enable invitations.</p>
+        <p className="text-sm text-slate-500">
+          {selectedVendors.length === 0 ? 'Select approved vendors to enable invitations.' : 'All selected vendors have been invited.'}
+        </p>
+      ) : null}
+      {inviteSelected.isError ? (
+        <p className="text-sm text-red-600">
+          {inviteSelected.error instanceof Error ? inviteSelected.error.message : 'Selected vendors could not be invited.'}
+        </p>
       ) : null}
       <RfqVendorSelectionPanel rfqId={rfqId} />
       <SectionCard title="Selected approved vendors" subtitle={selectedSubtitle}>
@@ -269,7 +310,16 @@ export function RfqVendorsPageContent({ rfqId }: { rfqId: string }) {
             icon={<Users size={20} />}
             title="No vendors invited yet"
             description="Invitations are sent only to approved vendors confirmed in the selection list."
-            action={<Button size="sm" disabled={inviteDisabled}>Invite vendors</Button>}
+            action={
+              <Button
+                size="sm"
+                onClick={inviteSelectedVendors}
+                loading={inviteSelected.isPending}
+                disabled={inviteDisabled}
+              >
+                Invite vendors
+              </Button>
+            }
           />
         ) : (
           <div className="space-y-3">

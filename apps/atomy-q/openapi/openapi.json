@@ -17745,14 +17745,14 @@
                                                         ]
                                                     },
                                                     "selected_at": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ],
+                                                        "type": "string",
                                                         "format": "date-time"
                                                     },
                                                     "selected_by_user_id": {
-                                                        "type": "string"
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     }
                                                 },
                                                 "required": [
@@ -17825,7 +17825,8 @@
                                         "maxItems": 100,
                                         "uniqueItems": true,
                                         "items": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "maxLength": 26
                                         }
                                     }
                                 },
@@ -17883,14 +17884,14 @@
                                                         ]
                                                     },
                                                     "selected_at": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ],
+                                                        "type": "string",
                                                         "format": "date-time"
                                                     },
                                                     "selected_by_user_id": {
-                                                        "type": "string"
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ]
                                                     }
                                                 },
                                                 "required": [

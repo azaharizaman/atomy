@@ -1,11 +1,12 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import { fireEvent, screen, waitFor } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
 
 const mockUseRfqVendors = vi.fn();
 const mockUseVendors = vi.fn();
 const mockUseRequisitionVendorSelection = vi.fn();
 const mockUseUpdateRequisitionVendorSelection = vi.fn();
+const mockUseInviteSelectedVendors = vi.fn();
 
 beforeAll(() => {
   process.env.NEXT_PUBLIC_USE_MOCKS = 'false';
@@ -36,6 +37,10 @@ vi.mock('@/hooks/use-update-requisition-vendor-selection', () => ({
   useUpdateRequisitionVendorSelection: (...args: unknown[]) => mockUseUpdateRequisitionVendorSelection(...args),
 }));
 
+vi.mock('@/hooks/use-invite-selected-vendors', () => ({
+  useInviteSelectedVendors: (...args: unknown[]) => mockUseInviteSelectedVendors(...args),
+}));
+
 import { RfqVendorsPageContent } from './page';
 
 describe('RfqVendorsPage', () => {
@@ -54,6 +59,12 @@ describe('RfqVendorsPage', () => {
       error: null,
     });
     mockUseUpdateRequisitionVendorSelection.mockReturnValue({
+      mutateAsync: vi.fn(),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+    mockUseInviteSelectedVendors.mockReturnValue({
       mutateAsync: vi.fn(),
       isPending: false,
       isError: false,
@@ -99,5 +110,58 @@ describe('RfqVendorsPage', () => {
     expect(await screen.findByRole('button', { name: /invite vendors/i })).toBeDisabled();
     expect(await screen.findByText(/select approved vendors to enable invitations/i)).toBeInTheDocument();
     expect(await screen.findByText(/alpha vendor/i)).toBeInTheDocument();
+  });
+
+  it('invites selected vendors that are not already in the RFQ invitation roster', async () => {
+    const inviteMutation = vi.fn().mockResolvedValue(undefined);
+    mockUseInviteSelectedVendors.mockReturnValue({
+      mutateAsync: inviteMutation,
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+    mockUseRequisitionVendorSelection.mockReturnValue({
+      data: [
+        {
+          id: 'sel-1',
+          rfqId: 'rfq-1',
+          vendorId: 'vendor-1',
+          vendorName: 'Alpha Vendor',
+          vendorDisplayName: 'Alpha Vendor',
+          vendorEmail: 'alpha@example.com',
+          status: 'approved',
+          selectedAt: '2026-04-22T10:00:00Z',
+          selectedByUserId: 'user-1',
+        },
+        {
+          id: 'sel-2',
+          rfqId: 'rfq-1',
+          vendorId: 'vendor-2',
+          vendorName: 'Beta Vendor',
+          vendorDisplayName: 'Beta Vendor',
+          vendorEmail: 'beta@example.com',
+          status: 'approved',
+          selectedAt: '2026-04-22T10:00:00Z',
+          selectedByUserId: 'user-1',
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    mockUseRfqVendors.mockReturnValue({
+      data: [
+        { id: 'inv-1', vendor_id: 'vendor-1', name: 'Alpha Vendor', status: 'invited', contact: 'alpha@example.com' },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    renderWithProviders(<RfqVendorsPageContent rfqId="rfq-1" />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /invite vendors/i }));
+
+    await waitFor(() => expect(inviteMutation).toHaveBeenCalledWith({ vendorIds: ['vendor-2'] }));
   });
 });

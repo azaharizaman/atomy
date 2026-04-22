@@ -160,15 +160,15 @@ All **203 endpoints** from `API_ENDPOINTS.md` are registered. The quote lifecycl
 - `nexus/laravel-tenant-adapter`
 - `nexus/laravel-setting-adapter`
 
-## Database Tables (25)
+## Database Tables (26)
 
-`users`, `rfqs`, `rfq_line_items`, `rfq_templates`, `vendor_invitations`, `quote_submissions`, `normalization_source_lines`, `normalization_conflicts`, `comparison_runs`, `scoring_models`, `scoring_policies`, `scenarios`, `approvals`, `approval_history`, `negotiation_rounds`, `awards`, `handoffs`, `decision_trail_entries`, `evidence_bundles`, `report_schedules`, `report_runs`, `integrations`, `integration_jobs`, `notifications`, `risk_items`
+`users`, `rfqs`, `rfq_line_items`, `rfq_templates`, `vendor_invitations`, `requisition_selected_vendors`, `quote_submissions`, `normalization_source_lines`, `normalization_conflicts`, `comparison_runs`, `scoring_models`, `scoring_policies`, `scenarios`, `approvals`, `approval_history`, `negotiation_rounds`, `awards`, `handoffs`, `decision_trail_entries`, `evidence_bundles`, `report_schedules`, `report_runs`, `integrations`, `integration_jobs`, `notifications`, `risk_items`
 
 All tables include `tenant_id` (indexed) for multi-tenant isolation.
 
-## Eloquent Models (26)
+## Eloquent Models (27)
 
-One model per table plus a `Tenant` model. All use ULID primary keys via `HasUlids` trait.
+One model per table plus a `Tenant` model, including `RequisitionSelectedVendor` for approved-vendor RFQ selection. All use ULID primary keys via `HasUlids` trait.
 
 ## Configuration
 
