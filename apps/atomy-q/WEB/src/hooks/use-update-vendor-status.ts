@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { vendorUpdateStatus } from '@/generated/api/sdk.gen';
+import { vendorStatusUpdate } from '@/generated/api/sdk.gen';
 import {
   extractResponseErrorMessage,
   normalizeVendorResponse,
@@ -16,7 +16,7 @@ async function invokeVendorStatusUpdate(vendorId: string, input: VendorStatusUpd
   const token = useAuthStore.getState().token;
 
   try {
-    const response = await vendorUpdateStatus({
+    const response = await vendorStatusUpdate({
       path: { id: vendorId },
       body: {
         status: input.status,

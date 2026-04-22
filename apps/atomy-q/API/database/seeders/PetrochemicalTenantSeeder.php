@@ -27,7 +27,7 @@ final class PetrochemicalTenantSeeder extends Seeder
     /** @var list<string> */
     private array $projectIds = [];
 
-    /** @var list<array{id: string, name: string, risky: bool}> */
+    /** @var list<array{id: string, name: string, risky: bool, status: string, category: string, capabilities: list<string>, regions: list<string>, email: string}> */
     private array $vendorPool = [];
 
     private string $tenantId = '';
@@ -64,6 +64,7 @@ final class PetrochemicalTenantSeeder extends Seeder
         $this->seedProjectsAndAcl();
         $this->seedScoringAndTemplates();
         $this->buildVendorPool();
+        $this->seedVendorMasterAndGovernance();
 
         /** @var list<array<string, mixed>> $rfqRows */
         $rfqRows = [];
@@ -286,13 +287,202 @@ final class PetrochemicalTenantSeeder extends Seeder
             ['Discount MRO Express', true],
             ['Shell fictive Contractor Nordic A/S', false],
         ];
-        foreach ($defs as [$name, $risky]) {
+        $categories = ['Rotating equipment', 'Instrumentation', 'Valves & piping', 'Electrical & automation', 'Turnaround services', 'Chemicals & consumables'];
+        $capabilitySets = [
+            ['API 610 pumps', 'seal support systems', 'turnaround response'],
+            ['control valves', 'SIL verification', 'field calibration'],
+            ['heat transfer', 'process filtration', 'skid fabrication'],
+            ['combustion systems', 'burner management', 'ATEX field service'],
+            ['catalyst supply', 'reactor internals', 'technical service'],
+            ['inspection services', 'NDT', 'rope access'],
+        ];
+        $regionSets = [
+            ['NO', 'SE', 'DK'],
+            ['NO', 'GB', 'NL'],
+            ['NO', 'DE', 'BE'],
+            ['NO', 'MY', 'SG'],
+        ];
+
+        foreach ($defs as $index => [$name, $risky]) {
+            $status = match (true) {
+                $risky && $index % 3 === 0 => 'restricted',
+                $risky && $index % 3 === 1 => 'under_review',
+                $risky => 'suspended',
+                default => 'approved',
+            };
+            $emailLocalPart = strtolower((string) preg_replace('/[^a-z0-9]+/i', '.', $name));
             $this->vendorPool[] = [
                 'id' => (string) Str::ulid(),
                 'name' => $name,
                 'risky' => $risky,
+                'status' => $status,
+                'category' => $categories[$index % count($categories)],
+                'capabilities' => $capabilitySets[$index % count($capabilitySets)],
+                'regions' => $regionSets[$index % count($regionSets)],
+                'email' => trim($emailLocalPart, '.') . '@vendor.test',
             ];
         }
+    }
+
+    private function seedVendorMasterAndGovernance(): void
+    {
+        foreach ($this->vendorPool as $index => $vendor) {
+            $isApproved = $vendor['status'] === 'approved';
+            $contactName = $this->vendorContactName($index);
+            $metadata = [
+                'primary_category' => $vendor['category'],
+                'secondary_categories' => array_values(array_unique([
+                    $vendor['category'],
+                    $index % 2 === 0 ? 'Reliability engineering' : 'Petrochemical services',
+                ])),
+                'capability_tags' => $vendor['capabilities'],
+                'operating_regions' => $vendor['regions'],
+                'strategic_tier' => $index % 5 === 0 ? 'strategic' : ($index % 3 === 0 ? 'preferred' : 'standard'),
+                'risk_tier' => $vendor['risky'] ? 'watchlist' : ($index % 4 === 0 ? 'medium' : 'low'),
+                'esg_maturity_band' => $vendor['risky'] ? 'developing' : ($index % 4 === 0 ? 'managed' : 'advanced'),
+                'preferred_vendor' => ! $vendor['risky'] && $index % 4 === 0,
+                'supported_delivery_modes' => $index % 2 === 0 ? ['onsite', 'regional'] : ['remote', 'onsite'],
+                'compliance_status' => $vendor['risky'] ? 'review_required' : 'compliant',
+                'kyc_verified' => ! $vendor['risky'],
+                'sanctions_screened' => true,
+                'compliance_last_checked_at' => $this->now->copy()->subDays($vendor['risky'] ? 210 : 30 + ($index % 45))->toAtomString(),
+                'performance_summary' => [
+                    'participation_rate' => round(0.58 + self::hash($index + 41) * 0.34, 2),
+                    'quote_response_rate' => round(0.62 + self::hash($index + 43) * 0.30, 2),
+                    'award_conversion_rate' => round(0.08 + self::hash($index + 47) * 0.24, 2),
+                    'last_active_at' => $this->now->copy()->subDays(8 + ($index * 11) % 140)->toAtomString(),
+                ],
+            ];
+
+            DB::table('vendors')->insert([
+                'id' => $vendor['id'],
+                'tenant_id' => $this->tenantId,
+                'name' => $vendor['name'],
+                'trading_name' => $vendor['name'],
+                'registration_number' => 'NO-' . str_pad((string) (730000 + $index), 6, '0', STR_PAD_LEFT),
+                'tax_id' => 'MVA-' . str_pad((string) (930000 + $index), 6, '0', STR_PAD_LEFT),
+                'country_code' => $vendor['regions'][0],
+                'email' => $vendor['email'],
+                'phone' => '+47 ' . (22000000 + $index * 137),
+                'status' => $vendor['status'],
+                'onboarded_at' => $this->now->copy()->subDays(420 - ($index % 240)),
+                'metadata' => json_encode($metadata, JSON_THROW_ON_ERROR),
+                'legal_name' => $vendor['name'],
+                'display_name' => $vendor['name'],
+                'country_of_registration' => $vendor['regions'][0],
+                'primary_contact_name' => $contactName,
+                'primary_contact_email' => $vendor['email'],
+                'primary_contact_phone' => '+47 ' . (22000000 + $index * 137),
+                'approved_by_user_id' => $isApproved ? $this->userIds[$index % count($this->userIds)] : null,
+                'approved_at' => $isApproved ? $this->now->copy()->subDays(180 - ($index % 90)) : null,
+                'approval_note' => $isApproved ? 'Seeded approval after petrochemical supplier qualification review.' : null,
+                'created_at' => $this->now,
+                'updated_at' => $this->now,
+            ]);
+
+            $this->seedVendorEvidenceRows($vendor, $index);
+            if ($vendor['risky']) {
+                $this->seedVendorFindingRows($vendor, $index);
+            }
+        }
+    }
+
+    /**
+     * @param array{id: string, name: string, risky: bool, status: string, category: string, capabilities: list<string>, regions: list<string>, email: string} $vendor
+     */
+    private function seedVendorEvidenceRows(array $vendor, int $index): void
+    {
+        $baseRows = [
+            [
+                'domain' => 'compliance',
+                'type' => 'sanctions_screening',
+                'title' => 'Sanctions screening — ' . $vendor['name'],
+                'source' => 'Dow Jones manual export',
+                'observed_at' => $this->now->copy()->subDays($vendor['risky'] ? 210 : 35 + ($index % 35)),
+                'expires_at' => $this->now->copy()->addDays($vendor['risky'] ? -15 : 145),
+                'review_status' => $vendor['risky'] ? 'pending' : 'reviewed',
+                'reviewed_by' => $vendor['risky'] ? null : $this->userIds[$index % count($this->userIds)],
+                'notes' => $vendor['risky']
+                    ? 'Potential beneficial ownership similarity requires secondary compliance review.'
+                    : 'No sanctions or politically exposed person matches in latest manual screening.',
+            ],
+            [
+                'domain' => 'esg',
+                'type' => 'sustainability_disclosure',
+                'title' => 'Supplier sustainability disclosure — ' . $vendor['category'],
+                'source' => 'Supplier questionnaire',
+                'observed_at' => $this->now->copy()->subDays($vendor['risky'] ? 430 : 80 + ($index % 80)),
+                'expires_at' => $this->now->copy()->addDays($vendor['risky'] ? 30 : 260),
+                'review_status' => $vendor['risky'] ? 'pending' : 'reviewed',
+                'reviewed_by' => $vendor['risky'] ? null : $this->userIds[($index + 1) % count($this->userIds)],
+                'notes' => $vendor['risky']
+                    ? 'Disclosure is stale and misses Scope 3 emissions evidence for the petrochemical services category.'
+                    : 'Disclosure includes energy intensity, HSE incident rate, and waste-handling commitments.',
+            ],
+            [
+                'domain' => 'compliance',
+                'type' => 'due_diligence',
+                'title' => 'Beneficial ownership and anti-bribery due diligence',
+                'source' => 'Procurement compliance checklist',
+                'observed_at' => $this->now->copy()->subDays(25 + ($index % 60)),
+                'expires_at' => $this->now->copy()->addDays($vendor['risky'] ? 45 : 300),
+                'review_status' => $vendor['risky'] ? 'pending' : 'reviewed',
+                'reviewed_by' => $vendor['risky'] ? null : $this->userIds[($index + 2) % count($this->userIds)],
+                'notes' => $vendor['risky']
+                    ? 'Enhanced due diligence is in progress due to limited Nordic project references.'
+                    : 'Ownership, anti-bribery, and HSE policy evidence reviewed for petrochemical procurement.',
+            ],
+        ];
+
+        foreach ($baseRows as $row) {
+            DB::table('vendor_evidence')->insert([
+                'id' => (string) Str::ulid(),
+                'tenant_id' => $this->tenantId,
+                'vendor_id' => $vendor['id'],
+                ...$row,
+                'created_at' => $this->now,
+                'updated_at' => $this->now,
+            ]);
+        }
+    }
+
+    /**
+     * @param array{id: string, name: string, risky: bool, status: string, category: string, capabilities: list<string>, regions: list<string>, email: string} $vendor
+     */
+    private function seedVendorFindingRows(array $vendor, int $index): void
+    {
+        DB::table('vendor_findings')->insert([
+            'id' => (string) Str::ulid(),
+            'tenant_id' => $this->tenantId,
+            'vendor_id' => $vendor['id'],
+            'domain' => 'risk',
+            'issue_type' => $index % 2 === 0 ? 'financial_watch' : 'reference_gap',
+            'severity' => $index % 2 === 0 ? 'high' : 'medium',
+            'status' => 'open',
+            'opened_at' => $this->now->copy()->subDays(18 + ($index % 20)),
+            'opened_by' => $this->userIds[$index % count($this->userIds)],
+            'remediation_owner' => $this->userIds[($index + 1) % count($this->userIds)],
+            'remediation_due_at' => $this->now->copy()->addDays($index % 2 === 0 ? -3 : 21),
+            'resolution_summary' => null,
+            'created_at' => $this->now,
+            'updated_at' => $this->now,
+        ]);
+    }
+
+    private function vendorContactName(int $index): string
+    {
+        $names = [
+            'Ingrid Solheim',
+            'Marius Dahl',
+            'Kari Lund',
+            'Sofie Berg',
+            'Anders Haugen',
+            'Liv Johansen',
+            'Erik Nilsen',
+            'Nora Vik',
+        ];
+
+        return $names[$index % count($names)];
     }
 
     /**
@@ -529,12 +719,24 @@ final class PetrochemicalTenantSeeder extends Seeder
             $invitationIds[] = $invId;
             $hasQuote = $v < $quoteTarget;
             $invitationMeta[$invId] = $vend;
+            if ($vend['status'] === 'approved') {
+                DB::table('requisition_selected_vendors')->insertOrIgnore([
+                    'id' => (string) Str::ulid(),
+                    'tenant_id' => $this->tenantId,
+                    'rfq_id' => $rfqId,
+                    'vendor_id' => $vend['id'],
+                    'selected_by_user_id' => $ctx['owner_id'],
+                    'selected_at' => $this->now->copy()->subDays(1 + ($v % 4)),
+                    'created_at' => $this->now,
+                    'updated_at' => $this->now,
+                ]);
+            }
             DB::table('vendor_invitations')->insert([
                 'id' => $invId,
                 'tenant_id' => $this->tenantId,
                 'rfq_id' => $rfqId,
                 'vendor_id' => $vend['id'],
-                'vendor_email' => strtolower(preg_replace('/[^a-z0-9]+/i', '.', $vend['name'])) . '@vendor.test',
+                'vendor_email' => $vend['email'],
                 'vendor_name' => $vend['name'],
                 'status' => $hasQuote ? 'accepted' : 'pending',
                 'invited_at' => $this->now,

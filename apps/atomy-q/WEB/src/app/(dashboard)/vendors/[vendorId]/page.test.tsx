@@ -6,12 +6,21 @@ import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from '@/test/utils';
 
 const mockUseVendor = vi.fn();
+const mockUseVendorGovernance = vi.fn();
 const mockUseUpdateVendor = vi.fn();
 const mockUseUpdateVendorStatus = vi.fn();
 
 vi.mock('@/hooks/use-vendor', () => ({
   useVendor: (...args: unknown[]) => mockUseVendor(...args),
 }));
+
+vi.mock('@/hooks/use-vendor-governance', async () => {
+  const actual = await vi.importActual<typeof import('@/hooks/use-vendor-governance')>('@/hooks/use-vendor-governance');
+  return {
+    ...actual,
+    useVendorGovernance: (...args: unknown[]) => mockUseVendorGovernance(...args),
+  };
+});
 
 vi.mock('@/hooks/use-update-vendor-status', () => ({
   useUpdateVendorStatus: (...args: unknown[]) => mockUseUpdateVendorStatus(...args),
@@ -50,6 +59,23 @@ describe('VendorDetailPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseVendorGovernance.mockReturnValue({
+      data: {
+        vendorId: 'ven-1',
+        evidence: [],
+        findings: [],
+        scores: {
+          esgScore: 100,
+          complianceHealthScore: 100,
+          riskWatchScore: 100,
+          evidenceFreshnessScore: 100,
+        },
+        warningFlags: [],
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
   });
 
   it('renders approval metadata and status controls for an approved vendor', () => {
@@ -73,6 +99,40 @@ describe('VendorDetailPage', () => {
     expect(screen.getByRole('button', { name: /restrict/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /suspend/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /archive/i })).toBeInTheDocument();
+  });
+
+  it('renders governance warning chips on the overview', () => {
+    mockUseVendor.mockReturnValue({
+      data: baseVendor,
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    mockUseVendorGovernance.mockReturnValue({
+      data: {
+        vendorId: 'ven-1',
+        evidence: [],
+        findings: [],
+        scores: {
+          esgScore: 65,
+          complianceHealthScore: 50,
+          riskWatchScore: 45,
+          evidenceFreshnessScore: 40,
+        },
+        warningFlags: ['compliance_document_expired', 'open_severe_risk_finding'],
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    mockUseUpdateVendor.mockReturnValue({ mutate: vi.fn(), isPending: false, isError: false, error: null });
+    mockUseUpdateVendorStatus.mockReturnValue({ mutate: vi.fn(), isPending: false, isError: false, error: null });
+
+    renderWithProviders(<VendorDetailPageContent vendorId="ven-1" />);
+
+    expect(screen.getByText('Compliance Document Expired')).toBeInTheDocument();
+    expect(screen.getByText('Open Severe Risk Finding')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /review/i })).toHaveAttribute('href', '/vendors/ven-1/esg-compliance');
   });
 
   it('renders under-review transition for draft vendor', () => {

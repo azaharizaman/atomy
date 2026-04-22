@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\V1\SearchController;
 use App\Http\Controllers\Api\V1\SettingController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\VendorController;
+use App\Http\Controllers\Api\V1\VendorGovernanceController;
 use App\Http\Controllers\Api\V1\VendorRecommendationController;
 use App\Http\Controllers\Api\V1\VendorStatusController;
 use App\Http\Controllers\Api\V1\VendorInvitationController;
@@ -145,12 +146,15 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::get('{id}/performance', [VendorController::class, 'performance']);
         Route::get('{id}/compliance', [VendorController::class, 'compliance']);
         Route::get('{id}/history', [VendorController::class, 'history']);
+        Route::get('{id}/governance', [VendorGovernanceController::class, 'show']);
 
         // Risk-related vendor endpoints (Section 14)
-        Route::post('{id}/sanctions-screening', [RiskComplianceController::class, 'sanctionsScreening']);
-        Route::get('{id}/sanctions-history', [RiskComplianceController::class, 'sanctionsHistory']);
-        Route::get('{id}/due-diligence', [RiskComplianceController::class, 'dueDiligence']);
-        Route::patch('{id}/due-diligence/{itemId}', [RiskComplianceController::class, 'updateDueDiligence']);
+        Route::post('{id}/sanctions-screening', [VendorGovernanceController::class, 'sanctionsScreening'])
+            ->middleware('idempotency')
+            ->name('v1.vendors.sanctions-screening');
+        Route::get('{id}/sanctions-history', [VendorGovernanceController::class, 'sanctionsHistory']);
+        Route::get('{id}/due-diligence', [VendorGovernanceController::class, 'dueDiligence']);
+        Route::patch('{id}/due-diligence/{itemId}', [VendorGovernanceController::class, 'updateDueDiligence']);
     });
 
     // --- Section 7: Quote Intake (7 endpoints) ---

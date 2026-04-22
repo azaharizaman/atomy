@@ -1,12 +1,14 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ds/Button';
 import { PageHeader } from '@/components/ds/FilterBar';
 import { SectionCard } from '@/components/ds/Card';
 import { StatusBadge } from '@/components/ds/Badge';
 import { TextInput } from '@/components/ds/Input';
 import { useVendor } from '@/hooks/use-vendor';
+import { formatVendorGovernanceWarning, useVendorGovernance } from '@/hooks/use-vendor-governance';
 import { useUpdateVendor } from '@/hooks/use-update-vendor';
 import { useUpdateVendorStatus } from '@/hooks/use-update-vendor-status';
 import type { VendorStatusValue } from '@/hooks/use-vendors';
@@ -53,6 +55,7 @@ function getBadgeVariant(status: VendorStatusValue) {
 
 export function VendorDetailPageContent({ vendorId }: { vendorId: string }) {
   const vendorQuery = useVendor(vendorId);
+  const governanceQuery = useVendorGovernance(vendorId);
   const updateVendorMutation = useUpdateVendor(vendorId);
   const statusMutation = useUpdateVendorStatus(vendorId);
 
@@ -167,6 +170,39 @@ export function VendorDetailPageContent({ vendorId }: { vendorId: string }) {
           <p><span className="text-slate-500">Primary phone:</span> {vendor.primaryContactPhone ?? '—'}</p>
           <p><span className="text-slate-500">Current status:</span> {formatVendorStatus(vendor.status)}</p>
         </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Governance monitoring"
+        subtitle="Advisory ESG, compliance, and risk signals"
+        actions={
+          <Link
+            href={`/vendors/${encodeURIComponent(vendorId)}/esg-compliance`}
+            className="inline-flex h-7 items-center justify-center rounded border border-slate-300 bg-white px-3 text-xs font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Review
+          </Link>
+        }
+      >
+        {governanceQuery.isLoading ? (
+          <p className="text-sm text-slate-500">Loading governance summary...</p>
+        ) : governanceQuery.isError ? (
+          <p className="text-sm text-red-600">
+            {governanceQuery.error instanceof Error
+              ? governanceQuery.error.message
+              : 'Vendor governance summary could not be loaded.'}
+          </p>
+        ) : governanceQuery.data && governanceQuery.data.warningFlags.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {governanceQuery.data.warningFlags.map((flag) => (
+              <span key={flag} className="rounded border border-amber-200 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800">
+                {formatVendorGovernanceWarning(flag)}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-slate-500">No governance warnings recorded.</p>
+        )}
       </SectionCard>
 
       {isEditing ? (

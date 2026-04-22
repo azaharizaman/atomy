@@ -6,6 +6,7 @@ import { renderWithProviders } from '@/test/utils';
 const mockUseVendors = vi.fn();
 const mockUseRequisitionVendorSelection = vi.fn();
 const mockUseUpdateRequisitionVendorSelection = vi.fn();
+const mockUseVendorGovernanceMap = vi.fn();
 const mockUseVendorRecommendations = vi.fn();
 
 vi.mock('@/hooks/use-vendors', () => ({
@@ -19,6 +20,14 @@ vi.mock('@/hooks/use-requisition-vendor-selection', () => ({
 vi.mock('@/hooks/use-update-requisition-vendor-selection', () => ({
   useUpdateRequisitionVendorSelection: (...args: unknown[]) => mockUseUpdateRequisitionVendorSelection(...args),
 }));
+
+vi.mock('@/hooks/use-vendor-governance', async () => {
+  const actual = await vi.importActual<typeof import('@/hooks/use-vendor-governance')>('@/hooks/use-vendor-governance');
+  return {
+    ...actual,
+    useVendorGovernanceMap: (...args: unknown[]) => mockUseVendorGovernanceMap(...args),
+  };
+});
 
 vi.mock('@/hooks/use-vendor-recommendations', () => ({
   useVendorRecommendations: (...args: unknown[]) => mockUseVendorRecommendations(...args),
@@ -104,6 +113,12 @@ describe('RfqVendorSelectionPanel', () => {
       isError: false,
       error: null,
     });
+    mockUseVendorGovernanceMap.mockReturnValue({
+      data: new Map(),
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
   });
 
   it('lists approved vendors only, keeps selected state, and saves selected ids', async () => {
@@ -171,5 +186,57 @@ describe('RfqVendorSelectionPanel', () => {
 
     expect(screen.getByText(/no approved vendors available/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /browse vendors/i })).toHaveAttribute('href', '/vendors');
+  });
+
+  it('surfaces stale governance evidence warnings without blocking selection', async () => {
+    const saveMutation = vi.fn().mockResolvedValue(undefined);
+    mockUseUpdateRequisitionVendorSelection.mockReturnValue({
+      mutateAsync: saveMutation,
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+    mockUseVendors.mockReturnValue({
+      data: {
+        items: [approvedVendor],
+        meta: { currentPage: 1, perPage: 25, total: 1, totalPages: 1 },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    mockUseVendorGovernanceMap.mockReturnValue({
+      data: new Map([
+        [
+          'vendor-1',
+          {
+            vendorId: 'vendor-1',
+            evidence: [],
+            findings: [],
+            scores: {
+              esgScore: 65,
+              complianceHealthScore: 55,
+              riskWatchScore: 100,
+              evidenceFreshnessScore: 40,
+            },
+            warningFlags: ['stale_evidence'],
+          },
+        ],
+      ]),
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    renderWithProviders(<RfqVendorSelectionPanel rfqId="rfq-1" />);
+
+    expect(screen.getByText('Stale Evidence')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /save selection/i }));
+
+    await waitFor(() =>
+      expect(saveMutation).toHaveBeenCalledWith({
+        vendor_ids: ['vendor-1'],
+      }),
+    );
   });
 });
