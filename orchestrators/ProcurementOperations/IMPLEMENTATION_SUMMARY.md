@@ -14,12 +14,14 @@
 - The LLM contract receives scoped tenant-local context only, filtered to tenant-specific data and separate from numerical score bounds, and cannot mutate eligibility, vendor master data, or persisted selection.
 - Follow-up: if future providers use a non-0-100 score range, adjust `VendorRecommendationCoordinator::MAX_LLM_SCORE_DELTA` proportionally and document the new range.
 - Verification:
+
   ```bash
   ./vendor/bin/phpunit \
     orchestrators/ProcurementOperations/tests/Unit/Services/DeterministicVendorScorerTest.php \
     orchestrators/ProcurementOperations/tests/Unit/Coordinators/VendorRecommendationCoordinatorTest.php
   ```
-  Result: PASS (8 tests, 18 assertions).
+
+  Result: PASS (9 tests, 20 assertions).
 
 ## 2026-04-13 - Tenant-scoped contract corrections for goods receipt and vendor bills
 

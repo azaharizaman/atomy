@@ -10,6 +10,8 @@ use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationRe
 final readonly class NullVendorRecommendationLlm implements VendorRecommendationLlmInterface
 {
     /**
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
+     *
      * @param list<\Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationScoredCandidate> $candidates
      *
      * @return array<string, array<string, mixed>>

@@ -14,6 +14,7 @@ use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationCa
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationRequest;
 use Nexus\ProcurementOperations\Services\DeterministicVendorScorer;
 use Nexus\ProcurementOperations\Services\NullVendorRecommendationLlm;
+use Nexus\ProcurementOperations\Tests\Support\FixedRecommendationClock;
 
 #[CoversClass(VendorRecommendationCoordinator::class)]
 final class VendorRecommendationCoordinatorTest extends TestCase
@@ -134,13 +135,5 @@ final readonly class FakeVendorRecommendationLlm implements VendorRecommendation
     public function enrich(VendorRecommendationRequest $request, array $candidates): array
     {
         return $this->enrichments;
-    }
-}
-
-final readonly class FixedRecommendationClock implements \Nexus\Common\Contracts\ClockInterface
-{
-    public function now(): \DateTimeImmutable
-    {
-        return new \DateTimeImmutable('2026-04-22T00:00:00Z');
     }
 }

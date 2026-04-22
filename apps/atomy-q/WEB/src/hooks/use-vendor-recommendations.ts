@@ -145,7 +145,7 @@ async function fetchVendorRecommendations(rfqId: string): Promise<VendorRecommen
   const idempotencyKey =
     typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
       ? crypto.randomUUID()
-      : `vendor-recommendations-${rfqId}-${Date.now()}`;
+      : `vendor-recommendations-${rfqId}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   const response = await api.post(
     `/rfqs/${encodeURIComponent(rfqId)}/vendor-recommendations`,
     {},

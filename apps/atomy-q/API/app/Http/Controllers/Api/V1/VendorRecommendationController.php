@@ -49,6 +49,7 @@ final class VendorRecommendationController extends Controller
 
         $vendors = Vendor::query()
             ->whereRaw('lower(tenant_id) = ?', [$this->normalizeIdentifier($tenantId)])
+            ->orderByRaw("CASE WHEN lower(status) = 'approved' THEN 0 ELSE 1 END")
             ->orderBy('display_name')
             ->orderBy('id')
             ->limit($candidateLimit)
@@ -71,7 +72,7 @@ final class VendorRecommendationController extends Controller
         $result = $coordinator->recommend($recommendationRequest);
         $candidateStatusById = $vendors->mapWithKeys(
             static fn (Vendor $vendor): array => [(string) $vendor->id => strtolower(trim((string) $vendor->status))],
-        );
+        )->all();
 
         return response()->json([
             'data' => [
@@ -83,12 +84,30 @@ final class VendorRecommendationController extends Controller
                 ),
                 'excluded_reasons' => array_map(
                     static fn (array $reason): array => array_merge($reason, [
-                        'status' => isset($reason['vendor_id']) ? ($candidateStatusById[$reason['vendor_id']] ?? null) : null,
+                        'status' => self::excludedReasonStatus($reason, $candidateStatusById),
                     ]),
                     $result->excludedReasons,
                 ),
             ],
         ]);
+    }
+
+    /**
+     * @param array<string, mixed> $reason
+     * @param array<string, string> $candidateStatusById
+     */
+    private static function excludedReasonStatus(array $reason, array $candidateStatusById): string
+    {
+        if (!array_key_exists('vendor_id', $reason)) {
+            return 'no_vendor_id';
+        }
+
+        $vendorId = trim((string) $reason['vendor_id']);
+        if ($vendorId === '') {
+            return 'no_vendor_id';
+        }
+
+        return $candidateStatusById[$vendorId] ?? 'unknown_vendor';
     }
 
     private function findRfq(string $tenantId, string $rfqId): ?Rfq

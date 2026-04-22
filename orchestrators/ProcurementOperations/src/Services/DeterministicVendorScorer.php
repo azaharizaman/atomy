@@ -193,6 +193,11 @@ final readonly class DeterministicVendorScorer implements VendorScorerInterface
 
     private function daysSince(DateTimeImmutable $date): int
     {
-        return (int) $date->diff($this->clock->now())->format('%a');
+        $now = $this->clock->now();
+        if ($date > $now) {
+            return PHP_INT_MAX;
+        }
+
+        return (int) $date->diff($now)->format('%a');
     }
 }

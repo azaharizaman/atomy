@@ -43,7 +43,7 @@ final readonly class VendorRecommendationCoordinator implements VendorRecommenda
         usort(
             $candidates,
             static fn (VendorRecommendationScoredCandidate $a, VendorRecommendationScoredCandidate $b): int =>
-                $b->fitScore <=> $a->fitScore ?: strcmp($a->vendorName, $b->vendorName),
+                ($b->fitScore <=> $a->fitScore) ?: strcmp($a->vendorName, $b->vendorName),
         );
 
         return new VendorRecommendationResult(

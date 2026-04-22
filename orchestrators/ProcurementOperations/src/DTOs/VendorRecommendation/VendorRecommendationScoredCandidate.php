@@ -25,6 +25,13 @@ final readonly class VendorRecommendationScoredCandidate
         public array $warningFlags = [],
         public array $warnings = [],
     ) {
+        if ($fitScore < 0 || $fitScore > 100) {
+            throw new InvalidVendorRecommendation(sprintf(
+                'fitScore %d is outside the supported 0-100 range.',
+                $fitScore,
+            ));
+        }
+
         $expectedConfidenceBand = self::confidenceBandFor($fitScore);
         if ($confidenceBand !== $expectedConfidenceBand) {
             throw new InvalidVendorRecommendation(sprintf(

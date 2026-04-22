@@ -18210,22 +18210,7 @@
                         }
                     },
                     "422": {
-                        "description": "Validation failed",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "errors": {
-                                            "$ref": "#/components/schemas/MessageBag"
-                                        }
-                                    },
-                                    "required": [
-                                        "errors"
-                                    ]
-                                }
-                            }
-                        }
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }

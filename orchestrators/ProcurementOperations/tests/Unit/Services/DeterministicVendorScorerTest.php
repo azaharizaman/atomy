@@ -8,10 +8,10 @@ use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Nexus\Common\Contracts\ClockInterface;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationCandidate;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationRequest;
 use Nexus\ProcurementOperations\Services\DeterministicVendorScorer;
+use Nexus\ProcurementOperations\Tests\Support\FixedRecommendationClock;
 
 #[CoversClass(DeterministicVendorScorer::class)]
 final class DeterministicVendorScorerTest extends TestCase
@@ -152,12 +152,31 @@ final class DeterministicVendorScorerTest extends TestCase
             ],
         ], $result->excludedReasons);
     }
-}
 
-final readonly class FixedRecommendationClock implements ClockInterface
-{
-    public function now(): DateTimeImmutable
+    #[Test]
+    public function futureActivityDoesNotReceiveRecentActivityBoost(): void
     {
-        return new DateTimeImmutable('2026-04-22T00:00:00Z');
+        $result = (new DeterministicVendorScorer(new FixedRecommendationClock()))->score(new VendorRecommendationRequest(
+            tenantId: 'tenant-1',
+            rfqId: 'rfq-1',
+            categories: ['it-services'],
+            description: 'Managed service support',
+            geography: 'MY',
+            spendBand: 'medium',
+            lineItemSummary: ['managed service'],
+            candidates: [
+                new VendorRecommendationCandidate(
+                    vendorId: 'future',
+                    vendorName: 'Future Vendor',
+                    status: 'approved',
+                    categories: ['it-services'],
+                    regions: ['MY'],
+                    lastActiveAt: new DateTimeImmutable('2026-05-01T00:00:00Z'),
+                ),
+            ],
+        ));
+
+        $this->assertNotContains('Recent activity within 90 days.', $result->candidates[0]->deterministicReasons);
+        $this->assertContains('sparse_historical_signal', $result->candidates[0]->warningFlags);
     }
 }

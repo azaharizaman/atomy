@@ -6849,10 +6849,19 @@ export type VendorRecommendationStoreErrors = {
         message: 'RFQ not found';
     };
     /**
-     * Validation failed
+     * Validation error
      */
     422: {
-        errors: MessageBag;
+        /**
+         * Errors overview.
+         */
+        message: string;
+        /**
+         * A detailed description of each field that failed validation.
+         */
+        errors: {
+            [key: string]: Array<string>;
+        };
     };
 };
 
