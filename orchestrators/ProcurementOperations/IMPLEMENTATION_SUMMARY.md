@@ -1,5 +1,28 @@
 # ProcurementOperations Implementation Summary
 
+## 2026-04-22 - Vendor Recommendation Engine
+
+- Added framework-agnostic vendor recommendation DTOs under `DTOs/VendorRecommendation` for requisition context, candidate records, scored candidates, and recommendation results.
+- Added `DeterministicVendorScorer`, which enforces approved-only eligibility before scoring and produces explainable fit scores from category overlap, capability/narrative signals, geography, spend band, historical activity, and preferred-vendor metadata.
+- Added `VendorRecommendationCoordinatorInterface` plus `VendorRecommendationCoordinator` and `VendorRecommendationLlmInterface`; LLM enrichment is optional and bounded to +/- 10 score points on the 0-100 score domain, so a baseline score of 72 can become at most 82 or 62. The coordinator clamps adjusted scores to [0,100], so 5 minus 10 becomes 0 and 95 plus 10 becomes 100. The coordinator enforces that cap and cannot introduce unknown or ineligible vendors.
+- Added `NullVendorRecommendationLlm` as the alpha default so deterministic recommendations work without an LLM provider.
+
+### Security/architecture impact
+
+- Recommendation DTOs carry tenant context (`tenantId`) and candidate records are supplied by the tenant-scoped upstream API adapter before scoring.
+- The deterministic scorer excludes non-approved vendors before scoring; tenant isolation remains the adapter/query responsibility, while the coordinator rejects LLM enrichment for vendors outside the deterministic eligible set.
+- The LLM contract receives scoped tenant-local context only, filtered to tenant-specific data and separate from numerical score bounds, and cannot mutate eligibility, vendor master data, or persisted selection.
+- Follow-up: if future providers use a non-0-100 score range, adjust `VendorRecommendationCoordinator::MAX_LLM_SCORE_DELTA` proportionally and document the new range.
+- Verification:
+
+  ```bash
+  ./vendor/bin/phpunit \
+    orchestrators/ProcurementOperations/tests/Unit/Services/DeterministicVendorScorerTest.php \
+    orchestrators/ProcurementOperations/tests/Unit/Coordinators/VendorRecommendationCoordinatorTest.php
+  ```
+
+  Result: PASS (9 tests, 20 assertions).
+
 ## 2026-04-13 - Tenant-scoped contract corrections for goods receipt and vendor bills
 
 ### Problem addressed

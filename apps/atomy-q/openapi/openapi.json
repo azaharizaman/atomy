@@ -17955,6 +17955,266 @@
                 }
             }
         },
+        "/rfqs/{rfqId}/vendor-recommendations": {
+            "post": {
+                "operationId": "vendorRecommendation.store",
+                "tags": [
+                    "VendorRecommendation"
+                ],
+                "parameters": [
+                    {
+                        "name": "rfqId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "categories": {
+                                        "type": "array",
+                                        "minItems": 1,
+                                        "maxItems": 20,
+                                        "items": {
+                                            "type": "string",
+                                            "maxLength": 128
+                                        }
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "maxLength": 2000
+                                    },
+                                    "geography": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 64
+                                    },
+                                    "spend_band": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 64
+                                    },
+                                    "line_item_summary": {
+                                        "type": "array",
+                                        "maxItems": 100,
+                                        "items": {
+                                            "type": "string",
+                                            "maxLength": 500
+                                        }
+                                    },
+                                    "candidate_limit": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 500
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Vendor recommendations retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "tenant_id": {
+                                                    "type": "string"
+                                                },
+                                                "rfq_id": {
+                                                    "type": "string"
+                                                },
+                                                "candidates": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "vendor_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "vendor_name": {
+                                                                "type": "string"
+                                                            },
+                                                            "fit_score": {
+                                                                "type": "integer",
+                                                                "minimum": 0,
+                                                                "maximum": 100
+                                                            },
+                                                            "confidence_band": {
+                                                                "type": "string",
+                                                                "enum": [
+                                                                    "low",
+                                                                    "medium",
+                                                                    "high"
+                                                                ]
+                                                            },
+                                                            "recommended_reason_summary": {
+                                                                "type": "string"
+                                                            },
+                                                            "deterministic_reasons": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "llm_insights": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "warning_flags": {
+                                                                "description": "Machine-readable warning identifiers used for filtering, analytics, and programmatic handling.",
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "warnings": {
+                                                                "description": "Human-readable warning messages shown to users when reviewing recommendation explanations.",
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "string"
+                                                                }
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "vendor_id",
+                                                            "vendor_name",
+                                                            "fit_score",
+                                                            "confidence_band",
+                                                            "recommended_reason_summary",
+                                                            "deterministic_reasons",
+                                                            "llm_insights",
+                                                            "warning_flags",
+                                                            "warnings"
+                                                        ]
+                                                    }
+                                                },
+                                                "excluded_reasons": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "vendor_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "vendor_name": {
+                                                                "type": "string"
+                                                            },
+                                                            "reason": {
+                                                                "type": "string"
+                                                            },
+                                                            "status": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "vendor_id",
+                                                            "vendor_name",
+                                                            "reason",
+                                                            "status"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "tenant_id",
+                                                "rfq_id",
+                                                "candidates",
+                                                "excluded_reasons"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Unauthorized"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Forbidden"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "RFQ not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "const": "RFQ not found"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
         "/rfqs/{rfqId}/invitations": {
             "get": {
                 "operationId": "vendorInvitation.index",

@@ -6,6 +6,7 @@ import { renderWithProviders } from '@/test/utils';
 const mockUseVendors = vi.fn();
 const mockUseRequisitionVendorSelection = vi.fn();
 const mockUseUpdateRequisitionVendorSelection = vi.fn();
+const mockUseVendorRecommendations = vi.fn();
 
 vi.mock('@/hooks/use-vendors', () => ({
   useVendors: (...args: unknown[]) => mockUseVendors(...args),
@@ -17,6 +18,10 @@ vi.mock('@/hooks/use-requisition-vendor-selection', () => ({
 
 vi.mock('@/hooks/use-update-requisition-vendor-selection', () => ({
   useUpdateRequisitionVendorSelection: (...args: unknown[]) => mockUseUpdateRequisitionVendorSelection(...args),
+}));
+
+vi.mock('@/hooks/use-vendor-recommendations', () => ({
+  useVendorRecommendations: (...args: unknown[]) => mockUseVendorRecommendations(...args),
 }));
 
 import { RfqVendorSelectionPanel } from './page';
@@ -90,6 +95,12 @@ describe('RfqVendorSelectionPanel', () => {
     mockUseUpdateRequisitionVendorSelection.mockReturnValue({
       mutateAsync: vi.fn().mockResolvedValue(undefined),
       isPending: false,
+      isError: false,
+      error: null,
+    });
+    mockUseVendorRecommendations.mockReturnValue({
+      data: { candidates: [], excludedReasons: [] },
+      isLoading: false,
       isError: false,
       error: null,
     });

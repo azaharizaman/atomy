@@ -1,5 +1,14 @@
 # Implementation Summary
 
+## 2026-04-22 Vendor Recommendation Shortlist Prefill
+
+- Added `use-vendor-recommendations.ts` with strict live payload normalization for ranked candidates, deterministic reasons, LLM insights, warning flags, and excluded reasons.
+- The RFQ vendors selection panel now loads vendor recommendations and preselects the draft shortlist when no saved selection exists.
+- Recommended vendors are marked with a `Recommended` badge and an explanation control showing reason summary, deterministic/LLM rationale, and warnings.
+- Users remain in control: they can remove a recommended vendor, add another approved vendor, and only persist the final shortlist through the existing selected-vendors mutation.
+- Verification:
+  - `cd apps/atomy-q/WEB && npx vitest run src/app/'(dashboard)'/rfqs/[rfqId]/vendors/vendor-recommendations.test.tsx src/app/'(dashboard)'/rfqs/[rfqId]/vendors/vendor-selection-panel.test.tsx src/app/'(dashboard)'/rfqs/[rfqId]/vendors/page.test.tsx` -> PASS (6 tests).
+
 ## Implementation Status
 
 | Feature | Status | Notes |

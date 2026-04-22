@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\V1\SearchController;
 use App\Http\Controllers\Api\V1\SettingController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\VendorController;
+use App\Http\Controllers\Api\V1\VendorRecommendationController;
 use App\Http\Controllers\Api\V1\VendorStatusController;
 use App\Http\Controllers\Api\V1\VendorInvitationController;
 use App\Http\Controllers\Api\V1\ProjectController;
@@ -100,6 +101,9 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
 
             Route::get('selected-vendors', [RequisitionVendorSelectionController::class, 'index']);
             Route::put('selected-vendors', [RequisitionVendorSelectionController::class, 'update']);
+            Route::post('vendor-recommendations', [VendorRecommendationController::class, 'store'])
+                ->middleware('idempotency')
+                ->name('v1.rfqs.vendor-recommendations.store');
 
             // --- Section 6: Vendor Invitations (3 endpoints) ---
             Route::get('invitations', [VendorInvitationController::class, 'index']);
