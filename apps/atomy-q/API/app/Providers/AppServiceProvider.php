@@ -47,6 +47,7 @@ use App\Services\Tenant\RequestTenantContext;
 use App\OpenApi\IdempotencyErrorCodesDocumentTransformer;
 use Dedoc\Scramble\Scramble;
 use Illuminate\Support\ServiceProvider;
+use Nexus\Common\Contracts\ClockInterface;
 use Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface;
 use Nexus\Identity\Contracts\MfaEnrollmentServiceInterface;
 use Nexus\Identity\Contracts\MfaVerificationServiceInterface;
@@ -77,6 +78,13 @@ use Nexus\ProjectManagementOperations\Contracts\MilestoneBillingServiceInterface
 use Nexus\ProjectManagementOperations\Contracts\ProjectTaskIdsQueryInterface;
 use Nexus\ProjectManagementOperations\Contracts\TimelineDriftServiceInterface;
 use Nexus\ProjectManagementOperations\ProjectManagementOperationsCoordinator;
+use Nexus\ProcurementOperations\Contracts\VendorRecommendationCoordinatorInterface;
+use Nexus\ProcurementOperations\Contracts\VendorRecommendationLlmInterface;
+use Nexus\ProcurementOperations\Contracts\VendorScorerInterface;
+use Nexus\ProcurementOperations\Coordinators\VendorRecommendationCoordinator;
+use Nexus\ProcurementOperations\Services\DeterministicVendorScorer;
+use Nexus\ProcurementOperations\Services\NullVendorRecommendationLlm;
+use Nexus\ProcurementOperations\Services\SystemClock;
 use Nexus\Sourcing\Contracts\RfqStatusTransitionPolicyInterface;
 use Nexus\Sourcing\Services\RfqStatusTransitionPolicy;
 use Nexus\SourcingOperations\Contracts\RfqInvitationPersistPortInterface;
@@ -183,6 +191,13 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(VendorQueryInterface::class, EloquentVendorRepository::class);
         $this->app->bind(VendorPersistInterface::class, EloquentVendorRepository::class);
         $this->app->singleton(VendorStatusTransitionPolicyInterface::class, VendorStatusTransitionPolicy::class);
+        $this->app->singleton(ClockInterface::class, SystemClock::class);
+        $this->app->singleton(
+            VendorScorerInterface::class,
+            static fn ($app): VendorScorerInterface => new DeterministicVendorScorer($app->make(ClockInterface::class)),
+        );
+        $this->app->singleton(VendorRecommendationLlmInterface::class, NullVendorRecommendationLlm::class);
+        $this->app->singleton(VendorRecommendationCoordinatorInterface::class, VendorRecommendationCoordinator::class);
 
         // Nexus ApprovalOperations (operational approvals — distinct from RFQ quote flows).
         $this->app->singleton(AtomyApprovalPolicyRegistry::class);

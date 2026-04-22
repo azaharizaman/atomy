@@ -6738,6 +6738,163 @@ export type VendorHistoryResponses = {
 
 export type VendorHistoryResponse = VendorHistoryResponses[keyof VendorHistoryResponses];
 
+export type RequisitionVendorSelectionIndexData = {
+    body?: never;
+    path: {
+        rfqId: string;
+    };
+    query?: never;
+    url: '/rfqs/{rfqId}/selected-vendors';
+};
+
+export type RequisitionVendorSelectionIndexErrors = {
+    404: {
+        message: 'RFQ not found';
+    };
+};
+
+export type RequisitionVendorSelectionIndexError = RequisitionVendorSelectionIndexErrors[keyof RequisitionVendorSelectionIndexErrors];
+
+export type RequisitionVendorSelectionIndexResponses = {
+    200: {
+        data: Array<{
+            id: string;
+            rfq_id: string;
+            vendor_id: string;
+            vendor_name: string | null;
+            vendor_display_name: string | null;
+            vendor_email: string | null;
+            status: string | null;
+            selected_at: string;
+            selected_by_user_id: string | null;
+        }>;
+    };
+};
+
+export type RequisitionVendorSelectionIndexResponse = RequisitionVendorSelectionIndexResponses[keyof RequisitionVendorSelectionIndexResponses];
+
+export type RequisitionVendorSelectionUpdateData = {
+    body: {
+        vendor_ids: Array<string>;
+    };
+    path: {
+        rfqId: string;
+    };
+    query?: never;
+    url: '/rfqs/{rfqId}/selected-vendors';
+};
+
+export type RequisitionVendorSelectionUpdateErrors = {
+    404: {
+        message: 'RFQ not found';
+    };
+    422: {
+        errors: MessageBag;
+    };
+};
+
+export type RequisitionVendorSelectionUpdateError = RequisitionVendorSelectionUpdateErrors[keyof RequisitionVendorSelectionUpdateErrors];
+
+export type RequisitionVendorSelectionUpdateResponses = {
+    200: {
+        data: Array<{
+            id: string;
+            rfq_id: string;
+            vendor_id: string;
+            vendor_name: string | null;
+            vendor_display_name: string | null;
+            vendor_email: string | null;
+            status: string | null;
+            selected_at: string;
+            selected_by_user_id: string | null;
+        }>;
+    };
+};
+
+export type RequisitionVendorSelectionUpdateResponse = RequisitionVendorSelectionUpdateResponses[keyof RequisitionVendorSelectionUpdateResponses];
+
+export type VendorRecommendationStoreData = {
+    body?: {
+        categories?: Array<string>;
+        description?: string;
+        geography?: string | null;
+        spend_band?: string | null;
+        line_item_summary?: Array<string>;
+        candidate_limit?: number;
+    };
+    path: {
+        rfqId: string;
+    };
+    query?: never;
+    url: '/rfqs/{rfqId}/vendor-recommendations';
+};
+
+export type VendorRecommendationStoreErrors = {
+    /**
+     * Unauthorized
+     */
+    401: {
+        message: 'Unauthorized';
+    };
+    /**
+     * Forbidden
+     */
+    403: {
+        message: 'Forbidden';
+    };
+    /**
+     * RFQ not found
+     */
+    404: {
+        message: 'RFQ not found';
+    };
+    /**
+     * Validation failed
+     */
+    422: {
+        errors: MessageBag;
+    };
+};
+
+export type VendorRecommendationStoreError = VendorRecommendationStoreErrors[keyof VendorRecommendationStoreErrors];
+
+export type VendorRecommendationStoreResponses = {
+    /**
+     * Vendor recommendations retrieved successfully.
+     */
+    200: {
+        data: {
+            tenant_id: string;
+            rfq_id: string;
+            candidates: Array<{
+                vendor_id: string;
+                vendor_name: string;
+                fit_score: number;
+                confidence_band: 'low' | 'medium' | 'high';
+                recommended_reason_summary: string;
+                deterministic_reasons: Array<string>;
+                llm_insights: Array<string>;
+                /**
+                 * Machine-readable warning identifiers used for filtering, analytics, and programmatic handling.
+                 */
+                warning_flags: Array<string>;
+                /**
+                 * Human-readable warning messages shown to users when reviewing recommendation explanations.
+                 */
+                warnings: Array<string>;
+            }>;
+            excluded_reasons: Array<{
+                vendor_id: string;
+                vendor_name: string;
+                reason: string;
+                status: string | null;
+            }>;
+        };
+    };
+};
+
+export type VendorRecommendationStoreResponse = VendorRecommendationStoreResponses[keyof VendorRecommendationStoreResponses];
+
 export type VendorInvitationIndexData = {
     body?: never;
     path: {
@@ -6757,7 +6914,17 @@ export type VendorInvitationIndexError = VendorInvitationIndexErrors[keyof Vendo
 
 export type VendorInvitationIndexResponses = {
     200: {
-        data: Array<string>;
+        data: Array<{
+            id: string;
+            rfq_id: string;
+            vendor_id: string | null;
+            vendor_email: string | null;
+            vendor_name: string | null;
+            status: string;
+            invited_at: string | null;
+            responded_at: string | null;
+            reminded_at: string | null;
+        }>;
     };
 };
 
@@ -6765,10 +6932,8 @@ export type VendorInvitationIndexResponse = VendorInvitationIndexResponses[keyof
 
 export type V1RfqsInvitationsStoreData = {
     body: {
-        vendor_email: string;
-        vendor_name?: string | null;
-        vendor_id?: string | null;
-        channel?: string;
+        vendor_id: string;
+        channel?: 'email';
     };
     headers: {
         /**
@@ -6795,8 +6960,17 @@ export type V1RfqsInvitationsStoreErrors = {
 export type V1RfqsInvitationsStoreError = V1RfqsInvitationsStoreErrors[keyof V1RfqsInvitationsStoreErrors];
 
 export type V1RfqsInvitationsStoreResponses = {
-    200: {
-        [key: string]: unknown;
+    201: {
+        data: {
+            id: string;
+            rfq_id: string;
+            vendor_id: string;
+            vendor_email: string | null;
+            vendor_name: string | null;
+            status: string;
+            invited_at: string | null;
+            channel: string | null;
+        };
     };
 };
 

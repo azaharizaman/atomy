@@ -1,5 +1,15 @@
 # Implementation Summary - Atomy-Q Backend API
 
+## 2026-04-22 Vendor Recommendation API
+
+- Added `POST /api/v1/rfqs/{id}/vendor-recommendations` in the RFQ route group.
+- The controller keeps tenant-scoped RFQ lookup semantics: wrong-tenant and missing RFQs both return 404.
+- The API loads only tenant-local vendor master records, maps maintained vendor metadata (`categories`, `capabilities`, `regions`, activity/history flags) into the ProcurementOperations recommendation coordinator, and returns ranked candidates plus excluded reasons.
+- Only approved vendors can appear in the selectable `candidates` array; non-approved vendor records are reported under `excluded_reasons`.
+- The request may provide structured requisition context, but falls back to RFQ category/description/line items where available.
+- Verification:
+  - `cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Feature/Api/V1/VendorRecommendationApiTest.php` -> PASS (4 tests, 15 assertions).
+
 ## Status
 - **Phase**: Foundation complete, quote lifecycle productionized
 - **Framework**: Laravel 12 (PHP 8.3)

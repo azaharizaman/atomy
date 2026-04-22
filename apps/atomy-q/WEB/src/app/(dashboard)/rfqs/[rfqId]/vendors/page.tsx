@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { AlertTriangle, CheckCircle2, Mail, Search, Users } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Info, Mail, Search, Users } from 'lucide-react';
 import { StatusBadge } from '@/components/ds/Badge';
 import { Button } from '@/components/ds/Button';
 import { EmptyState, SectionCard } from '@/components/ds/Card';
@@ -12,6 +12,7 @@ import { useRequisitionVendorSelection } from '@/hooks/use-requisition-vendor-se
 import { useRfq } from '@/hooks/use-rfq';
 import { useRfqVendors } from '@/hooks/use-rfq-vendors';
 import { useUpdateRequisitionVendorSelection } from '@/hooks/use-update-requisition-vendor-selection';
+import { useVendorRecommendations, type VendorRecommendationCandidate } from '@/hooks/use-vendor-recommendations';
 import { useVendors, type VendorRow } from '@/hooks/use-vendors';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 
@@ -25,14 +26,24 @@ function vendorEmail(vendor: VendorRow): string {
 
 export function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
   const [search, setSearch] = React.useState('');
+  const [expandedRecommendationId, setExpandedRecommendationId] = React.useState<string | null>(null);
   const vendorsQuery = useVendors({ status: 'approved', q: search });
   const selectedQuery = useRequisitionVendorSelection(rfqId);
+  const recommendationsQuery = useVendorRecommendations(rfqId);
   const updateSelection = useUpdateRequisitionVendorSelection(rfqId);
   const approvedVendors = (vendorsQuery.data?.items ?? []).filter((vendor) => vendor.status === 'approved');
   const selectedVendorIds = React.useMemo(
     () => new Set((selectedQuery.data ?? []).map((row) => row.vendorId)),
     [selectedQuery.data],
   );
+  const recommendedById = React.useMemo(() => {
+    const recommendations = new Map<string, VendorRecommendationCandidate>();
+    for (const candidate of recommendationsQuery.data?.candidates ?? []) {
+      recommendations.set(candidate.vendorId, candidate);
+    }
+
+    return recommendations;
+  }, [recommendationsQuery.data]);
   const [draftSelected, setDraftSelected] = React.useState<Set<string>>(selectedVendorIds);
   const [isDirty, setIsDirty] = React.useState(false);
 
@@ -41,8 +52,19 @@ export function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
       return;
     }
 
-    setDraftSelected(new Set(selectedVendorIds));
-  }, [isDirty, selectedVendorIds]);
+    if (selectedVendorIds.size > 0 || recommendationsQuery.isLoading) {
+      setDraftSelected(new Set(selectedVendorIds));
+      return;
+    }
+
+    const recommendedIds = (recommendationsQuery.data?.candidates ?? []).map((candidate) => candidate.vendorId);
+    if (recommendedIds.length > 0) {
+      setDraftSelected(new Set(recommendedIds));
+      return;
+    }
+
+    setDraftSelected(new Set());
+  }, [isDirty, recommendationsQuery.data, recommendationsQuery.isLoading, selectedVendorIds]);
 
   const toggleVendor = (vendorId: string) => {
     setIsDirty(true);
@@ -124,31 +146,92 @@ export function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
           <div className="space-y-2">
             {approvedVendors.map((vendor) => {
               const checked = draftSelected.has(vendor.id);
+              const recommendation = recommendedById.get(vendor.id);
+              const expanded = expandedRecommendationId === vendor.id;
               return (
-                <label
-                  key={vendor.id}
-                  className="flex cursor-pointer items-center justify-between gap-4 rounded-md border border-slate-200 px-4 py-3 hover:bg-slate-50"
-                >
-                  <span className="flex min-w-0 items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => toggleVendor(vendor.id)}
-                      aria-label={`Select ${vendorLabel(vendor)}`}
-                      className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-medium text-slate-800">{vendorLabel(vendor)}</span>
-                      <span className="block truncate text-xs text-slate-500">{vendorEmail(vendor)}</span>
+                <div key={vendor.id} className="rounded-md border border-slate-200 hover:bg-slate-50">
+                  <label className="flex cursor-pointer items-center justify-between gap-4 px-4 py-3">
+                    <span className="flex min-w-0 items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleVendor(vendor.id)}
+                        aria-label={`Select ${vendorLabel(vendor)}`}
+                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span className="min-w-0">
+                        <span className="flex min-w-0 items-center gap-2">
+                          <span className="truncate text-sm font-medium text-slate-800">{vendorLabel(vendor)}</span>
+                          {recommendation ? (
+                            <span className="shrink-0 rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-700">
+                              Recommended
+                            </span>
+                          ) : null}
+                        </span>
+                        <span className="block truncate text-xs text-slate-500">{vendorEmail(vendor)}</span>
+                      </span>
                     </span>
-                  </span>
-                  {checked ? <CheckCircle2 size={16} className="shrink-0 text-emerald-600" /> : null}
-                </label>
+                    <span className="flex shrink-0 items-center gap-2">
+                      {recommendation ? (
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            setExpandedRecommendationId(expanded ? null : vendor.id);
+                          }}
+                          aria-expanded={expanded}
+                          aria-label={`Why ${vendorLabel(vendor)} is recommended`}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white text-slate-600 hover:bg-slate-100"
+                        >
+                          <Info size={14} />
+                        </button>
+                      ) : null}
+                      {checked ? <CheckCircle2 size={16} className="text-emerald-600" /> : null}
+                    </span>
+                  </label>
+                  {recommendation && expanded ? (
+                    <div className="border-t border-slate-100 px-4 py-3 text-sm">
+                      <p className="font-medium text-slate-800">{recommendation.recommendedReasonSummary}</p>
+                      <div className="mt-2 grid gap-3 md:grid-cols-2">
+                        <div>
+                          <p className="text-xs font-medium uppercase text-slate-500">Reasons</p>
+                          <ul className="mt-1 list-disc space-y-1 pl-4 text-slate-600">
+                            {recommendation.deterministicReasons.map((reason, index) => (
+                              <li key={`reason-${index}`}>{reason}</li>
+                            ))}
+                            {recommendation.llmInsights.map((insight, index) => (
+                              <li key={`insight-${index}`}>{insight}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium uppercase text-slate-500">Warnings</p>
+                          {recommendation.warnings.length > 0 ? (
+                            <ul className="mt-1 list-disc space-y-1 pl-4 text-slate-600">
+                              {recommendation.warnings.map((warning, index) => (
+                                <li key={`warning-${index}`}>{warning}</li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="mt-1 text-slate-500">No recommendation warnings.</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
               );
             })}
           </div>
         )}
 
+        {recommendationsQuery.isError ? (
+          <p className="text-sm text-red-600">
+            {recommendationsQuery.error instanceof Error
+              ? recommendationsQuery.error.message
+              : 'Vendor recommendations could not be loaded.'}
+          </p>
+        ) : null}
         {updateSelection.isError ? (
           <p className="text-sm text-red-600">
             {updateSelection.error instanceof Error ? updateSelection.error.message : 'Vendor selection could not be saved.'}

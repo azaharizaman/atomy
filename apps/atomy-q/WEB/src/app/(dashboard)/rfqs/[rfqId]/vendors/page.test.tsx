@@ -7,6 +7,7 @@ const mockUseVendors = vi.fn();
 const mockUseRequisitionVendorSelection = vi.fn();
 const mockUseUpdateRequisitionVendorSelection = vi.fn();
 const mockUseInviteSelectedVendors = vi.fn();
+const mockUseVendorRecommendations = vi.fn();
 
 beforeAll(() => {
   process.env.NEXT_PUBLIC_USE_MOCKS = 'false';
@@ -41,6 +42,10 @@ vi.mock('@/hooks/use-invite-selected-vendors', () => ({
   useInviteSelectedVendors: (...args: unknown[]) => mockUseInviteSelectedVendors(...args),
 }));
 
+vi.mock('@/hooks/use-vendor-recommendations', () => ({
+  useVendorRecommendations: (...args: unknown[]) => mockUseVendorRecommendations(...args),
+}));
+
 import { RfqVendorsPageContent } from './page';
 
 describe('RfqVendorsPage', () => {
@@ -67,6 +72,12 @@ describe('RfqVendorsPage', () => {
     mockUseInviteSelectedVendors.mockReturnValue({
       mutateAsync: vi.fn(),
       isPending: false,
+      isError: false,
+      error: null,
+    });
+    mockUseVendorRecommendations.mockReturnValue({
+      data: { candidates: [], excludedReasons: [] },
+      isLoading: false,
       isError: false,
       error: null,
     });
