@@ -1,10 +1,28 @@
 # Implementation Summary
 
-## 2026-04-22 Vendor Generated Client Build Fix
+## 2026-04-22 RFQ Workspace Fail-Loud Hardening
 
-- Bridged a generated OpenAPI typing defect where `POST /vendors` and `PUT /vendors/{id}` were emitted with `body?: never` despite the runtime API requiring vendor payloads.
-- `use-create-vendor.ts` and `use-update-vendor.ts` now centralize vendor mutation body mapping and apply a narrow request-option cast at the SDK call boundary so the production build can type-check without changing runtime behavior.
-- Follow-up: regenerate the vendor OpenAPI contract once the backend spec exports request bodies correctly, then remove the temporary cast bridge.
+- Hardened the RFQ workspace shell so malformed or unavailable RFQ records no longer silently remove mandatory UI regions.
+- `rfqs/[rfqId]/layout.tsx` now renders explicit unavailable panels in both the left RFQ shell column and the main work surface when `useRfq` fails, instead of collapsing those regions.
+- `rfq-insights-sidebar.tsx` now shows an explicit `Insights unavailable` card when RFQ or overview context fails to load, rather than falling through to misleading placeholder content.
+- `overview/page.tsx` now renders an intentional `Overview unavailable` state with the underlying error message whenever the overview query errors or resolves without data, instead of showing the loading skeleton indefinitely.
+- Verification:
+  - `cd apps/atomy-q/WEB && npx vitest run 'src/app/(dashboard)/rfqs/[rfqId]/overview/page.test.tsx'` -> PASS.
+  - `cd apps/atomy-q/WEB && npm run build` -> PASS.
+
+## 2026-04-22 Grouped Navigation Synchronization
+
+- Reorganized the main sidebar into workflow-based sections: ungrouped `Dashboard`, `Projects`, `Requisitions`; grouped `Inbox` (`Task`, `Approvals`); grouped `Records` (`Vendors`, `Documents`, `Reports`); and ungrouped `Settings`.
+- Reordered the requisition child navigation to match execution flow: `Draft`, `Pending Approval`, `Active (Live RFQ)`, `Awarded`, `Closed`, `Archived`.
+- Removed settings children from the main sidebar and introduced a shared `MainSidebarNav` renderer so the default dashboard sidebar and collapsed RFQ workspace rail now stay in sync from one source.
+- Verification:
+  - `cd apps/atomy-q/WEB && npm run build` -> PASS.
+  - `cd apps/atomy-q/WEB && npx vitest run src/components/alpha/alpha-deferred-screen.test.tsx` -> PASS.
+
+## 2026-04-22 Vendor Generated Client Contract Fix
+
+- Regenerated the vendor OpenAPI contract after making the backend request schema explicit to Scramble, so vendor create/update SDK methods now expose typed request bodies again.
+- Removed the temporary request-option cast bridge from `use-create-vendor.ts` and `use-update-vendor.ts`; the hooks now compile directly against the generated client contract.
 
 ## 2026-04-22 Vendor Governance Monitoring
 

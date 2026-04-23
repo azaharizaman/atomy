@@ -75,7 +75,15 @@ final class VendorController extends Controller
         try {
             $tenantId = $this->tenantId($request);
 
-            $validated = $this->validateVendorAttributes($request);
+            $validated = $request->validate([
+                'legal_name' => ['required', 'string'],
+                'display_name' => ['required', 'string'],
+                'registration_number' => ['required', 'string'],
+                'country_of_registration' => ['required', 'string'],
+                'primary_contact_name' => ['required', 'string'],
+                'primary_contact_email' => ['required', 'email'],
+                'primary_contact_phone' => ['nullable', 'string'],
+            ]);
 
             $vendor = new Vendor();
             $vendor->tenant_id = $this->normalizeIdentifier($tenantId);
@@ -120,7 +128,15 @@ final class VendorController extends Controller
             return response()->json(['message' => 'Vendor not found'], 404);
         }
 
-        $validated = $this->validateVendorAttributes($request);
+        $validated = $request->validate([
+            'legal_name' => ['required', 'string'],
+            'display_name' => ['required', 'string'],
+            'registration_number' => ['required', 'string'],
+            'country_of_registration' => ['required', 'string'],
+            'primary_contact_name' => ['required', 'string'],
+            'primary_contact_email' => ['required', 'email'],
+            'primary_contact_phone' => ['nullable', 'string'],
+        ]);
 
         $this->applyVendorAttributes($vendor, $validated);
         $vendor->save();
@@ -273,30 +289,6 @@ final class VendorController extends Controller
             'approved_at' => $vendor->approved_at?->toAtomString(),
             'approval_note' => $vendor->approval_note,
         ];
-    }
-
-    /**
-     * @return array{
-     *     legal_name:mixed,
-     *     display_name:mixed,
-     *     registration_number:mixed,
-     *     country_of_registration:mixed,
-     *     primary_contact_name:mixed,
-     *     primary_contact_email:mixed,
-     *     primary_contact_phone?:mixed
-     * }
-     */
-    private function validateVendorAttributes(Request $request): array
-    {
-        return $request->validate([
-            'legal_name' => ['required', 'string'],
-            'display_name' => ['required', 'string'],
-            'registration_number' => ['required', 'string'],
-            'country_of_registration' => ['required', 'string'],
-            'primary_contact_name' => ['required', 'string'],
-            'primary_contact_email' => ['required', 'email'],
-            'primary_contact_phone' => ['nullable', 'string'],
-        ]);
     }
 
     /**

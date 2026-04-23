@@ -1,5 +1,11 @@
 # Implementation Summary - Atomy-Q Backend API
 
+## 2026-04-22 Vendor OpenAPI Request Body Fix
+
+- Moved vendor create/update validation rules inline inside `VendorController::store` and `VendorController::update` so Scramble can infer the request body schema for `/vendors` and `/vendors/{id}`.
+- This fixes the exported OpenAPI contract that had emitted vendor mutation operations without request bodies, which in turn generated `body?: never` in the WEB SDK.
+- Follow-up verification: regenerate `apps/atomy-q/openapi/openapi.json`, regenerate the WEB client, and confirm the temporary frontend cast bridge is no longer needed.
+
 ## 2026-04-22 Vendor Governance Monitoring
 
 - Added persistent `vendor_evidence` and `vendor_findings` tables plus `VendorEvidence` and `VendorFinding` app models for tenant-scoped ESG, compliance, and risk monitoring records.

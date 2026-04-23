@@ -35,8 +35,8 @@ function PlaceholderCard({ icon, title, message }: { icon: React.ReactNode; titl
 
 export function RfqInsightsSidebar({ rfqId, isNewRfq: explicitIsNewRfq }: RfqInsightsSidebarProps) {
   const [expanded, setExpanded] = React.useState(true);
-  const { data: rfq, isLoading: rfqLoading } = useRfq(rfqId);
-  const { data: overview, isLoading: overviewLoading } = useRfqOverview(rfqId);
+  const { data: rfq, isLoading: rfqLoading, isError: rfqIsError, error: rfqError } = useRfq(rfqId);
+  const { data: overview, isLoading: overviewLoading, isError: overviewIsError, error: overviewError } = useRfqOverview(rfqId);
 
   const derivedIsNewRfq =
     !rfqLoading &&
@@ -58,6 +58,8 @@ export function RfqInsightsSidebar({ rfqId, isNewRfq: explicitIsNewRfq }: RfqIns
       </div>
     );
   }
+
+  const sidebarError = rfqIsError ? rfqError : overviewIsError ? overviewError : null;
 
   return (
     <div
@@ -83,8 +85,16 @@ export function RfqInsightsSidebar({ rfqId, isNewRfq: explicitIsNewRfq }: RfqIns
 
       {expanded && (
         <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar">
+          {sidebarError ? (
+            <PlaceholderCard
+              icon={<AlertTriangle size={16} />}
+              title="Insights unavailable"
+              message={sidebarError instanceof Error ? sidebarError.message : 'The insights sidebar could not load live RFQ context.'}
+            />
+          ) : null}
+
           {/* AI Insights Card */}
-          {isNewRfq ? (
+          {!sidebarError && isNewRfq ? (
             <PlaceholderCard
               icon={<Lightbulb size={16} />}
               title="AI Insights"
@@ -109,7 +119,7 @@ export function RfqInsightsSidebar({ rfqId, isNewRfq: explicitIsNewRfq }: RfqIns
           )}
 
           {/* Comparison Runs Card */}
-          {isNewRfq ? (
+          {!sidebarError && isNewRfq ? (
             <PlaceholderCard
               icon={<BarChart2 size={16} />}
               title="Comparison Runs"
@@ -146,7 +156,7 @@ export function RfqInsightsSidebar({ rfqId, isNewRfq: explicitIsNewRfq }: RfqIns
           )}
 
           {/* Risk Items Card */}
-          {isNewRfq ? (
+          {!sidebarError && isNewRfq ? (
             <PlaceholderCard
               icon={<AlertTriangle size={16} />}
               title="Risk Items"

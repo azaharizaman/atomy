@@ -2,32 +2,15 @@
 
 import React, { Suspense, useEffect } from 'react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
-import {
-  LayoutPanelTop,
-  FileText,
-  FolderKanban,
-  ListTodo,
-  FolderArchive,
-  BarChart2,
-  ShieldCheck,
-  Settings,
-} from 'lucide-react';
-import { NavGroup, NavItem, SubNavItem } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { AppFooter } from '@/components/layout/app-footer';
+import { MainSidebarNav } from '@/components/layout/main-sidebar-nav';
 import { isAlphaMode } from '@/lib/alpha-mode';
-import { getVisibleMainNavItems } from '@/config/nav';
 import { useAuthStore } from '@/store/use-auth-store';
-import { RFQ_STATUSES } from '@/hooks/use-rfqs';
 import { useRfqNavCounts } from '@/hooks/use-rfq-counts';
 import { useFeatureFlags } from '@/hooks/use-feature-flags';
 
 /** True when on an RFQ workspace route (e.g. /rfqs/[rfqId]/overview). Use Workspace layout only (Rail + Active Record Menu + Work surface). */
-/** Placeholder rows matching nav item height while feature flags load (no dead links). */
-function NavFeatureSlotSkeleton() {
-  return <div className="h-9 mx-0.5 rounded-md bg-slate-100 animate-pulse" aria-hidden />;
-}
-
 function isRfqWorkspacePath(pathname: string): boolean {
   if (!pathname.startsWith('/rfqs/') || pathname === '/rfqs' || pathname === '/rfqs/') return false;
   if (pathname.startsWith('/rfqs/new')) return false;
@@ -46,9 +29,6 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const isLoading = useAuthStore((state) => state.isLoading);
   const { data: rfqCounts } = useRfqNavCounts();
   const { data: featureFlags, isLoading: featureFlagsLoading } = useFeatureFlags();
-  const visibleMainNavItems = getVisibleMainNavItems();
-  const visibleNavItemIds = new Set(visibleMainNavItems.map((item) => item.id));
-  const isSettingsVisible = !alphaMode;
 
   // Deny access when not authenticated (after auth init). Redirect to login.
   useEffect(() => {
@@ -109,130 +89,14 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex-1 overflow-y-auto p-3 space-y-0.5 custom-scrollbar">
-          {visibleNavItemIds.has('dashboard') ? (
-            <NavItem
-              label="Dashboard"
-              icon={<LayoutPanelTop size={18} />}
-              active={pathname === '/'}
-              href="/"
-            />
-          ) : null}
-
-          {!alphaMode ? (
-            featureFlagsLoading ? (
-              <>
-                <NavFeatureSlotSkeleton />
-                <NavFeatureSlotSkeleton />
-              </>
-            ) : (
-              <>
-                {featureFlags?.projects ? (
-                  <NavItem
-                    label="Projects"
-                    icon={<FolderKanban size={18} />}
-                    active={pathname.startsWith('/projects')}
-                    href="/projects"
-                  />
-                ) : null}
-                {featureFlags?.tasks ? (
-                  <NavItem
-                    label="Task Inbox"
-                    icon={<ListTodo size={18} />}
-                    active={pathname.startsWith('/tasks')}
-                    href="/tasks"
-                  />
-                ) : null}
-              </>
-            )
-          ) : null}
-
-          {visibleNavItemIds.has('requisition') ? (
-            <NavGroup
-              label="Requisition"
-              icon={<FileText size={18} />}
-              active={pathname.startsWith('/rfqs')}
-              defaultOpen={pathname.startsWith('/rfqs')}
-            >
-              <SubNavItem
-                label="Active"
-                active={pathname === '/rfqs' && (!currentStatus || currentStatus === RFQ_STATUSES.ACTIVE)}
-                href="/rfqs"
-                badge={rfqCounts && rfqCounts.active > 0 ? rfqCounts.active : undefined}
-              />
-              <SubNavItem
-                label="Pending"
-                active={pathname === '/rfqs' && currentStatus === RFQ_STATUSES.PENDING}
-                href="/rfqs?status=pending"
-                badge={rfqCounts && rfqCounts.pending > 0 ? rfqCounts.pending : undefined}
-              />
-              <SubNavItem
-                label="Closed"
-                active={pathname === '/rfqs' && currentStatus === RFQ_STATUSES.CLOSED}
-                href={`/rfqs?status=${RFQ_STATUSES.CLOSED}`}
-                badge={rfqCounts && rfqCounts.closed > 0 ? rfqCounts.closed : undefined}
-              />
-              <SubNavItem
-                label="Awarded"
-                active={pathname === '/rfqs' && currentStatus === RFQ_STATUSES.AWARDED}
-                href={`/rfqs?status=${RFQ_STATUSES.AWARDED}`}
-                badge={rfqCounts && rfqCounts.awarded > 0 ? rfqCounts.awarded : undefined}
-              />
-              <SubNavItem
-                label="Archived"
-                active={pathname === '/rfqs' && currentStatus === RFQ_STATUSES.ARCHIVED}
-                href={`/rfqs?status=${RFQ_STATUSES.ARCHIVED}`}
-                badge={rfqCounts && rfqCounts.archived > 0 ? rfqCounts.archived : undefined}
-              />
-              <SubNavItem
-                label="Draft"
-                active={pathname === '/rfqs' && currentStatus === RFQ_STATUSES.DRAFT}
-                href={`/rfqs?status=${RFQ_STATUSES.DRAFT}`}
-                badge={rfqCounts && rfqCounts.draft > 0 ? rfqCounts.draft : undefined}
-              />
-            </NavGroup>
-          ) : null}
-
-          {visibleNavItemIds.has('documents') ? (
-            <NavItem
-              label="Documents"
-              icon={<FolderArchive size={18} />}
-              active={pathname.startsWith('/documents')}
-              href="/documents"
-            />
-          ) : null}
-
-          {visibleNavItemIds.has('reporting') ? (
-            <NavItem
-              label="Reporting"
-              icon={<BarChart2 size={18} />}
-              active={pathname.startsWith('/reporting')}
-              href="/reporting"
-            />
-          ) : null}
-
-          {visibleNavItemIds.has('approvals') ? (
-            <NavItem
-              label="Approval Queue"
-              icon={<ShieldCheck size={18} />}
-              active={pathname.startsWith('/approvals')}
-              href="/approvals"
-            />
-          ) : null}
-
-          {isSettingsVisible ? (
-            <NavGroup
-              label="Settings"
-              icon={<Settings size={18} />}
-              active={pathname.startsWith('/settings')}
-              defaultOpen={pathname.startsWith('/settings')}
-            >
-              <SubNavItem label="Users & Roles" active={pathname === '/settings/users'} href="/settings/users" />
-              <SubNavItem label="Scoring Policies" active={pathname === '/settings/scoring-policies'} href="/settings/scoring-policies" />
-              <SubNavItem label="Templates" active={pathname === '/settings/templates'} href="/settings/templates" />
-              <SubNavItem label="Integrations" active={pathname === '/settings/integrations'} href="/settings/integrations" />
-              <SubNavItem label="Feature Flags" active={pathname === '/settings/feature-flags'} href="/settings/feature-flags" />
-            </NavGroup>
-          ) : null}
+          <MainSidebarNav
+            pathname={pathname}
+            currentStatus={currentStatus}
+            alphaMode={alphaMode}
+            featureFlags={featureFlags}
+            featureFlagsLoading={featureFlagsLoading}
+            rfqCounts={rfqCounts}
+          />
         </nav>
 
         {user && (
