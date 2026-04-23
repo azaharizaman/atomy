@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Adapters\Ai\AiRuntimeStatusAdapter;
+use App\Adapters\Ai\AtomyAiCapabilityCatalog;
+use App\Adapters\Ai\Contracts\AiEndpointRegistryInterface;
+use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use App\Adapters\Ai\HuggingFaceEndpointRegistry;
+use App\Adapters\Ai\HuggingFaceHealthProbe;
 use App\Http\Idempotency\IdempotencyReplayResponseFactory;
 use App\Contracts\JwtServiceInterface;
 use App\Contracts\MfaChallengeStoreInterface;
@@ -47,6 +53,7 @@ use App\Services\Tenant\RequestTenantContext;
 use App\OpenApi\IdempotencyErrorCodesDocumentTransformer;
 use Dedoc\Scramble\Scramble;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Http\Client\Factory as HttpFactory;
 use Nexus\Common\Contracts\ClockInterface;
 use Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface;
 use Nexus\Identity\Contracts\MfaEnrollmentServiceInterface;
@@ -176,7 +183,11 @@ use Nexus\PolicyEngine\Services\PolicyEvaluator;
 use Nexus\PolicyEngine\Services\JsonPolicyDecoder;
 use Nexus\PolicyEngine\Services\PolicyValidator;
 use Nexus\QuotationIntelligence\Exceptions\QuotationIntelligenceException;
+use Nexus\IntelligenceOperations\Contracts\AiCapabilityCatalogInterface;
+use Nexus\IntelligenceOperations\Contracts\AiStatusCoordinatorInterface;
+use Nexus\IntelligenceOperations\Coordinators\AiStatusCoordinator;
 use Psr\Log\LoggerInterface;
+use Nexus\MachineLearning\Contracts\AiHealthProbeInterface;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -198,6 +209,16 @@ class AppServiceProvider extends ServiceProvider
         );
         $this->app->singleton(VendorRecommendationLlmInterface::class, NullVendorRecommendationLlm::class);
         $this->app->singleton(VendorRecommendationCoordinatorInterface::class, VendorRecommendationCoordinator::class);
+        $this->app->singleton(HuggingFaceEndpointRegistry::class, function (): HuggingFaceEndpointRegistry {
+            return new HuggingFaceEndpointRegistry($this->aiRuntimeConfig());
+        });
+        $this->app->singleton(AiEndpointRegistryInterface::class, HuggingFaceEndpointRegistry::class);
+        $this->app->singleton(AiCapabilityCatalogInterface::class, AtomyAiCapabilityCatalog::class);
+        $this->app->singleton(AiStatusCoordinatorInterface::class, AiStatusCoordinator::class);
+        $this->app->singleton(AiHealthProbeInterface::class, static function ($app): AiHealthProbeInterface {
+            return new HuggingFaceHealthProbe($app->make(HttpFactory::class));
+        });
+        $this->app->singleton(AiRuntimeStatusInterface::class, AiRuntimeStatusAdapter::class);
 
         // Nexus ApprovalOperations (operational approvals — distinct from RFQ quote flows).
         $this->app->singleton(AtomyApprovalPolicyRegistry::class);
@@ -455,5 +476,13 @@ class AppServiceProvider extends ServiceProvider
     private function quoteIntelligenceLlmConfig(): array
     {
         return (array) config('atomy.quote_intelligence.llm', []);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function aiRuntimeConfig(): array
+    {
+        return (array) config('atomy.ai', []);
     }
 }

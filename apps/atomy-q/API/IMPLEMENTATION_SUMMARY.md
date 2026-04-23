@@ -358,3 +358,14 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - Added `declare(strict_types=1);` to `config/cors.php` immediately after `<?php` to align with repository strict-types rules for PHP files.
 - Verification:
   - `cd apps/atomy-q/API && php -l config/cors.php` -> PASS (no syntax errors).
+
+## 2026-04-23 AI Runtime Env Preparation
+
+- Updated `apps/atomy-q/API/.env.example` to match the approved 2026-04-23 AI-first plan set: `AI_MODE=provider` is now the target alpha default, and the example includes dedicated Hugging Face managed inference endpoint variables for document, normalization, sourcing recommendation, comparison/award, insight, and governance capability groups.
+- Added shared/default Hugging Face auth and retry placeholders plus per-endpoint auth, timeout, model id, and model revision fields so future Layer 3 adapters can be wired against real managed endpoints without inventing a second env contract during implementation.
+- Kept the existing `QUOTE_INTELLIGENCE_*` variables explicitly labeled as legacy pre-Plan-1 compatibility settings so the current dormant adapter path is documented until the runtime migration lands.
+- Added a public `GET /api/v1/ai/status` endpoint with a stable `data` envelope backed by Layer 2 `AiStatusCoordinatorInterface`.
+- Added Layer 3 AI runtime adapters under `app/Adapters/Ai/` for capability cataloging, Hugging Face endpoint registry/config mapping, health probing, and status aggregation.
+- Added API config parsing for `AI_MODE` plus Hugging Face endpoint URI, auth token, and timeout settings in `config/atomy.php` and `config/services.php`.
+- Added `InteractsWithAiAvailability` so later controllers can centralize capability lookup and unavailable responses instead of duplicating status logic.
+- Added feature coverage for public access, mode handling, partial provider degradation, and response redaction in `tests/Feature/Api/V1/AiStatusApiTest.php` and `AiStatusVisibilityTest.php`.

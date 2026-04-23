@@ -1,5 +1,20 @@
 # Implementation Summary
 
+## 2026-04-23 WEB AI Status Consumption And Shared UX Primitives
+
+- Added a strict AI status normalization layer in `src/lib/ai-status.ts` for `/api/v1/ai/status`, including runtime-path sanitization, typed capability/endpoint parsing, and safe fallback snapshots for `off`, `unknown`, and request-error states.
+- Added shared AI capability helpers in `src/lib/ai-capabilities.ts` so consumers can consistently answer feature availability, whether AI controls should be hidden, whether an unavailable message should be shown, and which message key to surface.
+- Added `src/hooks/use-ai-status.ts` plus `src/providers/ai-provider.tsx` as the shared query/context entrypoint. The provider is mounted in `src/app/layout.tsx` between `QueryProvider` and `AuthProvider`, and it fails open so shell/navigation children still render when the status request fails.
+- Added reusable AI UI primitives:
+  - `src/components/ai/ai-status-chip.tsx`
+  - `src/components/ai/ai-unavailable-callout.tsx`
+- Added focused regression coverage:
+  - `src/hooks/use-ai-status.test.ts`
+  - `src/components/ai/ai-unavailable-callout.test.tsx`
+- Verification:
+  - `cd apps/atomy-q/WEB && npm run test:unit -- src/hooks/use-ai-status.test.ts src/components/ai/ai-unavailable-callout.test.tsx` -> PASS.
+  - `cd apps/atomy-q/WEB && npm run build` -> FAIL due pre-existing/out-of-scope type error in `src/components/layout/main-sidebar-nav.tsx` (`getVisibleMainNavItems(...)` call signature mismatch).
+
 ## 2026-04-22 RFQ Workspace Fail-Loud Hardening
 
 - Hardened the RFQ workspace shell so malformed or unavailable RFQ records no longer silently remove mandatory UI regions.
@@ -271,3 +286,9 @@
   - `src/app/(dashboard)/vendors/page.test.tsx`
   - `src/app/(dashboard)/vendors/[vendorId]/page.test.tsx`
 - Updated alpha policy test to include Vendors as alpha-visible top-level nav.
+
+## 2026-04-23 AI Runtime Env Preparation
+
+- Updated `apps/atomy-q/WEB/.env.example` for the approved AI-first rollout posture so `NEXT_PUBLIC_AI_MODE` now defaults to `provider` instead of `off`.
+- Kept `NEXT_PUBLIC_AI_STATUS_PATH` as the public runtime truth source and added `NEXT_PUBLIC_AI_PROVIDER_NAME=huggingface` as an optional UI/operator-facing label for the planned shared AI status surface.
+- The WEB example still keeps mocks disabled by default so developers can exercise real API-backed and future real Hugging Face-backed flows once the implementation plans land.
