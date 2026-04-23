@@ -8558,7 +8558,56 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "vendor_id": {
+                                                    "type": "string"
+                                                },
+                                                "screening_status": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "completed"
+                                                    ]
+                                                },
+                                                "matches": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "score": {
+                                                                "type": "number"
+                                                            },
+                                                            "details": {
+                                                                "type": [
+                                                                    "object",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "score",
+                                                            "details"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "vendor_id",
+                                                "screening_status",
+                                                "matches"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
                                 }
                             }
                         }
@@ -9348,13 +9397,22 @@
                                                         "type": "string"
                                                     },
                                                     "retry_count": {
-                                                        "type": "string"
+                                                        "oneOf": [
+                                                            { "type": "integer" },
+                                                            { "type": "string" }
+                                                        ]
                                                     },
                                                     "line_items_count": {
-                                                        "type": "string"
+                                                        "oneOf": [
+                                                            { "type": "integer" },
+                                                            { "type": "string" }
+                                                        ]
                                                     },
                                                     "confidence": {
-                                                        "type": "string"
+                                                        "oneOf": [
+                                                            { "type": "number" },
+                                                            { "type": "string" }
+                                                        ]
                                                     }
                                                 },
                                                 "required": [
@@ -9502,13 +9560,13 @@
                                                     "type": "string"
                                                 },
                                                 "retry_count": {
-                                                    "type": "string"
+                                                    "type": "integer"
                                                 },
                                                 "line_items_count": {
-                                                    "type": "string"
+                                                    "type": "integer"
                                                 },
                                                 "confidence": {
-                                                    "type": "string"
+                                                    "type": "number"
                                                 }
                                             },
                                             "required": [
@@ -11159,7 +11217,56 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "vendor_id": {
+                                                    "type": "string"
+                                                },
+                                                "screening_status": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "completed"
+                                                    ]
+                                                },
+                                                "matches": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "score": {
+                                                                "type": "number"
+                                                            },
+                                                            "details": {
+                                                                "type": [
+                                                                    "object",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "score",
+                                                            "details"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "vendor_id",
+                                                "screening_status",
+                                                "matches"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
                                 }
                             }
                         }
@@ -12531,7 +12638,10 @@
                                                     "type": "string"
                                                 },
                                                 "sort_order": {
-                                                    "type": "string"
+                                                    "oneOf": [
+                                                        { "type": "integer" },
+                                                        { "type": "string" }
+                                                    ]
                                                 }
                                             },
                                             "required": [
@@ -12650,7 +12760,7 @@
                                                     "type": "string"
                                                 },
                                                 "sort_order": {
-                                                    "type": "string"
+                                                    "type": "integer"
                                                 }
                                             },
                                             "required": [
@@ -15016,12 +15126,9 @@
                                     "description": {
                                         "type": "string"
                                     },
-                                    "project_id": {
-                                        "type": [
-                                            "integer",
-                                            "null"
-                                        ]
-                                    },
+                    "project_id": {
+                        "type": "string"
+                    },
                                     "priority": {
                                         "type": "string",
                                         "enum": [
@@ -16284,13 +16391,22 @@
                                                         ],
                                                         "properties": {
                                                             "approved_by_user_id": {
-                                                                "type": "string"
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
                                                             },
                                                             "approved_at": {
-                                                                "type": "string"
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
                                                             },
                                                             "approval_note": {
-                                                                "type": "string"
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
                                                             }
                                                         },
                                                         "required": [
@@ -16388,15 +16504,15 @@
                     "required": true,
                     "content": {
                         "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "legal_name": {
-                                        "type": "string"
-                                    },
-                                    "display_name": {
-                                        "type": "string"
-                                    },
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "legal_name": {
+                                            "type": "string"
+                                        },
+                                        "display_name": {
+                                            "type": "string"
+                                        },
                                     "registration_number": {
                                         "type": "string"
                                     },
@@ -16416,18 +16532,9 @@
                                             "null"
                                         ]
                                     }
-                                },
-                                "required": [
-                                    "legal_name",
-                                    "display_name",
-                                    "registration_number",
-                                    "country_of_registration",
-                                    "primary_contact_name",
-                                    "primary_contact_email"
-                                ]
+                                }
                             }
                         }
-                    }
                 },
                 "responses": {
                     "200": {
@@ -16503,27 +16610,29 @@
                                                 "status": {
                                                     "type": "string"
                                                 },
-                                                "approval_record": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
-                                                    ],
-                                                    "properties": {
-                                                        "approved_by_user_id": {
-                                                            "type": "string"
-                                                        },
-                                                        "approved_at": {
-                                                            "type": "string"
-                                                        },
-                                                        "approval_note": {
-                                                            "type": "string"
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        "approved_by_user_id",
-                                                        "approved_at",
-                                                        "approval_note"
-                                                    ]
+                                                    "approval_record": {
+                                                        "oneOf": [
+                                                            {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "approved_by_user_id": {
+                                                                        "type": ["string", "null"]
+                                                                    },
+                                                                    "approved_at": {
+                                                                        "type": ["string", "null"]
+                                                                    },
+                                                                    "approval_note": {
+                                                                        "type": ["string", "null"]
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "approved_by_user_id",
+                                                                    "approved_at",
+                                                                    "approval_note"
+                                                                ]
+                                                            },
+                                                            { "type": "null" }
+                                                        ]
                                                 },
                                                 "created_at": {
                                                     "type": "string"
@@ -16646,15 +16755,7 @@
                                             "null"
                                         ]
                                     }
-                                },
-                                "required": [
-                                    "legal_name",
-                                    "display_name",
-                                    "registration_number",
-                                    "country_of_registration",
-                                    "primary_contact_name",
-                                    "primary_contact_email"
-                                ]
+                                }
                             }
                         }
                     }
@@ -16700,22 +16801,31 @@
                                                 "status": {
                                                     "type": "string"
                                                 },
-                                                "approval_record": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
-                                                    ],
-                                                    "properties": {
-                                                        "approved_by_user_id": {
-                                                            "type": "string"
+                                                    "approval_record": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "approved_by_user_id": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "approved_at": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "approval_note": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
                                                         },
-                                                        "approved_at": {
-                                                            "type": "string"
-                                                        },
-                                                        "approval_note": {
-                                                            "type": "string"
-                                                        }
-                                                    },
                                                     "required": [
                                                         "approved_by_user_id",
                                                         "approved_at",
@@ -17201,7 +17311,56 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "vendor_id": {
+                                                    "type": "string"
+                                                },
+                                                "screening_status": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "completed"
+                                                    ]
+                                                },
+                                                "matches": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "score": {
+                                                                "type": "number"
+                                                            },
+                                                            "details": {
+                                                                "type": [
+                                                                    "object",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "id",
+                                                            "score",
+                                                            "details"
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "vendor_id",
+                                                "screening_status",
+                                                "matches"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
                                 }
                             }
                         }
@@ -18057,22 +18216,31 @@
                                                 "status": {
                                                     "type": "string"
                                                 },
-                                                "approval_record": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
-                                                    ],
-                                                    "properties": {
-                                                        "approved_by_user_id": {
-                                                            "type": "string"
+                                                    "approval_record": {
+                                                        "type": [
+                                                            "object",
+                                                            "null"
+                                                        ],
+                                                        "properties": {
+                                                            "approved_by_user_id": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "approved_at": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "approval_note": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
                                                         },
-                                                        "approved_at": {
-                                                            "type": "string"
-                                                        },
-                                                        "approval_note": {
-                                                            "type": "string"
-                                                        }
-                                                    },
                                                     "required": [
                                                         "approved_by_user_id",
                                                         "approved_at",
@@ -18159,62 +18327,44 @@
         }
     },
     "components": {
+                "schemas": {
+                    "ScreeningResponse": {
+                        "type": "object",
+                        "properties": {
+                            "data": {
+                                "type": "object",
+                                "properties": {
+                                    "vendor_id": { "type": "string" },
+                                    "screening_status": {
+                                        "type": "string",
+                                        "enum": ["completed", "pending", "failed"]
+                                    },
+                                    "matches": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": { "type": "string" },
+                                                "score": { "type": "number" },
+                                                "details": { "type": ["object", "null"] }
+                                            },
+                                            "required": ["id", "score", "details"]
+                                        }
+                                    }
+                                },
+                                "required": ["vendor_id", "screening_status", "matches"]
+                            }
+                        },
+                        "required": ["data"]
+                    }
+                },
         "schemas": {
             "ComparisonFinalizeRequest": {
                 "type": "object",
                 "properties": {
                     "rfq_id": {
                         "type": "string"
-                    }
-                },
-                "required": [
-                    "rfq_id"
-                ],
-                "title": "ComparisonFinalizeRequest"
-            },
-            "ComparisonPreviewRequest": {
-                "type": "object",
-                "properties": {
-                    "rfq_id": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "rfq_id"
-                ],
-                "title": "ComparisonPreviewRequest"
-            },
-            "MessageBag": {
-                "type": "object",
-                "additionalProperties": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "title": "MessageBag"
-            },
-            "NormalizationOverrideRequest": {
-                "type": "object",
-                "properties": {
-                    "override_data": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "minItems": 1
-                    },
-                    "issue_code": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "enum": [
-                            "missing_price",
-                            "missing_currency",
-                            "ambiguous_mapping",
-                            "invalid_uom"
-                        ]
+                                    "$ref": "#/components/schemas/ScreeningResponse"
                     }
                 },
                 "required": [
@@ -18431,12 +18581,9 @@
                             "null"
                         ]
                     },
-                    "project_id": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
+                                    "project_id": {
+                                        "type": "string"
+                                    },
                     "estimated_value": {
                         "type": [
                             "number",

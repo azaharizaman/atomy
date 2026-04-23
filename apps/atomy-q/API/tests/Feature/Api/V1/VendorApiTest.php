@@ -198,6 +198,59 @@ final class VendorApiTest extends ApiTestCase
         $response->assertJsonPath('data.status', 'draft');
     }
 
+    public function testPatchVendorAcceptsPartialPayloadsAndPreservesOmittedFields(): void
+    {
+        $tenantId = (string) Str::ulid();
+        $user = $this->createUser($tenantId);
+        $vendor = $this->createVendor($tenantId, [
+            'legal_name' => 'Acme Holdings Sdn Bhd',
+            'display_name' => 'Acme Trading',
+            'registration_number' => '201901234567',
+            'country_of_registration' => 'MY',
+            'primary_contact_name' => 'Amina Zain',
+            'primary_contact_email' => 'amina@example.com',
+            'primary_contact_phone' => '+60123456789',
+        ]);
+
+        $original = $vendor->fresh();
+        $originalStatus = $original->status;
+
+        $response = $this->patchJson(
+            '/api/v1/vendors/' . $vendor->id,
+            ['display_name' => 'New Name'],
+            $this->authHeaders($tenantId, (string) $user->id),
+        );
+
+        $response->assertOk();
+        $response->assertJsonMissingValidationErrors();
+        $response->assertJsonPath('data.display_name', 'New Name');
+        $response->assertJsonPath('data.trading_name', 'New Name');
+        $response->assertJsonPath('data.legal_name', 'Acme Holdings Sdn Bhd');
+        $response->assertJsonPath('data.registration_number', '201901234567');
+        $response->assertJsonPath('data.country_of_registration', 'MY');
+        $response->assertJsonPath('data.primary_contact_name', 'Amina Zain');
+        $response->assertJsonPath('data.primary_contact_email', 'amina@example.com');
+        $response->assertJsonPath('data.primary_contact_phone', '+60123456789');
+        $response->assertJsonPath('data.status', $originalStatus);
+
+        $vendor->refresh();
+
+        $this->assertSame($original->tenant_id, $vendor->tenant_id);
+        $this->assertSame('New Name', $vendor->display_name);
+        $this->assertSame('New Name', $vendor->trading_name);
+        $this->assertSame('Acme Holdings Sdn Bhd', $vendor->legal_name);
+        $this->assertSame('Acme Holdings Sdn Bhd', $vendor->name);
+        $this->assertSame('201901234567', $vendor->registration_number);
+        $this->assertSame('MY', $vendor->country_of_registration);
+        $this->assertSame('MY', $vendor->country_code);
+        $this->assertSame('Amina Zain', $vendor->primary_contact_name);
+        $this->assertSame('amina@example.com', $vendor->primary_contact_email);
+        $this->assertSame('amina@example.com', $vendor->email);
+        $this->assertSame('+60123456789', $vendor->primary_contact_phone);
+        $this->assertSame('+60123456789', $vendor->phone);
+        $this->assertSame($originalStatus, $vendor->status);
+    }
+
     public function testApproveVendor(): void
     {
         $tenantId = (string) Str::ulid();

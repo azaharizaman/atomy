@@ -31,7 +31,7 @@ export const MAIN_NAV_ITEMS: NavItemConfig[] = [
   { id: 'dashboard', label: 'Dashboard', href: '/', path: '/' },
   { id: 'projects', label: 'Projects', href: '/projects', path: '/projects' },
   { id: 'requisition', label: 'Requisitions', href: '/rfqs', path: '/rfqs' },
-  { id: 'tasks', label: 'Task', href: '/tasks', path: '/tasks' },
+  { id: 'tasks', label: 'Tasks', href: '/tasks', path: '/tasks' },
   { id: 'approvals', label: 'Approvals', href: '/approvals', path: '/approvals' },
   { id: 'vendors', label: 'Vendors', href: '/vendors', path: '/vendors' },
   { id: 'documents', label: 'Documents', href: '/documents', path: '/documents' },
@@ -45,12 +45,12 @@ export const RECORDS_MAIN_NAV_IDS = ['vendors', 'documents', 'reporting'] as con
 export const UNGROUPED_TRAILING_MAIN_NAV_IDS = ['settings'] as const;
 
 export const REQUISITION_NAV_ITEMS: RequisitionNavItemConfig[] = [
-  { id: 'draft', label: 'Draft', href: `/rfqs?status=draft`, path: '/rfqs', countKey: 'draft' },
-  { id: 'pending', label: 'Pending Approval', href: `/rfqs?status=pending`, path: '/rfqs', countKey: 'pending' },
+  { id: 'draft', label: 'Draft', href: '/rfqs?status=draft', path: '/rfqs', countKey: 'draft' },
+  { id: 'pending', label: 'Pending Approval', href: '/rfqs?status=pending', path: '/rfqs', countKey: 'pending' },
   { id: 'active', label: 'Active (Live RFQ)', href: '/rfqs', path: '/rfqs', countKey: 'active' },
-  { id: 'awarded', label: 'Awarded', href: `/rfqs?status=awarded`, path: '/rfqs', countKey: 'awarded' },
-  { id: 'closed', label: 'Closed', href: `/rfqs?status=closed`, path: '/rfqs', countKey: 'closed' },
-  { id: 'archived', label: 'Archived', href: `/rfqs?status=archived`, path: '/rfqs', countKey: 'archived' },
+  { id: 'awarded', label: 'Awarded', href: '/rfqs?status=awarded', path: '/rfqs', countKey: 'awarded' },
+  { id: 'closed', label: 'Closed', href: '/rfqs?status=closed', path: '/rfqs', countKey: 'closed' },
+  { id: 'archived', label: 'Archived', href: '/rfqs?status=archived', path: '/rfqs', countKey: 'archived' },
 ];
 
 /** Settings group — same list used by sidebar and settings landing page. */
@@ -86,7 +86,7 @@ const pathToLabel: Record<string, string> = {
   '/': 'Dashboard',
   '/projects': 'Projects',
   '/rfqs': 'Requisitions',
-  '/tasks': 'Task',
+  '/tasks': 'Tasks',
   '/vendors': 'Vendors',
   '/documents': 'Documents',
   '/reporting': 'Reports',

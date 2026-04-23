@@ -129,13 +129,13 @@ final class VendorController extends Controller
         }
 
         $validated = $request->validate([
-            'legal_name' => ['required', 'string'],
-            'display_name' => ['required', 'string'],
-            'registration_number' => ['required', 'string'],
-            'country_of_registration' => ['required', 'string'],
-            'primary_contact_name' => ['required', 'string'],
-            'primary_contact_email' => ['required', 'email'],
-            'primary_contact_phone' => ['nullable', 'string'],
+            'legal_name' => ['sometimes', 'required', 'string'],
+            'display_name' => ['sometimes', 'required', 'string'],
+            'registration_number' => ['sometimes', 'required', 'string'],
+            'country_of_registration' => ['sometimes', 'required', 'string'],
+            'primary_contact_name' => ['sometimes', 'required', 'string'],
+            'primary_contact_email' => ['sometimes', 'required', 'email'],
+            'primary_contact_phone' => ['sometimes', 'nullable', 'string'],
         ]);
 
         $this->applyVendorAttributes($vendor, $validated);
@@ -296,21 +296,46 @@ final class VendorController extends Controller
      */
     private function applyVendorAttributes(Vendor $vendor, array $validated): void
     {
-        $phone = $validated['primary_contact_phone'] ?? null;
-        $normalizedPhone = $phone !== null ? (string) $phone : '';
+        if (array_key_exists('legal_name', $validated)) {
+            $legalName = (string) $validated['legal_name'];
+            $vendor->name = $legalName;
+            $vendor->legal_name = $legalName;
+        }
 
-        $vendor->name = (string) $validated['legal_name'];
-        $vendor->trading_name = (string) $validated['display_name'];
-        $vendor->registration_number = (string) $validated['registration_number'];
-        $vendor->country_code = (string) $validated['country_of_registration'];
-        $vendor->email = (string) $validated['primary_contact_email'];
-        $vendor->phone = $normalizedPhone;
-        $vendor->legal_name = (string) $validated['legal_name'];
-        $vendor->display_name = (string) $validated['display_name'];
-        $vendor->country_of_registration = (string) $validated['country_of_registration'];
-        $vendor->primary_contact_name = (string) $validated['primary_contact_name'];
-        $vendor->primary_contact_email = (string) $validated['primary_contact_email'];
-        $vendor->primary_contact_phone = $normalizedPhone;
+        if (array_key_exists('display_name', $validated)) {
+            $displayName = (string) $validated['display_name'];
+            $vendor->trading_name = $displayName;
+            $vendor->display_name = $displayName;
+        }
+
+        if (array_key_exists('registration_number', $validated)) {
+            $vendor->registration_number = (string) $validated['registration_number'];
+        }
+
+        if (array_key_exists('country_of_registration', $validated)) {
+            $countryOfRegistration = (string) $validated['country_of_registration'];
+            $vendor->country_code = $countryOfRegistration;
+            $vendor->country_of_registration = $countryOfRegistration;
+        }
+
+        if (array_key_exists('primary_contact_name', $validated)) {
+            $vendor->primary_contact_name = (string) $validated['primary_contact_name'];
+        }
+
+        if (array_key_exists('primary_contact_email', $validated)) {
+            $primaryContactEmail = (string) $validated['primary_contact_email'];
+            $vendor->email = $primaryContactEmail;
+            $vendor->primary_contact_email = $primaryContactEmail;
+        }
+
+        if (array_key_exists('primary_contact_phone', $validated)) {
+            $phone = $validated['primary_contact_phone'];
+            // Preserve nulls: if incoming is null, persist null; else string
+            $normalizedPhone = $phone !== null ? (string) $phone : null;
+
+            $vendor->phone = $normalizedPhone;
+            $vendor->primary_contact_phone = $normalizedPhone;
+        }
     }
 
     private function nullableString(mixed $value): ?string

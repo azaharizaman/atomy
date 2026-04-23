@@ -80,8 +80,14 @@ export function MainSidebarNav({
   featureFlagsLoading = false,
   rfqCounts,
 }: MainSidebarNavProps) {
-  const visibleItems = getVisibleMainNavItems();
-  const visibleItemById = new Map(visibleItems.map((item) => [item.id, item]));
+  const visibleItems = React.useMemo(
+    () => getVisibleMainNavItems(alphaMode, featureFlagsLoading, featureFlags),
+    [alphaMode, featureFlagsLoading, featureFlags?.projects, featureFlags?.tasks],
+  );
+  const visibleItemById = React.useMemo(
+    () => new Map(visibleItems.map((item) => [item.id, item])),
+    [visibleItems],
+  );
 
   function getItem(id: string): NavItemConfig | undefined {
     return visibleItemById.get(id);
