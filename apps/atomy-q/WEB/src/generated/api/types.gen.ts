@@ -4,17 +4,31 @@ export type ClientOptions = {
     baseUrl: 'http://localhost:8000/api/v1' | (string & {});
 };
 
-/**
- * ComparisonFinalizeRequest
- */
-export type ComparisonFinalizeRequest = {
-    rfq_id: string;
+export type ScreeningResponse = {
+    data: {
+        vendor_id: string;
+        screening_status: 'completed' | 'pending' | 'failed';
+        matches: Array<{
+            id: string;
+            score: number;
+            details: {
+                [key: string]: unknown;
+            } | null;
+        }>;
+    };
 };
 
 /**
  * ComparisonPreviewRequest
  */
 export type ComparisonPreviewRequest = {
+    rfq_id: string;
+};
+
+/**
+ * ComparisonFinalizeRequest
+ */
+export type ComparisonFinalizeRequest = {
     rfq_id: string;
 };
 
@@ -93,7 +107,7 @@ export type RfqBulkActionRequest = {
 export type RfqDraftRequest = {
     title?: string;
     description?: string | null;
-    project_id?: string | null;
+    project_id?: string;
     estimated_value?: number | null;
     savings_percentage?: number | null;
     submission_deadline?: string | null;
@@ -117,22 +131,22 @@ export type RfqStatusTransitionRequest = {
  */
 export type VendorStatus = 'draft' | 'under_review' | 'approved' | 'restricted' | 'suspended' | 'archived';
 
-export type V1AccountProfile0Data = {
+export type AccountMeData = {
     body?: never;
     path?: never;
     query?: never;
     url: '/me';
 };
 
-export type V1AccountProfile0Errors = {
+export type AccountMeErrors = {
     404: {
         message: 'User not found';
     };
 };
 
-export type V1AccountProfile0Error = V1AccountProfile0Errors[keyof V1AccountProfile0Errors];
+export type AccountMeError = AccountMeErrors[keyof AccountMeErrors];
 
-export type V1AccountProfile0Responses = {
+export type AccountMeResponses = {
     200: {
         data: {
             id: string;
@@ -145,24 +159,24 @@ export type V1AccountProfile0Responses = {
     };
 };
 
-export type V1AccountProfile0Response = V1AccountProfile0Responses[keyof V1AccountProfile0Responses];
+export type AccountMeResponse = AccountMeResponses[keyof AccountMeResponses];
 
-export type V1AccountUpdateProfile1Data = {
+export type AccountUpdateMeData = {
     body?: never;
     path?: never;
     query?: never;
     url: '/me';
 };
 
-export type V1AccountUpdateProfile1Errors = {
+export type AccountUpdateMeErrors = {
     404: {
         message: 'User not found';
     };
 };
 
-export type V1AccountUpdateProfile1Error = V1AccountUpdateProfile1Errors[keyof V1AccountUpdateProfile1Errors];
+export type AccountUpdateMeError = AccountUpdateMeErrors[keyof AccountUpdateMeErrors];
 
-export type V1AccountUpdateProfile1Responses = {
+export type AccountUpdateMeResponses = {
     200: {
         data: {
             id: string;
@@ -175,24 +189,24 @@ export type V1AccountUpdateProfile1Responses = {
     };
 };
 
-export type V1AccountUpdateProfile1Response = V1AccountUpdateProfile1Responses[keyof V1AccountUpdateProfile1Responses];
+export type AccountUpdateMeResponse = AccountUpdateMeResponses[keyof AccountUpdateMeResponses];
 
-export type V1AccountProfile02Data = {
+export type AccountProfileData = {
     body?: never;
     path?: never;
     query?: never;
     url: '/account/profile';
 };
 
-export type V1AccountProfile02Errors = {
+export type AccountProfileErrors = {
     404: {
         message: 'User not found';
     };
 };
 
-export type V1AccountProfile02Error = V1AccountProfile02Errors[keyof V1AccountProfile02Errors];
+export type AccountProfileError = AccountProfileErrors[keyof AccountProfileErrors];
 
-export type V1AccountProfile02Responses = {
+export type AccountProfileResponses = {
     200: {
         data: {
             id: string;
@@ -205,24 +219,24 @@ export type V1AccountProfile02Responses = {
     };
 };
 
-export type V1AccountProfile02Response = V1AccountProfile02Responses[keyof V1AccountProfile02Responses];
+export type AccountProfileResponse = AccountProfileResponses[keyof AccountProfileResponses];
 
-export type V1AccountUpdateProfile12Data = {
+export type AccountUpdateProfileData = {
     body?: never;
     path?: never;
     query?: never;
     url: '/account/profile';
 };
 
-export type V1AccountUpdateProfile12Errors = {
+export type AccountUpdateProfileErrors = {
     404: {
         message: 'User not found';
     };
 };
 
-export type V1AccountUpdateProfile12Error = V1AccountUpdateProfile12Errors[keyof V1AccountUpdateProfile12Errors];
+export type AccountUpdateProfileError = AccountUpdateProfileErrors[keyof AccountUpdateProfileErrors];
 
-export type V1AccountUpdateProfile12Responses = {
+export type AccountUpdateProfileResponses = {
     200: {
         data: {
             id: string;
@@ -235,7 +249,7 @@ export type V1AccountUpdateProfile12Responses = {
     };
 };
 
-export type V1AccountUpdateProfile12Response = V1AccountUpdateProfile12Responses[keyof V1AccountUpdateProfile12Responses];
+export type AccountUpdateProfileResponse = AccountUpdateProfileResponses[keyof AccountUpdateProfileResponses];
 
 export type AccountChangePasswordData = {
     body?: never;
@@ -3276,7 +3290,17 @@ export type V1ProjectsStoreError = V1ProjectsStoreErrors[keyof V1ProjectsStoreEr
 
 export type V1ProjectsStoreResponses = {
     200: {
-        [key: string]: unknown;
+        data: {
+            vendor_id: string;
+            screening_status: 'completed';
+            matches: Array<{
+                id: string;
+                score: number;
+                details: {
+                    [key: string]: unknown;
+                } | null;
+            }>;
+        };
     };
 };
 
@@ -3646,9 +3670,9 @@ export type QuoteSubmissionIndexResponses = {
             processing_started_at: string;
             processing_completed_at: string;
             parsed_at: string;
-            retry_count: string;
-            line_items_count: string;
-            confidence: string;
+            retry_count: number | string;
+            line_items_count: number | string;
+            confidence: number | string;
         }>;
         meta: {
             current_page: number;
@@ -3711,9 +3735,9 @@ export type QuoteSubmissionUploadResponses = {
             processing_started_at: string;
             processing_completed_at: string;
             parsed_at: string;
-            retry_count: string;
-            line_items_count: string;
-            confidence: string;
+            retry_count: number;
+            line_items_count: number;
+            confidence: number;
         };
     };
 };
@@ -4361,7 +4385,17 @@ export type V1RfqsStoreError = V1RfqsStoreErrors[keyof V1RfqsStoreErrors];
 
 export type V1RfqsStoreResponses = {
     200: {
-        [key: string]: unknown;
+        data: {
+            vendor_id: string;
+            screening_status: 'completed';
+            matches: Array<{
+                id: string;
+                score: number;
+                details: {
+                    [key: string]: unknown;
+                } | null;
+            }>;
+        };
     };
 };
 
@@ -4865,7 +4899,7 @@ export type RfqStoreLineItemResponses = {
             uom: string;
             unit_price: string;
             currency: string;
-            sort_order: string;
+            sort_order: number | string;
         };
     };
 };
@@ -4931,7 +4965,7 @@ export type RfqUpdateLineItemResponses = {
             uom: string;
             unit_price: string;
             currency: string;
-            sort_order: string;
+            sort_order: number;
         };
     };
 };
@@ -4978,8 +5012,14 @@ export type V1RfqTemplatesStoreData = {
 };
 
 export type V1RfqTemplatesStoreResponses = {
-    200: {
-        [key: string]: unknown;
+    201: {
+        data: {
+            id: string;
+            title: string;
+            status: string;
+            assignee_ids: Array<string>;
+            due_date: string | null;
+        };
     };
 };
 
@@ -5765,7 +5805,7 @@ export type V1TasksStoreData = {
     body: {
         title: string;
         description?: string;
-        project_id?: number | null;
+        project_id?: string;
         priority?: 'low' | 'medium' | 'high' | 'critical';
         due_date?: string | null;
         assignee_ids?: Array<string>;
@@ -5820,8 +5860,30 @@ export type V1TasksStoreErrors = {
 export type V1TasksStoreError = V1TasksStoreErrors[keyof V1TasksStoreErrors];
 
 export type V1TasksStoreResponses = {
-    200: {
-        [key: string]: unknown;
+    201: {
+        data: {
+            id: string;
+            legal_name: string;
+            display_name: string;
+            registration_number: string;
+            country_of_registration: string;
+            primary_contact_name: string;
+            primary_contact_email: string;
+            primary_contact_phone: string | null;
+            status: string;
+            approval_record: {
+                approved_by_user_id: string | null;
+                approved_at: string | null;
+                approval_note: string | null;
+            } | null;
+            created_at: string | null;
+            updated_at: string | null;
+            name: string;
+            trading_name: string;
+            country_code: string;
+            email: string;
+            phone: string | null;
+        };
     };
 };
 
@@ -6352,9 +6414,9 @@ export type VendorIndexResponses = {
             primary_contact_phone: string | null;
             status: string;
             approval_record: {
-                approved_by_user_id: string;
-                approved_at: string;
-                approval_note: string;
+                approved_by_user_id: string | null;
+                approved_at: string | null;
+                approval_note: string | null;
             } | null;
             created_at: string;
             updated_at: string;
@@ -6377,12 +6439,12 @@ export type VendorIndexResponse = VendorIndexResponses[keyof VendorIndexResponse
 
 export type V1VendorsStoreData = {
     body: {
-        legal_name: string;
-        display_name: string;
-        registration_number: string;
-        country_of_registration: string;
-        primary_contact_name: string;
-        primary_contact_email: string;
+        legal_name?: string;
+        display_name?: string;
+        registration_number?: string;
+        country_of_registration?: string;
+        primary_contact_name?: string;
+        primary_contact_email?: string;
         primary_contact_phone?: string | null;
     };
     path?: never;
@@ -6411,8 +6473,30 @@ export type V1VendorsStoreErrors = {
 export type V1VendorsStoreError = V1VendorsStoreErrors[keyof V1VendorsStoreErrors];
 
 export type V1VendorsStoreResponses = {
-    200: {
-        [key: string]: unknown;
+    201: {
+        data: {
+            id: string;
+            legal_name: string;
+            display_name: string;
+            registration_number: string;
+            country_of_registration: string;
+            primary_contact_name: string;
+            primary_contact_email: string;
+            primary_contact_phone: string | null;
+            status: string;
+            approval_record: {
+                approved_by_user_id: string | null;
+                approved_at: string | null;
+                approval_note: string | null;
+            } | null;
+            created_at: string | null;
+            updated_at: string | null;
+            name: string;
+            trading_name: string;
+            country_code: string;
+            email: string;
+            phone: string | null;
+        };
     };
 };
 
@@ -6448,9 +6532,9 @@ export type VendorShowResponses = {
             primary_contact_phone: string | null;
             status: string;
             approval_record: {
-                approved_by_user_id: string;
-                approved_at: string;
-                approval_note: string;
+                approved_by_user_id: string | null;
+                approved_at: string | null;
+                approval_note: string | null;
             } | null;
             created_at: string;
             updated_at: string;
@@ -6467,12 +6551,12 @@ export type VendorShowResponse = VendorShowResponses[keyof VendorShowResponses];
 
 export type VendorUpdateData = {
     body: {
-        legal_name: string;
-        display_name: string;
-        registration_number: string;
-        country_of_registration: string;
-        primary_contact_name: string;
-        primary_contact_email: string;
+        legal_name?: string;
+        display_name?: string;
+        registration_number?: string;
+        country_of_registration?: string;
+        primary_contact_name?: string;
+        primary_contact_email?: string;
         primary_contact_phone?: string | null;
     };
     path: {
@@ -6518,9 +6602,9 @@ export type VendorUpdateResponses = {
             primary_contact_phone: string | null;
             status: string;
             approval_record: {
-                approved_by_user_id: string;
-                approved_at: string;
-                approval_note: string;
+                approved_by_user_id: string | null;
+                approved_at: string | null;
+                approval_note: string | null;
             } | null;
             created_at: string;
             updated_at: string;
@@ -6699,7 +6783,17 @@ export type V1VendorsSanctionsScreeningError = V1VendorsSanctionsScreeningErrors
 
 export type V1VendorsSanctionsScreeningResponses = {
     200: {
-        [key: string]: unknown;
+        data: {
+            vendor_id: string;
+            screening_status: 'completed';
+            matches: Array<{
+                id: string;
+                score: number;
+                details: {
+                    [key: string]: unknown;
+                } | null;
+            }>;
+        };
     };
 };
 
@@ -7040,9 +7134,9 @@ export type VendorStatusUpdateResponses = {
             primary_contact_phone: string | null;
             status: string;
             approval_record: {
-                approved_by_user_id: string;
-                approved_at: string;
-                approval_note: string;
+                approved_by_user_id: string | null;
+                approved_at: string | null;
+                approval_note: string | null;
             } | null;
             created_at: string;
             updated_at: string;

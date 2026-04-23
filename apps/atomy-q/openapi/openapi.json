@@ -13,7 +13,7 @@
     "paths": {
         "/me": {
             "get": {
-                "operationId": "v1.account.profile_0",
+                "operationId": "account.me",
                 "description": "GET /me or GET /account/profile",
                 "summary": "Get current user profile",
                 "tags": [
@@ -88,7 +88,7 @@
                 }
             },
             "put": {
-                "operationId": "v1.account.updateProfile_1",
+                "operationId": "account.updateMe",
                 "description": "PUT /me or PUT /account/profile",
                 "summary": "Update current user profile",
                 "tags": [
@@ -165,7 +165,7 @@
         },
         "/account/profile": {
             "get": {
-                "operationId": "v1.account.profile_0",
+                "operationId": "account.profile",
                 "description": "GET /me or GET /account/profile",
                 "summary": "Get current user profile",
                 "tags": [
@@ -240,7 +240,7 @@
                 }
             },
             "put": {
-                "operationId": "v1.account.updateProfile_1",
+                "operationId": "account.updateProfile",
                 "description": "PUT /me or PUT /account/profile",
                 "summary": "Update current user profile",
                 "tags": [
@@ -12992,12 +12992,51 @@
                     }
                 },
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "assignee_ids": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "due_date": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "title",
+                                                "status",
+                                                "assignee_ids",
+                                                "due_date"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
                                 }
                             }
                         }
@@ -15160,12 +15199,136 @@
                     }
                 },
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "legal_name": {
+                                                    "type": "string"
+                                                },
+                                                "display_name": {
+                                                    "type": "string"
+                                                },
+                                                "registration_number": {
+                                                    "type": "string"
+                                                },
+                                                "country_of_registration": {
+                                                    "type": "string"
+                                                },
+                                                "primary_contact_name": {
+                                                    "type": "string"
+                                                },
+                                                "primary_contact_email": {
+                                                    "type": "string"
+                                                },
+                                                "primary_contact_phone": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "approval_record": {
+                                                    "oneOf": [
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "approved_by_user_id": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "approved_at": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "approval_note": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "approved_by_user_id",
+                                                                "approved_at",
+                                                                "approval_note"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "type": "null"
+                                                        }
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "updated_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "trading_name": {
+                                                    "type": "string"
+                                                },
+                                                "country_code": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "phone": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "legal_name",
+                                                "display_name",
+                                                "registration_number",
+                                                "country_of_registration",
+                                                "primary_contact_name",
+                                                "primary_contact_email",
+                                                "primary_contact_phone",
+                                                "status",
+                                                "approval_record",
+                                                "created_at",
+                                                "updated_at",
+                                                "name",
+                                                "trading_name",
+                                                "country_code",
+                                                "email",
+                                                "phone"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
                                 }
                             }
                         }
@@ -16504,15 +16667,15 @@
                     "required": true,
                     "content": {
                         "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "legal_name": {
-                                            "type": "string"
-                                        },
-                                        "display_name": {
-                                            "type": "string"
-                                        },
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "legal_name": {
+                                        "type": "string"
+                                    },
+                                    "display_name": {
+                                        "type": "string"
+                                    },
                                     "registration_number": {
                                         "type": "string"
                                     },
@@ -16535,14 +16698,139 @@
                                 }
                             }
                         }
+                    }
                 },
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object"
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "legal_name": {
+                                                    "type": "string"
+                                                },
+                                                "display_name": {
+                                                    "type": "string"
+                                                },
+                                                "registration_number": {
+                                                    "type": "string"
+                                                },
+                                                "country_of_registration": {
+                                                    "type": "string"
+                                                },
+                                                "primary_contact_name": {
+                                                    "type": "string"
+                                                },
+                                                "primary_contact_email": {
+                                                    "type": "string"
+                                                },
+                                                "primary_contact_phone": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "status": {
+                                                    "type": "string"
+                                                },
+                                                "approval_record": {
+                                                    "oneOf": [
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "approved_by_user_id": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "approved_at": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                },
+                                                                "approval_note": {
+                                                                    "type": [
+                                                                        "string",
+                                                                        "null"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "approved_by_user_id",
+                                                                "approved_at",
+                                                                "approval_note"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "type": "null"
+                                                        }
+                                                    ]
+                                                },
+                                                "created_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "updated_at": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "trading_name": {
+                                                    "type": "string"
+                                                },
+                                                "country_code": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "phone": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "id",
+                                                "legal_name",
+                                                "display_name",
+                                                "registration_number",
+                                                "country_of_registration",
+                                                "primary_contact_name",
+                                                "primary_contact_email",
+                                                "primary_contact_phone",
+                                                "status",
+                                                "approval_record",
+                                                "created_at",
+                                                "updated_at",
+                                                "name",
+                                                "trading_name",
+                                                "country_code",
+                                                "email",
+                                                "phone"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
                                 }
                             }
                         }
@@ -18327,44 +18615,115 @@
         }
     },
     "components": {
-                "schemas": {
-                    "ScreeningResponse": {
+        "schemas": {
+            "ScreeningResponse": {
+                "type": "object",
+                "properties": {
+                    "data": {
                         "type": "object",
                         "properties": {
-                            "data": {
-                                "type": "object",
-                                "properties": {
-                                    "vendor_id": { "type": "string" },
-                                    "screening_status": {
-                                        "type": "string",
-                                        "enum": ["completed", "pending", "failed"]
-                                    },
-                                    "matches": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": { "type": "string" },
-                                                "score": { "type": "number" },
-                                                "details": { "type": ["object", "null"] }
-                                            },
-                                            "required": ["id", "score", "details"]
+                            "vendor_id": {
+                                "type": "string"
+                            },
+                            "screening_status": {
+                                "type": "string",
+                                "enum": [
+                                    "completed",
+                                    "pending",
+                                    "failed"
+                                ]
+                            },
+                            "matches": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "score": {
+                                            "type": "number"
+                                        },
+                                        "details": {
+                                            "type": [
+                                                "object",
+                                                "null"
+                                            ]
                                         }
-                                    }
-                                },
-                                "required": ["vendor_id", "screening_status", "matches"]
+                                    },
+                                    "required": [
+                                        "id",
+                                        "score",
+                                        "details"
+                                    ]
+                                }
                             }
                         },
-                        "required": ["data"]
+                        "required": [
+                            "vendor_id",
+                            "screening_status",
+                            "matches"
+                        ]
                     }
                 },
-        "schemas": {
+                "required": [
+                    "data"
+                ]
+            },
+            "ComparisonPreviewRequest": {
+                "type": "object",
+                "properties": {
+                    "rfq_id": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "rfq_id"
+                ],
+                "title": "ComparisonPreviewRequest"
+            },
             "ComparisonFinalizeRequest": {
                 "type": "object",
                 "properties": {
                     "rfq_id": {
                         "type": "string"
-                                    "$ref": "#/components/schemas/ScreeningResponse"
+                    }
+                },
+                "required": [
+                    "rfq_id"
+                ],
+                "title": "ComparisonFinalizeRequest"
+            },
+            "MessageBag": {
+                "type": "object",
+                "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": "MessageBag"
+            },
+            "NormalizationOverrideRequest": {
+                "type": "object",
+                "properties": {
+                    "override_data": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "issue_code": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "missing_price",
+                            "missing_currency",
+                            "ambiguous_mapping",
+                            "invalid_uom"
+                        ]
                     }
                 },
                 "required": [
