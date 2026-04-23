@@ -1,5 +1,7 @@
 # Atomy-Q Global AI Fallback Implementation Plan
 
+> **Superseded:** Use [docs/superpowers/plans/2026-04-23-atomy-q-ai-plan-index.md](docs/superpowers/plans/2026-04-23-atomy-q-ai-plan-index.md) and its six dependency-ordered implementation plans. This single-plan document reflects the earlier, narrower fallback-only posture and is no longer the authoritative execution entry point after the AI-first alpha redesign.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Make Atomy-Q AI-backed at its core while keeping every RFQ workflow usable when AI is disabled, degraded, or unavailable.
@@ -476,4 +478,3 @@ Use a final docs commit after the verification run so the implementation plan, c
 - The WEB hides AI-only controls where manual fallback exists and shows a clear unavailable message where it does not.
 - The API exposes a public AI status endpoint that distinguishes config-disabled AI from runtime-unavailable AI.
 - The implementation is covered by package, API, WEB, and browser tests.
-
