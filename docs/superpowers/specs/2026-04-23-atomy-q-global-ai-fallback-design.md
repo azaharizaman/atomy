@@ -16,7 +16,9 @@ This spec defines the target-state architecture for that operating model and mak
 
 - Atomy-Q is **AI-first**, not AI-optional.
 - Alpha must ship with **real provider-backed AI**, not only deterministic or rule-based approximations.
-- Alpha will use **Hugging Face Managed Inference Endpoints** as the **single primary provider**.
+- Alpha will use **one globally selected provider** for all AI capability groups.
+- **OpenRouter** is the alpha default and primary provider.
+- **Hugging Face** is also supported as an alternative single-provider deployment option.
 - Alpha will use **separate managed endpoints per capability group**, not one shared endpoint for the whole application.
 - The **main RFQ chain** must remain manually operable when provider-backed AI is down.
 - Some AI surfaces remain **AI-only** in alpha and must show a truthful unavailable state when AI is down.
@@ -84,7 +86,7 @@ Every stored AI artifact must retain provenance metadata sufficient for audit, d
 
 ## Target-State Capability Topology
 
-Atomy-Q AI is split into capability groups. Each group may depend on a different Hugging Face managed endpoint.
+Atomy-Q AI is split into capability groups. Each group may depend on a different endpoint or route within the selected global provider.
 
 | Capability Group | Purpose | Representative Atomy-Q Surfaces | Alpha Provider-Backed | Manual Continuity |
 |---|---|---|---|---|
@@ -144,11 +146,13 @@ Layer 3 owns framework-specific behavior.
 
 ## Provider Architecture
 
-### Alpha Primary Provider
+### Alpha Provider Model
 
-Alpha uses **Hugging Face Managed Inference Endpoints** as the single primary provider.
+Alpha uses **one globally selected provider** for all capability groups.
 
-This is a provider decision, not a modeling decision. Different endpoints may serve different model families, but the application treats Hugging Face as the primary provider boundary in alpha.
+The default alpha provider is **OpenRouter**. **Hugging Face** is supported as an alternative single-provider deployment option. Future providers may be added later through `Nexus\MachineLearning` contracts, but alpha still runs with exactly one active provider in a given environment.
+
+This is a deployment decision, not a Layer 1 business-modeling decision. Different capability groups may still use different models, routes, or endpoint URLs, but they must all belong to the same selected provider in that environment.
 
 ### Separate Endpoint Groups
 
@@ -156,16 +160,16 @@ Alpha must not rely on one shared managed endpoint for every AI function. Separa
 
 | Endpoint Group | Primary Consumers | Why It Must Be Separate |
 |---|---|---|
-| `HF_DOCUMENT_ENDPOINT` | upload, reparse, commercial terms extraction | document parsing has different payload size, latency, and model behavior |
-| `HF_NORMALIZATION_ENDPOINT` | line mapping, taxonomy hints, UOM normalization | normalization needs structured extraction and classification behavior |
-| `HF_SOURCING_RECOMMENDATION_ENDPOINT` | vendor ranking and shortlist explanation | recommendation requires vendor/context ranking rather than document parsing |
-| `HF_COMPARISON_AWARD_ENDPOINT` | comparison explanations, recommendation overlays, award guidance, debrief drafting | comparison and award guidance depend on frozen sourcing data and explanation workflows |
-| `HF_INSIGHT_ENDPOINT` | dashboard and RFQ insight summaries | summary generation should not share failure or scaling limits with transactional RFQ operations |
-| `HF_GOVERNANCE_ENDPOINT` | sanctions/due diligence narrative enrichment, governance explanations | governance workloads are adjacent but operationally different from RFQ chain traffic |
+| `AI_DOCUMENT_ENDPOINT` | upload, reparse, commercial terms extraction | document parsing has different payload size, latency, and model behavior |
+| `AI_NORMALIZATION_ENDPOINT` | line mapping, taxonomy hints, UOM normalization | normalization needs structured extraction and classification behavior |
+| `AI_SOURCING_RECOMMENDATION_ENDPOINT` | vendor ranking and shortlist explanation | recommendation requires vendor/context ranking rather than document parsing |
+| `AI_COMPARISON_AWARD_ENDPOINT` | comparison explanations, recommendation overlays, award guidance, debrief drafting | comparison and award guidance depend on frozen sourcing data and explanation workflows |
+| `AI_INSIGHT_ENDPOINT` | dashboard and RFQ insight summaries | summary generation should not share failure or scaling limits with transactional RFQ operations |
+| `AI_GOVERNANCE_ENDPOINT` | sanctions/due diligence narrative enrichment, governance explanations | governance workloads are adjacent but operationally different from RFQ chain traffic |
 
 ### Future Provider Strategy
 
-The target-state architecture must support future provider expansion through `Nexus\MachineLearning` contracts. Alpha does not require active multi-provider failover, but it must not hard-code Hugging Face assumptions into Layer 1 business contracts.
+The target-state architecture must support future provider expansion through `Nexus\MachineLearning` contracts. Alpha does not require active multi-provider failover, mixed-provider routing, or per-capability provider selection, but it must not hard-code OpenRouter-, Hugging Face-, or any other provider-specific assumptions into Layer 1 business contracts.
 
 ## Runtime Modes And Health Model
 
@@ -184,7 +188,7 @@ For implementation compatibility during transition, a legacy `llm` value may be 
 | Mode | Meaning |
 |---|---|
 | `off` | AI intentionally disabled globally |
-| `provider` | Real provider-backed AI is the default path |
+| `provider` | Real provider-backed AI from the selected single global provider is the default path |
 | `deterministic` | Controlled fallback mode for diagnostics, emergency continuity, local development, or staged rollout; not the commercial alpha default |
 
 ### Runtime Health States
@@ -554,12 +558,12 @@ This section is the operator-owned input contract. Without these inputs, provide
 
 | Item | What You Must Provide | Why It Is Needed | Consumed By |
 |---|---|---|---|
-| Hugging Face account / organization | active account with billing and endpoint ownership | required to host managed inference endpoints | API operations and platform setup |
-| Managed endpoint URLs | one URL per endpoint group | application must route each capability group to the correct endpoint | API config and provider adapters |
-| Access token or service credential | credential with invoke permission for each managed endpoint | required to authenticate inference calls | API only |
+| Provider account / organization | active provider account with billing and route or endpoint ownership | required to run provider-backed AI in the selected environment | API operations and platform setup |
+| Managed endpoint URLs or provider routes | one route/URL per endpoint group within the selected provider | application must route each capability group to the correct provider path | API config and provider adapters |
+| Access token or service credential | credential with invoke permission for the selected provider routes/endpoints | required to authenticate inference calls | API only |
 | Approved model per endpoint | model id, revision, and intended task per endpoint group | required to bind each capability group to the correct model behavior | API config and operations documentation |
 | Endpoint scaling policy | min replicas, max replicas, autoscaling thresholds, cold-start policy | required for latency and capacity planning | provider operations |
-| Network policy | allowlisted outbound access, private networking decisions, firewall rules if applicable | required so the API can reach Hugging Face endpoints securely | infrastructure and API runtime |
+| Network policy | allowlisted outbound access, private networking decisions, firewall rules if applicable | required so the API can reach the selected provider securely | infrastructure and API runtime |
 | Timeout and retry budgets | per-endpoint timeout, retry count, circuit-breaker policy | required to compute degraded and unavailable states safely | API and IntelligenceOperations |
 | Quota and cost budget | spend limits, alert thresholds, concurrency expectations | required so AI failure is not discovered only after quota exhaustion | operations and finance |
 | Healthcheck policy | how endpoint health is checked and what thresholds define degraded or unavailable | required for truthful status reporting | IntelligenceOperations and API |
@@ -573,25 +577,26 @@ This section is the operator-owned input contract. Without these inputs, provide
 The exact names may evolve, but alpha requires the API to be supplied with configuration equivalent to:
 
 - `AI_MODE`
-- `AI_PRIMARY_PROVIDER=huggingface`
-- `HF_DOCUMENT_ENDPOINT_URL`
-- `HF_DOCUMENT_ENDPOINT_TOKEN`
-- `HF_DOCUMENT_MODEL_ID`
-- `HF_NORMALIZATION_ENDPOINT_URL`
-- `HF_NORMALIZATION_ENDPOINT_TOKEN`
-- `HF_NORMALIZATION_MODEL_ID`
-- `HF_SOURCING_RECOMMENDATION_ENDPOINT_URL`
-- `HF_SOURCING_RECOMMENDATION_ENDPOINT_TOKEN`
-- `HF_SOURCING_RECOMMENDATION_MODEL_ID`
-- `HF_COMPARISON_AWARD_ENDPOINT_URL`
-- `HF_COMPARISON_AWARD_ENDPOINT_TOKEN`
-- `HF_COMPARISON_AWARD_MODEL_ID`
-- `HF_INSIGHT_ENDPOINT_URL`
-- `HF_INSIGHT_ENDPOINT_TOKEN`
-- `HF_INSIGHT_MODEL_ID`
-- `HF_GOVERNANCE_ENDPOINT_URL`
-- `HF_GOVERNANCE_ENDPOINT_TOKEN`
-- `HF_GOVERNANCE_MODEL_ID`
+- `AI_PROVIDER=openrouter`
+- `AI_PROVIDER_NAME=openrouter`
+- `AI_DOCUMENT_ENDPOINT_URL`
+- `AI_DOCUMENT_ENDPOINT_TOKEN`
+- `AI_DOCUMENT_MODEL_ID`
+- `AI_NORMALIZATION_ENDPOINT_URL`
+- `AI_NORMALIZATION_ENDPOINT_TOKEN`
+- `AI_NORMALIZATION_MODEL_ID`
+- `AI_SOURCING_RECOMMENDATION_ENDPOINT_URL`
+- `AI_SOURCING_RECOMMENDATION_ENDPOINT_TOKEN`
+- `AI_SOURCING_RECOMMENDATION_MODEL_ID`
+- `AI_COMPARISON_AWARD_ENDPOINT_URL`
+- `AI_COMPARISON_AWARD_ENDPOINT_TOKEN`
+- `AI_COMPARISON_AWARD_MODEL_ID`
+- `AI_INSIGHT_ENDPOINT_URL`
+- `AI_INSIGHT_ENDPOINT_TOKEN`
+- `AI_INSIGHT_MODEL_ID`
+- `AI_GOVERNANCE_ENDPOINT_URL`
+- `AI_GOVERNANCE_ENDPOINT_TOKEN`
+- `AI_GOVERNANCE_MODEL_ID`
 - `AI_REQUEST_TIMEOUT_SECONDS`
 - `AI_MAX_RETRIES`
 - `AI_HEALTH_FAILURE_THRESHOLD`
@@ -647,9 +652,13 @@ Alpha is not AI-excluded. Alpha includes real provider-backed AI across the full
 
 ### Alpha-Specific Constraints
 
-- one primary provider: Hugging Face managed inference endpoints
+- one globally selected provider for all capability groups
+- alpha default provider: OpenRouter
+- Hugging Face supported as an alternative single-provider deployment
 - separate endpoint groups required
 - no multi-provider failover yet
+- no mixed-provider topology yet
+- no per-capability provider routing yet
 - no per-tenant AI toggle yet
 - global AI kill switch remains required
 - deterministic mode remains available for diagnostics and emergency continuity, but it is not the primary alpha sales posture
@@ -657,6 +666,7 @@ Alpha is not AI-excluded. Alpha includes real provider-backed AI across the full
 ### Explicit Alpha Deferrals
 
 - active secondary provider failover
+- mixed-provider routing across capability groups
 - per-tenant AI enablement policy
 - autonomous approvals or awards
 - manual vendor ranking as a first-class replacement for AI recommendation
@@ -673,6 +683,6 @@ The design is not complete until the following are true:
 
 ## Final Position
 
-Atomy-Q alpha should launch as an AI-first procurement SaaS with real Hugging Face-backed AI across the full RFQ chain, while remaining operationally resilient enough to continue the core RFQ workflow when provider-backed AI is unavailable.
+Atomy-Q alpha should launch as an AI-first procurement SaaS with real provider-backed AI across the full RFQ chain, using OpenRouter by default while allowing a single-provider Hugging Face deployment option, and while remaining operationally resilient enough to continue the core RFQ workflow when provider-backed AI is unavailable.
 
 That is the correct balance between product differentiation and enterprise reliability.

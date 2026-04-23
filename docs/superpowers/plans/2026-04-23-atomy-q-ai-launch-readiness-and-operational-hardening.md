@@ -69,7 +69,8 @@
 ## Task 2: Operator Responsibility Handoff
 
 - [ ] Produce a concrete operator checklist covering:
-  - Hugging Face account or organization ownership
+  - selected provider account or organization ownership
+  - active provider choice for the environment (`openrouter`, `huggingface`, future supported value)
   - endpoint URLs per capability group
   - auth tokens or service credentials
   - model ids and revisions

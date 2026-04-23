@@ -4,7 +4,7 @@
 
 **Goal:** Establish the global AI operating contract for alpha: provider-backed by default, truthful when degraded, and consumable by every API endpoint and WEB surface through one authoritative runtime model.
 
-**Architecture:** Layer 1 defines provider-neutral AI runtime vocabulary and procurement-capability metadata. Layer 2 aggregates endpoint-group health into application-facing capability availability. Layer 3 adapts Hugging Face managed inference endpoint configuration, exposes status routes, and gives the WEB app one capability-aware source of truth for rendering manual continuity or unavailable states.
+**Architecture:** Layer 1 defines provider-neutral AI runtime vocabulary and procurement-capability metadata. Layer 2 aggregates endpoint-group health into application-facing capability availability. Layer 3 adapts a single globally selected provider configuration, exposes status routes, and gives the WEB app one capability-aware source of truth for rendering manual continuity or unavailable states.
 
 **Tech Stack:** PHP 8.3, Laravel, Nexus packages, Next.js/React, TypeScript, TanStack Query, PHPUnit, Vitest.
 
@@ -18,7 +18,8 @@
 - Endpoint-group health aggregation
 - Public AI status API for pre-auth and post-auth rendering
 - WEB AI provider, hook, and reusable unavailable-state primitives
-- Env/config contract for Hugging Face managed inference endpoints
+- Env/config contract for a single globally selected provider
+- OpenRouter as the alpha default provider, with Hugging Face as a supported alternative
 
 ## Layer Ownership
 
@@ -29,7 +30,7 @@
 - **Layer 2**
   - `orchestrators/IntelligenceOperations`: capability availability coordination, health aggregation, operator-facing status summary, endpoint-group dependency resolution.
 - **Layer 3**
-  - `apps/atomy-q/API`: env parsing, Hugging Face config adapters, health probes, public status endpoint, controller gating concern, OpenAPI.
+  - `apps/atomy-q/API`: env parsing, provider-specific config adapters, health probes, public status endpoint, controller gating concern, OpenAPI.
   - `apps/atomy-q/WEB`: AI status query, context provider, capability helper utilities, status chips, unavailable callouts.
 
 ## File Structure
@@ -60,8 +61,9 @@
 - Modify: `apps/atomy-q/API/config/atomy.php`
 - Modify: `apps/atomy-q/API/config/services.php`
 - Modify: `apps/atomy-q/API/app/Providers/AppServiceProvider.php`
-- Create: `apps/atomy-q/API/app/Adapters/Ai/HuggingFaceEndpointRegistry.php`
-- Create: `apps/atomy-q/API/app/Adapters/Ai/HuggingFaceHealthProbe.php`
+- Create: `apps/atomy-q/API/app/Adapters/Ai/ProviderEndpointRegistry.php`
+- Create: `apps/atomy-q/API/app/Adapters/Ai/ProviderHealthProbe.php`
+- Create if needed: provider-specific adapters such as `OpenRouterEndpointRegistry.php`, `OpenRouterHealthProbe.php`, `HuggingFaceEndpointRegistry.php`, and `HuggingFaceHealthProbe.php`
 - Create: `apps/atomy-q/API/app/Adapters/Ai/AtomyAiCapabilityCatalog.php`
 - Create: `apps/atomy-q/API/app/Http/Controllers/Api/V1/AiStatusController.php`
 - Create: `apps/atomy-q/API/app/Http/Controllers/Api/V1/Concerns/InteractsWithAiAvailability.php`
@@ -87,7 +89,7 @@
 
 - [ ] Write failing tests for AI mode parsing, capability definitions, endpoint-group health, and runtime snapshot serialization.
 - [ ] Implement provider-neutral enums and value objects in `packages/MachineLearning`.
-- [ ] Keep Hugging Face names out of Layer 1 contracts; use endpoint-group and provider-neutral terminology.
+- [ ] Keep provider names out of Layer 1 contracts; use endpoint-group and provider-neutral terminology.
 - [ ] Add procurement-facing feature keys only where they improve cross-layer consistency without pulling app routes or UI terms into Layer 1.
 
 ## Task 2: Build Capability Aggregation In Layer 2
@@ -101,15 +103,17 @@
 
 - [ ] Add API config parsing for:
   - `AI_MODE`
-  - `HF_PROVIDER_NAME`
-  - `HF_DOCUMENT_ENDPOINT`
-  - `HF_NORMALIZATION_ENDPOINT`
-  - `HF_SOURCING_RECOMMENDATION_ENDPOINT`
-  - `HF_COMPARISON_AWARD_ENDPOINT`
-  - `HF_INSIGHT_ENDPOINT`
-  - `HF_GOVERNANCE_ENDPOINT`
+  - `AI_PROVIDER`
+  - `AI_PROVIDER_NAME`
+  - `AI_DOCUMENT_ENDPOINT`
+  - `AI_NORMALIZATION_ENDPOINT`
+  - `AI_SOURCING_RECOMMENDATION_ENDPOINT`
+  - `AI_COMPARISON_AWARD_ENDPOINT`
+  - `AI_INSIGHT_ENDPOINT`
+  - `AI_GOVERNANCE_ENDPOINT`
   - matching auth token and timeout settings
-- [ ] Implement a Hugging Face endpoint registry and health probe adapter in Layer 3.
+- [ ] Implement a provider-selectable endpoint registry and health probe adapter in Layer 3.
+- [ ] Enforce that one provider selection applies globally to all endpoint groups in the environment.
 - [ ] Expose `GET /api/v1/ai/status` as a public route so the WEB app can render before auth is established.
 - [ ] Return a stable envelope that includes:
   - global mode
@@ -146,4 +150,4 @@ cd apps/atomy-q/WEB && npm run test:unit -- src/hooks/use-ai-status.test.ts src/
 - Every later plan can ask one API for AI runtime truth.
 - WEB has one capability-aware gating primitive instead of ad hoc env checks.
 - The system can distinguish `disabled by config` from `runtime unavailable`.
-- No Hugging Face transport detail leaks into Layer 1 contracts.
+- No provider transport detail leaks into Layer 1 contracts.

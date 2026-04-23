@@ -29,7 +29,7 @@
   - `orchestrators/ProcurementOperations`: award guidance coordination and recommendation-to-award rationale bridging.
   - `orchestrators/ApprovalOperations`: optional approval drafting aids that never supersede workflow authority.
 - **Layer 3**
-  - `apps/atomy-q/API`: comparison, award, and approval controllers; Hugging Face comparison/award adapter; persistence; routes; OpenAPI.
+  - `apps/atomy-q/API`: comparison, award, and approval controllers; provider-specific comparison/award adapter; persistence; routes; OpenAPI.
   - `apps/atomy-q/WEB`: comparison run screens, award workspace, approval pages, decision-trail views.
 
 ## File Structure
@@ -48,7 +48,8 @@
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/ApprovalController.php`
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/OperationalApprovalController.php`
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/DecisionTrailController.php`
-- Create: `apps/atomy-q/API/app/Adapters/Ai/HuggingFaceComparisonAwardClient.php`
+- Create: `apps/atomy-q/API/app/Adapters/Ai/ProviderComparisonAwardClient.php`
+- Create if needed: provider-specific implementations such as `OpenRouterComparisonAwardClient.php` and `HuggingFaceComparisonAwardClient.php`
 - Modify: `apps/atomy-q/API/routes/api.php`
 - Modify: `apps/atomy-q/API/openapi/openapi.json`
 - Add or refine persistence models/migrations if AI overlays and provenance need dedicated storage

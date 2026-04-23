@@ -4,7 +4,7 @@
 
 **Goal:** Deliver real provider-backed vendor recommendation and shortlist reasoning in alpha while ensuring vendor selection remains manually operable when recommendation intelligence is degraded or offline.
 
-**Architecture:** Procurement recommendation vocabulary lives in Layer 1. `orchestrators/ProcurementOperations` remains the orchestration home because the existing recommendation contracts already live there and the alpha scope is tightly tied to RFQ vendor decision support. Layer 3 provides the Hugging Face sourcing recommendation adapter, API gating, provenance persistence, and vendor workspace UX.
+**Architecture:** Procurement recommendation vocabulary lives in Layer 1. `orchestrators/ProcurementOperations` remains the orchestration home because the existing recommendation contracts already live there and the alpha scope is tightly tied to RFQ vendor decision support. Layer 3 provides the single-provider sourcing recommendation adapter, API gating, provenance persistence, and vendor workspace UX.
 
 **Tech Stack:** PHP 8.3, Laravel, Nexus packages, ProcurementOperations, React/TypeScript, PHPUnit, Vitest.
 
@@ -28,7 +28,7 @@
   - `orchestrators/ProcurementOperations`: recommendation orchestration, deterministic guards, candidate eligibility enforcement, bounded acceptance of provider output.
   - Keep recommendation in `ProcurementOperations` for alpha. Do not introduce a second orchestration home unless post-alpha reuse forces it.
 - **Layer 3**
-  - `apps/atomy-q/API`: Hugging Face sourcing recommendation adapter, controller/API contract, persistence and decision-trail integration.
+  - `apps/atomy-q/API`: provider-specific sourcing recommendation adapter, controller/API contract, persistence and decision-trail integration.
   - `apps/atomy-q/WEB`: vendors page, recommendation display, shortlist editing UX, unavailable-state messaging.
 
 ## File Structure
@@ -45,7 +45,8 @@
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/VendorRecommendationController.php`
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/RecommendationController.php`
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/RequisitionVendorSelectionController.php`
-- Create: `apps/atomy-q/API/app/Adapters/Ai/HuggingFaceSourcingRecommendationClient.php`
+- Create: `apps/atomy-q/API/app/Adapters/Ai/ProviderSourcingRecommendationClient.php`
+- Create if needed: provider-specific implementations such as `OpenRouterSourcingRecommendationClient.php` and `HuggingFaceSourcingRecommendationClient.php`
 - Modify: `apps/atomy-q/API/routes/api.php`
 - Modify: `apps/atomy-q/API/openapi/openapi.json`
 - Create or modify: API feature tests for recommendation AI gating and provenance

@@ -4,7 +4,7 @@
 
 **Goal:** Make quote ingestion and normalization genuinely provider-backed in alpha while preserving end-to-end manual continuity when document intelligence or normalization intelligence is degraded or offline.
 
-**Architecture:** Layer 1 defines provider-neutral document-intelligence and procurement-normalization request/result contracts. Layer 2 coordinates quote submission processing, extraction, normalization suggestions, commercial terms extraction, and provenance. Layer 3 wires Hugging Face endpoint adapters, persistence, manual source-line editing endpoints, and quote-intake/normalize workspace UX.
+**Architecture:** Layer 1 defines provider-neutral document-intelligence and procurement-normalization request/result contracts. Layer 2 coordinates quote submission processing, extraction, normalization suggestions, commercial terms extraction, and provenance. Layer 3 wires single-provider document/normalization adapters, persistence, manual source-line editing endpoints, and quote-intake/normalize workspace UX.
 
 **Tech Stack:** PHP 8.3, Laravel queues/jobs, Nexus packages, orchestrators, Next.js/React, TypeScript, PHPUnit, Vitest, Playwright.
 
@@ -30,7 +30,7 @@
   - `orchestrators/QuoteIngestion`: quote processing orchestration, retries, source-line persistence coordination, idempotent reparse semantics.
   - `orchestrators/QuotationIntelligence`: provider-backed extraction, normalization suggestioning, conflict/risk hint generation, decision trail writing.
 - **Layer 3**
-  - `apps/atomy-q/API`: queue jobs, Eloquent adapters, Hugging Face document/normalization clients, manual edit endpoints, persistence models, migrations, OpenAPI.
+  - `apps/atomy-q/API`: queue jobs, Eloquent adapters, provider-specific document/normalization clients, manual edit endpoints, persistence models, migrations, OpenAPI.
   - `apps/atomy-q/WEB`: quote intake, quote detail, normalize workspace, manual edit forms, AI status-driven UX.
 
 ## File Structure
@@ -51,8 +51,9 @@
 - Modify: `apps/atomy-q/API/app/Jobs/ProcessQuoteSubmissionJob.php`
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/QuoteSubmissionController.php`
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/NormalizationController.php`
-- Create: `apps/atomy-q/API/app/Adapters/Ai/HuggingFaceDocumentIntelligenceClient.php`
-- Create: `apps/atomy-q/API/app/Adapters/Ai/HuggingFaceNormalizationClient.php`
+- Create: `apps/atomy-q/API/app/Adapters/Ai/ProviderDocumentIntelligenceClient.php`
+- Create: `apps/atomy-q/API/app/Adapters/Ai/ProviderNormalizationClient.php`
+- Create if needed: provider-specific implementations such as `OpenRouterDocumentIntelligenceClient.php`, `OpenRouterNormalizationClient.php`, `HuggingFaceDocumentIntelligenceClient.php`, and `HuggingFaceNormalizationClient.php`
 - Create if needed: `apps/atomy-q/API/app/Http/Requests/ManualNormalizationSourceLineRequest.php`
 - Create if needed: `apps/atomy-q/API/app/Http/Requests/ManualCommercialTermsRequest.php`
 - Create if needed: manual source-line create/update endpoints in `routes/api.php`
@@ -90,7 +91,7 @@
 
 ## Task 3: Add API Adapters, Persistence, And Manual Continuity Endpoints
 
-- [ ] Replace dormant LLM ingestion/normalization adapters with real Hugging Face managed endpoint clients.
+- [ ] Replace dormant LLM ingestion/normalization adapters with real single-provider endpoint clients for the selected provider.
 - [ ] Add request/response normalization at the API edge so provider payload drift does not leak upward.
 - [ ] Extend quote-submission and normalization persistence with provenance and error fields required for audit and support.
 - [ ] Add or refine endpoints so users can:

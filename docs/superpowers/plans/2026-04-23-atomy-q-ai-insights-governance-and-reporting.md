@@ -29,7 +29,7 @@
   - `orchestrators/InsightOperations`: dashboard and reporting insight coordination.
   - `orchestrators/ProcurementOperations` and any existing governance-related coordinators: provide factual source context for AI summarization.
 - **Layer 3**
-  - `apps/atomy-q/API`: dashboard, report, risk/compliance, and vendor-governance controllers; Hugging Face insight and governance adapters.
+  - `apps/atomy-q/API`: dashboard, report, risk/compliance, and vendor-governance controllers; provider-specific insight and governance adapters.
   - `apps/atomy-q/WEB`: dashboard page, RFQ overview, RFQ insight sidebar, risk page, vendor governance pages, reporting surfaces.
 
 ## File Structure
@@ -47,8 +47,9 @@
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/ReportController.php`
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/VendorGovernanceController.php`
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/RiskComplianceController.php`
-- Create: `apps/atomy-q/API/app/Adapters/Ai/HuggingFaceInsightClient.php`
-- Create: `apps/atomy-q/API/app/Adapters/Ai/HuggingFaceGovernanceClient.php`
+- Create: `apps/atomy-q/API/app/Adapters/Ai/ProviderInsightClient.php`
+- Create: `apps/atomy-q/API/app/Adapters/Ai/ProviderGovernanceClient.php`
+- Create if needed: provider-specific implementations such as `OpenRouterInsightClient.php`, `OpenRouterGovernanceClient.php`, `HuggingFaceInsightClient.php`, and `HuggingFaceGovernanceClient.php`
 - Modify: `apps/atomy-q/API/routes/api.php`
 - Modify: `apps/atomy-q/API/openapi/openapi.json`
 
