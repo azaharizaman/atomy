@@ -2,8 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { CheckCircle2, Upload, BarChart2, Send, FileText, ShieldCheck } from 'lucide-react';
+import { CheckCircle2, Upload, BarChart2, Send, FileText, ShieldCheck, AlertTriangle } from 'lucide-react';
 
+import { EmptyState } from '@/components/ds/Card';
+import { PageHeader } from '@/components/ds/FilterBar';
 import { KPIScorecard } from '@/components/ds/KPIScorecard';
 import { StatusBadge } from '@/components/ds/Badge';
 import { SectionCard } from '@/components/ds/Card';
@@ -50,7 +52,7 @@ function activityToTimelineEvent(item: RfqOverviewActivityItem): TimelineEvent {
 
 export default function RfqOverviewPage({ params }: { params: Promise<{ rfqId: string }> }) {
   const { rfqId } = React.use(params);
-  const { data: overview, isLoading } = useRfqOverview(rfqId);
+  const { data: overview, isLoading, isError, error } = useRfqOverview(rfqId);
 
   const rfq = overview?.rfq;
   const expectedQuotes = overview?.expected_quotes ?? 0;
@@ -93,7 +95,7 @@ export default function RfqOverviewPage({ params }: { params: Promise<{ rfqId: s
     { label: 'Overview' },
   ];
 
-  if (isLoading || !overview) {
+  if (isLoading) {
     return (
       <div className="space-y-5">
         <WorkspaceBreadcrumbs items={breadcrumbItems} />
@@ -103,6 +105,24 @@ export default function RfqOverviewPage({ params }: { params: Promise<{ rfqId: s
           ))}
         </div>
         <div className="h-48 rounded-lg border border-slate-200 bg-slate-50 animate-pulse" />
+      </div>
+    );
+  }
+
+  if (isError || !overview) {
+    const errorMessage = error instanceof Error ? error.message : `RFQ overview unavailable for "${rfqId}".`;
+
+    return (
+      <div className="space-y-5">
+        <WorkspaceBreadcrumbs items={breadcrumbItems} />
+        <PageHeader title="Overview" subtitle="RFQ overview unavailable" />
+        <SectionCard title="Overview unavailable" subtitle="The overview screen could not load the live RFQ payload.">
+          <EmptyState
+            icon={<AlertTriangle size={20} />}
+            title="Could not load RFQ overview"
+            description={errorMessage}
+          />
+        </SectionCard>
       </div>
     );
   }
