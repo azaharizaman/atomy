@@ -6,8 +6,9 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Adapters\Ai\Contracts\ProviderGovernanceClientInterface;
 use App\Adapters\Ai\DTOs\GovernanceNarrativeRequest;
-use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
+use App\Http\Controllers\Api\V1\Concerns\BuildsAiArtifactEnvelope;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
+use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
 use App\Http\Controllers\Controller;
 use App\Http\Idempotency\IdempotencyCompletion;
 use App\Models\Vendor;
@@ -17,6 +18,7 @@ use App\Services\VendorGovernanceScoreService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\ValidationException;
 use Nexus\Common\Contracts\ClockInterface;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
@@ -25,6 +27,7 @@ use Throwable;
 
 final class VendorGovernanceController extends Controller
 {
+    use BuildsAiArtifactEnvelope;
     use ExtractsAuthContext;
     use InteractsWithAiAvailability;
 
@@ -36,6 +39,38 @@ final class VendorGovernanceController extends Controller
     }
 
     public function show(Request $request, string $id): JsonResponse
+    {
+        $tenantId = $this->tenantId($request);
+        $vendor = $this->findVendor($tenantId, $id);
+        if ($vendor === null) {
+            return response()->json(['message' => 'Vendor not found'], 404);
+        }
+
+        $evidence = $this->evidenceQuery($tenantId, $id)->orderByDesc('observed_at')->orderBy('title')->get();
+        $findings = $this->findingQuery($tenantId, $id)->orderByDesc('opened_at')->orderBy('issue_type')->get();
+        $summary = $this->scoreService->summarize($evidence, $findings);
+        $serializedEvidence = $evidence->map(fn (VendorEvidence $record): array => $this->serializeEvidence($record))->values()->all();
+        $serializedFindings = $findings->map(fn (VendorFinding $record): array => $this->serializeFinding($record))->values()->all();
+
+        return response()->json([
+            'data' => [
+                'vendor_id' => (string) $vendor->id,
+                'evidence' => $serializedEvidence,
+                'findings' => $serializedFindings,
+                'summary_scores' => $summary['scores'],
+                'warning_flags' => $summary['warning_flags'],
+                'ai_narrative' => $this->readGovernanceNarrativeEnvelope(
+                    tenantId: $tenantId,
+                    vendorId: (string) $vendor->id,
+                    evidence: $serializedEvidence,
+                    findings: $serializedFindings,
+                    summary: $summary,
+                ),
+            ],
+        ]);
+    }
+
+    public function generate(Request $request, string $id): JsonResponse
     {
         $tenantId = $this->tenantId($request);
         $vendor = $this->findVendor($tenantId, $id);
@@ -286,6 +321,8 @@ final class VendorGovernanceController extends Controller
         array $findings,
         array $summary,
     ): array {
+        [$sanitizedEvidence, $sanitizedFindings] = $this->sanitizeEvidenceAndFindings($evidence, $findings);
+
         if (! $this->aiCapabilityAvailable('governance_ai_narrative')) {
             return $this->unavailableArtifactEnvelope('governance_ai_narrative');
         }
@@ -296,8 +333,8 @@ final class VendorGovernanceController extends Controller
                 tenantId: $tenantId,
                 vendorId: $vendorId,
                 facts: [
-                    'evidence' => $evidence,
-                    'findings' => $findings,
+                    'evidence' => $sanitizedEvidence,
+                    'findings' => $sanitizedFindings,
                     'summary_scores' => $summary['scores'],
                     'warning_flags' => $summary['warning_flags'],
                 ],
@@ -308,56 +345,86 @@ final class VendorGovernanceController extends Controller
             return $this->unavailableArtifactEnvelope('governance_ai_narrative');
         }
 
-        return $this->artifactEnvelope(
+        $artifact = $this->artifactEnvelope(
             featureKey: 'governance_ai_narrative',
-            payload: $this->providerNarrativePayload($narrative, $evidence, $findings, $summary),
+            payload: $this->providerNarrativePayload($narrative, $sanitizedEvidence, $sanitizedFindings, $summary),
             provenance: $this->providerArtifactProvenance($narrative, AiStatusSchema::ENDPOINT_GROUP_GOVERNANCE),
         );
+
+        Cache::put(
+            $this->governanceNarrativeCacheKey($tenantId, $vendorId, $sanitizedEvidence, $sanitizedFindings, $summary),
+            $artifact,
+            now()->addMinutes(5),
+        );
+
+        return $artifact;
     }
 
     /**
-     * @param array<string, mixed> $payload
+     * @param array<int, array<string, mixed>> $evidence
+     * @param array<int, array<string, mixed>> $findings
+     * @param array{scores: array<string, int>, warning_flags: list<string>} $summary
      * @return array<string, mixed>
      */
-    private function artifactEnvelope(string $featureKey, array $payload, ?array $provenance = null): array
+    private function readGovernanceNarrativeEnvelope(
+        string $tenantId,
+        string $vendorId,
+        array $evidence,
+        array $findings,
+        array $summary,
+    ): array
     {
-        return [
-            'feature_key' => $featureKey,
-            'capability_group' => AiStatusSchema::CAPABILITY_GROUP_GOVERNANCE_INTELLIGENCE,
-            'available' => true,
-            'status' => AiStatusSchema::CAPABILITY_STATUS_AVAILABLE,
-            'manual_continuity' => 'available',
-            'payload' => $payload,
-            'provenance' => $provenance,
-        ];
+        [$sanitizedEvidence, $sanitizedFindings] = $this->sanitizeEvidenceAndFindings($evidence, $findings);
+
+        /** @var array<string, mixed>|null $cached */
+        $cached = Cache::get($this->governanceNarrativeCacheKey($tenantId, $vendorId, $sanitizedEvidence, $sanitizedFindings, $summary));
+
+        return is_array($cached) ? $cached : $this->unavailableArtifactEnvelope('governance_ai_narrative');
     }
 
     /**
-     * @return array<string, mixed>
+     * @param array<int, array<string, mixed>> $evidence
+     * @param array<int, array<string, mixed>> $findings
+     * @return array{0: array<int, array<string, mixed>>, 1: array<int, array<string, mixed>>}
      */
-    private function unavailableArtifactEnvelope(string $featureKey): array
+    private function sanitizeEvidenceAndFindings(array $evidence, array $findings): array
     {
-        $capabilityStatus = $this->aiCapabilityStatus($featureKey);
-        $statusSnapshot = $this->aiStatusSnapshot();
+        $sanitizeActor = static function (mixed $value): ?string {
+            if (! is_string($value) || trim($value) === '') {
+                return null;
+            }
 
-        return [
-            'feature_key' => $featureKey,
-            'capability_group' => AiStatusSchema::CAPABILITY_GROUP_GOVERNANCE_INTELLIGENCE,
-            'available' => false,
-            'status' => $capabilityStatus?->status ?? AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE,
-            'manual_continuity' => 'available',
-            'fallback_ui_mode' => $capabilityStatus?->fallbackUiMode ?? AiStatusSchema::FALLBACK_UI_MODE_SHOW_UNAVAILABLE_MESSAGE,
-            'message_key' => $capabilityStatus?->messageKey ?? 'ai.capability.unavailable',
-            'reason_codes' => $capabilityStatus?->reasonCodes ?? $statusSnapshot->reasonCodes,
-            'diagnostics' => $capabilityStatus?->diagnostics ?? ['mode' => $statusSnapshot->mode],
-            'payload' => null,
-            'provenance' => [
-                'source' => 'deterministic',
-                'endpoint_group' => AiStatusSchema::ENDPOINT_GROUP_GOVERNANCE,
-                'provider_name' => $this->providerName(),
-                'generated_at' => $this->clock->now()->format(DATE_ATOM),
-            ],
-        ];
+            return hash('sha256', strtolower(trim($value)));
+        };
+
+        $sanitizedEvidence = array_map(static function (array $item) use ($sanitizeActor): array {
+            return [
+                'type' => $item['type'] ?? null,
+                'domain' => $item['domain'] ?? null,
+                'source' => $item['source'] ?? null,
+                'review_status' => $item['review_status'] ?? null,
+                'observed_at' => $item['observed_at'] ?? null,
+                'expires_at' => $item['expires_at'] ?? null,
+                'has_notes' => ($item['notes'] ?? null) !== null,
+                'reviewed_by_hash' => $sanitizeActor($item['reviewed_by'] ?? null),
+            ];
+        }, $evidence);
+
+        $sanitizedFindings = array_map(static function (array $item) use ($sanitizeActor): array {
+            return [
+                'domain' => $item['domain'] ?? null,
+                'issue_type' => $item['issue_type'] ?? null,
+                'severity' => $item['severity'] ?? null,
+                'status' => $item['status'] ?? null,
+                'opened_at' => $item['opened_at'] ?? null,
+                'remediation_due_at' => $item['remediation_due_at'] ?? null,
+                'has_resolution_summary' => ($item['resolution_summary'] ?? null) !== null,
+                'opened_by_hash' => $sanitizeActor($item['opened_by'] ?? null),
+                'remediation_owner_hash' => $sanitizeActor($item['remediation_owner'] ?? null),
+            ];
+        }, $findings);
+
+        return [$sanitizedEvidence, $sanitizedFindings];
     }
 
     /**
@@ -369,10 +436,7 @@ final class VendorGovernanceController extends Controller
      */
     private function providerNarrativePayload(array $payload, array $evidence, array $findings, array $summary): array
     {
-        $narrative = is_array($payload['payload'] ?? null) ? $payload['payload'] : $payload;
-        if (! is_array($narrative)) {
-            $narrative = [];
-        }
+        $narrative = $this->unwrapProviderPayload($payload);
 
         $narrative['source_facts'] = [
             'evidence' => $evidence,
@@ -385,38 +449,38 @@ final class VendorGovernanceController extends Controller
     }
 
     /**
-     * @param array<string, mixed> $payload
-     * @return array<string, mixed>
+     * @param array<int, array<string, mixed>> $evidence
+     * @param array<int, array<string, mixed>> $findings
+     * @param array{scores: array<string, int>, warning_flags: list<string>} $summary
      */
-    private function providerArtifactProvenance(array $payload, string $endpointGroup): array
+    private function governanceNarrativeCacheKey(
+        string $tenantId,
+        string $vendorId,
+        array $evidence,
+        array $findings,
+        array $summary,
+    ): string
     {
-        $provenance = is_array($payload['provenance'] ?? null) ? $payload['provenance'] : [];
+        $encoded = json_encode([
+            'evidence' => $evidence,
+            'findings' => $findings,
+            'summary_scores' => $summary['scores'],
+            'warning_flags' => $summary['warning_flags'],
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-        return array_replace($provenance, [
-            'source' => 'provider',
-            'provider_name' => $this->providerName(),
-            'endpoint_group' => $endpointGroup,
-            'generated_at' => $provenance['generated_at'] ?? $this->clock->now()->format(DATE_ATOM),
-        ]);
+        return 'ai:vendor-governance:' . strtolower(trim($tenantId)) . ':' . strtolower(trim($vendorId)) . ':' . hash(
+            'sha256',
+            is_string($encoded) ? $encoded : serialize([$evidence, $findings, $summary]),
+        );
     }
 
-    private function providerName(): ?string
+    protected function aiArtifactCapabilityGroup(): string
     {
-        $providerName = config('atomy.ai.provider.name');
-        if (is_string($providerName)) {
-            $providerName = trim($providerName);
-            if ($providerName !== '') {
-                return $providerName;
-            }
-        }
+        return AiStatusSchema::CAPABILITY_GROUP_GOVERNANCE_INTELLIGENCE;
+    }
 
-        $providerKey = config('atomy.ai.provider.key');
-        if (! is_string($providerKey)) {
-            return null;
-        }
-
-        $providerKey = trim($providerKey);
-
-        return $providerKey === '' ? null : strtolower($providerKey);
+    protected function aiArtifactEndpointGroup(): string
+    {
+        return AiStatusSchema::ENDPOINT_GROUP_GOVERNANCE;
     }
 }

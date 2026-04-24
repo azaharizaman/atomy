@@ -69,6 +69,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
     // --- Section 2: Dashboard (5 endpoints) ---
     Route::prefix('dashboard')->group(function (): void {
         Route::get('kpis', [DashboardController::class, 'kpis']);
+        Route::post('kpis/generate', [DashboardController::class, 'generateKpisSummary']);
         Route::get('spend-trend', [DashboardController::class, 'spendTrend']);
         Route::get('vendor-scores', [DashboardController::class, 'vendorScores']);
         Route::get('recent-activity', [DashboardController::class, 'recentActivity']);
@@ -150,6 +151,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::get('{id}/compliance', [VendorController::class, 'compliance']);
         Route::get('{id}/history', [VendorController::class, 'history']);
         Route::get('{id}/governance', [VendorGovernanceController::class, 'show']);
+        Route::post('{id}/governance/generate', [VendorGovernanceController::class, 'generate']);
 
         // Risk-related vendor endpoints (Section 14)
         Route::post('{id}/sanctions-screening', [VendorGovernanceController::class, 'sanctionsScreening'])
@@ -248,6 +250,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
     // --- Section 14: Risk & Compliance (3 top-level + 4 vendor sub-routes above) ---
     Route::prefix('risk-items')->group(function (): void {
         Route::get('/', [RiskComplianceController::class, 'index']);
+        Route::post('generate', [RiskComplianceController::class, 'generate']);
         Route::post('{id}/escalate', [RiskComplianceController::class, 'escalate']);
         Route::post('{id}/exception', [RiskComplianceController::class, 'exception']);
     });
@@ -332,8 +335,11 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
     // --- Section 21: Reports & Analytics (11 endpoints) ---
     Route::prefix('reports')->group(function (): void {
         Route::get('kpis', [ReportController::class, 'kpis']);
+        Route::post('kpis/generate', [ReportController::class, 'generateKpisSummary']);
         Route::get('spend-trend', [ReportController::class, 'spendTrend']);
+        Route::post('spend-trend/generate', [ReportController::class, 'generateSpendTrendSummary']);
         Route::get('spend-by-category', [ReportController::class, 'spendByCategory']);
+        Route::post('spend-by-category/generate', [ReportController::class, 'generateSpendByCategorySummary']);
         Route::post('export', [ReportController::class, 'export']);
         Route::get('runs', [ReportController::class, 'runs']);
         Route::get('runs/{id}/download', [ReportController::class, 'downloadRun']);

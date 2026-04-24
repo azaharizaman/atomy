@@ -91,7 +91,7 @@
     },
     "scripts": {
         "test:insight-operations": "./vendor/bin/phpunit orchestrators/InsightOperations/tests",
-        "test:atomy-q-api-feature-flags": "cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Feature/FeatureFlagsApiTest.php",
+        "test:atomy-q-api-feature-flags": "composer install --working-dir=apps/atomy-q/API --no-interaction && cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Feature/FeatureFlagsApiTest.php",
         "verify:atomy-q-ai-insights-governance-reporting": [
             "@test:insight-operations",
             "@test:atomy-q-api-feature-flags"

@@ -8,16 +8,26 @@ use InvalidArgumentException;
 
 final readonly class GovernanceNarrativeRequest
 {
+    public string $featureKey;
+
+    public string $tenantId;
+
+    public string $vendorId;
+
     /**
      * @param array<string, mixed> $facts
      */
     public function __construct(
-        public string $featureKey,
-        public string $tenantId,
-        public string $vendorId,
+        string $featureKey,
+        string $tenantId,
+        string $vendorId,
         public array $facts,
     ) {
-        if (trim($this->featureKey) === '' || trim($this->tenantId) === '' || trim($this->vendorId) === '') {
+        $this->featureKey = trim($featureKey);
+        $this->tenantId = trim($tenantId);
+        $this->vendorId = trim($vendorId);
+
+        if ($this->featureKey === '' || $this->tenantId === '' || $this->vendorId === '') {
             throw new InvalidArgumentException('Governance narrative request requires featureKey, tenantId, and vendorId.');
         }
     }

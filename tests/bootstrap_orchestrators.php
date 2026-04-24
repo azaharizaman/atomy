@@ -7,7 +7,6 @@ require_once __DIR__ . '/../vendor/autoload.php';
 spl_autoload_register(static function (string $class): void {
     $prefixes = [
         'Nexus\\DataExchangeOperations\\' => __DIR__ . '/../orchestrators/DataExchangeOperations/src/',
-        'Nexus\\InsightOperations\\' => __DIR__ . '/../orchestrators/InsightOperations/src/',
         'Nexus\\IntelligenceOperations\\' => __DIR__ . '/../orchestrators/IntelligenceOperations/src/',
         'Nexus\\ConnectivityOperations\\' => __DIR__ . '/../orchestrators/ConnectivityOperations/src/',
     ];

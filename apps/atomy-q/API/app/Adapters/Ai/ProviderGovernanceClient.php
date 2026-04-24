@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Adapters\Ai;
 
-use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
-use App\Adapters\Ai\Contracts\ProviderGovernanceClientInterface;
 use App\Adapters\Ai\Contracts\ProviderAiTransportInterface;
+use App\Adapters\Ai\Contracts\ProviderGovernanceClientInterface;
 use App\Adapters\Ai\DTOs\GovernanceNarrativeRequest;
+use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 
 final readonly class ProviderGovernanceClient implements ProviderGovernanceClientInterface
 {

@@ -24,7 +24,7 @@ export default function ReportingPage() {
       />
 
       <AiNarrativePanel
-        featureKey="dashboard_ai_summary"
+        featureKey="reporting_ai_summary"
         title="Reporting Summary"
         subtitle="Assistive interpretation of the deterministic reporting surface."
         summary={reportingAiSummary.summary}

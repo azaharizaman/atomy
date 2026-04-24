@@ -415,3 +415,12 @@ After each resolved PR review comment, append a new entry below using this templ
 - **Root cause:** I prioritized end-to-end plan coverage and targeted verification first, then deferred the final defensive-coding and component-hygiene pass that would normally catch null-safe hook inputs, stable repeated-content keys, and mismatches between render conditions and props.
 - **Action taken:** Hardened `useRfqAiSummary` with null-safe normalization, extracted `AiNarrativePanelProps`, guarded bullet rendering with stable composite keys, simplified governance page panel invocations, corrected provider import ordering, and aligned the related reporting test assertion style.
 - **Follow-up tasks:** Before closing future AI UX review rounds, explicitly check (1) null-safe hook inputs, (2) shared component prop interfaces vs inline literals, (3) stable React keys for repeated narrative content, and (4) whether conditional rendering has made any passed loading/error props dead code.
+
+---
+
+- **Date:** 2026-04-24
+- **PR/Issue ID:** Plan 5 governance/reporting follow-up hardening
+- **Summary of mistake:** The next review pass showed that several plan-5 surfaces still mixed read-only and write-time AI behavior, reporting capability scope was still drifting from the dashboard key, governance provider facts were too raw, and a few DTO/tests/UI normalizers still lagged behind the stricter runtime contracts.
+- **Root cause:** I landed the initial plan-5 slice with working provider paths, then left the boundary tightening for a later pass instead of validating read/write semantics, feature-key ownership, provider-input sanitization, and test/mock contract parity before stopping.
+- **Action taken:** Added explicit POST generation endpoints and cached read paths for dashboard/reporting/vendor-governance/risk surfaces, split reporting onto `reporting_ai_summary`, sanitized governance evidence/finding facts before provider calls, moved shared AI artifact helpers and AI-runtime test binding into reusable traits, tightened DTO canonicalization/docs/imports, and hardened WEB narrative rendering/normalization and mocks.
+- **Follow-up tasks:** Before future AI insights/governance merges, require a final pass for (1) no provider calls on read-only GETs unless intentionally cached and documented, (2) feature-key alignment across API, WEB, tests, and plans, (3) provider-input minimization for tenant/vendor evidence, and (4) strict hook/test contract parity for optional AI envelopes.

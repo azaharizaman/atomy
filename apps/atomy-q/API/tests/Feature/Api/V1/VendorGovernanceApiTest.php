@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api\V1;
 
-use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
 use App\Adapters\Ai\Contracts\ProviderGovernanceClientInterface;
 use App\Models\User;
 use App\Models\Vendor;
@@ -16,11 +15,12 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Nexus\IntelligenceOperations\DTOs\AiCapabilityStatus;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
-use Nexus\IntelligenceOperations\DTOs\AiStatusSnapshot;
+use Tests\Feature\Api\Concerns\BindsAiRuntimeStatus;
 use Tests\Feature\Api\ApiTestCase;
 
 final class VendorGovernanceApiTest extends ApiTestCase
 {
+    use BindsAiRuntimeStatus;
     use RefreshDatabase;
 
     protected function tearDown(): void
@@ -201,7 +201,7 @@ final class VendorGovernanceApiTest extends ApiTestCase
             'remediation_due_at' => '2026-04-01T00:00:00Z',
         ]);
 
-        $this->bindGovernanceAiRuntime([
+        $this->bindAiRuntimeStatus([
             'governance_ai_narrative' => new AiCapabilityStatus(
                 featureKey: 'governance_ai_narrative',
                 capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_GOVERNANCE_INTELLIGENCE,
@@ -226,14 +226,19 @@ final class VendorGovernanceApiTest extends ApiTestCase
             }
         });
 
+        $generate = $this->postJson('/api/v1/vendors/' . $vendor->id . '/governance/generate', [], $this->authHeaders($tenantId, (string) $user->id));
         $response = $this->getJson('/api/v1/vendors/' . $vendor->id . '/governance', $this->authHeaders($tenantId, (string) $user->id));
 
+        $generate->assertOk();
         $response->assertOk();
-        $response->assertJsonPath('data.ai_narrative.available', true);
-        $response->assertJsonPath('data.ai_narrative.payload.headline', 'Vendor governance is acceptable with targeted follow-up.');
-        $response->assertJsonPath('data.ai_narrative.payload.source_facts.summary_scores.compliance_health_score', 45);
-        $response->assertJsonPath('data.ai_narrative.payload.source_facts.evidence.0.id', (string) $evidence->id);
-        $response->assertJsonPath('data.ai_narrative.payload.source_facts.findings.0.id', (string) $finding->id);
+        $generate->assertJsonPath('data.ai_narrative.available', true);
+        $generate->assertJsonPath('data.ai_narrative.payload.headline', 'Vendor governance is acceptable with targeted follow-up.');
+        $generate->assertJsonPath('data.ai_narrative.payload.source_facts.summary_scores.compliance_health_score', 45);
+        $generate->assertJsonPath('data.ai_narrative.payload.source_facts.evidence.0.has_notes', false);
+        $generate->assertJsonMissingPath('data.ai_narrative.payload.source_facts.evidence.0.id');
+        $generate->assertJsonMissingPath('data.ai_narrative.payload.source_facts.findings.0.id');
+        $this->assertIsString($generate->json('data.ai_narrative.payload.source_facts.findings.0.opened_by_hash'));
+        $response->assertJsonPath('data.summary_scores.compliance_health_score', 45);
     }
 
     public function testGovernanceKeepsFactualDataWhenAiNarrativeIsUnavailable(): void
@@ -251,7 +256,7 @@ final class VendorGovernanceApiTest extends ApiTestCase
             'review_status' => 'pending',
         ]);
 
-        $this->bindGovernanceAiRuntime([
+        $this->bindAiRuntimeStatus([
             'governance_ai_narrative' => new AiCapabilityStatus(
                 featureKey: 'governance_ai_narrative',
                 capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_GOVERNANCE_INTELLIGENCE,
@@ -280,40 +285,6 @@ final class VendorGovernanceApiTest extends ApiTestCase
         $response->assertJsonPath('data.ai_narrative.available', false);
         $response->assertJsonPath('data.ai_narrative.payload', null);
         $response->assertJsonPath('data.ai_narrative.feature_key', 'governance_ai_narrative');
-    }
-
-    private function bindGovernanceAiRuntime(array $capabilityStatuses): void
-    {
-        $snapshot = new AiStatusSnapshot(
-            mode: AiStatusSchema::MODE_PROVIDER,
-            globalHealth: AiStatusSchema::HEALTH_HEALTHY,
-            capabilityDefinitions: [],
-            capabilityStatuses: $capabilityStatuses,
-            endpointGroupHealthSnapshots: [],
-            reasonCodes: [],
-            generatedAt: new \DateTimeImmutable('2026-04-24T03:00:00Z'),
-        );
-
-        $this->app->instance(AiRuntimeStatusInterface::class, new readonly class($snapshot) implements AiRuntimeStatusInterface {
-            public function __construct(private AiStatusSnapshot $snapshot)
-            {
-            }
-
-            public function snapshot(): AiStatusSnapshot
-            {
-                return $this->snapshot;
-            }
-
-            public function capabilityStatus(string $featureKey): ?AiCapabilityStatus
-            {
-                return $this->snapshot->capabilityStatuses[$featureKey] ?? null;
-            }
-
-            public function providerName(): string
-            {
-                return 'openrouter';
-            }
-        });
     }
 
     /**

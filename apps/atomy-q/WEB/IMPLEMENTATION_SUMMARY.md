@@ -3,10 +3,12 @@
 ## 2026-04-24 AI Insights, Governance, And Reporting UX (Plan 5)
 
 - Added a shared `AiNarrativePanel` plus `use-ai-narrative-summary.ts` so dashboard, RFQ, risk, governance, and reporting surfaces all consume the same capability-aware AI summary rendering pattern.
+- `AiNarrativePanel` now formats provenance timestamps for the user locale, avoids leaking raw runtime error messages into the unavailable callout, and uses stable content-derived keys for repeated bullets.
 - `dashboard/page.tsx` now renders an optional AI dashboard summary panel keyed to `dashboard_ai_summary` without fabricating AI content when unavailable.
 - `rfq-insights-sidebar.tsx`, `rfqs/[rfqId]/overview/page.tsx`, and `rfqs/[rfqId]/risk/page.tsx` now use `rfq_ai_insights` to show optional RFQ insight summaries while keeping deterministic/manual continuity content visible.
 - `reporting/page.tsx` is no longer alpha-deferred; it keeps the deterministic reporting shell available and adds an optional AI reporting summary panel.
-- `use-vendor-governance.ts` now normalizes the optional backend `ai_narrative` envelope, and the vendor detail / ESG-compliance pages surface that narrative without replacing evidence/findings/scores.
+- `reporting/page.tsx` and `use-reporting-ai-summary.ts` now use the dedicated `reporting_ai_summary` capability instead of reusing the dashboard capability.
+- `use-vendor-governance.ts` now normalizes the optional backend `ai_narrative` envelope defensively, and the vendor detail / ESG-compliance pages surface that narrative without replacing evidence/findings/scores.
 - Updated AI-status regression coverage to use the plan-5 `rfq_ai_insights` feature key.
 - Added focused WEB regression coverage:
   - `src/components/ai/ai-narrative-panel.test.tsx`

@@ -198,6 +198,16 @@ export function normalizeVendorGovernancePayload(payload: unknown): VendorGovern
     throw new Error('Invalid vendor governance payload: expected evidence, findings, summary_scores, and warning_flags.');
   }
 
+  const aiNarrativeField = pickField(data, 'ai_narrative', 'aiNarrative');
+  let narrative = null;
+  if (isObject(aiNarrativeField) && (typeof aiNarrativeField.feature_key === 'string' || typeof aiNarrativeField.featureKey === 'string')) {
+    try {
+      narrative = normalizeAiNarrativePayload(aiNarrativeField);
+    } catch {
+      narrative = null;
+    }
+  }
+
   return {
     vendorId: requireText(pickField(data, 'vendor_id', 'vendorId'), 'vendor_id', 'Invalid vendor governance payload'),
     evidence: evidence.map((row, index) => normalizeEvidence(row, index)),
@@ -221,9 +231,7 @@ export function normalizeVendorGovernancePayload(payload: unknown): VendorGovern
       ),
     },
     warningFlags: stringList(warningFlags, 'warning_flags', 'Invalid vendor governance payload'),
-    narrative: isObject(pickField(data, 'ai_narrative', 'aiNarrative'))
-      ? normalizeAiNarrativePayload(pickField(data, 'ai_narrative', 'aiNarrative'))
-      : null,
+    narrative,
   };
 }
 

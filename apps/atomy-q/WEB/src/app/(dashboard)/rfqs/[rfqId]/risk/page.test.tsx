@@ -59,6 +59,9 @@ describe('RiskPage', () => {
       isLoading: false,
       isError: false,
       error: null,
+      isHidden: false,
+      shouldShowUnavailableMessage: false,
+      messageKey: null,
     });
 
     await act(async () => {
@@ -70,6 +73,7 @@ describe('RiskPage', () => {
     });
 
     expect(await screen.findByRole('heading', { name: 'Risk & Compliance' })).toBeInTheDocument();
+    expect(mockUseRfqAiSummary).toHaveBeenCalledWith('rfq-1');
     expect(screen.getByText('Governance checks remain steady.')).toBeInTheDocument();
     expect(screen.getByText(/No persisted RFQ risk items are currently recorded\./i)).toBeInTheDocument();
     expect(screen.getByText(/Review vendor evidence and findings/i)).toBeInTheDocument();

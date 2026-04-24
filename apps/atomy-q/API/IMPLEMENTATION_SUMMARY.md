@@ -5,13 +5,14 @@
 - Added `ProviderInsightClientInterface` / `ProviderInsightClient` and `ProviderGovernanceClientInterface` / `ProviderGovernanceClient` on top of the shared `ProviderAiTransport`, plus request DTOs for insight summaries and governance narratives.
 - Expanded `AtomyAiCapabilityCatalog` with plan-5 feature policies:
   - `dashboard_ai_summary`
+  - `reporting_ai_summary`
   - `rfq_ai_insights`
   - `governance_ai_narrative`
   - `governance_manual_review`
-- `DashboardController` now returns deterministic KPI facts plus an optional provider-backed `ai_summary` sidecar envelope; unavailable cases remain truthful and do not remove the factual KPI payload.
-- `ReportController` now returns deterministic reporting facts plus optional `ai_summary` sidecars on KPI, spend-trend, and spend-by-category responses.
-- `VendorGovernanceController` now preserves evidence/findings/score facts as the source of truth and adds an optional `ai_narrative` sidecar on top of those facts.
-- `RiskComplianceController` now returns a truthful RFQ insight sidecar (`ai_insights`) and a separate deterministic `manual_review` envelope so governance review remains available even when AI is degraded or off.
+- `DashboardController` now returns KPI facts under a `{data: ...}` envelope, caches generated dashboard summaries by tenant plus fact hash, and exposes `POST /dashboard/kpis/generate` for explicit regeneration.
+- `ReportController` now uses the dedicated `reporting_ai_summary` feature key, caches report summaries by tenant plus subject/fact hash, and exposes explicit POST generation endpoints for KPI, spend-trend, and spend-by-category summaries.
+- `VendorGovernanceController` now keeps `GET /vendors/{id}/governance` read-only, serves cached AI narratives when present, exposes `POST /vendors/{id}/governance/generate` for provider generation, and sanitizes evidence/finding facts before sending them to the provider.
+- `RiskComplianceController` now treats `GET /risk-items` as read-only, enforces tenant-scoped RFQ existence checks, short-circuits empty-risk-item AI generation to truthful unavailability, and exposes `POST /risk-items/generate` for explicit generation.
 - Added focused API coverage:
   - `tests/Feature/Api/V1/DashboardReportAiSummaryApiTest.php`
   - `tests/Feature/Api/V1/RiskComplianceAiInsightsApiTest.php`

@@ -6,17 +6,20 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Adapters\Ai\Contracts\ProviderInsightClientInterface;
 use App\Adapters\Ai\DTOs\InsightSummaryRequest;
+use App\Http\Controllers\Api\V1\Concerns\BuildsAiArtifactEnvelope;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Nexus\Common\Contracts\ClockInterface;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 use Throwable;
 
 final class DashboardController extends Controller
 {
+    use BuildsAiArtifactEnvelope;
     use ExtractsAuthContext;
     use InteractsWithAiAvailability;
 
@@ -42,8 +45,31 @@ final class DashboardController extends Controller
         ];
 
         return response()->json([
-            ...$facts,
-            'ai_summary' => $this->buildDashboardSummaryEnvelope($tenantId, $facts),
+            'data' => [
+                ...$facts,
+                'ai_summary' => $this->buildDashboardSummaryEnvelope($tenantId, $facts, false),
+            ],
+        ]);
+    }
+
+    /**
+     * POST /dashboard/kpis/generate
+     */
+    public function generateKpisSummary(Request $request): JsonResponse
+    {
+        $tenantId = $this->tenantId($request);
+        $facts = [
+            'active_rfqs' => 0,
+            'pending_approvals' => 0,
+            'total_savings' => 0.0,
+            'avg_cycle_time_days' => 0,
+        ];
+
+        return response()->json([
+            'data' => [
+                ...$facts,
+                'ai_summary' => $this->buildDashboardSummaryEnvelope($tenantId, $facts, true),
+            ],
         ]);
     }
 
@@ -107,8 +133,17 @@ final class DashboardController extends Controller
      * @param array<string, mixed> $facts
      * @return array<string, mixed>
      */
-    private function buildDashboardSummaryEnvelope(string $tenantId, array $facts): array
+    private function buildDashboardSummaryEnvelope(string $tenantId, array $facts, bool $generate): array
     {
+        $cacheKey = $this->dashboardSummaryCacheKey($tenantId, $facts);
+        if (! $generate) {
+            /** @var array<string, mixed>|null $cached */
+            $cached = Cache::get($cacheKey);
+            if (is_array($cached)) {
+                return $cached;
+            }
+        }
+
         if (! $this->aiCapabilityAvailable('dashboard_ai_summary')) {
             return $this->unavailableArtifactEnvelope('dashboard_ai_summary');
         }
@@ -126,109 +161,54 @@ final class DashboardController extends Controller
             return $this->unavailableArtifactEnvelope('dashboard_ai_summary');
         }
 
-        return $this->artifactEnvelope(
+        $artifact = $this->artifactEnvelope(
             featureKey: 'dashboard_ai_summary',
             payload: $this->providerSummaryPayload($summary, $facts),
             provenance: $this->providerArtifactProvenance($summary, AiStatusSchema::ENDPOINT_GROUP_INSIGHT),
         );
+
+        Cache::put($cacheKey, $artifact, now()->addMinutes(5));
+
+        return $artifact;
     }
 
     /**
      * @param array<string, mixed> $payload
-     * @param array<string, scalar|array<string, mixed>|null> $facts
-     * @return array<string, mixed>
-     */
-    private function artifactEnvelope(string $featureKey, array $payload, ?array $provenance = null): array
-    {
-        return [
-            'feature_key' => $featureKey,
-            'capability_group' => AiStatusSchema::CAPABILITY_GROUP_INSIGHT_INTELLIGENCE,
-            'available' => true,
-            'status' => AiStatusSchema::CAPABILITY_STATUS_AVAILABLE,
-            'manual_continuity' => 'available',
-            'payload' => $payload,
-            'provenance' => $provenance,
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function unavailableArtifactEnvelope(string $featureKey): array
-    {
-        $capabilityStatus = $this->aiCapabilityStatus($featureKey);
-        $statusSnapshot = $this->aiStatusSnapshot();
-
-        return [
-            'feature_key' => $featureKey,
-            'capability_group' => AiStatusSchema::CAPABILITY_GROUP_INSIGHT_INTELLIGENCE,
-            'available' => false,
-            'status' => $capabilityStatus?->status ?? AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE,
-            'manual_continuity' => 'available',
-            'fallback_ui_mode' => $capabilityStatus?->fallbackUiMode ?? AiStatusSchema::FALLBACK_UI_MODE_SHOW_UNAVAILABLE_MESSAGE,
-            'message_key' => $capabilityStatus?->messageKey ?? 'ai.capability.unavailable',
-            'reason_codes' => $capabilityStatus?->reasonCodes ?? $statusSnapshot->reasonCodes,
-            'diagnostics' => $capabilityStatus?->diagnostics ?? ['mode' => $statusSnapshot->mode],
-            'payload' => null,
-            'provenance' => [
-                'source' => 'deterministic',
-                'endpoint_group' => AiStatusSchema::ENDPOINT_GROUP_INSIGHT,
-                'provider_name' => $this->providerName(),
-                'generated_at' => $this->clock->now()->format(DATE_ATOM),
-            ],
-        ];
-    }
-
-    /**
-     * @param array<string, mixed> $payload
-     * @param array<string, mixed> $facts
      * @return array<string, mixed>
      */
     private function providerSummaryPayload(array $payload, array $facts): array
     {
-        $summary = is_array($payload['payload'] ?? null) ? $payload['payload'] : $payload;
-        if (! is_array($summary)) {
-            $summary = [];
-        }
-
+        $summary = $this->unwrapProviderPayload($payload);
         $summary['source_facts'] = $facts;
 
         return $summary;
     }
 
     /**
-     * @param array<string, mixed> $payload
-     * @return array<string, mixed>
+     * @param array<string, mixed> $facts
      */
-    private function providerArtifactProvenance(array $payload, string $endpointGroup): array
+    private function dashboardSummaryCacheKey(string $tenantId, array $facts): string
     {
-        $provenance = is_array($payload['provenance'] ?? null) ? $payload['provenance'] : [];
-
-        return array_replace($provenance, [
-            'source' => 'provider',
-            'provider_name' => $this->providerName(),
-            'endpoint_group' => $endpointGroup,
-            'generated_at' => $provenance['generated_at'] ?? $this->clock->now()->format(DATE_ATOM),
-        ]);
+        return 'ai:dashboard:kpis:' . strtolower(trim($tenantId)) . ':' . $this->factsHash($facts);
     }
 
-    private function providerName(): ?string
+    /**
+     * @param array<string, mixed> $facts
+     */
+    private function factsHash(array $facts): string
     {
-        $providerName = config('atomy.ai.provider.name');
-        if (is_string($providerName)) {
-            $providerName = trim($providerName);
-            if ($providerName !== '') {
-                return $providerName;
-            }
-        }
+        $encoded = json_encode($facts, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-        $providerKey = config('atomy.ai.provider.key');
-        if (! is_string($providerKey)) {
-            return null;
-        }
+        return hash('sha256', is_string($encoded) ? $encoded : serialize($facts));
+    }
 
-        $providerKey = trim($providerKey);
+    protected function aiArtifactCapabilityGroup(): string
+    {
+        return AiStatusSchema::CAPABILITY_GROUP_INSIGHT_INTELLIGENCE;
+    }
 
-        return $providerKey === '' ? null : strtolower($providerKey);
+    protected function aiArtifactEndpointGroup(): string
+    {
+        return AiStatusSchema::ENDPOINT_GROUP_INSIGHT;
     }
 }

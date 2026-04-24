@@ -8,12 +8,40 @@ import { SectionCard } from '@/components/ds/Card';
 import { useAiStatus } from '@/hooks/use-ai-status';
 import type { AiNarrativeSummary } from '@/hooks/use-ai-narrative-summary';
 
+function hashText(value: string): string {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = ((hash << 5) - hash) + value.charCodeAt(index);
+    hash |= 0;
+  }
+
+  return Math.abs(hash).toString(36);
+}
+
+function formatGeneratedAt(value: string | null): string | null {
+  if (value === null) {
+    return null;
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return new Intl.DateTimeFormat(globalThis.navigator?.language ?? 'en-US', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date);
+}
+
 function renderProvenance(summary: AiNarrativeSummary): React.ReactNode {
   const provider = typeof summary.provenance?.provider === 'string'
     ? summary.provenance.provider
     : (typeof summary.provenance?.provider_name === 'string' ? summary.provenance.provider_name : null);
   const endpointGroup = typeof summary.provenance?.endpoint_group === 'string' ? summary.provenance.endpoint_group : null;
-  const generatedAt = typeof summary.provenance?.generated_at === 'string' ? summary.provenance.generated_at : null;
+  const generatedAt = formatGeneratedAt(
+    typeof summary.provenance?.generated_at === 'string' ? summary.provenance.generated_at : null,
+  );
 
   if (!provider && !endpointGroup && !generatedAt) {
     return null;
@@ -54,6 +82,12 @@ export function AiNarrativePanel({
   className = '',
 }: AiNarrativePanelProps) {
   const aiStatus = useAiStatus();
+  React.useEffect(() => {
+    if (isError && error instanceof Error) {
+      // eslint-disable-next-line no-console
+      console.error('AI narrative panel error', error);
+    }
+  }, [error, isError]);
 
   if (aiStatus.shouldHideAiControls(featureKey)) {
     return null;
@@ -63,6 +97,7 @@ export function AiNarrativePanel({
   const messageKey = aiStatus.messageKeyForFeature(featureKey);
   const hasAvailableSummary = summary?.available === true;
   const bullets = Array.isArray(summary?.bullets) ? summary.bullets : [];
+  const bulletCounts = new Map<string, number>();
 
   return (
     <SectionCard
@@ -77,12 +112,17 @@ export function AiNarrativePanel({
           {summary.summary ? <p className="text-sm text-slate-600">{summary.summary}</p> : null}
           {bullets.length > 0 ? (
             <ul className="space-y-1.5 text-sm text-slate-600">
-              {bullets.map((bullet, index) => (
-                <li key={`${bullet}-${index}`} className="flex items-start gap-2">
+              {bullets.map((bullet) => {
+                const nextCount = (bulletCounts.get(bullet) ?? 0) + 1;
+                bulletCounts.set(bullet, nextCount);
+
+                return (
+                <li key={`${hashText(bullet)}-${nextCount}`} className="flex items-start gap-2">
                   <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" aria-hidden="true" />
                   <span>{bullet}</span>
                 </li>
-              ))}
+                );
+              })}
             </ul>
           ) : null}
           {renderProvenance(summary)}
@@ -93,7 +133,7 @@ export function AiNarrativePanel({
         <AiUnavailableCallout
           title={`${title} unavailable`}
           messageKey={messageKey}
-          fallbackCopy={error instanceof Error ? error.message : fallbackCopy}
+          fallbackCopy={fallbackCopy}
         />
       ) : null
       }

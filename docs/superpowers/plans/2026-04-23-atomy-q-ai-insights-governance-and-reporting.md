@@ -67,6 +67,7 @@
 - [ ] Do not allow AI narrative to become the only returned representation for dashboard, governance, or report facts.
 - [ ] Add or update feature-level policies:
   - `dashboard_ai_summary`
+  - `reporting_ai_summary`
   - `rfq_ai_insights`
   - `governance_ai_narrative`
   - `governance_manual_review`

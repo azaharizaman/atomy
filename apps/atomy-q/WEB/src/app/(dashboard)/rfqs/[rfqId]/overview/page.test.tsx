@@ -25,6 +25,9 @@ describe('RfqOverviewPage', () => {
       isLoading: false,
       isError: false,
       error: null,
+      isHidden: false,
+      shouldShowUnavailableMessage: false,
+      messageKey: null,
     });
   });
 

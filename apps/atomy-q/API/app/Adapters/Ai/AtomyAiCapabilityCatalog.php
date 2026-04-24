@@ -235,6 +235,16 @@ final readonly class AtomyAiCapabilityCatalog implements AiCapabilityCatalogInte
                     endpointGroup: AiStatusSchema::ENDPOINT_GROUP_INSIGHT,
                 ),
                 new AiCapabilityDefinition(
+                    featureKey: 'reporting_ai_summary',
+                    capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_INSIGHT_INTELLIGENCE,
+                    requiresAi: true,
+                    hasManualFallback: false,
+                    fallbackUiMode: AiStatusSchema::FALLBACK_UI_MODE_SHOW_UNAVAILABLE_MESSAGE,
+                    degradationMessageKey: 'ai.reporting_ai_summary.unavailable',
+                    operatorCritical: false,
+                    endpointGroup: AiStatusSchema::ENDPOINT_GROUP_INSIGHT,
+                ),
+                new AiCapabilityDefinition(
                     featureKey: 'rfq_ai_insights',
                     capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_INSIGHT_INTELLIGENCE,
                     requiresAi: true,

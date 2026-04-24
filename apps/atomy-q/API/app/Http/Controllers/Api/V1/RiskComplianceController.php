@@ -6,17 +6,21 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Adapters\Ai\Contracts\ProviderInsightClientInterface;
 use App\Adapters\Ai\DTOs\InsightSummaryRequest;
-use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
+use App\Http\Controllers\Api\V1\Concerns\BuildsAiArtifactEnvelope;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
+use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
 use App\Http\Controllers\Controller;
+use App\Models\Rfq;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Nexus\Common\Contracts\ClockInterface;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 use Throwable;
 
 final class RiskComplianceController extends Controller
 {
+    use BuildsAiArtifactEnvelope;
     use ExtractsAuthContext;
     use InteractsWithAiAvailability;
 
@@ -33,7 +37,36 @@ final class RiskComplianceController extends Controller
     {
         $tenantId = $this->tenantId($request);
         $rfqId = trim((string) $request->query('rfqId'));
-        $riskItems = [];
+        if ($rfqId !== '' && ! $this->rfqExists($tenantId, $rfqId)) {
+            return response()->json(['message' => 'RFQ not found'], 404);
+        }
+
+        $riskItems = $this->loadRiskItems($tenantId, $rfqId);
+
+        return response()->json([
+            'data' => [
+                'items' => $riskItems,
+                'ai_insights' => $this->readRfqInsightsEnvelope($tenantId, $rfqId, $riskItems),
+                'manual_review' => $this->manualReviewEnvelope($riskItems),
+            ],
+            'meta' => [
+                'rfq_id' => $rfqId !== '' ? $rfqId : null,
+            ],
+        ]);
+    }
+
+    /**
+     * POST /risk-items/generate
+     */
+    public function generate(Request $request): JsonResponse
+    {
+        $tenantId = $this->tenantId($request);
+        $rfqId = trim((string) ($request->input('rfq_id') ?? $request->query('rfqId', '')));
+        if ($rfqId === '' || ! $this->rfqExists($tenantId, $rfqId)) {
+            return response()->json(['message' => 'RFQ not found'], 404);
+        }
+
+        $riskItems = $this->loadRiskItems($tenantId, $rfqId);
 
         return response()->json([
             'data' => [
@@ -42,7 +75,7 @@ final class RiskComplianceController extends Controller
                 'manual_review' => $this->manualReviewEnvelope($riskItems),
             ],
             'meta' => [
-                'rfq_id' => $rfqId !== '' ? $rfqId : null,
+                'rfq_id' => $rfqId,
             ],
         ]);
     }
@@ -136,7 +169,7 @@ final class RiskComplianceController extends Controller
      */
     private function buildRfqInsightsEnvelope(string $tenantId, string $rfqId, array $riskItems): array
     {
-        if ($rfqId === '' || ! $this->aiCapabilityAvailable('rfq_ai_insights')) {
+        if ($rfqId === '' || $riskItems === [] || ! $this->aiCapabilityAvailable('rfq_ai_insights')) {
             return $this->unavailableArtifactEnvelope('rfq_ai_insights');
         }
 
@@ -156,11 +189,31 @@ final class RiskComplianceController extends Controller
             return $this->unavailableArtifactEnvelope('rfq_ai_insights');
         }
 
-        return $this->artifactEnvelope(
+        $artifact = $this->artifactEnvelope(
             featureKey: 'rfq_ai_insights',
             payload: $this->providerSummaryPayload($insights, $riskItems, $rfqId),
             provenance: $this->providerArtifactProvenance($insights, AiStatusSchema::ENDPOINT_GROUP_INSIGHT),
         );
+
+        Cache::put($this->rfqInsightsCacheKey($tenantId, $rfqId, $riskItems), $artifact, now()->addMinutes(5));
+
+        return $artifact;
+    }
+
+    /**
+     * @param list<array<string, mixed>> $riskItems
+     * @return array<string, mixed>
+     */
+    private function readRfqInsightsEnvelope(string $tenantId, string $rfqId, array $riskItems): array
+    {
+        if ($rfqId === '' || $riskItems === []) {
+            return $this->unavailableArtifactEnvelope('rfq_ai_insights');
+        }
+
+        /** @var array<string, mixed>|null $cached */
+        $cached = Cache::get($this->rfqInsightsCacheKey($tenantId, $rfqId, $riskItems));
+
+        return is_array($cached) ? $cached : $this->unavailableArtifactEnvelope('rfq_ai_insights');
     }
 
     /**
@@ -191,9 +244,13 @@ final class RiskComplianceController extends Controller
      */
     private function providerSummaryPayload(array $payload, array $riskItems, string $rfqId): array
     {
-        $summary = is_array($payload['payload'] ?? null) ? $payload['payload'] : $payload;
-        if (! is_array($summary)) {
-            $summary = [];
+        $content = $this->unwrapProviderPayload($payload);
+        $summary = [];
+
+        foreach (['headline', 'summary', 'body', 'bullets'] as $key) {
+            if (array_key_exists($key, $content)) {
+                $summary[$key] = $content[$key];
+            }
         }
 
         $summary['source_facts'] = [
@@ -205,83 +262,44 @@ final class RiskComplianceController extends Controller
     }
 
     /**
-     * @param array<string, mixed> $payload
-     * @return array<string, mixed>
+     * @return list<array<string, mixed>>
      */
-    private function artifactEnvelope(string $featureKey, array $payload, ?array $provenance = null): array
+    private function loadRiskItems(string $tenantId, string $rfqId): array
     {
-        return [
-            'feature_key' => $featureKey,
-            'capability_group' => AiStatusSchema::CAPABILITY_GROUP_INSIGHT_INTELLIGENCE,
-            'available' => true,
-            'status' => AiStatusSchema::CAPABILITY_STATUS_AVAILABLE,
-            'manual_continuity' => 'available',
-            'payload' => $payload,
-            'provenance' => $provenance,
-        ];
+        unset($tenantId, $rfqId);
+
+        return [];
+    }
+
+    private function rfqExists(string $tenantId, string $rfqId): bool
+    {
+        return Rfq::query()
+            ->where('tenant_id', strtolower(trim($tenantId)))
+            ->where('id', strtolower(trim($rfqId)))
+            ->exists();
     }
 
     /**
+     * @param list<array<string, mixed>> $riskItems
      * @return array<string, mixed>
      */
-    private function unavailableArtifactEnvelope(string $featureKey): array
+    private function rfqInsightsCacheKey(string $tenantId, string $rfqId, array $riskItems): string
     {
-        $capabilityStatus = $this->aiCapabilityStatus($featureKey);
-        $statusSnapshot = $this->aiStatusSnapshot();
+        $encoded = json_encode($riskItems, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
-        return [
-            'feature_key' => $featureKey,
-            'capability_group' => AiStatusSchema::CAPABILITY_GROUP_INSIGHT_INTELLIGENCE,
-            'available' => false,
-            'status' => $capabilityStatus?->status ?? AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE,
-            'manual_continuity' => 'available',
-            'fallback_ui_mode' => $capabilityStatus?->fallbackUiMode ?? AiStatusSchema::FALLBACK_UI_MODE_SHOW_UNAVAILABLE_MESSAGE,
-            'message_key' => $capabilityStatus?->messageKey ?? 'ai.capability.unavailable',
-            'reason_codes' => $capabilityStatus?->reasonCodes ?? $statusSnapshot->reasonCodes,
-            'diagnostics' => $capabilityStatus?->diagnostics ?? ['mode' => $statusSnapshot->mode],
-            'payload' => null,
-            'provenance' => [
-                'source' => 'deterministic',
-                'endpoint_group' => AiStatusSchema::ENDPOINT_GROUP_INSIGHT,
-                'provider_name' => $this->providerName(),
-                'generated_at' => $this->clock->now()->format(DATE_ATOM),
-            ],
-        ];
+        return 'ai:risk-items:' . strtolower(trim($tenantId)) . ':' . strtolower(trim($rfqId)) . ':' . hash(
+            'sha256',
+            is_string($encoded) ? $encoded : serialize($riskItems),
+        );
     }
 
-    /**
-     * @param array<string, mixed> $payload
-     * @return array<string, mixed>
-     */
-    private function providerArtifactProvenance(array $payload, string $endpointGroup): array
+    protected function aiArtifactCapabilityGroup(): string
     {
-        $provenance = is_array($payload['provenance'] ?? null) ? $payload['provenance'] : [];
-
-        return array_replace($provenance, [
-            'source' => 'provider',
-            'provider_name' => $this->providerName(),
-            'endpoint_group' => $endpointGroup,
-            'generated_at' => $provenance['generated_at'] ?? $this->clock->now()->format(DATE_ATOM),
-        ]);
+        return AiStatusSchema::CAPABILITY_GROUP_INSIGHT_INTELLIGENCE;
     }
 
-    private function providerName(): ?string
+    protected function aiArtifactEndpointGroup(): string
     {
-        $providerName = config('atomy.ai.provider.name');
-        if (is_string($providerName)) {
-            $providerName = trim($providerName);
-            if ($providerName !== '') {
-                return $providerName;
-            }
-        }
-
-        $providerKey = config('atomy.ai.provider.key');
-        if (! is_string($providerKey)) {
-            return null;
-        }
-
-        $providerKey = trim($providerKey);
-
-        return $providerKey === '' ? null : strtolower($providerKey);
+        return AiStatusSchema::ENDPOINT_GROUP_INSIGHT;
     }
 }

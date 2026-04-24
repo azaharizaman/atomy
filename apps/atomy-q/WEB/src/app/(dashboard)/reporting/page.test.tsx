@@ -48,6 +48,9 @@ describe('ReportingPage', () => {
       isLoading: false,
       isError: false,
       error: null,
+      isHidden: false,
+      shouldShowUnavailableMessage: false,
+      messageKey: null,
     });
 
     renderWithProviders(<ReportingPage />);
@@ -69,6 +72,9 @@ describe('ReportingPage', () => {
       isLoading: false,
       isError: false,
       error: null,
+      isHidden: true,
+      shouldShowUnavailableMessage: false,
+      messageKey: null,
     });
 
     renderWithProviders(<ReportingPage />);

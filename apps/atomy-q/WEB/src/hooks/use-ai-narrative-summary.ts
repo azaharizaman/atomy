@@ -65,8 +65,8 @@ export function normalizeAiNarrativePayload(payload: unknown): AiNarrativeSummar
   }
 
   const provenance = normalizeProvenance(narrative.provenance ?? raw.provenance);
-  const headline = toText(narrative.headline ?? narrative.summary ?? narrative.title ?? narrative.message);
-  const summary = toText(narrative.summary ?? narrative.headline ?? narrative.description);
+  const headline = toText(narrative.headline ?? narrative.title ?? narrative.message);
+  const summary = toText(narrative.summary ?? narrative.description);
   const bullets =
     normalizeStringList(
       narrative.bullets
