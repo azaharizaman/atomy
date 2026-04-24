@@ -7,6 +7,8 @@ import { useAward } from '@/hooks/use-award';
 import { useComparisonRun } from '@/hooks/use-comparison-run';
 import { useComparisonRunMatrix } from '@/hooks/use-comparison-run-matrix';
 import { useComparisonRuns } from '@/hooks/use-comparison-runs';
+import { useAwardDebriefDraft } from '@/hooks/use-award-debrief-draft';
+import { useAwardGuidance } from '@/hooks/use-award-guidance';
 import { useRfqVendors } from '@/hooks/use-rfq-vendors';
 
 beforeAll(() => {
@@ -21,6 +23,17 @@ vi.mock('@/hooks/use-rfq', () => ({
   useRfq: () => ({ data: { title: 'RFQ', rfq_number: 'RFQ-1' } }),
 }));
 
+let aiStatusData = {
+  isFeatureAvailable: () => true,
+  shouldHideAiControls: () => false,
+  shouldShowUnavailableMessage: () => false,
+  messageKeyForFeature: () => null,
+};
+
+vi.mock('@/hooks/use-ai-status', () => ({
+  useAiStatus: () => aiStatusData,
+}));
+
 vi.mock('@/hooks/use-award', async () => {
   const actual = await vi.importActual<typeof import('@/hooks/use-award')>('@/hooks/use-award');
   return {
@@ -31,6 +44,8 @@ vi.mock('@/hooks/use-award', async () => {
 vi.mock('@/hooks/use-comparison-run');
 vi.mock('@/hooks/use-comparison-run-matrix');
 vi.mock('@/hooks/use-comparison-runs');
+vi.mock('@/hooks/use-award-debrief-draft');
+vi.mock('@/hooks/use-award-guidance');
 vi.mock('@/hooks/use-rfq-vendors');
 
 const mockAward = {
@@ -62,11 +77,20 @@ type UseAwardReturn = ReturnType<typeof useAward>;
 type UseComparisonRunReturn = ReturnType<typeof useComparisonRun>;
 type UseComparisonRunMatrixReturn = ReturnType<typeof useComparisonRunMatrix>;
 type UseComparisonRunsReturn = ReturnType<typeof useComparisonRuns>;
+type UseAwardDebriefDraftReturn = ReturnType<typeof useAwardDebriefDraft>;
+type UseAwardGuidanceReturn = ReturnType<typeof useAwardGuidance>;
 type UseRfqVendorsReturn = ReturnType<typeof useRfqVendors>;
 
 describe('RfqAwardPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    
+    aiStatusData = {
+      isFeatureAvailable: () => true,
+      shouldHideAiControls: () => false,
+      shouldShowUnavailableMessage: () => false,
+      messageKeyForFeature: () => null,
+    };
     
     vi.mocked(useAward).mockReturnValue({
       award: mockAward,
@@ -143,6 +167,40 @@ describe('RfqAwardPage', () => {
       },
     } as unknown as UseComparisonRunMatrixReturn);
 
+    vi.mocked(useAwardGuidance).mockReturnValue({
+      data: {
+        featureKey: 'award_ai_guidance',
+        available: true,
+        payload: {
+          headline: 'Proceed with the top-ranked vendor.',
+        },
+        provenance: {
+          provider: 'openrouter',
+          endpoint_group: 'comparison_award',
+        },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as unknown as UseAwardGuidanceReturn);
+
+    vi.mocked(useAwardDebriefDraft).mockReturnValue({
+      data: {
+        featureKey: 'award_ai_guidance',
+        available: true,
+        payload: {
+          draft_message: 'Thank you for your proposal.',
+        },
+        provenance: {
+          provider: 'openrouter',
+          endpoint_group: 'comparison_award',
+        },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as unknown as UseAwardDebriefDraftReturn);
+
     vi.mocked(useRfqVendors).mockReturnValue({
       data: [
         { id: 'inv-1', vendor_id: 'vendor-1', name: 'Winner Vendor', status: 'responded' },
@@ -156,6 +214,9 @@ describe('RfqAwardPage', () => {
 
     expect(await screen.findByText('Winner Vendor', { selector: 'p' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /finalize award/i })).toBeEnabled();
+    expect(screen.getByText('AI guidance')).toBeInTheDocument();
+    expect(screen.getByText(/Proceed with the top-ranked vendor/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/openrouter/i).length).toBeGreaterThan(0);
   });
 
   it('renders existing award data when comparison runs fail to load', async () => {
@@ -183,6 +244,19 @@ describe('RfqAwardPage', () => {
     fireEvent.change(debriefInput, { target: { value: 'Thanks for your proposal.' } });
 
     expect(sendButton).toBeEnabled();
+  });
+
+  it('can apply an AI debrief draft into the editable textarea', async () => {
+    renderWithProviders(<RfqAwardPageContent rfqId="rfq-1" />);
+
+    const reviewDraftButtons = await screen.findAllByRole('button', { name: /review ai draft/i });
+    fireEvent.click(reviewDraftButtons[0]);
+
+    expect(screen.getByText(/thank you for your proposal/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /apply ai draft/i }));
+
+    expect((screen.getByLabelText(/debrief message/i) as HTMLTextAreaElement).value).toBe('Thank you for your proposal.');
   });
 
   it('shows award creation UI when no award exists', async () => {
@@ -393,5 +467,27 @@ describe('RfqAwardPage', () => {
 
     expect(await screen.findByRole('option', { name: 'Winner Vendor' })).toBeInTheDocument();
     expect(screen.queryByRole('option', { name: 'Other Vendor' })).not.toBeInTheDocument();
+  });
+
+  it('renders the award AI guidance unavailable state while keeping manual actions available', async () => {
+    vi.mocked(useAwardGuidance).mockReturnValue({
+      data: {
+        featureKey: 'award_ai_guidance',
+        available: false,
+        payload: null,
+        provenance: {
+          source: 'deterministic',
+        },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    } as unknown as UseAwardGuidanceReturn);
+
+    renderWithProviders(<RfqAwardPageContent rfqId="rfq-1" />);
+
+    await screen.findByText('Award AI guidance unavailable');
+    expect(screen.queryByText('Award payload rejected')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /finalize award/i })).toBeEnabled();
   });
 });

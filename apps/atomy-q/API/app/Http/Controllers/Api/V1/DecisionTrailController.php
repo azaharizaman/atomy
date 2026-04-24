@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
+use App\Models\ComparisonRun;
 use App\Models\DecisionTrailEntry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -33,10 +34,17 @@ final class DecisionTrailController extends Controller
         $total = $query->count();
         $entries = $query
             ->forPage($pagination['page'], $pagination['per_page'])
+            ->with([
+                'comparisonRun' => static function ($relation) use ($tenantId): void {
+                    $relation
+                        ->where('tenant_id', $tenantId)
+                        ->select('id', 'tenant_id', 'response_payload');
+                },
+            ])
             ->get();
 
         return response()->json([
-            'data' => $entries->map(static fn (DecisionTrailEntry $e) => [
+            'data' => $entries->map(fn (DecisionTrailEntry $e) => [
                 'id' => $e->id,
                 'rfq_id' => $e->rfq_id,
                 'comparison_run_id' => $e->comparison_run_id,
@@ -44,6 +52,7 @@ final class DecisionTrailController extends Controller
                 'event_type' => $e->event_type,
                 'payload_hash' => $e->payload_hash,
                 'occurred_at' => $e->occurred_at?->toAtomString(),
+                'metadata' => $this->trailMetadata($e),
             ])->values()->all(),
             'meta' => [
                 'current_page' => $pagination['page'],
@@ -68,10 +77,19 @@ final class DecisionTrailController extends Controller
         $entry = DecisionTrailEntry::query()
             ->where('tenant_id', $tenantId)
             ->where('id', $id)
+            ->with([
+                'comparisonRun' => static function ($relation) use ($tenantId): void {
+                    $relation
+                        ->where('tenant_id', $tenantId)
+                        ->select('id', 'tenant_id', 'response_payload');
+                },
+            ])
             ->first();
         if ($entry === null) {
             return response()->json(['message' => 'Decision trail entry not found'], 404);
         }
+
+        $metadata = $this->trailMetadata($entry);
 
         return response()->json([
             'data' => [
@@ -83,11 +101,12 @@ final class DecisionTrailController extends Controller
                 'scope' => 'rfq',
                 'event_type' => $entry->event_type,
                 'actor_id' => '',
-                'description' => $entry->event_type,
+                'description' => $metadata['description'] ?? $entry->event_type,
                 'metadata' => [
                     'payload_hash' => $entry->payload_hash,
                     'previous_hash' => $entry->previous_hash,
                     'entry_hash' => $entry->entry_hash,
+                    ...$metadata,
                 ],
                 'hash' => $entry->entry_hash,
                 'previous_hash' => $entry->previous_hash,
@@ -121,5 +140,167 @@ final class DecisionTrailController extends Controller
                 'status' => 'processing',
             ],
         ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function trailMetadata(DecisionTrailEntry $entry): array
+    {
+        $base = [
+            'artifact_origin' => 'deterministic',
+            'artifact_kind' => 'event',
+            'description' => $entry->event_type,
+        ];
+
+        if ($entry->event_type === 'comparison_snapshot_frozen') {
+            return array_merge($base, [
+                'artifact_origin' => 'deterministic_fact',
+                'artifact_kind' => 'comparison_snapshot',
+                'description' => 'Comparison snapshot frozen',
+            ]);
+        }
+
+        if ($entry->event_type === 'comparison_ai_overlay_generated') {
+            $artifact = $this->artifactFromEntry($entry, ['ai_overlay']);
+
+            return array_merge($base, $this->artifactMetadata(
+                artifactKind: 'comparison_ai_overlay',
+                defaultDescription: 'Comparison AI overlay generated',
+                artifact: $artifact,
+            ));
+        }
+
+        if (str_starts_with($entry->event_type, 'award_ai_guidance_generated:')) {
+            $awardId = substr($entry->event_type, strlen('award_ai_guidance_generated:'));
+            $artifact = $this->artifactFromEntry($entry, ['ai_artifacts', 'award_guidance', $awardId]);
+
+            return array_merge($base, $this->artifactMetadata(
+                artifactKind: 'award_ai_guidance',
+                defaultDescription: 'Award AI guidance generated',
+                artifact: $artifact,
+                artifactId: $awardId,
+            ));
+        }
+
+        if ($entry->event_type === 'award_ai_debrief_draft_generated') {
+            $summary = is_array($entry->summary_payload) ? $entry->summary_payload : [];
+            $awardId = is_string($summary['award_id'] ?? null) ? $summary['award_id'] : null;
+            $vendorId = is_string($summary['vendor_id'] ?? null) ? $summary['vendor_id'] : null;
+            $artifact = $this->artifactFromEntry(
+                $entry,
+                ['ai_artifacts', 'award_debrief_draft', $awardId ?? '', $vendorId ?? ''],
+            );
+
+            return array_merge($base, $this->artifactMetadata(
+                artifactKind: 'award_ai_debrief_draft',
+                defaultDescription: 'Award AI debrief draft generated',
+                artifact: $artifact,
+                artifactId: $vendorId,
+                extra: [
+                    'award_id' => $awardId,
+                ],
+            ));
+        }
+
+        if (str_starts_with($entry->event_type, 'approval_ai_summary_generated:')) {
+            $approvalId = substr($entry->event_type, strlen('approval_ai_summary_generated:'));
+            $artifact = $this->artifactFromEntry($entry, ['ai_artifacts', 'approval_summary', $approvalId]);
+
+            return array_merge($base, $this->artifactMetadata(
+                artifactKind: 'approval_ai_summary',
+                defaultDescription: 'Approval AI summary generated',
+                artifact: $artifact,
+                artifactId: $approvalId,
+            ));
+        }
+
+        if (in_array($entry->event_type, ['award_created', 'award_debriefed', 'award_signed_off'], true)) {
+            return array_merge($base, [
+                'artifact_origin' => 'user_confirmed_action',
+                'artifact_kind' => 'award_workflow_action',
+                'description' => match ($entry->event_type) {
+                    'award_created' => 'Award created',
+                    'award_debriefed' => 'Award debrief drafted',
+                    'award_signed_off' => 'Award signed off',
+                    default => $entry->event_type,
+                },
+            ]);
+        }
+
+        return $base;
+    }
+
+    /**
+     * @param array<int, string> $path
+     * @return array<string, mixed>|null
+     */
+    private function artifactFromEntry(DecisionTrailEntry $entry, array $path): ?array
+    {
+        $summary = is_array($entry->summary_payload) ? $entry->summary_payload : [];
+        $artifact = $this->artifactFromSummary($summary);
+        if ($artifact !== null) {
+            return $artifact;
+        }
+
+        return $this->artifactFromRun($entry->comparisonRun, $path);
+    }
+
+    /**
+     * @param array<string, mixed> $summary
+     * @return array<string, mixed>|null
+     */
+    private function artifactFromSummary(array $summary): ?array
+    {
+        $artifact = $summary['artifact'] ?? null;
+
+        return is_array($artifact) ? $artifact : null;
+    }
+
+    /**
+     * @param array<int, string> $path
+     * @return array<string, mixed>|null
+     */
+    private function artifactFromRun(?ComparisonRun $comparisonRun, array $path): ?array
+    {
+        if (! $comparisonRun instanceof ComparisonRun) {
+            return null;
+        }
+
+        $value = $comparisonRun->response_payload;
+        if (! is_array($value)) {
+            return null;
+        }
+
+        foreach ($path as $segment) {
+            $value = is_array($value) ? ($value[$segment] ?? null) : null;
+        }
+
+        return is_array($value) ? $value : null;
+    }
+
+    /**
+     * @param array<string, mixed>|null $artifact
+     * @return array<string, mixed>
+     */
+    private function artifactMetadata(
+        string $artifactKind,
+        string $defaultDescription,
+        ?array $artifact = null,
+        ?string $artifactId = null,
+        array $extra = [],
+    ): array {
+        $provenance = is_array($artifact['provenance'] ?? null) ? $artifact['provenance'] : [];
+        $available = $artifact['available'] ?? null;
+
+        return array_merge([
+            'artifact_kind' => $artifactKind,
+            'artifact_subject_id' => $artifactId,
+            'artifact_origin' => $available === true ? 'provider_drafted' : 'manual_continuity',
+            'description' => $defaultDescription,
+            'feature_key' => $artifact['feature_key'] ?? null,
+            'available' => $available,
+            'provenance' => $provenance,
+        ], $extra);
     }
 }

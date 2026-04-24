@@ -83,6 +83,25 @@ final readonly class DecisionTrailRecorder
         );
     }
 
+    /**
+     * @param array<string, mixed> $summary Tenant-safe, machine-readable summary (counts, ids); avoid PII.
+     */
+    public function recordAiArtifactGenerated(
+        string $tenantId,
+        string $rfqId,
+        string $comparisonRunId,
+        string $eventType,
+        array $summary,
+    ): void {
+        $this->record(
+            tenantId: $tenantId,
+            rfqId: $rfqId,
+            comparisonRunId: $comparisonRunId,
+            eventType: $eventType,
+            summary: $summary,
+        );
+    }
+
     public function recordManualSourceLineEvent(
         string $tenantId,
         string $rfqId,
@@ -135,6 +154,7 @@ final readonly class DecisionTrailRecorder
                 'rfq_id' => $rfqId,
                 'sequence' => $sequence,
                 'event_type' => $eventType,
+                'summary_payload' => $summary,
                 'payload_hash' => $payloadHash,
                 'previous_hash' => $previousHash,
                 'entry_hash' => $entryHash,

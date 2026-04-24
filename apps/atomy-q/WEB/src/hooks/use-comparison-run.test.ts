@@ -90,6 +90,7 @@ describe('useComparisonRun', () => {
           'line-1': 'USD',
         },
       },
+      aiOverlay: null,
       createdAt: '2026-04-06T08:00:00Z',
     });
   });

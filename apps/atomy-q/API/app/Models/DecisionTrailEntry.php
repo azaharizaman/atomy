@@ -24,6 +24,7 @@ class DecisionTrailEntry extends Model
         'rfq_id',
         'sequence',
         'event_type',
+        'summary_payload',
         'payload_hash',
         'previous_hash',
         'entry_hash',
@@ -32,6 +33,7 @@ class DecisionTrailEntry extends Model
 
     protected $casts = [
         'sequence' => 'integer',
+        'summary_payload' => 'array',
         'occurred_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

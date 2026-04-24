@@ -4,8 +4,15 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use DateTimeImmutable;
+use Nexus\IntelligenceOperations\DTOs\AiCapabilityStatus;
+use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
+use Nexus\IntelligenceOperations\DTOs\AiStatusSnapshot;
+use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface;
 use App\Models\Approval;
 use App\Models\ComparisonRun;
+use App\Models\DecisionTrailEntry;
 use App\Models\Rfq;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -47,6 +54,44 @@ final class ApprovalAlphaPathTest extends ApiTestCase
         ]);
 
         return $user;
+    }
+
+    /**
+     * @param array<string, AiCapabilityStatus> $capabilityStatuses
+     */
+    private function bindAiRuntimeStatus(array $capabilityStatuses): void
+    {
+        $snapshot = new AiStatusSnapshot(
+            mode: AiStatusSchema::MODE_PROVIDER,
+            globalHealth: AiStatusSchema::HEALTH_DEGRADED,
+            capabilityDefinitions: [],
+            capabilityStatuses: $capabilityStatuses,
+            endpointGroupHealthSnapshots: [],
+            reasonCodes: ['provider_unavailable'],
+            generatedAt: new DateTimeImmutable('2026-04-24T11:00:00+08:00'),
+        );
+
+        $this->app->instance(AiRuntimeStatusInterface::class, new readonly class($snapshot) implements AiRuntimeStatusInterface {
+            public function __construct(
+                private AiStatusSnapshot $snapshot,
+            ) {
+            }
+
+            public function snapshot(): AiStatusSnapshot
+            {
+                return $this->snapshot;
+            }
+
+            public function capabilityStatus(string $featureKey): ?AiCapabilityStatus
+            {
+                return $this->snapshot->capabilityStatuses[$featureKey] ?? null;
+            }
+
+            public function providerName(): string
+            {
+                return 'openrouter';
+            }
+        });
     }
 
     /**
@@ -185,6 +230,12 @@ final class ApprovalAlphaPathTest extends ApiTestCase
         );
 
         $response->assertStatus(404);
+
+        $summaryResponse = $this->getJson(
+            '/api/v1/approvals/' . $approval->id . '/summary',
+            $this->authHeaders($tenantB, (string) $userB->id),
+        );
+        $summaryResponse->assertStatus(404);
     }
 
     public function test_show_returns_approval_for_owning_tenant(): void
@@ -201,6 +252,137 @@ final class ApprovalAlphaPathTest extends ApiTestCase
         $response->assertOk();
         $response->assertJsonPath('data.id', $approval->id);
         $response->assertJsonPath('data.status', 'pending');
+    }
+
+    public function test_summary_returns_provider_payload_for_approval(): void
+    {
+        $tenantId = (string) Str::ulid();
+        $user = $this->createUser($tenantId);
+        [, , $run, $approval] = $this->seedPendingApproval($user);
+
+        $this->bindAiRuntimeStatus([
+            'approval_ai_summary' => new AiCapabilityStatus(
+                featureKey: 'approval_ai_summary',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_GOVERNANCE_INTELLIGENCE,
+                endpointGroup: AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD,
+                fallbackUiMode: AiStatusSchema::FALLBACK_UI_MODE_SHOW_MANUAL_CONTINUITY_BANNER,
+                messageKey: 'ai.approval_ai_summary.available',
+                status: AiStatusSchema::CAPABILITY_STATUS_AVAILABLE,
+                available: true,
+                reasonCodes: [],
+                operatorCritical: true,
+                diagnostics: ['mode' => AiStatusSchema::MODE_PROVIDER],
+            ),
+        ]);
+        $comparisonAwardClient = $this->createMock(ComparisonAwardAiClientInterface::class);
+        $comparisonAwardClient->expects($this->once())
+            ->method('approvalSummary')
+            ->with($this->callback(function (array $payload) use ($tenantId, $approval, $run): bool {
+                return ($payload['tenant_id'] ?? null) === $tenantId
+                    && ($payload['approval_id'] ?? null) === $approval->id
+                    && ($payload['comparison_run_id'] ?? null) === $run->id;
+            }))
+            ->willReturn([
+                'headline' => 'Approval can proceed with the frozen comparison evidence.',
+                'risk_flags' => ['variance_with_policy'],
+            ]);
+        $comparisonAwardClient->expects($this->never())->method('comparisonOverlay');
+        $comparisonAwardClient->expects($this->never())->method('awardGuidance');
+        $comparisonAwardClient->expects($this->never())->method('awardDebriefDraft');
+        $this->app->instance(ComparisonAwardAiClientInterface::class, $comparisonAwardClient);
+
+        $response = $this->getJson(
+            '/api/v1/approvals/' . $approval->id . '/summary',
+            $this->authHeaders($tenantId, (string) $user->id),
+        );
+
+        $response->assertOk();
+        $response->assertJsonPath('data.ai_summary.feature_key', 'approval_ai_summary');
+        $response->assertJsonPath('data.ai_summary.available', true);
+        $response->assertJsonPath('data.ai_summary.payload.headline', 'Approval can proceed with the frozen comparison evidence.');
+        $response->assertJsonPath('data.ai_summary.provenance.source', 'provider');
+
+        $run = $run->fresh();
+        $storedSummary = $run?->response_payload['ai_artifacts']['approval_summary'][$approval->id] ?? null;
+        $this->assertIsArray($storedSummary);
+        $this->assertSame('approval_ai_summary', $storedSummary['feature_key'] ?? null);
+        $this->assertSame(true, $storedSummary['available'] ?? null);
+
+        $entry = DecisionTrailEntry::query()
+            ->where('tenant_id', $tenantId)
+            ->where('comparison_run_id', $run->id)
+            ->where('event_type', 'approval_ai_summary_generated:' . $approval->id)
+            ->first();
+        $this->assertNotNull($entry);
+
+        $trailResponse = $this->getJson(
+            '/api/v1/decision-trail/' . $entry->id,
+            $this->authHeaders($tenantId, (string) $user->id),
+        );
+        $trailResponse->assertOk();
+        $trailResponse->assertJsonPath('data.metadata.artifact_origin', 'provider_drafted');
+        $trailResponse->assertJsonPath('data.metadata.artifact_kind', 'approval_ai_summary');
+        $trailResponse->assertJsonPath('data.metadata.artifact_subject_id', $approval->id);
+        $trailResponse->assertJsonPath('data.metadata.provenance.source', 'provider');
+    }
+
+    public function test_summary_returns_persisted_artifact_when_runtime_is_unavailable(): void
+    {
+        $tenantId = (string) Str::ulid();
+        $user = $this->createUser($tenantId);
+        [, , $run, $approval] = $this->seedPendingApproval($user);
+
+        $run->response_payload = array_replace_recursive((array) $run->response_payload, [
+            'ai_artifacts' => [
+                'approval_summary' => [
+                    (string) $approval->id => [
+                        'feature_key' => 'approval_ai_summary',
+                        'capability_group' => AiStatusSchema::CAPABILITY_GROUP_GOVERNANCE_INTELLIGENCE,
+                        'available' => true,
+                        'status' => AiStatusSchema::CAPABILITY_STATUS_AVAILABLE,
+                        'manual_continuity' => 'available',
+                        'payload' => ['headline' => 'Persisted summary'],
+                        'provenance' => [
+                            'source' => 'provider',
+                            'provider_name' => 'openrouter',
+                            'endpoint_group' => AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD,
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+        $run->save();
+
+        $this->bindAiRuntimeStatus([
+            'approval_ai_summary' => new AiCapabilityStatus(
+                featureKey: 'approval_ai_summary',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_GOVERNANCE_INTELLIGENCE,
+                endpointGroup: AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD,
+                fallbackUiMode: AiStatusSchema::FALLBACK_UI_MODE_SHOW_MANUAL_CONTINUITY_BANNER,
+                messageKey: 'ai.approval_ai_summary.unavailable',
+                status: AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE,
+                available: false,
+                reasonCodes: ['provider_unavailable'],
+                operatorCritical: true,
+                diagnostics: ['mode' => AiStatusSchema::MODE_PROVIDER],
+            ),
+        ]);
+
+        $comparisonAwardClient = $this->createMock(ComparisonAwardAiClientInterface::class);
+        $comparisonAwardClient->expects($this->never())->method('approvalSummary');
+        $comparisonAwardClient->expects($this->never())->method('comparisonOverlay');
+        $comparisonAwardClient->expects($this->never())->method('awardGuidance');
+        $comparisonAwardClient->expects($this->never())->method('awardDebriefDraft');
+        $this->app->instance(ComparisonAwardAiClientInterface::class, $comparisonAwardClient);
+
+        $response = $this->getJson(
+            '/api/v1/approvals/' . $approval->id . '/summary',
+            $this->authHeaders($tenantId, (string) $user->id),
+        );
+
+        $response->assertOk();
+        $response->assertJsonPath('data.ai_summary.available', true);
+        $response->assertJsonPath('data.ai_summary.payload.headline', 'Persisted summary');
     }
 
     public function test_reject_sets_status_rejected(): void
@@ -227,6 +409,51 @@ final class ApprovalAlphaPathTest extends ApiTestCase
         $response->assertOk();
         $response->assertJsonPath('data.status', 'rejected');
         $this->assertSame('rejected', $approval->fresh()?->status);
+    }
+
+    public function test_approve_keeps_progression_working_when_ai_summary_is_unavailable(): void
+    {
+        $this->bindAiRuntimeStatus([
+            'approval_ai_summary' => new AiCapabilityStatus(
+                featureKey: 'approval_ai_summary',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_GOVERNANCE_INTELLIGENCE,
+                endpointGroup: AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD,
+                fallbackUiMode: AiStatusSchema::FALLBACK_UI_MODE_SHOW_UNAVAILABLE_MESSAGE,
+                messageKey: 'ai.approval_ai_summary.unavailable',
+                status: AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE,
+                available: false,
+                reasonCodes: ['provider_unavailable'],
+                operatorCritical: true,
+                diagnostics: ['mode' => AiStatusSchema::MODE_PROVIDER],
+            ),
+        ]);
+        $comparisonAwardClient = $this->createMock(ComparisonAwardAiClientInterface::class);
+        $comparisonAwardClient->expects($this->never())->method('approvalSummary');
+        $comparisonAwardClient->expects($this->never())->method('awardDebriefDraft');
+        $this->app->instance(ComparisonAwardAiClientInterface::class, $comparisonAwardClient);
+
+        $tenantId = (string) Str::ulid();
+        $user = $this->createUser($tenantId);
+        [, , , $approval] = $this->seedPendingApproval($user);
+
+        $summaryResponse = $this->getJson(
+            '/api/v1/approvals/' . $approval->id . '/summary',
+            $this->authHeaders($tenantId, (string) $user->id),
+        );
+        $summaryResponse->assertStatus(503);
+        $summaryResponse->assertJsonPath('data.ai_summary.feature_key', 'approval_ai_summary');
+        $summaryResponse->assertJsonPath('data.ai_summary.available', false);
+        $summaryResponse->assertJsonPath('data.ai_summary.provenance.source', 'deterministic');
+
+        $response = $this->postJson(
+            '/api/v1/approvals/' . $approval->id . '/approve',
+            ['reason' => 'Proceed'],
+            $this->authHeaders($tenantId, (string) $user->id),
+        );
+
+        $response->assertOk();
+        $response->assertJsonPath('data.status', 'approved');
+        $this->assertSame('approved', $approval->fresh()?->status);
     }
 
     public function test_index_filters_by_rfq_id(): void

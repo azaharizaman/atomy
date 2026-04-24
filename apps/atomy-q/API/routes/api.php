@@ -196,6 +196,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::post('preview', [ComparisonRunController::class, 'preview']);
         Route::post('final', [ComparisonRunController::class, 'final_']);
         Route::get('{id}', [ComparisonRunController::class, 'show']);
+        Route::get('{id}/overlay', [ComparisonRunController::class, 'overlay']);
         Route::get('{id}/matrix', [ComparisonRunController::class, 'matrix']);
         Route::get('{id}/readiness', [ComparisonRunController::class, 'readiness']);
         Route::patch('{id}/scoring-model', [ComparisonRunController::class, 'updateScoringModel']);
@@ -258,6 +259,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::post('bulk-reject', [ApprovalController::class, 'bulkReject']);
         Route::post('bulk-reassign', [ApprovalController::class, 'bulkReassign']);
         Route::get('{id}', [ApprovalController::class, 'show']);
+        Route::get('{id}/summary', [ApprovalController::class, 'summary']);
         Route::post('{id}/approve', [ApprovalController::class, 'approve']);
         Route::post('{id}/reject', [ApprovalController::class, 'reject']);
         Route::post('{id}/return', [ApprovalController::class, 'return_']);
@@ -281,6 +283,8 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::get('/', [AwardController::class, 'index']);
         Route::post('/', [AwardController::class, 'store']);
         Route::get('{id}', [AwardController::class, 'show']);
+        Route::get('{id}/guidance', [AwardController::class, 'guidance']);
+        Route::get('{id}/debrief-draft/{vendorId}', [AwardController::class, 'debriefDraft']);
         Route::put('{id}/split', [AwardController::class, 'updateSplit']);
         Route::post('{id}/debrief/{vendorId}', [AwardController::class, 'debrief']);
         Route::post('{id}/protest', [AwardController::class, 'protest']);
