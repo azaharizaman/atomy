@@ -17,6 +17,9 @@
             "Nexus\\InsightOperations\\Tests\\": "tests/"
         }
     },
+    "scripts": {
+        "test": "../../vendor/bin/phpunit -c phpunit.xml.dist"
+    },
     "minimum-stability": "dev",
     "prefer-stable": true
 }

@@ -2,11 +2,13 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { AiNarrativePanel } from '@/components/ai/ai-narrative-panel';
 import { Button } from '@/components/ds/Button';
 import { PageHeader } from '@/components/ds/FilterBar';
 import { SectionCard } from '@/components/ds/Card';
 import { StatusBadge } from '@/components/ds/Badge';
 import { TextInput } from '@/components/ds/Input';
+import { useAiStatus } from '@/hooks/use-ai-status';
 import { useVendor } from '@/hooks/use-vendor';
 import { formatVendorGovernanceWarning, useVendorGovernance } from '@/hooks/use-vendor-governance';
 import { useUpdateVendor } from '@/hooks/use-update-vendor';
@@ -54,6 +56,7 @@ function getBadgeVariant(status: VendorStatusValue) {
 }
 
 export function VendorDetailPageContent({ vendorId }: { vendorId: string }) {
+  const aiStatus = useAiStatus();
   const vendorQuery = useVendor(vendorId);
   const governanceQuery = useVendorGovernance(vendorId);
   const updateVendorMutation = useUpdateVendor(vendorId);
@@ -94,6 +97,8 @@ export function VendorDetailPageContent({ vendorId }: { vendorId: string }) {
     primaryContactEmail: vendor.primaryContactEmail,
     primaryContactPhone: vendor.primaryContactPhone ?? '',
   };
+  const shouldShowGovernanceNarrative = governanceQuery.data?.narrative != null
+    && !aiStatus.shouldHideAiControls('governance_ai_narrative');
 
   const updateEditField = (field: keyof VendorEditForm, value: string) => {
     setEditForm((current) => ({
@@ -171,6 +176,16 @@ export function VendorDetailPageContent({ vendorId }: { vendorId: string }) {
           <p><span className="text-slate-500">Current status:</span> {formatVendorStatus(vendor.status)}</p>
         </div>
       </SectionCard>
+
+      {shouldShowGovernanceNarrative ? (
+        <AiNarrativePanel
+          featureKey="governance_ai_narrative"
+          title="AI Governance Narrative"
+          subtitle="Assistive interpretation of the deterministic governance record."
+          summary={governanceQuery.data?.narrative ?? null}
+          fallbackCopy="Governance narrative is unavailable. Continue with the factual governance record."
+        />
+      ) : null}
 
       <SectionCard
         title="Governance monitoring"

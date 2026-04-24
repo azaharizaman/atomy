@@ -14,6 +14,8 @@ import {
   Users,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { AiNarrativePanel } from '@/components/ai/ai-narrative-panel';
+import { useDashboardAiSummary } from '@/hooks/use-dashboard-ai-summary';
 import { fetchLiveOrFail } from '@/lib/api-live';
 import {
   ActivitySummaryCard,
@@ -48,6 +50,7 @@ type DashboardActivityRaw = {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const dashboardAiSummary = useDashboardAiSummary();
 
   const { data: kpis, isLoading: isLoadingKpis } = useQuery({
     queryKey: ['dashboard', 'kpis'],
@@ -123,11 +126,24 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
           <p className="text-sm text-slate-500">Snapshot of requisitions, approvals, and savings performance.</p>
         </div>
-        <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
-          <Sparkles size={12} />
-          AI insights ready
-        </div>
+        {dashboardAiSummary.summary?.available ? (
+          <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
+            <Sparkles size={12} />
+            AI insights active
+          </div>
+        ) : null}
       </div>
+
+      <AiNarrativePanel
+        featureKey="dashboard_ai_summary"
+        title="AI Summary"
+        subtitle="Assistive interpretation of the deterministic dashboard signals."
+        summary={dashboardAiSummary.summary}
+        isLoading={dashboardAiSummary.isLoading}
+        isError={dashboardAiSummary.isError}
+        error={dashboardAiSummary.error}
+        fallbackCopy="Dashboard insights are unavailable. Deterministic dashboard metrics remain usable."
+      />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {[

@@ -406,3 +406,21 @@ After each resolved PR review comment, append a new entry below using this templ
 - **Root cause:** I treated the earlier hardening pass as “good enough” once the main workflows were functioning and missed a final closure pass for canonical DTO storage, minimal diagnostic context, explicit read/write HTTP semantics, transaction-safe artifact persistence, and stricter frontend presentation/validation.
 - **Action taken:** Canonicalized and validated award/comparison DTO identifiers and modes, sanitized provider exception context with encode-failure fallback, split approval/award AI artifact generation into explicit POST generate routes while keeping GET read-only, wrapped comparison/award/approval artifact persistence plus decision-trail writes in locked transactions, tightened decision-trail event validation/metadata dispatch, updated the approval and award AI normalizers/UI summaries, added targeted regression tests, and switched the approval alpha-path timestamp fixture to UTC.
 - **Follow-up tasks:** Before closing future AI review threads, explicitly verify (1) DTO properties themselves hold canonical values after validation, (2) exception/log context is identifier-only unless deeper diagnostics are intentionally shielded, (3) AI generation routes are write-only and persisted artifact routes are read-only, (4) every artifact merge/write plus audit write shares one transaction boundary, and (5) WEB AI panels prefer strict normalized summaries over raw JSON by default.
+
+---
+
+- **Date:** 2026-04-24
+- **PR/Issue ID:** Plan 5 CodeRabbit review follow-up
+- **Summary of mistake:** The AI insights/governance/reporting pass initially left some avoidable cleanup issues: one RFQ AI hook assumed a non-null id, the shared narrative panel kept an inline props type and unstable list keys, and governance page call sites passed dead loading/error props into a panel that only rendered once narrative data already existed.
+- **Root cause:** I prioritized end-to-end plan coverage and targeted verification first, then deferred the final defensive-coding and component-hygiene pass that would normally catch null-safe hook inputs, stable repeated-content keys, and mismatches between render conditions and props.
+- **Action taken:** Hardened `useRfqAiSummary` with null-safe normalization, extracted `AiNarrativePanelProps`, guarded bullet rendering with stable composite keys, simplified governance page panel invocations, corrected provider import ordering, and aligned the related reporting test assertion style.
+- **Follow-up tasks:** Before closing future AI UX review rounds, explicitly check (1) null-safe hook inputs, (2) shared component prop interfaces vs inline literals, (3) stable React keys for repeated narrative content, and (4) whether conditional rendering has made any passed loading/error props dead code.
+
+---
+
+- **Date:** 2026-04-24
+- **PR/Issue ID:** Plan 5 governance/reporting follow-up hardening
+- **Summary of mistake:** The next review pass showed that several plan-5 surfaces still mixed read-only and write-time AI behavior, reporting capability scope was still drifting from the dashboard key, governance provider facts were too raw, and a few DTO/tests/UI normalizers still lagged behind the stricter runtime contracts.
+- **Root cause:** I landed the initial plan-5 slice with working provider paths, then left the boundary tightening for a later pass instead of validating read/write semantics, feature-key ownership, provider-input sanitization, and test/mock contract parity before stopping.
+- **Action taken:** Added explicit POST generation endpoints and cached read paths for dashboard/reporting/vendor-governance/risk surfaces, split reporting onto `reporting_ai_summary`, sanitized governance evidence/finding facts before provider calls, moved shared AI artifact helpers and AI-runtime test binding into reusable traits, tightened DTO canonicalization/docs/imports, and hardened WEB narrative rendering/normalization and mocks.
+- **Follow-up tasks:** Before future AI insights/governance merges, require a final pass for (1) no provider calls on read-only GETs unless intentionally cached and documented, (2) feature-key alignment across API, WEB, tests, and plans, (3) provider-input minimization for tenant/vendor evidence, and (4) strict hook/test contract parity for optional AI envelopes.

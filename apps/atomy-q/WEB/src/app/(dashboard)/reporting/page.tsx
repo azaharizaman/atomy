@@ -2,15 +2,13 @@
 
 import React from 'react';
 import { BarChart2, Download, TrendingUp } from 'lucide-react';
+import { AiNarrativePanel } from '@/components/ai/ai-narrative-panel';
 import { Button } from '@/components/ds/Button';
 import { PageHeader } from '@/components/ds/FilterBar';
-import { AlphaDeferredScreen } from '@/components/alpha/alpha-deferred-screen';
-import { isAlphaMode } from '@/lib/alpha-mode';
+import { useReportingAiSummary } from '@/hooks/use-reporting-ai-summary';
 
 export default function ReportingPage() {
-  if (isAlphaMode()) {
-    return <AlphaDeferredScreen title="Reporting" subtitle="Reporting is deferred in alpha." />;
-  }
+  const reportingAiSummary = useReportingAiSummary();
 
   return (
     <div className="space-y-6">
@@ -25,6 +23,17 @@ export default function ReportingPage() {
         }
       />
 
+      <AiNarrativePanel
+        featureKey="reporting_ai_summary"
+        title="Reporting Summary"
+        subtitle="Assistive interpretation of the deterministic reporting surface."
+        summary={reportingAiSummary.summary}
+        isLoading={reportingAiSummary.isLoading}
+        isError={reportingAiSummary.isError}
+        error={reportingAiSummary.error}
+        fallbackCopy="Reporting summaries are unavailable. Deterministic reporting remains usable."
+      />
+
       <div className="rounded-lg border border-slate-200 bg-white p-8">
         <div className="flex flex-col items-center justify-center text-center">
           <div className="rounded-full bg-slate-100 p-4">
@@ -32,7 +41,7 @@ export default function ReportingPage() {
           </div>
           <h2 className="mt-4 text-lg font-semibold text-slate-900">Reports & analytics</h2>
           <p className="mt-2 max-w-sm text-sm text-slate-500">
-            View spend by category, vendor scores, and cycle-time reports. Export will be available when the reporting API is connected.
+            View spend by category, vendor scores, and cycle-time reports. AI summaries remain optional and never replace the factual reporting surface.
           </p>
           <div className="mt-6 flex gap-2">
             <Button size="sm" variant="outline" disabled>

@@ -4,7 +4,9 @@ import React from 'react';
 import { ChevronRight, BarChart2, AlertTriangle, Lightbulb } from 'lucide-react';
 import { Card } from '@/components/ds/Card';
 import { StatusBadge } from '@/components/ds/Badge';
+import { AiNarrativePanel } from '@/components/ai/ai-narrative-panel';
 import { useRfq } from '@/hooks/use-rfq';
+import { useRfqAiSummary } from '@/hooks/use-rfq-ai-summary';
 import { useRfqOverview } from '@/hooks/use-rfq-overview';
 import Link from 'next/link';
 
@@ -37,6 +39,7 @@ export function RfqInsightsSidebar({ rfqId, isNewRfq: explicitIsNewRfq }: RfqIns
   const [expanded, setExpanded] = React.useState(true);
   const { data: rfq, isLoading: rfqLoading, isError: rfqIsError, error: rfqError } = useRfq(rfqId);
   const { data: overview, isLoading: overviewLoading, isError: overviewIsError, error: overviewError } = useRfqOverview(rfqId);
+  const rfqAiSummary = useRfqAiSummary(rfqId);
 
   const derivedIsNewRfq =
     !rfqLoading &&
@@ -101,21 +104,16 @@ export function RfqInsightsSidebar({ rfqId, isNewRfq: explicitIsNewRfq }: RfqIns
               message="No insights available yet. Insights will appear once you have quotes and comparison data."
             />
           ) : (
-            <Card padding="sm">
-              <h4 className="text-xs font-semibold text-slate-800 mb-2 flex items-center gap-1.5">
-                <Lightbulb size={14} className="text-amber-500" />
-                AI Insights
-              </h4>
-              <p className="text-xs text-slate-600">
-                Analysis based on {overview?.normalization?.total_quotes ?? 0} quotes from{' '}
-                {overview?.rfq?.vendors_count ?? 0} vendors.
-              </p>
-              {overview?.comparison && (
-                <p className="text-xs text-slate-500 mt-2">
-                  Latest comparison: <span className="font-medium">{overview.comparison.name}</span>
-                </p>
-              )}
-            </Card>
+            <AiNarrativePanel
+              featureKey="rfq_ai_insights"
+              title="AI Insights"
+              subtitle={`Quotes ${overview?.normalization?.total_quotes ?? 0} · Vendors ${overview?.rfq?.vendors_count ?? 0}`}
+              summary={rfqAiSummary.summary}
+              isLoading={rfqAiSummary.isLoading}
+              isError={rfqAiSummary.isError}
+              error={rfqAiSummary.error}
+              fallbackCopy="RFQ insights are unavailable. Use the deterministic comparison and risk views instead."
+            />
           )}
 
           {/* Comparison Runs Card */}

@@ -44,19 +44,19 @@ describe('useAiStatus', () => {
           generated_at: '2026-04-23T10:00:00Z',
           capability_definitions: [
             {
-              feature_key: 'rfq_insights',
+              feature_key: 'rfq_ai_insights',
               capability_group: 'insight_intelligence',
               requires_ai: true,
               has_manual_fallback: true,
               fallback_ui_mode: 'show_manual_continuity_banner',
-              degradation_message_key: 'ai.rfq_insights.degraded',
+              degradation_message_key: 'ai.rfq_ai_insights.degraded',
               operator_critical: false,
               endpoint_group: 'insight',
             },
           ],
           capability_statuses: {
-            rfq_insights: {
-              feature_key: 'rfq_insights',
+            rfq_ai_insights: {
+              feature_key: 'rfq_ai_insights',
               capability_group: 'insight_intelligence',
               endpoint_group: 'insight',
               status: 'available',
@@ -94,10 +94,10 @@ describe('useAiStatus', () => {
     expect(mockGet).toHaveBeenCalledWith('/ai/status');
     expect(result.current.status.mode).toBe('provider');
     expect(result.current.status.providerName).toBe('openrouter');
-    expect(result.current.isFeatureAvailable('rfq_insights')).toBe(true);
-    expect(result.current.shouldHideAiControls('rfq_insights')).toBe(false);
-    expect(result.current.shouldShowUnavailableMessage('rfq_insights')).toBe(false);
-    expect(result.current.messageKeyForFeature('rfq_insights')).toBeNull();
+    expect(result.current.isFeatureAvailable('rfq_ai_insights')).toBe(true);
+    expect(result.current.shouldHideAiControls('rfq_ai_insights')).toBe(false);
+    expect(result.current.shouldShowUnavailableMessage('rfq_ai_insights')).toBe(false);
+    expect(result.current.messageKeyForFeature('rfq_ai_insights')).toBeNull();
   });
 
   it('falls back to the bootstrap provider name when the live payload omits provider_name', async () => {
@@ -295,10 +295,10 @@ describe('useAiStatus', () => {
 
     expect(mockGet).not.toHaveBeenCalled();
     expect(result.current.status.mode).toBe('off');
-    expect(result.current.isFeatureAvailable('rfq_insights')).toBe(false);
-    expect(result.current.shouldHideAiControls('rfq_insights')).toBe(true);
-    expect(result.current.shouldShowUnavailableMessage('rfq_insights')).toBe(true);
-    expect(result.current.messageKeyForFeature('rfq_insights')).toBe('ai.status.off');
+    expect(result.current.isFeatureAvailable('rfq_ai_insights')).toBe(false);
+    expect(result.current.shouldHideAiControls('rfq_ai_insights')).toBe(true);
+    expect(result.current.shouldShowUnavailableMessage('rfq_ai_insights')).toBe(true);
+    expect(result.current.messageKeyForFeature('rfq_ai_insights')).toBe('ai.status.off');
   });
 
   it('stays in a stable mock-safe state and skips the live status request in mock mode', async () => {
@@ -313,10 +313,10 @@ describe('useAiStatus', () => {
     expect(result.current.isError).toBe(false);
     expect(result.current.status.mode).toBe('deterministic');
     expect(result.current.status.globalHealth).toBe('degraded');
-    expect(result.current.isFeatureAvailable('rfq_insights')).toBe(false);
-    expect(result.current.shouldHideAiControls('rfq_insights')).toBe(false);
-    expect(result.current.shouldShowUnavailableMessage('rfq_insights')).toBe(true);
-    expect(result.current.messageKeyForFeature('rfq_insights')).toBe('ai.status.mock_mode');
+    expect(result.current.isFeatureAvailable('rfq_ai_insights')).toBe(false);
+    expect(result.current.shouldHideAiControls('rfq_ai_insights')).toBe(false);
+    expect(result.current.shouldShowUnavailableMessage('rfq_ai_insights')).toBe(true);
+    expect(result.current.messageKeyForFeature('rfq_ai_insights')).toBe('ai.status.mock_mode');
   });
 
   it('skips the live status request in deterministic mode and returns a safe disabled snapshot', async () => {
@@ -329,10 +329,10 @@ describe('useAiStatus', () => {
 
     expect(mockGet).not.toHaveBeenCalled();
     expect(result.current.status.mode).toBe('deterministic');
-    expect(result.current.isFeatureAvailable('rfq_insights')).toBe(false);
-    expect(result.current.shouldHideAiControls('rfq_insights')).toBe(false);
-    expect(result.current.shouldShowUnavailableMessage('rfq_insights')).toBe(true);
-    expect(result.current.messageKeyForFeature('rfq_insights')).toBe('ai.status.degraded');
+    expect(result.current.isFeatureAvailable('rfq_ai_insights')).toBe(false);
+    expect(result.current.shouldHideAiControls('rfq_ai_insights')).toBe(false);
+    expect(result.current.shouldShowUnavailableMessage('rfq_ai_insights')).toBe(true);
+    expect(result.current.messageKeyForFeature('rfq_ai_insights')).toBe('ai.status.degraded');
   });
 
   it('exposes a no-op refetch when live status is disabled', async () => {
@@ -359,7 +359,7 @@ describe('useAiStatus', () => {
         'div',
         null,
         React.createElement('span', null, 'Shell navigation'),
-        React.createElement('span', null, aiStatus.messageKeyForFeature('rfq_insights') ?? 'no-message-key'),
+        React.createElement('span', null, aiStatus.messageKeyForFeature('rfq_ai_insights') ?? 'no-message-key'),
       );
     }
 
@@ -375,9 +375,9 @@ describe('useAiStatus', () => {
 
     await waitFor(() => expect(hook.result.current.isError).toBe(true));
 
-    expect(hook.result.current.isFeatureAvailable('rfq_insights')).toBe(false);
-    expect(hook.result.current.shouldHideAiControls('rfq_insights')).toBe(true);
-    expect(hook.result.current.shouldShowUnavailableMessage('rfq_insights')).toBe(true);
-    expect(hook.result.current.messageKeyForFeature('rfq_insights')).toBe('ai.status.unavailable');
+    expect(hook.result.current.isFeatureAvailable('rfq_ai_insights')).toBe(false);
+    expect(hook.result.current.shouldHideAiControls('rfq_ai_insights')).toBe(true);
+    expect(hook.result.current.shouldShowUnavailableMessage('rfq_ai_insights')).toBe(true);
+    expect(hook.result.current.messageKeyForFeature('rfq_ai_insights')).toBe('ai.status.unavailable');
   });
 });

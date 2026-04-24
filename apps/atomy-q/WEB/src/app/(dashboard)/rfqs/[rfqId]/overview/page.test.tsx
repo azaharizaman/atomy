@@ -1,18 +1,34 @@
 import React, { Suspense } from 'react';
-import { act, render, screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { renderWithProviders } from '@/test/utils';
 
 import RfqOverviewPage from './page';
 
 const mockUseRfqOverview = vi.fn();
+const mockUseRfqAiSummary = vi.fn();
 
 vi.mock('@/hooks/use-rfq-overview', () => ({
   useRfqOverview: (...args: unknown[]) => mockUseRfqOverview(...args),
 }));
 
+vi.mock('@/hooks/use-rfq-ai-summary', () => ({
+  useRfqAiSummary: (...args: unknown[]) => mockUseRfqAiSummary(...args),
+}));
+
 describe('RfqOverviewPage', () => {
   beforeEach(() => {
     mockUseRfqOverview.mockReset();
+    mockUseRfqAiSummary.mockReset();
+    mockUseRfqAiSummary.mockReturnValue({
+      summary: null,
+      isLoading: false,
+      isError: false,
+      error: null,
+      isHidden: false,
+      shouldShowUnavailableMessage: false,
+      messageKey: null,
+    });
   });
 
   it('renders the generic unavailable state when overview data is missing', async () => {
@@ -24,7 +40,7 @@ describe('RfqOverviewPage', () => {
     });
 
     await act(async () => {
-      render(
+      renderWithProviders(
         <Suspense fallback={null}>
           <RfqOverviewPage params={Promise.resolve({ rfqId: 'rfq-missing-1' })} />
         </Suspense>,
@@ -77,7 +93,7 @@ describe('RfqOverviewPage', () => {
     });
 
     await act(async () => {
-      render(
+      renderWithProviders(
         <Suspense fallback={null}>
           <RfqOverviewPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
         </Suspense>,
