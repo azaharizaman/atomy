@@ -25,3 +25,4 @@
 
 ## Integration Notes And Coverage
 - Tests in `tests/Unit` and `tests/Integration` cover pipeline/snapshot flows, including `ReportingCoordinatorTest` and `ReportingPipelineIntegrationTest`.
+- Added package-local PHPUnit wiring via `phpunit.xml.dist` and a Composer `test` script that run from the package directory while bootstrapping the monorepo root autoloader, so `InsightOperations` verification matches the actual workspace layout.

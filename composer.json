@@ -89,11 +89,20 @@
         "phpunit/phpunit": "^11.0",
         "phpstan/phpstan": "^2.1"
     },
+    "scripts": {
+        "test:insight-operations": "./vendor/bin/phpunit orchestrators/InsightOperations/tests",
+        "test:atomy-q-api-feature-flags": "cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Feature/FeatureFlagsApiTest.php",
+        "verify:atomy-q-ai-insights-governance-reporting": [
+            "@test:insight-operations",
+            "@test:atomy-q-api-feature-flags"
+        ]
+    },
     "autoload": {
         "psr-4": {
             "Nexus\\ProjectManagementOperations\\": "orchestrators/ProjectManagementOperations/src/",
             "Nexus\\ProcurementOperations\\": "orchestrators/ProcurementOperations/src/",
             "Nexus\\ManufacturingOperations\\": "orchestrators/ManufacturingOperations/src/",
+            "Nexus\\InsightOperations\\": "orchestrators/InsightOperations/src/",
             "Nexus\\Sanctions\\": "packages/Sanctions/src/",
             "Nexus\\AmlCompliance\\": "packages/AmlCompliance/src/",
             "Nexus\\KycVerification\\": "packages/KycVerification/src/",
@@ -151,6 +160,7 @@
             "Nexus\\ProjectManagementOperations\\Tests\\": "orchestrators/ProjectManagementOperations/tests/",
             "Nexus\\ProcurementOperations\\Tests\\": "orchestrators/ProcurementOperations/tests/",
             "Nexus\\ManufacturingOperations\\Tests\\": "orchestrators/ManufacturingOperations/tests/",
+            "Nexus\\InsightOperations\\Tests\\": "orchestrators/InsightOperations/tests/",
             "Nexus\\Sanctions\\Tests\\": "packages/Sanctions/tests/",
             "Nexus\\AmlCompliance\\Tests\\": "packages/AmlCompliance/tests/",
             "Nexus\\KycVerification\\Tests\\": "packages/KycVerification/tests/",

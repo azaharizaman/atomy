@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Adapters\Ai\Contracts\ProviderGovernanceClientInterface;
+use App\Adapters\Ai\DTOs\GovernanceNarrativeRequest;
+use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
 use App\Http\Idempotency\IdempotencyCompletion;
@@ -15,14 +18,21 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
+use Nexus\Common\Contracts\ClockInterface;
+use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 use Nexus\Idempotency\Contracts\IdempotencyServiceInterface;
+use Throwable;
 
 final class VendorGovernanceController extends Controller
 {
     use ExtractsAuthContext;
+    use InteractsWithAiAvailability;
 
-    public function __construct(private readonly VendorGovernanceScoreService $scoreService)
-    {
+    public function __construct(
+        private readonly VendorGovernanceScoreService $scoreService,
+        private readonly ProviderGovernanceClientInterface $governanceClient,
+        private readonly ClockInterface $clock,
+    ) {
     }
 
     public function show(Request $request, string $id): JsonResponse
@@ -36,14 +46,23 @@ final class VendorGovernanceController extends Controller
         $evidence = $this->evidenceQuery($tenantId, $id)->orderByDesc('observed_at')->orderBy('title')->get();
         $findings = $this->findingQuery($tenantId, $id)->orderByDesc('opened_at')->orderBy('issue_type')->get();
         $summary = $this->scoreService->summarize($evidence, $findings);
+        $serializedEvidence = $evidence->map(fn (VendorEvidence $record): array => $this->serializeEvidence($record))->values()->all();
+        $serializedFindings = $findings->map(fn (VendorFinding $record): array => $this->serializeFinding($record))->values()->all();
 
         return response()->json([
             'data' => [
                 'vendor_id' => (string) $vendor->id,
-                'evidence' => $evidence->map(fn (VendorEvidence $record): array => $this->serializeEvidence($record))->values()->all(),
-                'findings' => $findings->map(fn (VendorFinding $record): array => $this->serializeFinding($record))->values()->all(),
+                'evidence' => $serializedEvidence,
+                'findings' => $serializedFindings,
                 'summary_scores' => $summary['scores'],
                 'warning_flags' => $summary['warning_flags'],
+                'ai_narrative' => $this->buildGovernanceNarrativeEnvelope(
+                    tenantId: $tenantId,
+                    vendorId: (string) $vendor->id,
+                    evidence: $serializedEvidence,
+                    findings: $serializedFindings,
+                    summary: $summary,
+                ),
             ],
         ]);
     }
@@ -252,5 +271,152 @@ final class VendorGovernanceController extends Controller
         $normalized = trim((string) $value);
 
         return $normalized === '' ? null : $normalized;
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $evidence
+     * @param array<int, array<string, mixed>> $findings
+     * @param array{scores: array<string, int>, warning_flags: list<string>} $summary
+     * @return array<string, mixed>
+     */
+    private function buildGovernanceNarrativeEnvelope(
+        string $tenantId,
+        string $vendorId,
+        array $evidence,
+        array $findings,
+        array $summary,
+    ): array {
+        if (! $this->aiCapabilityAvailable('governance_ai_narrative')) {
+            return $this->unavailableArtifactEnvelope('governance_ai_narrative');
+        }
+
+        try {
+            $narrative = $this->governanceClient->narrate(new GovernanceNarrativeRequest(
+                featureKey: 'governance_ai_narrative',
+                tenantId: $tenantId,
+                vendorId: $vendorId,
+                facts: [
+                    'evidence' => $evidence,
+                    'findings' => $findings,
+                    'summary_scores' => $summary['scores'],
+                    'warning_flags' => $summary['warning_flags'],
+                ],
+            ));
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return $this->unavailableArtifactEnvelope('governance_ai_narrative');
+        }
+
+        return $this->artifactEnvelope(
+            featureKey: 'governance_ai_narrative',
+            payload: $this->providerNarrativePayload($narrative, $evidence, $findings, $summary),
+            provenance: $this->providerArtifactProvenance($narrative, AiStatusSchema::ENDPOINT_GROUP_GOVERNANCE),
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    private function artifactEnvelope(string $featureKey, array $payload, ?array $provenance = null): array
+    {
+        return [
+            'feature_key' => $featureKey,
+            'capability_group' => AiStatusSchema::CAPABILITY_GROUP_GOVERNANCE_INTELLIGENCE,
+            'available' => true,
+            'status' => AiStatusSchema::CAPABILITY_STATUS_AVAILABLE,
+            'manual_continuity' => 'available',
+            'payload' => $payload,
+            'provenance' => $provenance,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function unavailableArtifactEnvelope(string $featureKey): array
+    {
+        $capabilityStatus = $this->aiCapabilityStatus($featureKey);
+        $statusSnapshot = $this->aiStatusSnapshot();
+
+        return [
+            'feature_key' => $featureKey,
+            'capability_group' => AiStatusSchema::CAPABILITY_GROUP_GOVERNANCE_INTELLIGENCE,
+            'available' => false,
+            'status' => $capabilityStatus?->status ?? AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE,
+            'manual_continuity' => 'available',
+            'fallback_ui_mode' => $capabilityStatus?->fallbackUiMode ?? AiStatusSchema::FALLBACK_UI_MODE_SHOW_UNAVAILABLE_MESSAGE,
+            'message_key' => $capabilityStatus?->messageKey ?? 'ai.capability.unavailable',
+            'reason_codes' => $capabilityStatus?->reasonCodes ?? $statusSnapshot->reasonCodes,
+            'diagnostics' => $capabilityStatus?->diagnostics ?? ['mode' => $statusSnapshot->mode],
+            'payload' => null,
+            'provenance' => [
+                'source' => 'deterministic',
+                'endpoint_group' => AiStatusSchema::ENDPOINT_GROUP_GOVERNANCE,
+                'provider_name' => $this->providerName(),
+                'generated_at' => $this->clock->now()->format(DATE_ATOM),
+            ],
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @param array<int, array<string, mixed>> $evidence
+     * @param array<int, array<string, mixed>> $findings
+     * @param array{scores: array<string, int>, warning_flags: list<string>} $summary
+     * @return array<string, mixed>
+     */
+    private function providerNarrativePayload(array $payload, array $evidence, array $findings, array $summary): array
+    {
+        $narrative = is_array($payload['payload'] ?? null) ? $payload['payload'] : $payload;
+        if (! is_array($narrative)) {
+            $narrative = [];
+        }
+
+        $narrative['source_facts'] = [
+            'evidence' => $evidence,
+            'findings' => $findings,
+            'summary_scores' => $summary['scores'],
+            'warning_flags' => $summary['warning_flags'],
+        ];
+
+        return $narrative;
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    private function providerArtifactProvenance(array $payload, string $endpointGroup): array
+    {
+        $provenance = is_array($payload['provenance'] ?? null) ? $payload['provenance'] : [];
+
+        return array_replace($provenance, [
+            'source' => 'provider',
+            'provider_name' => $this->providerName(),
+            'endpoint_group' => $endpointGroup,
+            'generated_at' => $provenance['generated_at'] ?? $this->clock->now()->format(DATE_ATOM),
+        ]);
+    }
+
+    private function providerName(): ?string
+    {
+        $providerName = config('atomy.ai.provider.name');
+        if (is_string($providerName)) {
+            $providerName = trim($providerName);
+            if ($providerName !== '') {
+                return $providerName;
+            }
+        }
+
+        $providerKey = config('atomy.ai.provider.key');
+        if (! is_string($providerKey)) {
+            return null;
+        }
+
+        $providerKey = trim($providerKey);
+
+        return $providerKey === '' ? null : strtolower($providerKey);
     }
 }

@@ -8,12 +8,16 @@ use App\Adapters\Ai\AiRuntimeStatusAdapter;
 use App\Adapters\Ai\ConfiguredAiEndpointRegistry;
 use App\Adapters\Ai\ConfiguredAiHealthProbe;
 use App\Adapters\Ai\AtomyAiCapabilityCatalog;
+use App\Adapters\Ai\Contracts\ProviderGovernanceClientInterface;
 use App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface;
+use App\Adapters\Ai\Contracts\ProviderInsightClientInterface;
 use App\Adapters\Ai\ProviderSourcingRecommendationClient;
 use App\Adapters\Ai\Contracts\AiEndpointRegistryInterface;
 use App\Adapters\Ai\Contracts\ProviderAiTransportInterface;
 use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use App\Adapters\Ai\ProviderGovernanceClient;
 use App\Adapters\Ai\ProviderComparisonAwardClient;
+use App\Adapters\Ai\ProviderInsightClient;
 use App\Adapters\Ai\ProviderAiTransport;
 use App\Http\Idempotency\IdempotencyReplayResponseFactory;
 use App\Contracts\JwtServiceInterface;
@@ -213,6 +217,8 @@ class AppServiceProvider extends ServiceProvider
         );
         $this->app->singleton(VendorRecommendationLlmInterface::class, ProviderSourcingRecommendationClient::class);
         $this->app->singleton(ComparisonAwardAiClientInterface::class, ProviderComparisonAwardClient::class);
+        $this->app->singleton(ProviderInsightClientInterface::class, ProviderInsightClient::class);
+        $this->app->singleton(ProviderGovernanceClientInterface::class, ProviderGovernanceClient::class);
         $this->app->singleton(VendorRecommendationCoordinatorInterface::class, VendorRecommendationCoordinator::class);
         $this->app->singleton(ConfiguredAiEndpointRegistry::class, function (): ConfiguredAiEndpointRegistry {
             return new ConfiguredAiEndpointRegistry($this->aiRuntimeConfig());

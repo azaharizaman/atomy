@@ -7,6 +7,9 @@
         "php": "^8.3",
         "psr/log": "^3.0"
     },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
     "autoload": {
         "psr-4": {
             "Nexus\\InsightOperations\\": "src/"
@@ -16,6 +19,9 @@
         "psr-4": {
             "Nexus\\InsightOperations\\Tests\\": "tests/"
         }
+    },
+    "scripts": {
+        "test": "../../vendor/bin/phpunit -c phpunit.xml.dist"
     },
     "minimum-stability": "dev",
     "prefer-stable": true

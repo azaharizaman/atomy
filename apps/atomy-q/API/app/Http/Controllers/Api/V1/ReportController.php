@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Adapters\Ai\Contracts\ProviderInsightClientInterface;
+use App\Adapters\Ai\DTOs\InsightSummaryRequest;
+use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Nexus\Common\Contracts\ClockInterface;
+use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
+use Throwable;
 
 /**
  * Report API controller (Section 21).
@@ -17,6 +23,13 @@ use Illuminate\Http\Request;
 final class ReportController extends Controller
 {
     use ExtractsAuthContext;
+    use InteractsWithAiAvailability;
+
+    public function __construct(
+        private readonly ProviderInsightClientInterface $insightClient,
+        private readonly ClockInterface $clock,
+    ) {
+    }
 
     /**
      * Get KPI metrics.
@@ -25,11 +38,17 @@ final class ReportController extends Controller
      */
     public function kpis(Request $request): JsonResponse
     {
+        $tenantId = $this->tenantId($request);
+        $facts = [
+            'total_spend' => 0,
+            'active_rfqs' => 0,
+            'savings' => 0,
+        ];
+
         return response()->json([
             'data' => [
-                'total_spend' => 0,
-                'active_rfqs' => 0,
-                'savings' => 0,
+                ...$facts,
+                'ai_summary' => $this->buildReportSummaryEnvelope($tenantId, 'report_kpis', $facts),
             ],
         ]);
     }
@@ -41,10 +60,16 @@ final class ReportController extends Controller
      */
     public function spendTrend(Request $request): JsonResponse
     {
+        $tenantId = $this->tenantId($request);
+        $facts = [
+            'series' => [],
+            'period' => 'monthly',
+        ];
+
         return response()->json([
             'data' => [
-                'series' => [],
-                'period' => 'monthly',
+                ...$facts,
+                'ai_summary' => $this->buildReportSummaryEnvelope($tenantId, 'report_spend_trend', $facts),
             ],
         ]);
     }
@@ -56,9 +81,15 @@ final class ReportController extends Controller
      */
     public function spendByCategory(Request $request): JsonResponse
     {
+        $tenantId = $this->tenantId($request);
+        $facts = [
+            'categories' => [],
+        ];
+
         return response()->json([
             'data' => [
-                'categories' => [],
+                ...$facts,
+                'ai_summary' => $this->buildReportSummaryEnvelope($tenantId, 'report_spend_by_category', $facts),
             ],
         ]);
     }
@@ -184,5 +215,133 @@ final class ReportController extends Controller
                 'expires_at' => now()->addHours(24)->toIso8601String(),
             ],
         ]);
+    }
+
+    /**
+     * @param array<string, mixed> $facts
+     * @return array<string, mixed>
+     */
+    private function buildReportSummaryEnvelope(string $tenantId, string $subjectType, array $facts): array
+    {
+        if (! $this->aiCapabilityAvailable('dashboard_ai_summary')) {
+            return $this->unavailableArtifactEnvelope('dashboard_ai_summary');
+        }
+
+        try {
+            $summary = $this->insightClient->summarize(new InsightSummaryRequest(
+                featureKey: 'dashboard_ai_summary',
+                tenantId: $tenantId,
+                subjectType: $subjectType,
+                facts: $facts,
+            ));
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return $this->unavailableArtifactEnvelope('dashboard_ai_summary');
+        }
+
+        return $this->artifactEnvelope(
+            featureKey: 'dashboard_ai_summary',
+            payload: $this->providerSummaryPayload($summary, $facts),
+            provenance: $this->providerArtifactProvenance($summary, AiStatusSchema::ENDPOINT_GROUP_INSIGHT),
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    private function artifactEnvelope(string $featureKey, array $payload, ?array $provenance = null): array
+    {
+        return [
+            'feature_key' => $featureKey,
+            'capability_group' => AiStatusSchema::CAPABILITY_GROUP_INSIGHT_INTELLIGENCE,
+            'available' => true,
+            'status' => AiStatusSchema::CAPABILITY_STATUS_AVAILABLE,
+            'manual_continuity' => 'available',
+            'payload' => $payload,
+            'provenance' => $provenance,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function unavailableArtifactEnvelope(string $featureKey): array
+    {
+        $capabilityStatus = $this->aiCapabilityStatus($featureKey);
+        $statusSnapshot = $this->aiStatusSnapshot();
+
+        return [
+            'feature_key' => $featureKey,
+            'capability_group' => AiStatusSchema::CAPABILITY_GROUP_INSIGHT_INTELLIGENCE,
+            'available' => false,
+            'status' => $capabilityStatus?->status ?? AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE,
+            'manual_continuity' => 'available',
+            'fallback_ui_mode' => $capabilityStatus?->fallbackUiMode ?? AiStatusSchema::FALLBACK_UI_MODE_SHOW_UNAVAILABLE_MESSAGE,
+            'message_key' => $capabilityStatus?->messageKey ?? 'ai.capability.unavailable',
+            'reason_codes' => $capabilityStatus?->reasonCodes ?? $statusSnapshot->reasonCodes,
+            'diagnostics' => $capabilityStatus?->diagnostics ?? ['mode' => $statusSnapshot->mode],
+            'payload' => null,
+            'provenance' => [
+                'source' => 'deterministic',
+                'endpoint_group' => AiStatusSchema::ENDPOINT_GROUP_INSIGHT,
+                'provider_name' => $this->providerName(),
+                'generated_at' => $this->clock->now()->format(DATE_ATOM),
+            ],
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @param array<string, mixed> $facts
+     * @return array<string, mixed>
+     */
+    private function providerSummaryPayload(array $payload, array $facts): array
+    {
+        $summary = is_array($payload['payload'] ?? null) ? $payload['payload'] : $payload;
+        if (! is_array($summary)) {
+            $summary = [];
+        }
+
+        $summary['source_facts'] = $facts;
+
+        return $summary;
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    private function providerArtifactProvenance(array $payload, string $endpointGroup): array
+    {
+        $provenance = is_array($payload['provenance'] ?? null) ? $payload['provenance'] : [];
+
+        return array_replace($provenance, [
+            'source' => 'provider',
+            'provider_name' => $this->providerName(),
+            'endpoint_group' => $endpointGroup,
+            'generated_at' => $provenance['generated_at'] ?? $this->clock->now()->format(DATE_ATOM),
+        ]);
+    }
+
+    private function providerName(): ?string
+    {
+        $providerName = config('atomy.ai.provider.name');
+        if (is_string($providerName)) {
+            $providerName = trim($providerName);
+            if ($providerName !== '') {
+                return $providerName;
+            }
+        }
+
+        $providerKey = config('atomy.ai.provider.key');
+        if (! is_string($providerKey)) {
+            return null;
+        }
+
+        $providerKey = trim($providerKey);
+
+        return $providerKey === '' ? null : strtolower($providerKey);
     }
 }

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { AiNarrativePanel } from '@/components/ai/ai-narrative-panel';
 import { Button } from '@/components/ds/Button';
 import { PageHeader } from '@/components/ds/FilterBar';
 import { SectionCard } from '@/components/ds/Card';
@@ -184,6 +185,17 @@ export function VendorDetailPageContent({ vendorId }: { vendorId: string }) {
           </Link>
         }
       >
+        {governanceQuery.data?.narrative ? (
+          <div className="mb-4">
+            <AiNarrativePanel
+              featureKey="governance_ai_narrative"
+              title="AI Governance Narrative"
+              subtitle="Assistive interpretation of the deterministic governance record."
+              summary={governanceQuery.data.narrative}
+              fallbackCopy="Governance narrative is unavailable. Continue with the factual governance record."
+            />
+          </div>
+        ) : null}
         {governanceQuery.isLoading ? (
           <p className="text-sm text-slate-500">Loading governance summary...</p>
         ) : governanceQuery.isError ? (

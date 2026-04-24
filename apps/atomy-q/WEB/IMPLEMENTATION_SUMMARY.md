@@ -1,5 +1,22 @@
 # Implementation Summary
 
+## 2026-04-24 AI Insights, Governance, And Reporting UX (Plan 5)
+
+- Added a shared `AiNarrativePanel` plus `use-ai-narrative-summary.ts` so dashboard, RFQ, risk, governance, and reporting surfaces all consume the same capability-aware AI summary rendering pattern.
+- `dashboard/page.tsx` now renders an optional AI dashboard summary panel keyed to `dashboard_ai_summary` without fabricating AI content when unavailable.
+- `rfq-insights-sidebar.tsx`, `rfqs/[rfqId]/overview/page.tsx`, and `rfqs/[rfqId]/risk/page.tsx` now use `rfq_ai_insights` to show optional RFQ insight summaries while keeping deterministic/manual continuity content visible.
+- `reporting/page.tsx` is no longer alpha-deferred; it keeps the deterministic reporting shell available and adds an optional AI reporting summary panel.
+- `use-vendor-governance.ts` now normalizes the optional backend `ai_narrative` envelope, and the vendor detail / ESG-compliance pages surface that narrative without replacing evidence/findings/scores.
+- Updated AI-status regression coverage to use the plan-5 `rfq_ai_insights` feature key.
+- Added focused WEB regression coverage:
+  - `src/components/ai/ai-narrative-panel.test.tsx`
+  - `src/app/(dashboard)/page.test.tsx`
+  - `src/app/(dashboard)/reporting/page.test.tsx`
+  - `src/app/(dashboard)/rfqs/[rfqId]/overview/page.test.tsx`
+  - `src/app/(dashboard)/rfqs/[rfqId]/risk/page.test.tsx`
+- Verification:
+  - `cd apps/atomy-q/WEB && npm run test:unit -- src/app/'(dashboard)'/page.test.tsx src/app/'(dashboard)'/reporting/page.test.tsx src/app/'(dashboard)'/rfqs/[rfqId]/overview/page.test.tsx src/app/'(dashboard)'/rfqs/[rfqId]/risk/page.test.tsx src/components/ai/ai-narrative-panel.test.tsx src/app/'(dashboard)'/vendors/[vendorId]/page.test.tsx src/app/'(dashboard)'/vendors/[vendorId]/esg-compliance/page.test.tsx` -> PASS (18 tests).
+
 ## 2026-04-24 Comparison/Award/Approval AI Overlay UX (Plan 4)
 
 - Added scoped AI-assist surfaces for the comparison run detail, RFQ award workspace, and RFQ approvals list without changing deterministic/manual authority paths.

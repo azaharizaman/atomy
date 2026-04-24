@@ -3,6 +3,7 @@
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { isObject, toText } from '@/hooks/normalize-utils';
+import { normalizeAiNarrativePayload, type AiNarrativeSummary } from '@/hooks/use-ai-narrative-summary';
 
 export interface VendorGovernanceEvidence {
   id: string;
@@ -45,6 +46,7 @@ export interface VendorGovernanceSummary {
   findings: VendorGovernanceFinding[];
   scores: VendorGovernanceScores;
   warningFlags: string[];
+  narrative: AiNarrativeSummary | null;
 }
 
 export type VendorGovernanceMap = Map<string, VendorGovernanceSummary>;
@@ -219,6 +221,9 @@ export function normalizeVendorGovernancePayload(payload: unknown): VendorGovern
       ),
     },
     warningFlags: stringList(warningFlags, 'warning_flags', 'Invalid vendor governance payload'),
+    narrative: isObject(pickField(data, 'ai_narrative', 'aiNarrative'))
+      ? normalizeAiNarrativePayload(pickField(data, 'ai_narrative', 'aiNarrative'))
+      : null,
   };
 }
 

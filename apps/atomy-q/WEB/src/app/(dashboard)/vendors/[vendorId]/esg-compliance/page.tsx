@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { AlertTriangle, FileCheck2, ShieldCheck } from 'lucide-react';
+import { AiNarrativePanel } from '@/components/ai/ai-narrative-panel';
 import { EmptyState, SectionCard } from '@/components/ds/Card';
 import { PageHeader } from '@/components/ds/FilterBar';
 import { formatVendorGovernanceWarning, useVendorGovernance } from '@/hooks/use-vendor-governance';
@@ -59,6 +60,14 @@ export function VendorEsgCompliancePageContent({ vendorId }: { vendorId: string 
   return (
     <div className="space-y-4">
       <PageHeader title="ESG / Compliance" subtitle={`Vendor ${governance.vendorId}`} />
+
+      <AiNarrativePanel
+        featureKey="governance_ai_narrative"
+        title="AI Governance Narrative"
+        subtitle="Assistive interpretation of the current governance posture."
+        summary={governance.narrative}
+        fallbackCopy="Governance narrative is unavailable. Continue with the evidence and findings below."
+      />
 
       <SectionCard title="Health scores" subtitle="Monitoring signals are advisory and do not automatically change eligibility">
         <div className="grid gap-3 md:grid-cols-4">

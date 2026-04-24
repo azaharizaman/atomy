@@ -102,9 +102,13 @@
   - reporting summary degradation without data-loss.
 - [ ] Run:
 ```bash
-./vendor/bin/phpunit orchestrators/InsightOperations/tests apps/atomy-q/API/tests/Feature/FeatureFlagsApiTest.php
+composer verify:atomy-q-ai-insights-governance-reporting
 cd apps/atomy-q/WEB && npm run test:unit -- src/app/'(dashboard)'/page.test.tsx src/app/'(dashboard)'/rfqs/[rfqId]/overview/page.test.tsx
 ```
+
+Verification note:
+- `InsightOperations` tests run through the monorepo root autoloader.
+- `FeatureFlagsApiTest` runs inside `apps/atomy-q/API` because it depends on the API package's PHPUnit bootstrap and Laravel test base classes.
 
 ## Exit Criteria
 

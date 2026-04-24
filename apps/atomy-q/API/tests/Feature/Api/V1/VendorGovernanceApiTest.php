@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api\V1;
 
+use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use App\Adapters\Ai\Contracts\ProviderGovernanceClientInterface;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorEvidence;
@@ -12,6 +14,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Nexus\IntelligenceOperations\DTOs\AiCapabilityStatus;
+use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
+use Nexus\IntelligenceOperations\DTOs\AiStatusSnapshot;
 use Tests\Feature\Api\ApiTestCase;
 
 final class VendorGovernanceApiTest extends ApiTestCase
@@ -172,6 +177,143 @@ final class VendorGovernanceApiTest extends ApiTestCase
                 ->where('type', 'sanctions_screening')
                 ->count(),
         );
+    }
+
+    public function testGovernanceIncludesProviderNarrativeWhenAiIsAvailable(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-04-22T00:00:00Z'));
+        $tenantId = (string) Str::ulid();
+        $user = $this->createUser($tenantId);
+        $vendor = $this->createVendor($tenantId);
+        $evidence = $this->createEvidence($tenantId, (string) $vendor->id, [
+            'domain' => 'compliance',
+            'type' => 'iso_certificate',
+            'title' => 'ISO 14001 certificate',
+            'observed_at' => '2024-01-01T00:00:00Z',
+            'expires_at' => '2026-01-01T00:00:00Z',
+            'review_status' => 'pending',
+        ]);
+        $finding = $this->createFinding($tenantId, (string) $vendor->id, [
+            'domain' => 'risk',
+            'issue_type' => 'financial_watch',
+            'severity' => 'high',
+            'status' => 'open',
+            'remediation_due_at' => '2026-04-01T00:00:00Z',
+        ]);
+
+        $this->bindGovernanceAiRuntime([
+            'governance_ai_narrative' => new AiCapabilityStatus(
+                featureKey: 'governance_ai_narrative',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_GOVERNANCE_INTELLIGENCE,
+                endpointGroup: AiStatusSchema::ENDPOINT_GROUP_GOVERNANCE,
+                fallbackUiMode: AiStatusSchema::FALLBACK_UI_MODE_SHOW_MANUAL_CONTINUITY_BANNER,
+                messageKey: 'ai.governance_ai_narrative.available',
+                status: AiStatusSchema::CAPABILITY_STATUS_AVAILABLE,
+                available: true,
+                reasonCodes: ['provider_available'],
+                operatorCritical: true,
+                diagnostics: ['mode' => AiStatusSchema::MODE_PROVIDER],
+            ),
+        ]);
+
+        $this->app->instance(ProviderGovernanceClientInterface::class, new readonly class implements ProviderGovernanceClientInterface {
+            public function narrate(\App\Adapters\Ai\DTOs\GovernanceNarrativeRequest $request): array
+            {
+                return [
+                    'headline' => 'Vendor governance is acceptable with targeted follow-up.',
+                    'recommendations' => ['Complete the overdue remediation task'],
+                ];
+            }
+        });
+
+        $response = $this->getJson('/api/v1/vendors/' . $vendor->id . '/governance', $this->authHeaders($tenantId, (string) $user->id));
+
+        $response->assertOk();
+        $response->assertJsonPath('data.ai_narrative.available', true);
+        $response->assertJsonPath('data.ai_narrative.payload.headline', 'Vendor governance is acceptable with targeted follow-up.');
+        $response->assertJsonPath('data.ai_narrative.payload.source_facts.summary_scores.compliance_health_score', 45);
+        $response->assertJsonPath('data.ai_narrative.payload.source_facts.evidence.0.id', (string) $evidence->id);
+        $response->assertJsonPath('data.ai_narrative.payload.source_facts.findings.0.id', (string) $finding->id);
+    }
+
+    public function testGovernanceKeepsFactualDataWhenAiNarrativeIsUnavailable(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-04-22T00:00:00Z'));
+        $tenantId = (string) Str::ulid();
+        $user = $this->createUser($tenantId);
+        $vendor = $this->createVendor($tenantId);
+        $this->createEvidence($tenantId, (string) $vendor->id, [
+            'domain' => 'compliance',
+            'type' => 'iso_certificate',
+            'title' => 'ISO 14001 certificate',
+            'observed_at' => '2024-01-01T00:00:00Z',
+            'expires_at' => '2026-01-01T00:00:00Z',
+            'review_status' => 'pending',
+        ]);
+
+        $this->bindGovernanceAiRuntime([
+            'governance_ai_narrative' => new AiCapabilityStatus(
+                featureKey: 'governance_ai_narrative',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_GOVERNANCE_INTELLIGENCE,
+                endpointGroup: AiStatusSchema::ENDPOINT_GROUP_GOVERNANCE,
+                fallbackUiMode: AiStatusSchema::FALLBACK_UI_MODE_SHOW_MANUAL_CONTINUITY_BANNER,
+                messageKey: 'ai.governance_ai_narrative.unavailable',
+                status: AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE,
+                available: false,
+                reasonCodes: ['provider_unavailable'],
+                operatorCritical: true,
+                diagnostics: ['mode' => AiStatusSchema::MODE_PROVIDER],
+            ),
+        ]);
+
+        $this->app->instance(ProviderGovernanceClientInterface::class, new readonly class implements ProviderGovernanceClientInterface {
+            public function narrate(\App\Adapters\Ai\DTOs\GovernanceNarrativeRequest $request): array
+            {
+                throw new \RuntimeException('provider client should not be called when unavailable');
+            }
+        });
+
+        $response = $this->getJson('/api/v1/vendors/' . $vendor->id . '/governance', $this->authHeaders($tenantId, (string) $user->id));
+
+        $response->assertOk();
+        $response->assertJsonPath('data.summary_scores.compliance_health_score', 45);
+        $response->assertJsonPath('data.ai_narrative.available', false);
+        $response->assertJsonPath('data.ai_narrative.payload', null);
+        $response->assertJsonPath('data.ai_narrative.feature_key', 'governance_ai_narrative');
+    }
+
+    private function bindGovernanceAiRuntime(array $capabilityStatuses): void
+    {
+        $snapshot = new AiStatusSnapshot(
+            mode: AiStatusSchema::MODE_PROVIDER,
+            globalHealth: AiStatusSchema::HEALTH_HEALTHY,
+            capabilityDefinitions: [],
+            capabilityStatuses: $capabilityStatuses,
+            endpointGroupHealthSnapshots: [],
+            reasonCodes: [],
+            generatedAt: new \DateTimeImmutable('2026-04-24T03:00:00Z'),
+        );
+
+        $this->app->instance(AiRuntimeStatusInterface::class, new readonly class($snapshot) implements AiRuntimeStatusInterface {
+            public function __construct(private AiStatusSnapshot $snapshot)
+            {
+            }
+
+            public function snapshot(): AiStatusSnapshot
+            {
+                return $this->snapshot;
+            }
+
+            public function capabilityStatus(string $featureKey): ?AiCapabilityStatus
+            {
+                return $this->snapshot->capabilityStatuses[$featureKey] ?? null;
+            }
+
+            public function providerName(): string
+            {
+                return 'openrouter';
+            }
+        });
     }
 
     /**

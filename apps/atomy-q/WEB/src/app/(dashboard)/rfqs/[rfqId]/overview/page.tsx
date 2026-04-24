@@ -10,8 +10,10 @@ import { KPIScorecard } from '@/components/ds/KPIScorecard';
 import { StatusBadge } from '@/components/ds/Badge';
 import { SectionCard } from '@/components/ds/Card';
 import { Timeline, type TimelineEvent } from '@/components/ds/Timeline';
+import { AiNarrativePanel } from '@/components/ai/ai-narrative-panel';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { OverviewNextStep } from '@/components/workspace/overview-next-step';
+import { useRfqAiSummary } from '@/hooks/use-rfq-ai-summary';
 import { useRfqOverview, type RfqOverviewActivityItem } from '@/hooks/use-rfq-overview';
 import { RfqScheduleTimeline } from '@/components/workspace/rfq-schedule-timeline';
 
@@ -53,6 +55,7 @@ function activityToTimelineEvent(item: RfqOverviewActivityItem): TimelineEvent {
 export default function RfqOverviewPage({ params }: { params: Promise<{ rfqId: string }> }) {
   const { rfqId } = React.use(params);
   const { data: overview, isLoading, isError, error } = useRfqOverview(rfqId);
+  const rfqAiSummary = useRfqAiSummary(rfqId);
 
   const rfq = overview?.rfq;
   const expectedQuotes = overview?.expected_quotes ?? 0;
@@ -161,6 +164,17 @@ export default function RfqOverviewPage({ params }: { params: Promise<{ rfqId: s
       <SectionCard title="Schedule" subtitle="Deadlines, planning milestones, and today on one axis">
         <RfqScheduleTimeline {...scheduleContext} />
       </SectionCard>
+
+      <AiNarrativePanel
+        featureKey="rfq_ai_insights"
+        title="RFQ Insight Summary"
+        subtitle="Assistive interpretation of the latest RFQ signals."
+        summary={rfqAiSummary.summary}
+        isLoading={rfqAiSummary.isLoading}
+        isError={rfqAiSummary.isError}
+        error={rfqAiSummary.error}
+        fallbackCopy="RFQ insights are unavailable. The deterministic RFQ overview remains usable."
+      />
 
       {/* 4 KPI scorecards */}
       <div className="grid gap-4 xl:grid-cols-4 md:grid-cols-2">
