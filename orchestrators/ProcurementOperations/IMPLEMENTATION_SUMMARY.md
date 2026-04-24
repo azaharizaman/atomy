@@ -1,5 +1,29 @@
 # ProcurementOperations Implementation Summary
 
+## 2026-04-24 - Provider-backed Vendor Recommendation Runtime
+
+- Refactored `VendorRecommendationCoordinatorInterface` to return the Layer 1 `Nexus\ProcurementML\ValueObjects\VendorRecommendationResult` contract instead of the older orchestrator-local DTO.
+- `VendorRecommendationCoordinator` now treats provider-backed inference as the alpha default when the injected provider adapter is available: it calls the provider, rejects malformed payloads or invented/ineligible vendors, preserves deterministic eligibility boundaries, and returns an explicit `unavailable` result when provider invocation fails or provider output cannot be trusted.
+- Provider explanations now flow separately from deterministic reason sets, with per-candidate explanation fallback order of candidate provider explanation, candidate reason summary, then top-level provider explanation, while deterministic reasons remain anchored to the scorer output.
+- `NullVendorRecommendationLlm` remains as the honest continuity adapter for environments where no provider client is bound, but the coordinator no longer represents that path as a silent synthetic success.
+
+### Security/architecture impact
+
+- Tightens the Layer 2 boundary around a Layer 1 result contract: callers now consume the `Nexus\ProcurementML` recommendation result directly instead of an orchestrator-local result DTO.
+- Provider-backed inference remains advisory only. The coordinator never lets the provider invent vendors, widen eligibility, or bypass deterministic approved-vendor gating.
+- Malformed provider payloads and provider transport failures now resolve to an explicit unavailable result instead of a partial synthetic success path, which keeps downstream API/UI layers honest about degraded runtime state.
+- Explanation flow is explicit: deterministic reasons remain owned by the scorer, while provider explanations are layered on top without mutating deterministic eligibility evidence.
+
+- Verification:
+
+  ```bash
+  ./vendor/bin/phpunit \
+    orchestrators/ProcurementOperations/tests/Unit/Coordinators/VendorRecommendationCoordinatorTest.php \
+    packages/ProcurementML/tests/Unit/VendorRecommendationContractsTest.php
+  ```
+
+  Result: PASS (5 tests, 27 assertions).
+
 ## 2026-04-22 - Vendor Recommendation Engine
 
 - Added framework-agnostic vendor recommendation DTOs under `DTOs/VendorRecommendation` for requisition context, candidate records, scored candidates, and recommendation results.

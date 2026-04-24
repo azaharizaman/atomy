@@ -14,7 +14,7 @@ final readonly class NullVendorRecommendationLlm implements VendorRecommendation
      *
      * @param list<\Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationScoredCandidate> $candidates
      *
-     * @return array<string, array<string, mixed>>
+     * @return array<string, mixed>
      */
     public function enrich(VendorRecommendationRequest $request, array $candidates): array
     {

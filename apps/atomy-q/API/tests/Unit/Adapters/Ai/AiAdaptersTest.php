@@ -11,19 +11,25 @@ use Tests\TestCase;
 
 final class AiAdaptersTest extends TestCase
 {
-    public function testCapabilityCatalogMemoizesDefinitionsAndFeatureIndex(): void
+    public function testCapabilityCatalogMemoizesDefinitionsAndDefinesExpectedCapabilities(): void
     {
         $catalog = new AtomyAiCapabilityCatalog();
 
         $definitions = $catalog->all();
         $definitionsAgain = $catalog->all();
 
-        self::assertCount(7, $definitions);
+        self::assertCount(14, $definitions);
         self::assertSame($definitions[0], $definitionsAgain[0]);
         self::assertSame(
             $definitions[0],
             $catalog->findByFeatureKey($definitions[0]->featureKey),
         );
+        // AI ranking is plan-3 provider-backed functionality and must stay discoverable.
+        self::assertNotNull($catalog->findByFeatureKey('vendor_ai_ranking'));
+        // Manual vendor selection remains available even when AI ranking is unavailable.
+        self::assertNotNull($catalog->findByFeatureKey('vendor_manual_selection'));
+        // Recommendation endpoints remain stubbed and must not be advertised as live AI capability.
+        self::assertNull($catalog->findByFeatureKey('recommendation_ai_endpoint'));
     }
 
     public function testConfiguredEndpointRegistryPreservesUnknownProviderKey(): void

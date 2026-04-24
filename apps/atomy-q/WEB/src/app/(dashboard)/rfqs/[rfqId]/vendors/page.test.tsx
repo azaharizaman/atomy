@@ -9,6 +9,7 @@ const mockUseUpdateRequisitionVendorSelection = vi.fn();
 const mockUseInviteSelectedVendors = vi.fn();
 const mockUseVendorGovernanceMap = vi.fn();
 const mockUseVendorRecommendations = vi.fn();
+const mockUseAiStatus = vi.fn();
 
 beforeAll(() => {
   process.env.NEXT_PUBLIC_USE_MOCKS = 'false';
@@ -55,11 +56,22 @@ vi.mock('@/hooks/use-vendor-recommendations', () => ({
   useVendorRecommendations: (...args: unknown[]) => mockUseVendorRecommendations(...args),
 }));
 
+vi.mock('@/hooks/use-ai-status', () => ({
+  useAiStatus: () => mockUseAiStatus(),
+}));
+
 import { RfqVendorsPageContent } from './page';
 
 describe('RfqVendorsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseAiStatus.mockReturnValue({
+      isFeatureAvailable: () => true,
+      shouldHideAiControls: () => false,
+      shouldShowUnavailableMessage: () => false,
+      messageKeyForFeature: () => null,
+      status: { mode: 'provider', globalHealth: 'healthy', providerName: 'OpenRouter' },
+    });
     mockUseVendors.mockReturnValue({
       data: { items: [], meta: { currentPage: 1, perPage: 25, total: 0, totalPages: 1 } },
       isLoading: false,
@@ -85,7 +97,16 @@ describe('RfqVendorsPage', () => {
       error: null,
     });
     mockUseVendorRecommendations.mockReturnValue({
-      data: { candidates: [], excludedReasons: [] },
+      data: {
+        status: 'available',
+        eligibleCandidates: [],
+        excludedCandidates: [],
+        providerExplanation: null,
+        deterministicReasonSet: [],
+        provenance: null,
+        candidates: [],
+        excludedReasons: [],
+      },
       isLoading: false,
       isError: false,
       error: null,
@@ -189,5 +210,67 @@ describe('RfqVendorsPage', () => {
     fireEvent.click(await screen.findByRole('button', { name: /invite vendors/i }));
 
     await waitFor(() => expect(inviteMutation).toHaveBeenCalledWith({ vendorIds: ['vendor-2'] }));
+  });
+
+  it('shows scoped AI recommendation unavailability while keeping the manual selection workspace usable', async () => {
+    mockUseAiStatus.mockReturnValue({
+      isFeatureAvailable: () => false,
+      shouldHideAiControls: () => true,
+      shouldShowUnavailableMessage: (featureKey: string) => featureKey === 'vendor_ai_ranking',
+      messageKeyForFeature: () => 'ai.status.unavailable',
+      status: { mode: 'provider', globalHealth: 'degraded', providerName: 'OpenRouter' },
+    });
+    mockUseVendors.mockReturnValue({
+      data: {
+        items: [
+          {
+            id: 'vendor-1',
+            legalName: 'Alpha Procurement Pte Ltd',
+            displayName: 'Alpha Procurement',
+            registrationNumber: 'REG-001',
+            countryOfRegistration: 'SG',
+            primaryContactName: 'Alicia Tan',
+            primaryContactEmail: 'alicia@example.com',
+            primaryContactPhone: '+65 9000 1111',
+            status: 'approved',
+            approvalRecord: null,
+            createdAt: '2026-04-20T10:00:00Z',
+            updatedAt: '2026-04-21T10:00:00Z',
+            name: 'Alpha Procurement Pte Ltd',
+            tradingName: 'Alpha Procurement',
+            countryCode: 'SG',
+            email: 'alicia@example.com',
+            phone: '+65 9000 1111',
+          },
+        ],
+        meta: { currentPage: 1, perPage: 25, total: 1, totalPages: 1 },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    mockUseVendorRecommendations.mockReturnValue({
+      data: {
+        status: 'unavailable',
+        eligibleCandidates: [],
+        excludedCandidates: [],
+        providerExplanation: 'AI recommendation is unavailable. You can still manually select vendors.',
+        deterministicReasonSet: [],
+        provenance: { code: 'ai_unavailable' },
+        candidates: [],
+        excludedReasons: [],
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    renderWithProviders(<RfqVendorsPageContent rfqId="rfq-1" />);
+
+    expect(await screen.findByText(/ai recommendation is unavailable/i)).toBeInTheDocument();
+    expect(screen.getByText(/you can still manually select vendors/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /approved vendor selection/i })).toBeInTheDocument();
+    expect(screen.queryByText('Recommended')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /why alpha procurement/i })).not.toBeInTheDocument();
   });
 });

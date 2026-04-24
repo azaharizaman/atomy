@@ -12,6 +12,7 @@ import { useRequisitionVendorSelection } from '@/hooks/use-requisition-vendor-se
 import { useRfq } from '@/hooks/use-rfq';
 import { useRfqVendors } from '@/hooks/use-rfq-vendors';
 import { useUpdateRequisitionVendorSelection } from '@/hooks/use-update-requisition-vendor-selection';
+import { useAiStatus } from '@/hooks/use-ai-status';
 import { formatVendorGovernanceWarning, useVendorGovernanceMap } from '@/hooks/use-vendor-governance';
 import { useVendorRecommendations, type VendorRecommendationCandidate } from '@/hooks/use-vendor-recommendations';
 import { useVendors, type VendorRow } from '@/hooks/use-vendors';
@@ -28,10 +29,15 @@ function vendorEmail(vendor: VendorRow): string {
 export function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
   const [search, setSearch] = React.useState('');
   const [expandedRecommendationId, setExpandedRecommendationId] = React.useState<string | null>(null);
+  const aiStatus = useAiStatus();
   const vendorsQuery = useVendors({ status: 'approved', q: search });
   const selectedQuery = useRequisitionVendorSelection(rfqId);
   const recommendationsQuery = useVendorRecommendations(rfqId);
   const updateSelection = useUpdateRequisitionVendorSelection(rfqId);
+  const shouldShowRecommendationUnavailable =
+    aiStatus.shouldShowUnavailableMessage('vendor_ai_ranking') || recommendationsQuery.data?.status === 'unavailable';
+  const shouldHideRecommendationAffordances =
+    aiStatus.shouldHideAiControls('vendor_ai_ranking') || shouldShowRecommendationUnavailable;
   const approvedVendors = (vendorsQuery.data?.items ?? []).filter((vendor) => vendor.status === 'approved');
   const governanceByVendor = useVendorGovernanceMap(approvedVendors.map((vendor) => vendor.id));
   const selectedVendorIds = React.useMemo(
@@ -40,7 +46,7 @@ export function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
   );
   const recommendedById = React.useMemo(() => {
     const recommendations = new Map<string, VendorRecommendationCandidate>();
-    for (const candidate of recommendationsQuery.data?.candidates ?? []) {
+    for (const candidate of recommendationsQuery.data?.eligibleCandidates ?? recommendationsQuery.data?.candidates ?? []) {
       recommendations.set(candidate.vendorId, candidate);
     }
 
@@ -54,19 +60,8 @@ export function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
       return;
     }
 
-    if (selectedVendorIds.size > 0 || recommendationsQuery.isLoading) {
-      setDraftSelected(new Set(selectedVendorIds));
-      return;
-    }
-
-    const recommendedIds = (recommendationsQuery.data?.candidates ?? []).map((candidate) => candidate.vendorId);
-    if (recommendedIds.length > 0) {
-      setDraftSelected(new Set(recommendedIds));
-      return;
-    }
-
-    setDraftSelected(new Set());
-  }, [isDirty, recommendationsQuery.data, recommendationsQuery.isLoading, selectedVendorIds]);
+    setDraftSelected(new Set(selectedVendorIds));
+  }, [isDirty, selectedVendorIds]);
 
   const toggleVendor = (vendorId: string) => {
     setIsDirty(true);
@@ -120,6 +115,22 @@ export function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
           </span>
         </label>
 
+        {shouldShowRecommendationUnavailable ? (
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+            <p className="font-semibold">AI recommendation is unavailable. You can still manually select vendors.</p>
+          </div>
+        ) : recommendationsQuery.data?.providerExplanation ? (
+          <div className="rounded-md border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-950">
+            <p className="font-semibold">AI recommendation summary</p>
+            <p className="mt-1">{recommendationsQuery.data.providerExplanation}</p>
+            {recommendationsQuery.data.deterministicReasonSet.length > 0 ? (
+              <p className="mt-2 text-xs text-indigo-900">
+                Key deterministic reasons: {recommendationsQuery.data.deterministicReasonSet.join(', ')}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
         {hasError ? (
           <EmptyState
             icon={<AlertTriangle size={20} />}
@@ -152,6 +163,7 @@ export function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
               const governance = governanceByVendor.data.get(vendor.id);
               const governanceWarnings = governance?.warningFlags ?? [];
               const expanded = expandedRecommendationId === vendor.id;
+              const showRecommendationDetails = Boolean(recommendation) && !shouldHideRecommendationAffordances;
               return (
                 <div key={vendor.id} className="rounded-md border border-slate-200 hover:bg-slate-50">
                   <label className="flex cursor-pointer items-center justify-between gap-4 px-4 py-3">
@@ -166,7 +178,7 @@ export function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
                       <span className="min-w-0">
                         <span className="flex min-w-0 items-center gap-2">
                           <span className="truncate text-sm font-medium text-slate-800">{vendorLabel(vendor)}</span>
-                          {recommendation ? (
+                          {showRecommendationDetails ? (
                             <span className="shrink-0 rounded border border-emerald-200 bg-emerald-50 px-1.5 py-0.5 text-[11px] font-medium text-emerald-700">
                               Recommended
                             </span>
@@ -188,7 +200,7 @@ export function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
                       </span>
                     </span>
                     <span className="flex shrink-0 items-center gap-2">
-                      {recommendation ? (
+                      {showRecommendationDetails ? (
                         <button
                           type="button"
                           onClick={(event) => {
@@ -205,7 +217,7 @@ export function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
                       {checked ? <CheckCircle2 size={16} className="text-emerald-600" /> : null}
                     </span>
                   </label>
-                  {recommendation && expanded ? (
+                  {showRecommendationDetails && expanded ? (
                     <div className="border-t border-slate-100 px-4 py-3 text-sm">
                       <p className="font-medium text-slate-800">{recommendation.recommendedReasonSummary}</p>
                       <div className="mt-2 grid gap-3 md:grid-cols-2">

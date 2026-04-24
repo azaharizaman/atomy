@@ -1,5 +1,19 @@
 # Implementation Summary
 
+## 2026-04-24 Vendor Recommendation Manual-Continuity UX
+
+- Updated `use-vendor-recommendations.ts` to normalize the plan-3 payload shape from the API: `eligible_candidates`, `excluded_candidates`, `provider_explanation`, `deterministic_reason_set`, `provenance`, and structured unavailable responses.
+- The RFQ vendor selection workspace now treats AI ranking as advisory only. It no longer auto-prefills the manual shortlist from AI recommendations; users explicitly choose and persist the final shortlist through the existing selected-vendors mutation.
+- The page now consumes shared AI status capability helpers so `vendor_ai_ranking` can be hidden or shown independently from `vendor_manual_selection`.
+- When AI ranking is unavailable, the page shows an explicit amber continuity banner and removes recommendation affordances while keeping the manual selection workflow fully usable.
+- Added focused regression coverage for the hook parser, unavailable-state rendering, and manual-selection continuity:
+  - `src/hooks/use-vendor-recommendations.test.ts`
+  - `src/app/(dashboard)/rfqs/[rfqId]/vendors/vendor-recommendations.test.tsx`
+  - `src/app/(dashboard)/rfqs/[rfqId]/vendors/vendor-selection-panel.test.tsx`
+  - `src/app/(dashboard)/rfqs/[rfqId]/vendors/page.test.tsx`
+- Verification:
+  - `cd apps/atomy-q/WEB && npm run test:unit -- src/hooks/use-vendor-recommendations.test.ts 'src/app/(dashboard)/rfqs/[rfqId]/vendors/vendor-recommendations.test.tsx' 'src/app/(dashboard)/rfqs/[rfqId]/vendors/vendor-selection-panel.test.tsx' 'src/app/(dashboard)/rfqs/[rfqId]/vendors/page.test.tsx'` -> PASS (13 tests).
+
 ## 2026-04-23 WEB AI Status Consumption And Shared UX Primitives
 
 - Added a strict AI status normalization layer in `src/lib/ai-status.ts` for `/api/v1/ai/status`, including runtime-path sanitization, typed capability/endpoint parsing, authoritative live `provider_name` consumption with env bootstrap fallback, and safe fallback snapshots for `off`, `unknown`, and request-error states.
@@ -51,11 +65,9 @@
 ## 2026-04-22 Vendor Recommendation Shortlist Prefill
 
 - Added `use-vendor-recommendations.ts` with strict live payload normalization for ranked candidates, deterministic reasons, LLM insights, warning flags, and excluded reasons.
-- The RFQ vendors selection panel now loads vendor recommendations and preselects the draft shortlist when no saved selection exists.
-- Recommended vendors are marked with a `Recommended` badge and an explanation control showing reason summary, deterministic/LLM rationale, and warnings.
-- Users remain in control: they can remove a recommended vendor, add another approved vendor, and only persist the final shortlist through the existing selected-vendors mutation.
-- Verification:
-  - `cd apps/atomy-q/WEB && npx vitest run src/app/'(dashboard)'/rfqs/[rfqId]/vendors/vendor-recommendations.test.tsx src/app/'(dashboard)'/rfqs/[rfqId]/vendors/vendor-selection-panel.test.tsx src/app/'(dashboard)'/rfqs/[rfqId]/vendors/page.test.tsx` -> PASS (6 tests).
+- The RFQ vendors selection panel originally loaded vendor recommendations and preselected the draft shortlist when no saved selection existed.
+- Recommended vendors were marked with a `Recommended` badge and an explanation control showing reason summary, deterministic/LLM rationale, and warnings.
+- This behavior was later superseded by the 2026-04-24 manual-continuity update above, which removed AI-driven shortlist prefilling and kept recommendations advisory only.
 
 ## Implementation Status
 
