@@ -29,9 +29,14 @@ function normalizeApprovalSummaryPayload(payload: unknown): ApprovalSummary {
       ? raw.aiSummary
       : raw;
 
-  const featureKey = toText(summary.feature_key ?? summary.featureKey);
+  const featureKeyValue = summary.feature_key ?? summary.featureKey;
+  const featureKey = typeof featureKeyValue === 'string' ? toText(featureKeyValue) : null;
   if (featureKey === null) {
     throw new Error('Approval summary payload is missing feature_key.');
+  }
+
+  if (typeof summary.available !== 'boolean') {
+    throw new Error('Approval summary payload has invalid available state.');
   }
 
   const payloadObject = isObject(summary.payload) ? summary.payload : null;
@@ -39,7 +44,7 @@ function normalizeApprovalSummaryPayload(payload: unknown): ApprovalSummary {
 
   return {
     featureKey,
-    available: summary.available === true,
+    available: summary.available,
     payload: payloadObject,
     provenance,
   };

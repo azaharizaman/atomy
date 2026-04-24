@@ -41,7 +41,9 @@ function normalizeAwardAiGuidance(payload: unknown): AwardAiGuidance {
     featureKey,
     available: guidance.available === true,
     payload: isObject(guidance.payload) ? guidance.payload : null,
-    provenance: normalizeProvenance(guidance.provenance),
+    provenance: normalizeProvenance(
+      guidance.provenance ?? (isObject(guidance.payload) ? guidance.payload.provenance : undefined),
+    ),
   };
 }
 

@@ -15,7 +15,17 @@ final class ComparisonAwardAiException extends RuntimeException
     {
         $message = sprintf('ComparisonAward AI operation "%s" failed.', $action);
         if ($context !== []) {
-            $message .= ' Context: ' . json_encode($context, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            $encodedContext = json_encode($context, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+            if ($encodedContext === false) {
+                $message .= sprintf(
+                    ' Context encode failed (%s): %s',
+                    json_last_error_msg(),
+                    var_export($context, true),
+                );
+            } else {
+                $message .= ' Context: ' . $encodedContext;
+            }
         }
 
         return new self($message, 0, $previous);

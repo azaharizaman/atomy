@@ -41,10 +41,18 @@ export function normalizeAwardDebriefDraft(payload: unknown): AwardDebriefDraft 
     throw new Error('Award debrief draft payload has invalid available state.');
   }
 
+  const normalizedPayload = isObject(draft.payload) ? draft.payload : null;
+  const hasInvalidDraftMessage =
+    normalizedPayload !== null &&
+    'draft_message' in normalizedPayload &&
+    typeof normalizedPayload.draft_message !== 'string';
+  const hasInvalidLegacyMessage =
+    normalizedPayload !== null && 'message' in normalizedPayload && typeof normalizedPayload.message !== 'string';
+
   return {
     featureKey,
     available: draft.available,
-    payload: isObject(draft.payload) ? draft.payload : null,
+    payload: hasInvalidDraftMessage || hasInvalidLegacyMessage ? null : normalizedPayload,
     provenance: normalizeProvenance(draft.provenance),
   };
 }

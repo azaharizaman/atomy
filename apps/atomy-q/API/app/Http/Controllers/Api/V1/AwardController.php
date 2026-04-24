@@ -33,6 +33,7 @@ final class AwardController extends Controller
     public function __construct(
         private readonly ComparisonAwardAiClientInterface $comparisonAwardAiClient,
         private readonly DecisionTrailRecorder $decisionTrailRecorder,
+        private readonly AiRuntimeStatusInterface $aiRuntimeStatus,
         private readonly ClockInterface $clock,
     ) {}
 
@@ -175,6 +176,36 @@ final class AwardController extends Controller
         }
 
         $storedGuidance = $this->storedAwardGuidance($comparisonRun, (string) $award->id);
+        if ($storedGuidance === null) {
+            return response()->json(['message' => 'Award guidance not found'], 404);
+        }
+
+        return response()->json([
+            'data' => [
+                'ai_guidance' => $storedGuidance,
+            ],
+        ]);
+    }
+
+    /**
+     * POST /awards/:id/guidance/generate
+     * Scoped by tenant_id.
+     */
+    public function generateGuidance(Request $request, string $id): JsonResponse
+    {
+        $tenantId = $this->tenantId($request);
+
+        $award = $this->findAward($tenantId, $id);
+        if ($award === null) {
+            return response()->json(['message' => 'Award not found'], 404);
+        }
+
+        $comparisonRun = $award->comparisonRun()->where('tenant_id', $tenantId)->first();
+        if ($comparisonRun === null) {
+            return response()->json(['message' => 'Comparison run not found'], 404);
+        }
+
+        $storedGuidance = $this->storedAwardGuidance($comparisonRun, (string) $award->id);
         if ($storedGuidance !== null) {
             return response()->json([
                 'data' => [
@@ -183,60 +214,64 @@ final class AwardController extends Controller
             ]);
         }
 
-        if (! $this->aiCapabilityAvailable('award_ai_guidance')) {
-            return response()->json([
-                'data' => [
-                    'ai_guidance' => $this->unavailableArtifactEnvelope(
-                        featureKey: 'award_ai_guidance',
-                        capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_AWARD_INTELLIGENCE,
-                    ),
-                ],
-            ], 503);
+        $artifact = $this->buildAwardGuidanceEnvelope($award, $comparisonRun);
+        if (($artifact['available'] ?? false) === true) {
+            $this->persistAwardGuidanceArtifact($comparisonRun, $award, $artifact);
         }
-
-        try {
-            $guidance = $this->comparisonAwardAiClient->awardGuidance(new AwardGuidanceRequest(
-                tenantId: $tenantId,
-                awardId: (string) $award->id,
-                rfqId: (string) $award->rfq_id,
-                comparisonRunId: (string) $award->comparison_run_id,
-                award: $this->serializeAward($award),
-                comparisonContext: $this->serializeComparisonContext($comparisonRun),
-            ))->payload;
-        } catch (Throwable $exception) {
-            report($exception);
-
-            return response()->json([
-                'data' => [
-                    'ai_guidance' => $this->unavailableArtifactEnvelope(
-                        featureKey: 'award_ai_guidance',
-                        capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_AWARD_INTELLIGENCE,
-                    ),
-                ],
-            ], 503);
-        }
-
-        $artifact = $this->artifactEnvelope(
-            featureKey: 'award_ai_guidance',
-            capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_AWARD_INTELLIGENCE,
-            payload: $guidance,
-            provenance: $this->providerArtifactProvenance($guidance, AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD),
-        );
-        $this->persistAwardGuidanceArtifact($comparisonRun, $award, $artifact);
 
         return response()->json([
             'data' => [
-                'ai_guidance' => [
-                    ...$artifact,
-                ],
+                'ai_guidance' => $artifact,
             ],
-        ]);
+        ], ($artifact['available'] ?? false) === true ? 200 : 503);
     }
 
     /**
      * GET /awards/:id/debrief-draft/:vendorId
      */
     public function debriefDraft(Request $request, string $id, string $vendorId): JsonResponse
+    {
+        $tenantId = $this->tenantId($request);
+
+        $award = $this->findAward($tenantId, $id);
+        if ($award === null) {
+            return response()->json(['message' => 'Award not found'], 404);
+        }
+
+        if ($vendorId === $award->vendor_id) {
+            return response()->json(['message' => 'Winning vendor does not require a debrief draft'], 422);
+        }
+
+        $comparisonRun = $award->comparisonRun()->where('tenant_id', $tenantId)->first();
+        if ($comparisonRun === null) {
+            return response()->json(['message' => 'Comparison run not found'], 404);
+        }
+
+        $losingSubmission = QuoteSubmission::query()
+            ->where('tenant_id', $tenantId)
+            ->where('rfq_id', $award->rfq_id)
+            ->where('vendor_id', $vendorId)
+            ->first();
+        if ($losingSubmission === null) {
+            return response()->json(['message' => 'Vendor not found'], 404);
+        }
+
+        $storedDraft = $this->storedAwardDebriefDraft($comparisonRun, (string) $award->id, $vendorId);
+        if ($storedDraft === null) {
+            return response()->json(['message' => 'Award debrief draft not found'], 404);
+        }
+
+        return response()->json([
+            'data' => [
+                'ai_debrief_draft' => $storedDraft,
+            ],
+        ]);
+    }
+
+    /**
+     * POST /awards/:id/debrief-draft/:vendorId/generate
+     */
+    public function generateDebriefDraft(Request $request, string $id, string $vendorId): JsonResponse
     {
         $tenantId = $this->tenantId($request);
 
@@ -272,58 +307,16 @@ final class AwardController extends Controller
             ]);
         }
 
-        if (! $this->aiCapabilityAvailable('award_ai_guidance')) {
-            return response()->json([
-                'data' => [
-                    'ai_debrief_draft' => $this->unavailableArtifactEnvelope(
-                        featureKey: 'award_ai_guidance',
-                        capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_AWARD_INTELLIGENCE,
-                    ),
-                ],
-            ], 503);
+        $artifact = $this->buildAwardDebriefDraftEnvelope($tenantId, $award, $comparisonRun, $losingSubmission, $vendorId);
+        if (($artifact['available'] ?? false) === true) {
+            $this->persistAwardDebriefDraftArtifact($comparisonRun, $award, $vendorId, $artifact);
         }
-
-        try {
-            $draft = $this->comparisonAwardAiClient->awardDebriefDraft(new AwardDebriefDraftRequest(
-                tenantId: $tenantId,
-                awardId: (string) $award->id,
-                rfqId: (string) $award->rfq_id,
-                comparisonRunId: (string) $award->comparison_run_id,
-                vendorId: $vendorId,
-                award: $this->serializeAward($award),
-                losingVendor: [
-                    'vendor_id' => (string) $losingSubmission->vendor_id,
-                    'vendor_name' => $losingSubmission->vendor_name,
-                    'quote_submission_id' => (string) $losingSubmission->id,
-                ],
-                comparisonContext: $this->serializeComparisonContext($comparisonRun),
-            ))->payload;
-        } catch (Throwable $exception) {
-            report($exception);
-
-            return response()->json([
-                'data' => [
-                    'ai_debrief_draft' => $this->unavailableArtifactEnvelope(
-                        featureKey: 'award_ai_guidance',
-                        capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_AWARD_INTELLIGENCE,
-                    ),
-                ],
-            ], 503);
-        }
-
-        $artifact = $this->artifactEnvelope(
-            featureKey: 'award_ai_guidance',
-            capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_AWARD_INTELLIGENCE,
-            payload: $draft,
-            provenance: $this->providerArtifactProvenance($draft, AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD),
-        );
-        $this->persistAwardDebriefDraftArtifact($comparisonRun, $award, $vendorId, $artifact);
 
         return response()->json([
             'data' => [
                 'ai_debrief_draft' => $artifact,
             ],
-        ]);
+        ], ($artifact['available'] ?? false) === true ? 200 : 503);
     }
 
     /**
@@ -654,7 +647,7 @@ final class AwardController extends Controller
     private function providerName(): ?string
     {
         try {
-            $providerName = app(AiRuntimeStatusInterface::class)->providerName();
+            $providerName = $this->aiRuntimeStatus->providerName();
         } catch (Throwable) {
             return null;
         }
@@ -719,41 +712,49 @@ final class AwardController extends Controller
      */
     private function persistAwardGuidanceArtifact(ComparisonRun $comparisonRun, Award $award, array $artifact): void
     {
-        $responsePayload = $comparisonRun->response_payload ?? [];
-        if (! is_array($responsePayload)) {
-            $responsePayload = [];
-        }
+        DB::transaction(function () use ($comparisonRun, $award, $artifact): void {
+            /** @var ComparisonRun $lockedRun */
+            $lockedRun = ComparisonRun::query()
+                ->where('id', $comparisonRun->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $artifacts = $responsePayload['ai_artifacts'] ?? [];
-        if (! is_array($artifacts)) {
-            $artifacts = [];
-        }
+            $responsePayload = $lockedRun->response_payload ?? [];
+            if (! is_array($responsePayload)) {
+                $responsePayload = [];
+            }
 
-        $guidanceArtifacts = $artifacts['award_guidance'] ?? [];
-        if (! is_array($guidanceArtifacts)) {
-            $guidanceArtifacts = [];
-        }
+            $artifacts = $responsePayload['ai_artifacts'] ?? [];
+            if (! is_array($artifacts)) {
+                $artifacts = [];
+            }
 
-        $guidanceArtifacts[(string) $award->id] = $artifact;
-        $artifacts['award_guidance'] = $guidanceArtifacts;
-        $responsePayload['ai_artifacts'] = $artifacts;
-        $comparisonRun->response_payload = $responsePayload;
-        $comparisonRun->save();
+            $guidanceArtifacts = $artifacts['award_guidance'] ?? [];
+            if (! is_array($guidanceArtifacts)) {
+                $guidanceArtifacts = [];
+            }
 
-        $this->decisionTrailRecorder->recordAiArtifactGenerated(
-            tenantId: (string) $award->tenant_id,
-            rfqId: (string) $award->rfq_id,
-            comparisonRunId: (string) $award->comparison_run_id,
-            eventType: 'award_ai_guidance_generated:' . (string) $award->id,
-            summary: [
-                'artifact_kind' => 'award_ai_guidance',
-                'artifact_origin' => 'provider_drafted',
-                'feature_key' => 'award_ai_guidance',
-                'award_id' => (string) $award->id,
-                'artifact' => $artifact,
-                'provenance' => is_array($artifact['provenance'] ?? null) ? $artifact['provenance'] : [],
-            ],
-        );
+            $guidanceArtifacts[(string) $award->id] = $artifact;
+            $artifacts['award_guidance'] = $guidanceArtifacts;
+            $responsePayload['ai_artifacts'] = $artifacts;
+            $lockedRun->response_payload = $responsePayload;
+            $lockedRun->save();
+
+            $this->decisionTrailRecorder->recordAiArtifactGenerated(
+                tenantId: (string) $award->tenant_id,
+                rfqId: (string) $award->rfq_id,
+                comparisonRunId: (string) $award->comparison_run_id,
+                eventType: 'award_ai_guidance_generated:' . (string) $award->id,
+                summary: [
+                    'artifact_kind' => 'award_ai_guidance',
+                    'artifact_origin' => 'provider_drafted',
+                    'feature_key' => 'award_ai_guidance',
+                    'award_id' => (string) $award->id,
+                    'artifact' => $artifact,
+                    'provenance' => is_array($artifact['provenance'] ?? null) ? $artifact['provenance'] : [],
+                ],
+            );
+        });
     }
 
     /**
@@ -765,47 +766,142 @@ final class AwardController extends Controller
         string $vendorId,
         array $artifact,
     ): void {
-        $responsePayload = $comparisonRun->response_payload ?? [];
-        if (! is_array($responsePayload)) {
-            $responsePayload = [];
+        DB::transaction(function () use ($comparisonRun, $award, $vendorId, $artifact): void {
+            /** @var ComparisonRun $lockedRun */
+            $lockedRun = ComparisonRun::query()
+                ->where('id', $comparisonRun->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $responsePayload = $lockedRun->response_payload ?? [];
+            if (! is_array($responsePayload)) {
+                $responsePayload = [];
+            }
+
+            $artifacts = $responsePayload['ai_artifacts'] ?? [];
+            if (! is_array($artifacts)) {
+                $artifacts = [];
+            }
+
+            $draftArtifacts = $artifacts['award_debrief_draft'] ?? [];
+            if (! is_array($draftArtifacts)) {
+                $draftArtifacts = [];
+            }
+
+            $awardDraftArtifacts = $draftArtifacts[(string) $award->id] ?? [];
+            if (! is_array($awardDraftArtifacts)) {
+                $awardDraftArtifacts = [];
+            }
+
+            $awardDraftArtifacts[$vendorId] = $artifact;
+            $draftArtifacts[(string) $award->id] = $awardDraftArtifacts;
+            $artifacts['award_debrief_draft'] = $draftArtifacts;
+            $responsePayload['ai_artifacts'] = $artifacts;
+            $lockedRun->response_payload = $responsePayload;
+            $lockedRun->save();
+
+            $this->decisionTrailRecorder->recordAiArtifactGenerated(
+                tenantId: (string) $award->tenant_id,
+                rfqId: (string) $award->rfq_id,
+                comparisonRunId: (string) $award->comparison_run_id,
+                eventType: 'award_ai_debrief_draft_generated',
+                summary: [
+                    'artifact_kind' => 'award_ai_debrief_draft',
+                    'artifact_origin' => 'provider_drafted',
+                    'feature_key' => 'award_ai_guidance',
+                    'award_id' => (string) $award->id,
+                    'vendor_id' => $vendorId,
+                    'artifact' => $artifact,
+                    'provenance' => is_array($artifact['provenance'] ?? null) ? $artifact['provenance'] : [],
+                ],
+            );
+        });
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildAwardGuidanceEnvelope(Award $award, ComparisonRun $comparisonRun): array
+    {
+        if (! $this->aiCapabilityAvailable('award_ai_guidance')) {
+            return $this->unavailableArtifactEnvelope(
+                featureKey: 'award_ai_guidance',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_AWARD_INTELLIGENCE,
+            );
         }
 
-        $artifacts = $responsePayload['ai_artifacts'] ?? [];
-        if (! is_array($artifacts)) {
-            $artifacts = [];
+        try {
+            $guidance = $this->comparisonAwardAiClient->awardGuidance(new AwardGuidanceRequest(
+                tenantId: (string) $award->tenant_id,
+                awardId: (string) $award->id,
+                rfqId: (string) $award->rfq_id,
+                comparisonRunId: (string) $award->comparison_run_id,
+                award: $this->serializeAward($award),
+                comparisonContext: $this->serializeComparisonContext($comparisonRun),
+            ))->payload;
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return $this->unavailableArtifactEnvelope(
+                featureKey: 'award_ai_guidance',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_AWARD_INTELLIGENCE,
+            );
         }
 
-        $draftArtifacts = $artifacts['award_debrief_draft'] ?? [];
-        if (! is_array($draftArtifacts)) {
-            $draftArtifacts = [];
+        return $this->artifactEnvelope(
+            featureKey: 'award_ai_guidance',
+            capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_AWARD_INTELLIGENCE,
+            payload: $guidance,
+            provenance: $this->providerArtifactProvenance($guidance, AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD),
+        );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildAwardDebriefDraftEnvelope(
+        string $tenantId,
+        Award $award,
+        ComparisonRun $comparisonRun,
+        QuoteSubmission $losingSubmission,
+        string $vendorId,
+    ): array {
+        if (! $this->aiCapabilityAvailable('award_ai_guidance')) {
+            return $this->unavailableArtifactEnvelope(
+                featureKey: 'award_ai_guidance',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_AWARD_INTELLIGENCE,
+            );
         }
 
-        $awardDraftArtifacts = $draftArtifacts[(string) $award->id] ?? [];
-        if (! is_array($awardDraftArtifacts)) {
-            $awardDraftArtifacts = [];
+        try {
+            $draft = $this->comparisonAwardAiClient->awardDebriefDraft(new AwardDebriefDraftRequest(
+                tenantId: $tenantId,
+                awardId: (string) $award->id,
+                rfqId: (string) $award->rfq_id,
+                comparisonRunId: (string) $award->comparison_run_id,
+                vendorId: $vendorId,
+                award: $this->serializeAward($award),
+                losingVendor: [
+                    'vendor_id' => (string) $losingSubmission->vendor_id,
+                    'vendor_name' => $losingSubmission->vendor_name,
+                    'quote_submission_id' => (string) $losingSubmission->id,
+                ],
+                comparisonContext: $this->serializeComparisonContext($comparisonRun),
+            ))->payload;
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return $this->unavailableArtifactEnvelope(
+                featureKey: 'award_ai_guidance',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_AWARD_INTELLIGENCE,
+            );
         }
 
-        $awardDraftArtifacts[$vendorId] = $artifact;
-        $draftArtifacts[(string) $award->id] = $awardDraftArtifacts;
-        $artifacts['award_debrief_draft'] = $draftArtifacts;
-        $responsePayload['ai_artifacts'] = $artifacts;
-        $comparisonRun->response_payload = $responsePayload;
-        $comparisonRun->save();
-
-        $this->decisionTrailRecorder->recordAiArtifactGenerated(
-            tenantId: (string) $award->tenant_id,
-            rfqId: (string) $award->rfq_id,
-            comparisonRunId: (string) $award->comparison_run_id,
-            eventType: 'award_ai_debrief_draft_generated',
-            summary: [
-                'artifact_kind' => 'award_ai_debrief_draft',
-                'artifact_origin' => 'provider_drafted',
-                'feature_key' => 'award_ai_guidance',
-                'award_id' => (string) $award->id,
-                'vendor_id' => $vendorId,
-                'artifact' => $artifact,
-                'provenance' => is_array($artifact['provenance'] ?? null) ? $artifact['provenance'] : [],
-            ],
+        return $this->artifactEnvelope(
+            featureKey: 'award_ai_guidance',
+            capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_AWARD_INTELLIGENCE,
+            payload: $draft,
+            provenance: $this->providerArtifactProvenance($draft, AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD),
         );
     }
 }

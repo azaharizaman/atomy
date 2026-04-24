@@ -153,89 +153,105 @@ final class DecisionTrailController extends Controller
             'description' => $entry->event_type,
         ];
 
-        if ($entry->event_type === 'comparison_snapshot_frozen') {
-            return array_merge($base, [
+        $exactHandlers = [
+            'comparison_snapshot_frozen' => fn (DecisionTrailEntry $trailEntry): array => [
                 'artifact_origin' => 'deterministic_fact',
                 'artifact_kind' => 'comparison_snapshot',
                 'description' => 'Comparison snapshot frozen',
-            ]);
-        }
-
-        if ($entry->event_type === 'comparison_ai_overlay_generated') {
-            $artifact = $this->artifactFromEntry($entry, ['ai_overlay']);
-
-            return array_merge($base, $this->artifactMetadata(
+            ],
+            'comparison_ai_overlay_generated' => fn (DecisionTrailEntry $trailEntry): array => $this->artifactMetadata(
                 artifactKind: 'comparison_ai_overlay',
                 defaultDescription: 'Comparison AI overlay generated',
-                artifact: $artifact,
-            ));
+                artifact: $this->artifactFromEntry($trailEntry, ['ai_artifacts', 'ai_overlay'])
+                    ?? $this->artifactFromEntry($trailEntry, ['ai_overlay']),
+            ),
+            'award_ai_debrief_draft_generated' => fn (DecisionTrailEntry $trailEntry): array => $this->awardDebriefMetadata($trailEntry),
+            'award_created' => fn (DecisionTrailEntry $trailEntry): array => $this->awardWorkflowMetadata($trailEntry),
+            'award_debriefed' => fn (DecisionTrailEntry $trailEntry): array => $this->awardWorkflowMetadata($trailEntry),
+            'award_signed_off' => fn (DecisionTrailEntry $trailEntry): array => $this->awardWorkflowMetadata($trailEntry),
+        ];
+
+        if (isset($exactHandlers[$entry->event_type])) {
+            return array_merge($base, $exactHandlers[$entry->event_type]($entry));
         }
 
-        if (str_starts_with($entry->event_type, 'award_ai_guidance_generated:')) {
-            $awardId = substr($entry->event_type, strlen('award_ai_guidance_generated:'));
-            if ($awardId === '') {
-                return $base;
+        $prefixHandlers = [
+            'award_ai_guidance_generated:' => function (DecisionTrailEntry $trailEntry) use ($base): array {
+                $awardId = substr($trailEntry->event_type, strlen('award_ai_guidance_generated:'));
+                if ($awardId === '') {
+                    return $base;
+                }
+
+                return array_merge($base, $this->artifactMetadata(
+                    artifactKind: 'award_ai_guidance',
+                    defaultDescription: 'Award AI guidance generated',
+                    artifact: $this->artifactFromEntry($trailEntry, ['ai_artifacts', 'award_guidance', $awardId]),
+                    artifactId: $awardId,
+                ));
+            },
+            'approval_ai_summary_generated:' => function (DecisionTrailEntry $trailEntry) use ($base): array {
+                $approvalId = substr($trailEntry->event_type, strlen('approval_ai_summary_generated:'));
+                if ($approvalId === '') {
+                    return $base;
+                }
+
+                return array_merge($base, $this->artifactMetadata(
+                    artifactKind: 'approval_ai_summary',
+                    defaultDescription: 'Approval AI summary generated',
+                    artifact: $this->artifactFromEntry($trailEntry, ['ai_artifacts', 'approval_summary', $approvalId]),
+                    artifactId: $approvalId,
+                ));
+            },
+        ];
+
+        foreach ($prefixHandlers as $prefix => $handler) {
+            if (str_starts_with($entry->event_type, $prefix)) {
+                return $handler($entry);
             }
-
-            $artifact = $this->artifactFromEntry($entry, ['ai_artifacts', 'award_guidance', $awardId]);
-
-            return array_merge($base, $this->artifactMetadata(
-                artifactKind: 'award_ai_guidance',
-                defaultDescription: 'Award AI guidance generated',
-                artifact: $artifact,
-                artifactId: $awardId,
-            ));
-        }
-
-        if ($entry->event_type === 'award_ai_debrief_draft_generated') {
-            $summary = is_array($entry->summary_payload) ? $entry->summary_payload : [];
-            $awardId = is_string($summary['award_id'] ?? null) ? $summary['award_id'] : null;
-            $vendorId = is_string($summary['vendor_id'] ?? null) ? $summary['vendor_id'] : null;
-            $artifact = null;
-            if ($awardId !== null && $awardId !== '' && $vendorId !== null && $vendorId !== '') {
-                $artifact = $this->artifactFromEntry(
-                    $entry,
-                    ['ai_artifacts', 'award_debrief_draft', $awardId, $vendorId],
-                );
-            }
-
-            return array_merge($base, $this->artifactMetadata(
-                artifactKind: 'award_ai_debrief_draft',
-                defaultDescription: 'Award AI debrief draft generated',
-                artifact: $artifact,
-                artifactId: $vendorId,
-                extra: [
-                    'award_id' => $awardId,
-                ],
-            ));
-        }
-
-        if (str_starts_with($entry->event_type, 'approval_ai_summary_generated:')) {
-            $approvalId = substr($entry->event_type, strlen('approval_ai_summary_generated:'));
-            $artifact = $this->artifactFromEntry($entry, ['ai_artifacts', 'approval_summary', $approvalId]);
-
-            return array_merge($base, $this->artifactMetadata(
-                artifactKind: 'approval_ai_summary',
-                defaultDescription: 'Approval AI summary generated',
-                artifact: $artifact,
-                artifactId: $approvalId,
-            ));
-        }
-
-        if (in_array($entry->event_type, ['award_created', 'award_debriefed', 'award_signed_off'], true)) {
-            return array_merge($base, [
-                'artifact_origin' => 'user_confirmed_action',
-                'artifact_kind' => 'award_workflow_action',
-                'description' => match ($entry->event_type) {
-                    'award_created' => 'Award created',
-                    'award_debriefed' => 'Award debrief drafted',
-                    'award_signed_off' => 'Award signed off',
-                    default => $entry->event_type,
-                },
-            ]);
         }
 
         return $base;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function awardDebriefMetadata(DecisionTrailEntry $entry): array
+    {
+        $summary = is_array($entry->summary_payload) ? $entry->summary_payload : [];
+        $awardId = is_string($summary['award_id'] ?? null) ? $summary['award_id'] : null;
+        $vendorId = is_string($summary['vendor_id'] ?? null) ? $summary['vendor_id'] : null;
+        $artifact = null;
+        if ($awardId !== null && $awardId !== '' && $vendorId !== null && $vendorId !== '') {
+            $artifact = $this->artifactFromEntry($entry, ['ai_artifacts', 'award_debrief_draft', $awardId, $vendorId]);
+        }
+
+        return $this->artifactMetadata(
+            artifactKind: 'award_ai_debrief_draft',
+            defaultDescription: 'Award AI debrief draft generated',
+            artifact: $artifact,
+            artifactId: $vendorId,
+            extra: [
+                'award_id' => $awardId,
+            ],
+        );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function awardWorkflowMetadata(DecisionTrailEntry $entry): array
+    {
+        return [
+            'artifact_origin' => 'user_confirmed_action',
+            'artifact_kind' => 'award_workflow_action',
+            'description' => match ($entry->event_type) {
+                'award_created' => 'Award created',
+                'award_debriefed' => 'Award debrief drafted',
+                'award_signed_off' => 'Award signed off',
+                default => $entry->event_type,
+            },
+        ];
     }
 
     /**

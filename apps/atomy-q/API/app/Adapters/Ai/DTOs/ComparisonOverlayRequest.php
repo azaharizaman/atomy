@@ -8,28 +8,51 @@ use InvalidArgumentException;
 
 final readonly class ComparisonOverlayRequest
 {
+    private const ALLOWED_MODES = ['preview', 'final'];
+    public string $tenantId;
+    public string $rfqId;
+    public string $mode;
+    /** @var array<string, mixed> */
+    public array $comparison;
+    /** @var array<string, mixed>|null */
+    public ?array $snapshot;
+
     /**
      * @param array<string, mixed> $comparison
      * @param array<string, mixed>|null $snapshot
      */
     public function __construct(
-        public string $tenantId,
-        public string $rfqId,
-        public string $mode,
-        public array $comparison,
-        public ?array $snapshot = null,
+        string $tenantId,
+        string $rfqId,
+        string $mode,
+        array $comparison,
+        ?array $snapshot = null,
     ) {
-        if (trim($tenantId) === '') {
+        $tenantId = trim($tenantId);
+        $rfqId = trim($rfqId);
+        $mode = strtolower(trim($mode));
+
+        if ($tenantId === '') {
             throw new InvalidArgumentException('Comparison overlay request requires tenantId.');
         }
 
-        if (trim($rfqId) === '') {
+        if ($rfqId === '') {
             throw new InvalidArgumentException('Comparison overlay request requires rfqId.');
         }
 
-        if (trim($mode) === '') {
+        if ($mode === '') {
             throw new InvalidArgumentException('Comparison overlay request requires mode.');
         }
+
+        if (! in_array($mode, self::ALLOWED_MODES, true)) {
+            throw new InvalidArgumentException('Comparison overlay request mode must be one of: preview, final.');
+        }
+
+        $this->tenantId = $tenantId;
+        $this->rfqId = $rfqId;
+        $this->mode = $mode;
+        $this->comparison = $comparison;
+        $this->snapshot = $snapshot;
     }
 
     /**

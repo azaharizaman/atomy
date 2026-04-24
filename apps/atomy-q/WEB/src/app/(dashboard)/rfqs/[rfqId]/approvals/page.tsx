@@ -28,6 +28,10 @@ function normalizePriority(priority: string | null | undefined): ApprovalRow['pr
   return priority === 'high' || priority === 'medium' || priority === 'low' ? priority : 'medium';
 }
 
+function summaryText(value: unknown): string {
+  return typeof value === 'string' && value.trim() !== '' ? value.trim() : '—';
+}
+
 function JsonBlock({ title, value }: { title: string; value: Record<string, unknown> }) {
   return (
     <div className="space-y-2">
@@ -35,6 +39,69 @@ function JsonBlock({ title, value }: { title: string; value: Record<string, unkn
       <pre className="overflow-x-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-700">
         {JSON.stringify(value, null, 2)}
       </pre>
+    </div>
+  );
+}
+
+function RawJsonToggle({
+  label,
+  value,
+}: {
+  label: string;
+  value: Record<string, unknown>;
+}) {
+  const [open, setOpen] = React.useState(false);
+
+  return (
+    <div className="space-y-2">
+      <button
+        type="button"
+        className="text-xs font-semibold uppercase tracking-wider text-slate-500 hover:text-slate-700"
+        onClick={() => setOpen((current) => !current)}
+      >
+        {open ? `Hide raw ${label}` : `View raw ${label}`}
+      </button>
+      {open ? <JsonBlock title={`Raw ${label}`} value={value} /> : null}
+    </div>
+  );
+}
+
+function ApprovalPayloadSummary({ payload }: { payload: Record<string, unknown> | null }) {
+  const recommendation = summaryText(payload?.recommendation ?? payload?.headline);
+  const reason = summaryText(payload?.reason ?? payload?.headline ?? payload?.rationale);
+  const severity = summaryText(payload?.severity);
+
+  return (
+    <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+      <InfoGrid
+        cols={3}
+        items={[
+          { label: 'Recommendation', value: recommendation },
+          { label: 'Reason', value: reason },
+          { label: 'Severity', value: severity },
+        ]}
+      />
+      {payload ? <RawJsonToggle label="provider payload" value={payload} /> : null}
+    </div>
+  );
+}
+
+function ApprovalProvenanceSummary({ provenance }: { provenance: Record<string, unknown> | null }) {
+  const source = summaryText(provenance?.source ?? provenance?.provider);
+  const endpointGroup = summaryText(provenance?.endpoint_group);
+  const generatedAt = summaryText(provenance?.generated_at);
+
+  return (
+    <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
+      <InfoGrid
+        cols={3}
+        items={[
+          { label: 'Source', value: source },
+          { label: 'Endpoint group', value: endpointGroup },
+          { label: 'Generated at', value: generatedAt },
+        ]}
+      />
+      {provenance ? <RawJsonToggle label="provenance" value={provenance} /> : null}
     </div>
   );
 }
@@ -135,10 +202,8 @@ export function ApprovalsListPageContent({ rfqId }: { rfqId: string }) {
                   { label: 'Assignee', value: selectedApproval?.assignee ?? '—' },
                 ]}
               />
-              <JsonBlock title="Provider payload" value={approvalSummary.payload} />
-              {approvalSummary.provenance ? (
-                <JsonBlock title="Provenance" value={approvalSummary.provenance} />
-              ) : null}
+              <ApprovalPayloadSummary payload={approvalSummary.payload} />
+              <ApprovalProvenanceSummary provenance={approvalSummary.provenance} />
             </div>
           ) : isApprovalSummaryUnavailable ? (
             <AiUnavailableCallout

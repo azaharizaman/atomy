@@ -251,10 +251,7 @@ final class AwardWorkflowTest extends ApiTestCase
             '/api/v1/awards/' . $awardId . '/guidance',
             $this->authHeaders((string) $user->tenant_id, (string) $user->id),
         );
-        $guidanceResponse->assertStatus(503);
-        $guidanceResponse->assertJsonPath('data.ai_guidance.feature_key', 'award_ai_guidance');
-        $guidanceResponse->assertJsonPath('data.ai_guidance.available', false);
-        $guidanceResponse->assertJsonPath('data.ai_guidance.provenance.source', 'deterministic');
+        $guidanceResponse->assertNotFound();
 
         $loserVendorId = (string) Str::ulid();
         QuoteSubmission::query()->create([
@@ -330,7 +327,7 @@ final class AwardWorkflowTest extends ApiTestCase
         );
     }
 
-    public function test_guidance_returns_provider_payload_for_award(): void
+    public function test_generate_guidance_persists_provider_payload_for_award(): void
     {
         $this->bindAiRuntimeStatus([
             'award_ai_guidance' => new AiCapabilityStatus(
@@ -366,8 +363,9 @@ final class AwardWorkflowTest extends ApiTestCase
 
         [$user, $rfq, $run, $award] = $this->seedAward($this->createUser());
 
-        $response = $this->getJson(
-            '/api/v1/awards/' . $award->id . '/guidance',
+        $response = $this->postJson(
+            '/api/v1/awards/' . $award->id . '/guidance/generate',
+            [],
             $this->authHeaders((string) $user->tenant_id, (string) $user->id),
         );
 
@@ -376,6 +374,14 @@ final class AwardWorkflowTest extends ApiTestCase
         $response->assertJsonPath('data.ai_guidance.available', true);
         $response->assertJsonPath('data.ai_guidance.payload.headline', 'Proceed with the lowest compliant vendor.');
         $response->assertJsonPath('data.ai_guidance.provenance.source', 'provider');
+
+        $readResponse = $this->getJson(
+            '/api/v1/awards/' . $award->id . '/guidance',
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $readResponse->assertOk();
+        $readResponse->assertJsonPath('data.ai_guidance.payload.headline', 'Proceed with the lowest compliant vendor.');
 
         $run = $run->fresh();
         $storedGuidance = $run?->response_payload['ai_artifacts']['award_guidance'][$award->id] ?? null;
@@ -510,13 +516,22 @@ final class AwardWorkflowTest extends ApiTestCase
             ]));
         $this->app->instance(ComparisonAwardAiClientInterface::class, $comparisonAwardClient);
 
-        $response = $this->getJson(
-            '/api/v1/awards/' . $award->id . '/debrief-draft/' . $loserVendorId,
+        $response = $this->postJson(
+            '/api/v1/awards/' . $award->id . '/debrief-draft/' . $loserVendorId . '/generate',
+            [],
             $this->authHeaders((string) $user->tenant_id, (string) $user->id),
         );
 
         $response->assertOk();
         $response->assertJsonPath('data.ai_debrief_draft.feature_key', 'award_ai_guidance');
+
+        $readResponse = $this->getJson(
+            '/api/v1/awards/' . $award->id . '/debrief-draft/' . $loserVendorId,
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $readResponse->assertOk();
+        $readResponse->assertJsonPath('data.ai_debrief_draft.feature_key', 'award_ai_guidance');
         $response->assertJsonPath('data.ai_debrief_draft.available', true);
         $response->assertJsonPath('data.ai_debrief_draft.payload.draft_message', 'Thank you for your proposal. The award went to a lower-risk commercial bid.');
         $response->assertJsonPath('data.ai_debrief_draft.provenance.source', 'provider');

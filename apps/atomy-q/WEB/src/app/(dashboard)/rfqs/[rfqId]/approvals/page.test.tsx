@@ -132,23 +132,34 @@ describe('ApprovalsListPage', () => {
 
     expect(await screen.findByRole('heading', { name: 'AI summary aid' })).toBeInTheDocument();
     expect(screen.getAllByText('approval-1').length).toBeGreaterThan(0);
-    expect(screen.getByText(/approval can proceed with the frozen comparison evidence/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/approval can proceed with the frozen comparison evidence/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/view raw provider payload/i)).toBeInTheDocument();
     expect(screen.getAllByText(/openrouter/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText('Compliance review').length).toBeGreaterThan(0);
     expect(mockUseApprovalSummary).toHaveBeenCalledWith('approval-1', expect.objectContaining({ enabled: true }));
   });
 
+  it('reveals raw payload and provenance only after toggling view raw', async () => {
+    renderWithProviders(<ApprovalsListPageContent rfqId="rfq-1" />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /view raw provider payload/i }));
+    fireEvent.click(screen.getByRole('button', { name: /view raw provenance/i }));
+
+    expect(screen.getAllByText(/openrouter/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/comparison_award/i).length).toBeGreaterThan(0);
+  });
+
   it('updates the summary when a different approval row is selected', async () => {
     renderWithProviders(<ApprovalsListPageContent rfqId="rfq-1" />);
 
-    expect(await screen.findByText(/approval can proceed with the frozen comparison evidence/i)).toBeInTheDocument();
+    expect((await screen.findAllByText(/approval can proceed with the frozen comparison evidence/i)).length).toBeGreaterThan(0);
 
     const financeCell = screen.getByText('Finance review');
     const financeRow = financeCell.closest('tr');
     expect(financeRow).not.toBeNull();
     fireEvent.click(within(financeRow as HTMLTableRowElement).getByRole('checkbox'));
 
-    await waitFor(() => expect(screen.getByText(/finance can clear this review/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getAllByText(/finance can clear this review/i).length).toBeGreaterThan(0));
     expect(mockUseApprovalSummary).toHaveBeenCalledWith('approval-2', expect.objectContaining({ enabled: true }));
   });
 

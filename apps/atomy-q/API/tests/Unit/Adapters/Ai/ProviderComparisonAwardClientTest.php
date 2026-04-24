@@ -75,6 +75,9 @@ final class ProviderComparisonAwardClientTest extends TestCase
             self::fail('Expected ComparisonAwardAiException to be thrown.');
         } catch (ComparisonAwardAiException $exception) {
             self::assertStringContainsString('award_guidance', $exception->getMessage());
+            self::assertStringContainsString('"tenant_id":"tenant-1"', $exception->getMessage());
+            self::assertStringNotContainsString('comparison_context', $exception->getMessage());
+            self::assertStringNotContainsString('award_id', $exception->getMessage());
             self::assertInstanceOf(\RuntimeException::class, $exception->getPrevious());
         }
     }

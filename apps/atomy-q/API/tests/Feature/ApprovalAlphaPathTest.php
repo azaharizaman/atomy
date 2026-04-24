@@ -70,7 +70,7 @@ final class ApprovalAlphaPathTest extends ApiTestCase
             capabilityStatuses: $capabilityStatuses,
             endpointGroupHealthSnapshots: [],
             reasonCodes: ['provider_unavailable'],
-            generatedAt: new DateTimeImmutable('2026-04-24T11:00:00+08:00'),
+            generatedAt: new DateTimeImmutable('2026-04-24T03:00:00Z'),
         );
 
         $this->app->instance(AiRuntimeStatusInterface::class, new readonly class($snapshot) implements AiRuntimeStatusInterface {
@@ -256,7 +256,7 @@ final class ApprovalAlphaPathTest extends ApiTestCase
         $response->assertJsonPath('data.status', 'pending');
     }
 
-    public function test_summary_returns_provider_payload_for_approval(): void
+    public function test_generate_summary_persists_provider_payload_for_approval(): void
     {
         $tenantId = (string) Str::ulid();
         $user = $this->createUser($tenantId);
@@ -293,8 +293,9 @@ final class ApprovalAlphaPathTest extends ApiTestCase
         $comparisonAwardClient->expects($this->never())->method('awardDebriefDraft');
         $this->app->instance(ComparisonAwardAiClientInterface::class, $comparisonAwardClient);
 
-        $response = $this->getJson(
-            '/api/v1/approvals/' . $approval->id . '/summary',
+        $response = $this->postJson(
+            '/api/v1/approvals/' . $approval->id . '/summary/generate',
+            [],
             $this->authHeaders($tenantId, (string) $user->id),
         );
 
@@ -303,6 +304,14 @@ final class ApprovalAlphaPathTest extends ApiTestCase
         $response->assertJsonPath('data.ai_summary.available', true);
         $response->assertJsonPath('data.ai_summary.payload.headline', 'Approval can proceed with the frozen comparison evidence.');
         $response->assertJsonPath('data.ai_summary.provenance.source', 'provider');
+
+        $summaryReadResponse = $this->getJson(
+            '/api/v1/approvals/' . $approval->id . '/summary',
+            $this->authHeaders($tenantId, (string) $user->id),
+        );
+
+        $summaryReadResponse->assertOk();
+        $summaryReadResponse->assertJsonPath('data.ai_summary.payload.headline', 'Approval can proceed with the frozen comparison evidence.');
 
         $run = $run->fresh();
         $storedSummary = $run?->response_payload['ai_artifacts']['approval_summary'][$approval->id] ?? null;
@@ -326,6 +335,18 @@ final class ApprovalAlphaPathTest extends ApiTestCase
         $trailResponse->assertJsonPath('data.metadata.artifact_kind', 'approval_ai_summary');
         $trailResponse->assertJsonPath('data.metadata.artifact_subject_id', $approval->id);
         $trailResponse->assertJsonPath('data.metadata.provenance.source', 'provider');
+    }
+
+    public function test_summary_get_returns_not_found_when_no_artifact_has_been_generated(): void
+    {
+        $tenantId = (string) Str::ulid();
+        $user = $this->createUser($tenantId);
+        [, , , $approval] = $this->seedPendingApproval($user);
+
+        $this->getJson(
+            '/api/v1/approvals/' . $approval->id . '/summary',
+            $this->authHeaders($tenantId, (string) $user->id),
+        )->assertNotFound();
     }
 
     public function test_summary_returns_persisted_artifact_when_runtime_is_unavailable(): void
@@ -442,10 +463,7 @@ final class ApprovalAlphaPathTest extends ApiTestCase
             '/api/v1/approvals/' . $approval->id . '/summary',
             $this->authHeaders($tenantId, (string) $user->id),
         );
-        $summaryResponse->assertStatus(503);
-        $summaryResponse->assertJsonPath('data.ai_summary.feature_key', 'approval_ai_summary');
-        $summaryResponse->assertJsonPath('data.ai_summary.available', false);
-        $summaryResponse->assertJsonPath('data.ai_summary.provenance.source', 'deterministic');
+        $summaryResponse->assertNotFound();
 
         $response = $this->postJson(
             '/api/v1/approvals/' . $approval->id . '/approve',

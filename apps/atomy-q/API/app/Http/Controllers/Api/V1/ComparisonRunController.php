@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use Closure;
 use App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface;
 use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
 use App\Adapters\Ai\DTOs\ComparisonOverlayRequest;
@@ -545,29 +546,45 @@ final class ComparisonRunController extends Controller
      */
     private function persistComparisonAiOverlay(ComparisonRun $run, array $aiOverlay): void
     {
-        $responsePayload = $run->response_payload ?? [];
-        if (! is_array($responsePayload)) {
-            $responsePayload = [];
-        }
+        DB::transaction(Closure::fromCallable(function () use ($run, $aiOverlay): void {
+            /** @var ComparisonRun $lockedRun */
+            $lockedRun = ComparisonRun::query()
+                ->where('id', $run->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $responsePayload['ai_overlay'] = $aiOverlay;
-        $run->response_payload = $responsePayload;
-        $run->save();
+            $responsePayload = $lockedRun->response_payload ?? [];
+            if (! is_array($responsePayload)) {
+                $responsePayload = [];
+            }
 
-        $this->decisionTrail->recordAiArtifactGenerated(
-            tenantId: (string) $run->tenant_id,
-            rfqId: (string) $run->rfq_id,
-            comparisonRunId: (string) $run->id,
-            eventType: 'comparison_ai_overlay_generated',
-            summary: [
-                'artifact_kind' => 'comparison_ai_overlay',
-                'artifact_origin' => $aiOverlay['available'] === true ? 'provider_drafted' : 'manual_continuity',
-                'feature_key' => $aiOverlay['feature_key'] ?? 'comparison_ai_overlay',
-                'available' => $aiOverlay['available'] ?? false,
-                'artifact' => $aiOverlay,
-                'provenance' => is_array($aiOverlay['provenance'] ?? null) ? $aiOverlay['provenance'] : [],
-            ],
-        );
+            $artifacts = $responsePayload['ai_artifacts'] ?? [];
+            if (! is_array($artifacts)) {
+                $artifacts = [];
+            }
+
+            $artifacts['ai_overlay'] = $aiOverlay;
+            $responsePayload['ai_artifacts'] = $artifacts;
+            unset($responsePayload['ai_overlay']);
+
+            $lockedRun->response_payload = $responsePayload;
+            $lockedRun->save();
+
+            $this->decisionTrail->recordAiArtifactGenerated(
+                tenantId: (string) $lockedRun->tenant_id,
+                rfqId: (string) $lockedRun->rfq_id,
+                comparisonRunId: (string) $lockedRun->id,
+                eventType: 'comparison_ai_overlay_generated',
+                summary: [
+                    'artifact_kind' => 'comparison_ai_overlay',
+                    'artifact_origin' => $aiOverlay['available'] === true ? 'provider_drafted' : 'manual_continuity',
+                    'feature_key' => $aiOverlay['feature_key'] ?? 'comparison_ai_overlay',
+                    'available' => $aiOverlay['available'] ?? false,
+                    'artifact' => $aiOverlay,
+                    'provenance' => is_array($aiOverlay['provenance'] ?? null) ? $aiOverlay['provenance'] : [],
+                ],
+            );
+        }));
     }
 
     /**
@@ -575,7 +592,8 @@ final class ComparisonRunController extends Controller
      */
     private function storedAiOverlay(ComparisonRun $run): array
     {
-        $overlay = $run->response_payload['ai_overlay'] ?? null;
+        $responsePayload = is_array($run->response_payload) ? $run->response_payload : [];
+        $overlay = $responsePayload['ai_artifacts']['ai_overlay'] ?? $responsePayload['ai_overlay'] ?? null;
         if (is_array($overlay)) {
             return $overlay;
         }
