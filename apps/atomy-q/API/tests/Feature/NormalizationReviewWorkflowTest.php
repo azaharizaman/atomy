@@ -285,7 +285,7 @@ final class NormalizationReviewWorkflowTest extends ApiTestCase
     public function test_manual_source_line_add_edit_and_delete_persists_manual_provenance_and_updates_readiness(): void
     {
         $user = $this->createUser();
-        [$rfq, $lineItem, $quote] = $this->createManualReviewFixture($user);
+        [, $lineItem, $quote] = $this->createManualReviewFixture($user);
         $headers = $this->authHeaders((string) $user->tenant_id, (string) $user->id);
 
         $create = $this->postJson(

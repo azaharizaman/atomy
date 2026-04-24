@@ -166,7 +166,9 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::post('upload', [QuoteSubmissionController::class, 'upload']);
         Route::get('{id}', [QuoteSubmissionController::class, 'show']);
         Route::patch('{id}/status', [QuoteSubmissionController::class, 'updateStatus']);
-        Route::post('{id}/source-lines', [QuoteSubmissionController::class, 'storeSourceLine']);
+        Route::post('{id}/source-lines', [QuoteSubmissionController::class, 'storeSourceLine'])
+            ->middleware('idempotency')
+            ->name('v1.quote-submissions.source-lines.store');
         Route::put('{id}/source-lines/{sourceLineId}', [QuoteSubmissionController::class, 'updateSourceLine']);
         Route::delete('{id}/source-lines/{sourceLineId}', [QuoteSubmissionController::class, 'destroySourceLine']);
         Route::post('{id}/replace', [QuoteSubmissionController::class, 'replace']);

@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Nexus\MachineLearning\Enums\AiEndpointGroup;
 use Nexus\ProcurementML\Enums\ProviderResultStatus;
 use Nexus\ProcurementML\Enums\SourceLineOrigin;
+use Nexus\ProcurementML\Exceptions\ProcurementMlContractException;
 use Nexus\ProcurementML\ValueObjects\NormalizationSuggestion;
 use Nexus\ProcurementML\ValueObjects\ProviderAiProvenance;
 use Nexus\ProcurementML\ValueObjects\ProviderQuoteExtractionResult;
@@ -109,6 +110,47 @@ final class QuoteIntakeAiContractsTest extends TestCase
         self::assertFalse($result->isAvailable());
         self::assertSame([], $result->sourceLines);
         self::assertSame('provider_payload_malformed', $result->unavailableReason);
+    }
+
+    #[Test]
+    public function it_rejects_decimal_provider_line_numbers_without_truncation(): void
+    {
+        $result = ProviderQuoteExtractionResult::fromProviderPayload([
+            'source_lines' => [
+                [
+                    'source_line_id' => 'line-provider-1',
+                    'line_number' => '1.5',
+                    'description' => 'Stainless steel valve',
+                    'quantity' => 3,
+                    'unit_of_measure' => 'EA',
+                    'currency' => 'USD',
+                ],
+            ],
+        ], $this->provenance(AiEndpointGroup::DOCUMENT));
+
+        self::assertSame(ProviderResultStatus::MANUAL_ACTION_REQUIRED, $result->status);
+        self::assertSame('provider_payload_malformed', $result->unavailableReason);
+    }
+
+    #[Test]
+    public function it_identifies_invalid_provider_provenance_hint_keys(): void
+    {
+        $this->expectException(ProcurementMlContractException::class);
+        $this->expectExceptionMessage('provider reliability hints: invalid key "0"');
+
+        new ProviderAiProvenance(
+            providerName: 'openrouter',
+            endpointGroup: AiEndpointGroup::DOCUMENT,
+            modelRevision: 'openai/gpt-4.1-mini:2026-04-01',
+            promptTemplateVersion: 'quote-extraction@2026-04-24',
+            requestTraceId: 'trace-quote-123',
+            inputHash: 'sha256:input',
+            outputHash: 'sha256:output',
+            latencyMs: 842,
+            confidence: 0.88,
+            reliabilityHints: ['invalid numeric key'],
+            processedAt: new DateTimeImmutable('2026-04-24T09:15:00+08:00'),
+        );
     }
 
     #[Test]

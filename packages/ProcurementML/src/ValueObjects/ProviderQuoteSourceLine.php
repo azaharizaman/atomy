@@ -69,7 +69,7 @@ final readonly class ProviderQuoteSourceLine
             }
         }
 
-        if (!is_string($payload['source_line_id']) || !is_numeric($payload['line_number'])) {
+        if (!is_string($payload['source_line_id']) || self::integerValue($payload['line_number']) === null) {
             return null;
         }
 
@@ -108,7 +108,7 @@ final readonly class ProviderQuoteSourceLine
         try {
             return new self(
                 sourceLineId: $payload['source_line_id'],
-                lineNumber: (int) $payload['line_number'],
+                lineNumber: self::integerValue($payload['line_number']) ?? 0,
                 description: $payload['description'],
                 quantity: (float) $payload['quantity'],
                 unitOfMeasure: $payload['unit_of_measure'],
@@ -177,5 +177,18 @@ final readonly class ProviderQuoteSourceLine
         }
 
         return true;
+    }
+
+    private static function integerValue(mixed $value): ?int
+    {
+        if (is_int($value)) {
+            return $value;
+        }
+
+        if (is_string($value) && preg_match('/^-?\d+$/', trim($value)) === 1) {
+            return (int) trim($value);
+        }
+
+        return null;
     }
 }

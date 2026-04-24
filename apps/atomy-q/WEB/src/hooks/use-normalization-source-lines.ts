@@ -10,6 +10,9 @@ export interface ManualSourceLineInput {
   source_quantity?: string | null;
   source_uom?: string | null;
   source_unit_price?: string | null;
+  rfq_line_item_id?: string | null;
+  note?: string | null;
+  sort_order?: number | null;
   reason?: string | null;
 }
 
@@ -156,6 +159,9 @@ function manualPayload(input: ManualSourceLineInput) {
     source_quantity: input.source_quantity ?? null,
     source_uom: input.source_uom ?? null,
     source_unit_price: input.source_unit_price ?? null,
+    rfq_line_item_id: input.rfq_line_item_id ?? null,
+    note: input.note ?? null,
+    sort_order: input.sort_order ?? null,
     origin: 'manual',
     reason: input.reason ?? null,
   };

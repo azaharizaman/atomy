@@ -43,7 +43,7 @@ final readonly class ProviderQuoteExtractionResult
     public static function fromProviderPayload(array $payload, ProviderAiProvenance $provenance): self
     {
         $sourceLines = $payload['source_lines'] ?? null;
-        if (!is_array($sourceLines) || !self::isList($sourceLines) || $sourceLines === []) {
+        if (!is_array($sourceLines) || !array_is_list($sourceLines) || $sourceLines === []) {
             return self::manualActionRequired($provenance, 'provider_payload_malformed');
         }
 
@@ -145,13 +145,5 @@ final readonly class ProviderQuoteExtractionResult
         }
 
         return true;
-    }
-
-    /**
-     * @param array<mixed> $values
-     */
-    private static function isList(array $values): bool
-    {
-        return array_keys($values) === range(0, count($values) - 1);
     }
 }

@@ -82,11 +82,11 @@ final readonly class ProviderAiProvenance
     {
         foreach ($values as $key => $value) {
             if (!is_string($key) || trim($key) === '') {
-                throw ProcurementMlContractException::invalidValue($subject);
+                throw ProcurementMlContractException::invalidValue(sprintf('%s: invalid key "%s"', $subject, (string) $key));
             }
 
             if (!is_scalar($value) && $value !== null) {
-                throw ProcurementMlContractException::invalidValue($subject);
+                throw ProcurementMlContractException::invalidValue(sprintf('%s: invalid value for key "%s"', $subject, (string) $key));
             }
         }
     }

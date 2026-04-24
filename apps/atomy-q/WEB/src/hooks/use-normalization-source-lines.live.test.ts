@@ -113,6 +113,8 @@ describe('useNormalizationSourceLines (live mode)', () => {
       source_quantity: '2',
       source_uom: 'ea',
       source_unit_price: '12.50',
+      rfq_line_item_id: 'rfq-line-1',
+      note: 'Typed from vendor email',
       reason: 'Supplier PDF image extraction failed',
     });
 
@@ -122,6 +124,9 @@ describe('useNormalizationSourceLines (live mode)', () => {
       source_quantity: '2',
       source_uom: 'ea',
       source_unit_price: '12.50',
+      rfq_line_item_id: 'rfq-line-1',
+      note: 'Typed from vendor email',
+      sort_order: null,
       origin: 'manual',
       reason: 'Supplier PDF image extraction failed',
     });
@@ -141,6 +146,8 @@ describe('useNormalizationSourceLines (live mode)', () => {
       source_quantity: '3',
       source_uom: 'box',
       source_unit_price: null,
+      rfq_line_item_id: 'rfq-line-1',
+      note: 'Operator note',
       reason: 'Operator correction',
     });
     await waitFor(() => expect(result.current.updateSourceLine.isSuccess).toBe(true));
@@ -153,6 +160,9 @@ describe('useNormalizationSourceLines (live mode)', () => {
       source_quantity: '3',
       source_uom: 'box',
       source_unit_price: null,
+      rfq_line_item_id: 'rfq-line-1',
+      note: 'Operator note',
+      sort_order: null,
       origin: 'manual',
       reason: 'Operator correction',
     });

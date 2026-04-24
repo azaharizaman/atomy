@@ -43,6 +43,35 @@ vi.mock('@/hooks/use-rfq', () => ({
   useRfq: () => ({ data: { title: 'RFQ' } }),
 }));
 
+vi.mock('@/hooks/use-rfq-line-items', () => ({
+  useRfqLineItems: () => ({
+    data: [
+      {
+        id: 'rfq-line-1',
+        rfq_id: 'r1',
+        description: 'RFQ Widget A',
+        quantity: 2,
+        uom: 'ea',
+        unit_price: 10,
+        currency: 'USD',
+        specifications: null,
+        sort_order: 1,
+      },
+      {
+        id: 'rfq-line-2',
+        rfq_id: 'r1',
+        description: 'RFQ Widget B',
+        quantity: 4,
+        uom: 'ea',
+        unit_price: 42,
+        currency: 'USD',
+        specifications: null,
+        sort_order: 2,
+      },
+    ],
+  }),
+}));
+
 vi.mock('@/hooks/use-ai-status', () => ({
   useAiStatus: () => mockUseAiStatus(),
 }));
@@ -205,6 +234,8 @@ describe('NormalizeQuotePage', () => {
     fireEvent.change(screen.getByLabelText(/quantity/i), { target: { value: '1' } });
     fireEvent.change(screen.getByLabelText(/uom/i), { target: { value: 'lot' } });
     fireEvent.change(screen.getByLabelText(/unit price/i), { target: { value: '250' } });
+    fireEvent.change(screen.getByLabelText(/rfq line/i), { target: { value: 'rfq-line-1' } });
+    fireEvent.change(screen.getByLabelText(/note/i), { target: { value: 'Typed from vendor email' } });
     fireEvent.click(screen.getByRole('button', { name: /add source line/i }));
 
     expect(mockCreateSourceLine).toHaveBeenCalledWith({
@@ -213,6 +244,8 @@ describe('NormalizeQuotePage', () => {
       source_quantity: '1',
       source_uom: 'lot',
       source_unit_price: '250',
+      rfq_line_item_id: 'rfq-line-1',
+      note: 'Typed from vendor email',
       reason: 'Manual entry from normalization workspace',
     });
 
@@ -225,9 +258,12 @@ describe('NormalizeQuotePage', () => {
       source_quantity: '2',
       source_uom: 'ea',
       source_unit_price: null,
+      rfq_line_item_id: 'rfq-line-1',
+      note: null,
       reason: 'Manual correction from normalization workspace',
     });
 
+    vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
     fireEvent.click(screen.getByRole('button', { name: /delete source line 1/i }));
     expect(mockDeleteSourceLine).toHaveBeenCalledWith({ quoteSubmissionId: 'q1', id: 'line-1' });
   });

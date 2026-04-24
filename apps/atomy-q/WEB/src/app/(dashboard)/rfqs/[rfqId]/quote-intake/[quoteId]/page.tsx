@@ -41,10 +41,9 @@ export default function QuoteIntakeDetailPage({
   const uploadedAt = submission?.submitted_at ?? null;
   const statusLabel = submission?.status === 'ready' ? 'Ready' : submission?.status === 'needs_review' ? 'Needs review' : submission?.status ?? 'Uploaded';
   const statusBadge = submission?.status === 'ready' ? 'approved' : submission?.status === 'needs_review' ? 'pending' : submission?.status === 'failed' ? 'error' : 'processing';
-  const extractionAvailable = aiStatus.isFeatureAvailable('quote_document_extraction');
   const showExtractionUnavailable =
-    !useMocks && aiStatus.shouldShowUnavailableMessage('quote_document_extraction') && !extractionAvailable;
-  const hideExtractionControls = !useMocks && aiStatus.shouldHideAiControls('quote_document_extraction') && !extractionAvailable;
+    !useMocks && aiStatus.shouldShowUnavailableMessage('quote_document_extraction');
+  const hideExtractionControls = !useMocks && aiStatus.shouldHideAiControls('quote_document_extraction');
 
   const breadcrumbItems = [
     { label: 'RFQs', href: '/rfqs' },

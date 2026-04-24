@@ -11,6 +11,8 @@ This package was created by abstracting all Machine Learning (ML) related featur
 
 As of 2026-04-24, the package also owns procurement-specific AI DTOs for provider-backed quote extraction and normalization. These DTOs keep provider results separate from persisted quote submission rows, carry source-line origin (`provider`, `deterministic`, `manual`), and preserve provider provenance for audit/debugging without introducing framework dependencies.
 
+Runtime behavior is gated outside this Layer 1 package by `atomy.ai.mode` and `atomy.quote_intelligence.mode`. Relevant values are `provider` for provider endpoints, `deterministic` for local deterministic extraction, and `off` for manual continuity. Callers must treat `ProcurementMlContractException` as the package-level contract failure for malformed DTO construction and must expect provider payload parsing to return `manual_action_required` with `unavailable_reason`/reason code `provider_payload_malformed` when upstream provider output cannot be trusted. Provider-disabled or unavailable paths should be represented as `unavailable` or `manual_action_required` before persisted quote rows are updated.
+
 ## Implementation Plan
 
 ### Phase 1: Core Implementation (Completed)

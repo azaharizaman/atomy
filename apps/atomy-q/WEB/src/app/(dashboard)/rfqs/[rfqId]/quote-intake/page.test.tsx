@@ -137,7 +137,8 @@ describe('QuoteIntakeListPage', () => {
     renderWithProviders(<QuoteIntakeListContent rfqId="rfq-1" />);
 
     expect(await screen.findByText('winner.pdf')).toBeInTheDocument();
-    expect(screen.getByText(/normalization review unavailable/i)).toBeInTheDocument();
+    expect(screen.getByText(/normalization review data unavailable/i)).toBeInTheDocument();
+    expect(screen.getByText(/review data could not be loaded/i)).toBeInTheDocument();
     expect(screen.queryByText(/quote intake unavailable/i)).not.toBeInTheDocument();
   });
 });

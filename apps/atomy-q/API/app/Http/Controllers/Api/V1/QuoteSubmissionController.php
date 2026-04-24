@@ -7,22 +7,26 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
 use App\Http\Controllers\Controller;
+use App\Http\Idempotency\IdempotencyCompletion;
 use App\Http\Requests\ManualNormalizationSourceLineRequest;
 use App\Http\Requests\QuoteSubmissionStatusRequest;
 use App\Http\Requests\QuoteSubmissionUploadRequest;
 use App\Jobs\ProcessQuoteSubmissionJob;
-use App\Models\DecisionTrailEntry;
 use App\Models\NormalizationSourceLine;
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
 use App\Models\RfqLineItem;
+use App\Services\QuoteIntake\DecisionTrailRecorder;
 use App\Services\QuoteIntake\QuoteSubmissionReadinessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Nexus\IntelligenceOperations\DTOs\AiCapabilityStatus;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
+use Nexus\Idempotency\Contracts\IdempotencyServiceInterface;
 use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
+use Throwable;
 
 final class QuoteSubmissionController extends Controller
 {
@@ -31,6 +35,7 @@ final class QuoteSubmissionController extends Controller
 
     public function __construct(
         private readonly QuoteSubmissionReadinessService $readiness,
+        private readonly DecisionTrailRecorder $decisionTrail,
     ) {}
 
     /**
@@ -118,20 +123,22 @@ final class QuoteSubmissionController extends Controller
         $qs->vendor_id = $vendorId;
         $qs->vendor_name = $vendorName;
         $qs->uploaded_by = $this->userId($request);
-        $qs->status = 'uploaded';
+        $manualExtractionContinuity = $this->shouldUseManualExtractionContinuity();
+        $qs->status = $manualExtractionContinuity ? 'needs_review' : 'uploaded';
         $qs->file_path = $filePath;
         $qs->file_type = $fileType;
         $qs->original_filename = $file->getClientOriginalName();
         $qs->submitted_at = now();
-        $qs->confidence = $this->shouldUseManualExtractionContinuity() ? null : 85.0;
+        $qs->confidence = $manualExtractionContinuity ? null : 85.0;
         $qs->line_items_count = 0;
         $qs->warnings_count = 0;
-        $qs->errors_count = 0;
+        $qs->errors_count = $manualExtractionContinuity ? 1 : 0;
+        if ($manualExtractionContinuity) {
+            $this->applyExtractionUnavailable($qs);
+        }
         $qs->save();
 
-        if ($this->shouldUseManualExtractionContinuity()) {
-            $this->markExtractionUnavailable($qs);
-        } else {
+        if (!$manualExtractionContinuity) {
             $this->dispatchProcessingJob($qs);
         }
         $qs->refresh();
@@ -219,38 +226,60 @@ final class QuoteSubmissionController extends Controller
         ]);
     }
 
-    public function storeSourceLine(ManualNormalizationSourceLineRequest $request, string $id): JsonResponse
+    public function storeSourceLine(
+        ManualNormalizationSourceLineRequest $request,
+        string $id,
+        IdempotencyServiceInterface $idempotency,
+    ): JsonResponse
     {
-        $tenantId = $this->tenantId($request);
-        $submission = $this->quoteSubmissionForTenant($tenantId, $id);
-        if ($submission === null) {
-            return response()->json(['message' => 'Quote submission not found'], 404);
+        try {
+            $tenantId = $this->tenantId($request);
+            $submission = $this->quoteSubmissionForTenant($tenantId, $id);
+            if ($submission === null) {
+                IdempotencyCompletion::fail($request, $idempotency);
+
+                return response()->json(['message' => 'Quote submission not found'], 404);
+            }
+
+            $validated = $request->validated();
+            $rfqLine = $this->rfqLineForSubmission($tenantId, $submission, $validated['rfq_line_item_id'] ?? null);
+            if (($validated['rfq_line_item_id'] ?? null) !== null && $rfqLine === null) {
+                IdempotencyCompletion::fail($request, $idempotency);
+
+                return response()->json(['message' => 'RFQ line not found'], 404);
+            }
+
+            [$sourceLine, $meta] = DB::transaction(function () use ($tenantId, $submission, $rfqLine, $validated, $request): array {
+                $sourceLine = new NormalizationSourceLine();
+                $sourceLine->tenant_id = $tenantId;
+                $sourceLine->quote_submission_id = $submission->id;
+                $sourceLine->rfq_line_item_id = $rfqLine?->id;
+                $this->applyManualSourceLineData($sourceLine, $validated, $this->userId($request));
+                $sourceLine->source_vendor = $submission->vendor_name;
+                $sourceLine->sort_order = array_key_exists('sort_order', $validated)
+                    ? (int) $validated['sort_order']
+                    : $this->nextSourceLineSortOrder($submission);
+                $sourceLine->save();
+
+                $meta = $this->refreshManualReadiness($submission);
+                $this->recordManualSourceLineDecision($submission, 'manual_source_line_created', $sourceLine->id);
+
+                return [$sourceLine->refresh(), $meta];
+            });
+
+            $response = response()->json([
+                'data' => $this->manualSourceLineData($sourceLine),
+                'meta' => $meta,
+            ], 201);
+
+            return IdempotencyCompletion::succeed($request, $idempotency, $response);
+        } catch (ValidationException $e) {
+            IdempotencyCompletion::fail($request, $idempotency);
+            throw $e;
+        } catch (Throwable $e) {
+            IdempotencyCompletion::fail($request, $idempotency);
+            throw $e;
         }
-
-        $validated = $request->validated();
-        $rfqLine = $this->rfqLineForSubmission($tenantId, $submission, $validated['rfq_line_item_id'] ?? null);
-        if (($validated['rfq_line_item_id'] ?? null) !== null && $rfqLine === null) {
-            return response()->json(['message' => 'RFQ line not found'], 404);
-        }
-
-        $sourceLine = new NormalizationSourceLine();
-        $sourceLine->tenant_id = $tenantId;
-        $sourceLine->quote_submission_id = $submission->id;
-        $sourceLine->rfq_line_item_id = $rfqLine?->id;
-        $this->applyManualSourceLineData($sourceLine, $validated, $this->userId($request));
-        $sourceLine->source_vendor = $submission->vendor_name;
-        $sourceLine->sort_order = array_key_exists('sort_order', $validated)
-            ? (int) $validated['sort_order']
-            : $this->nextSourceLineSortOrder($submission);
-        $sourceLine->save();
-
-        $meta = $this->refreshManualReadiness($submission);
-        $this->recordManualSourceLineDecision($submission, 'manual_source_line_created', $sourceLine->id);
-
-        return response()->json([
-            'data' => $this->manualSourceLineData($sourceLine->refresh()),
-            'meta' => $meta,
-        ], 201);
     }
 
     public function updateSourceLine(ManualNormalizationSourceLineRequest $request, string $id, string $sourceLineId): JsonResponse
@@ -280,18 +309,22 @@ final class QuoteSubmissionController extends Controller
             $sourceLine->rfq_line_item_id = $rfqLine?->id;
         }
 
-        $this->applyManualSourceLineData($sourceLine, $validated, $this->userId($request));
-        $sourceLine->source_vendor = $submission->vendor_name;
-        if (array_key_exists('sort_order', $validated)) {
-            $sourceLine->sort_order = (int) $validated['sort_order'];
-        }
-        $sourceLine->save();
+        [$sourceLine, $meta] = DB::transaction(function () use ($sourceLine, $submission, $validated, $request): array {
+            $this->applyManualSourceLineData($sourceLine, $validated, $this->userId($request));
+            $sourceLine->source_vendor = $submission->vendor_name;
+            if (array_key_exists('sort_order', $validated)) {
+                $sourceLine->sort_order = (int) $validated['sort_order'];
+            }
+            $sourceLine->save();
 
-        $meta = $this->refreshManualReadiness($submission);
-        $this->recordManualSourceLineDecision($submission, 'manual_source_line_updated', $sourceLine->id);
+            $meta = $this->refreshManualReadiness($submission);
+            $this->recordManualSourceLineDecision($submission, 'manual_source_line_updated', $sourceLine->id);
+
+            return [$sourceLine->refresh(), $meta];
+        });
 
         return response()->json([
-            'data' => $this->manualSourceLineData($sourceLine->refresh()),
+            'data' => $this->manualSourceLineData($sourceLine),
             'meta' => $meta,
         ]);
     }
@@ -313,11 +346,15 @@ final class QuoteSubmissionController extends Controller
             return response()->json(['message' => 'Source line not found'], 404);
         }
 
-        $sourceLine->conflicts()->delete();
-        $sourceLine->delete();
+        $meta = DB::transaction(function () use ($sourceLine, $submission, $sourceLineId): array {
+            $sourceLine->conflicts()->delete();
+            $sourceLine->delete();
 
-        $meta = $this->refreshManualReadiness($submission);
-        $this->recordManualSourceLineDecision($submission, 'manual_source_line_deleted', $sourceLineId);
+            $meta = $this->refreshManualReadiness($submission);
+            $this->recordManualSourceLineDecision($submission, 'manual_source_line_deleted', $sourceLineId);
+
+            return $meta;
+        });
 
         return response()->json([
             'data' => [
@@ -496,6 +533,12 @@ final class QuoteSubmissionController extends Controller
 
     private function markExtractionUnavailable(QuoteSubmission $submission): void
     {
+        $this->applyExtractionUnavailable($submission);
+        $submission->save();
+    }
+
+    private function applyExtractionUnavailable(QuoteSubmission $submission): void
+    {
         $capabilityStatus = $this->aiCapabilityStatus('quote_document_extraction');
         $submission->status = 'needs_review';
         $submission->error_code = $capabilityStatus?->status === AiCapabilityStatus::STATUS_DISABLED
@@ -507,7 +550,6 @@ final class QuoteSubmissionController extends Controller
         $submission->errors_count = 1;
         $submission->confidence = null;
         $submission->processing_completed_at = now();
-        $submission->save();
     }
 
     private function quoteSubmissionForTenant(string $tenantId, string $id): ?QuoteSubmission
@@ -549,9 +591,10 @@ final class QuoteSubmissionController extends Controller
         $sourceLine->ai_confidence = null;
         $sourceLine->taxonomy_code = null;
         $sourceLine->mapping_version = null;
-        $sourceLine->raw_data = [
-            'provenance' => $this->manualProvenance($validated, $userId),
-        ];
+        $rawData = is_array($sourceLine->raw_data) ? $sourceLine->raw_data : [];
+        $existingProvenance = is_array($rawData['provenance'] ?? null) ? $rawData['provenance'] : [];
+        $rawData['provenance'] = array_replace($existingProvenance, $this->manualProvenance($validated, $userId));
+        $sourceLine->raw_data = $rawData;
     }
 
     /**
@@ -577,6 +620,12 @@ final class QuoteSubmissionController extends Controller
 
     private function nextSourceLineSortOrder(QuoteSubmission $submission): int
     {
+        QuoteSubmission::query()
+            ->where('tenant_id', $submission->tenant_id)
+            ->where('id', $submission->id)
+            ->lockForUpdate()
+            ->first();
+
         return ((int) NormalizationSourceLine::query()
             ->where('tenant_id', $submission->tenant_id)
             ->where('quote_submission_id', $submission->id)
@@ -605,32 +654,13 @@ final class QuoteSubmissionController extends Controller
 
     private function recordManualSourceLineDecision(QuoteSubmission $submission, string $eventType, string $sourceLineId): void
     {
-        $previous = DecisionTrailEntry::query()
-            ->where('tenant_id', $submission->tenant_id)
-            ->where('comparison_run_id', $submission->id)
-            ->orderByDesc('sequence')
-            ->first();
-
-        $sequence = ((int) ($previous?->sequence ?? 0)) + 1;
-        $previousHash = $previous?->entry_hash ?? hash('sha256', 'genesis:' . $submission->id);
-        $payloadHash = hash('sha256', json_encode([
-            'origin' => 'manual',
-            'quote_submission_id' => $submission->id,
-            'source_line_id' => $sourceLineId,
-            'event_type' => $eventType,
-        ], JSON_THROW_ON_ERROR));
-
-        DecisionTrailEntry::query()->create([
-            'tenant_id' => $submission->tenant_id,
-            'comparison_run_id' => $submission->id,
-            'rfq_id' => $submission->rfq_id,
-            'sequence' => $sequence,
-            'event_type' => $eventType,
-            'payload_hash' => $payloadHash,
-            'previous_hash' => $previousHash,
-            'entry_hash' => hash('sha256', $previousHash . $payloadHash . $sequence),
-            'occurred_at' => now(),
-        ]);
+        $this->decisionTrail->recordManualSourceLineEvent(
+            tenantId: (string) $submission->tenant_id,
+            rfqId: (string) $submission->rfq_id,
+            quoteSubmissionId: (string) $submission->id,
+            sourceLineId: $sourceLineId,
+            eventType: $eventType,
+        );
     }
 
     /**

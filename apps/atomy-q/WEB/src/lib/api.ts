@@ -27,6 +27,7 @@ export function requiresIdempotencyKey(url: string): boolean {
   if (path === 'rfq-templates') return true;
   if (/^rfq-templates\/.+\/duplicate$/.test(path)) return true;
   if (/^rfq-templates\/.+\/apply$/.test(path)) return true;
+  if (/^quote-submissions\/.+\/source-lines$/.test(path)) return true;
   if (path === 'projects' || path === 'tasks') return true;
   return false;
 }

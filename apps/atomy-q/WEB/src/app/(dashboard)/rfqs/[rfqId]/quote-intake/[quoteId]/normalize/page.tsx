@@ -18,6 +18,7 @@ import {
   useNormalizationSourceLines,
 } from '@/hooks/use-normalization-source-lines';
 import { useFreezeComparison } from '@/hooks/use-freeze-comparison';
+import { useRfqLineItems } from '@/hooks/use-rfq-line-items';
 import { AlertTriangle, Lock, Pencil, Plus, Save, Trash2, Unlock, X } from 'lucide-react';
 
 const MOCK_SOURCE_LINES = [
@@ -33,6 +34,8 @@ interface ManualSourceLineFormState {
   source_quantity: string;
   source_uom: string;
   source_unit_price: string;
+  rfq_line_item_id: string;
+  note: string;
 }
 
 const EMPTY_MANUAL_LINE: ManualSourceLineFormState = {
@@ -40,6 +43,8 @@ const EMPTY_MANUAL_LINE: ManualSourceLineFormState = {
   source_quantity: '',
   source_uom: '',
   source_unit_price: '',
+  rfq_line_item_id: '',
+  note: '',
 };
 
 function normalizeNullableField(value: string): string | null {
@@ -53,6 +58,8 @@ function formFromSourceLine(line: NormalizationSourceLineRow): ManualSourceLineF
     source_quantity: line.source_quantity ?? '',
     source_uom: line.source_uom ?? '',
     source_unit_price: line.source_unit_price ?? '',
+    rfq_line_item_id: line.rfq_line_item_id ?? '',
+    note: '',
   };
 }
 
@@ -62,8 +69,10 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
   const aiStatus = useAiStatus();
   const normLive = useNormalizationReview(rfqId, { enabled: !useMocks });
   const sourceLinesQuery = useNormalizationSourceLines(rfqId, { enabled: !useMocks });
+  const rfqLineItemsQuery = useRfqLineItems(rfqId);
   const manualSourceLines = useManualNormalizationSourceLineMutations(rfqId);
   const liveSourceLines = sourceLinesQuery.data ?? [];
+  const rfqLineItems = useMocks ? [] : (rfqLineItemsQuery.data ?? []).filter((line) => line.rowType !== 'heading');
   const freeze = useFreezeComparison();
   const [locked, setLocked] = React.useState(false);
   const [selectedLineIds, setSelectedLineIds] = React.useState<string[]>([]);
@@ -102,13 +111,10 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
   const conflicts = normLive.conflicts;
   const openConflicts = conflicts.filter((c) => c.resolution === null);
   const sourceLines = useMocks ? MOCK_SOURCE_LINES : liveSourceLines.filter((line) => line.quote_submission_id === quoteId);
-  const extractionAvailable = aiStatus.isFeatureAvailable('quote_document_extraction');
-  const normalizationAvailable = aiStatus.isFeatureAvailable('normalization_suggestions');
   const showExtractionUnavailable =
-    !useMocks && aiStatus.shouldShowUnavailableMessage('quote_document_extraction') && !extractionAvailable;
+    !useMocks && aiStatus.shouldShowUnavailableMessage('quote_document_extraction');
   const showNormalizationUnavailable =
-    !useMocks && aiStatus.shouldShowUnavailableMessage('normalization_suggestions') && !normalizationAvailable;
-  const hideAiAssist = !useMocks && aiStatus.shouldHideAiControls('quote_document_extraction') && !extractionAvailable;
+    !useMocks && aiStatus.shouldShowUnavailableMessage('normalization_suggestions');
   const sourceLinesError =
     sourceLinesQuery.error instanceof Error ? sourceLinesQuery.error.message : 'Source-line data could not be loaded.';
   const reviewError = normLive.error instanceof Error ? normLive.error.message : 'Review data could not be loaded.';
@@ -131,6 +137,8 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
       source_quantity: normalizeNullableField(manualForm.source_quantity),
       source_uom: normalizeNullableField(manualForm.source_uom),
       source_unit_price: normalizeNullableField(manualForm.source_unit_price),
+      rfq_line_item_id: normalizeNullableField(manualForm.rfq_line_item_id),
+      note: normalizeNullableField(manualForm.note),
       reason: 'Manual entry from normalization workspace',
     });
     setManualForm(EMPTY_MANUAL_LINE);
@@ -143,7 +151,7 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
 
   function saveEdit(lineId: string): void {
     const description = editForm.source_description.trim();
-    if (description === '') return;
+    if (description === '' || manualSourceLines.updateSourceLine.isPending) return;
 
     manualSourceLines.updateSourceLine.mutate({
       quoteSubmissionId: quoteId,
@@ -152,6 +160,8 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
       source_quantity: normalizeNullableField(editForm.source_quantity),
       source_uom: normalizeNullableField(editForm.source_uom),
       source_unit_price: normalizeNullableField(editForm.source_unit_price),
+      rfq_line_item_id: normalizeNullableField(editForm.rfq_line_item_id),
+      note: normalizeNullableField(editForm.note),
       reason: 'Manual correction from normalization workspace',
     });
     setEditingLineId(null);
@@ -164,6 +174,13 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
 
   function isSelected(lineId: string): boolean {
     return selectedLineIds.includes(lineId);
+  }
+
+  function deleteSourceLine(lineId: string, lineNumber: number): void {
+    if (manualSourceLines.deleteSourceLine.isPending) return;
+    if (typeof window !== 'undefined' && !window.confirm(`Delete source line ${lineNumber}?`)) return;
+
+    manualSourceLines.deleteSourceLine.mutate({ quoteSubmissionId: quoteId, id: lineId });
   }
 
   function parseOptionalPrice(value: number | string | null | undefined): number | null {
@@ -267,11 +284,6 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
         >
           Freeze comparison
         </Button>
-        {hasBlockingIssues && !hideAiAssist && (
-          <Button size="sm" variant="outline" type="button">
-            Manual assist
-          </Button>
-        )}
         <Link
           href={`/rfqs/${encodeURIComponent(rfqId)}/decision-trail`}
           className="text-xs font-medium text-indigo-600 hover:underline"
@@ -284,7 +296,7 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
           <div className="space-y-2">
             {!useMocks && (
               <div className="rounded border border-slate-200 bg-slate-50 p-3">
-                <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_90px_90px_110px_auto]">
+                <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_90px_90px_110px_minmax(150px,0.8fr)_minmax(140px,0.8fr)_auto]">
                   <label className="text-xs font-medium text-slate-600">
                     Description
                     <input
@@ -319,6 +331,31 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
                       className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                       value={manualForm.source_unit_price}
                       onChange={(event) => updateManualForm('source_unit_price', event.target.value)}
+                    />
+                  </label>
+                  <label className="text-xs font-medium text-slate-600">
+                    RFQ line
+                    <select
+                      aria-label="RFQ line"
+                      className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      value={manualForm.rfq_line_item_id}
+                      onChange={(event) => updateManualForm('rfq_line_item_id', event.target.value)}
+                    >
+                      <option value="">Unmapped</option>
+                      {rfqLineItems.map((line) => (
+                        <option key={line.id} value={line.id}>
+                          {line.description}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="text-xs font-medium text-slate-600">
+                    Note
+                    <input
+                      aria-label="Note"
+                      className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      value={manualForm.note}
+                      onChange={(event) => updateManualForm('note', event.target.value)}
                     />
                   </label>
                   <div className="flex items-end">
@@ -376,7 +413,7 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
                   className="rounded border border-slate-200 px-3 py-2 text-xs"
                 >
                   {isEditing ? (
-                    <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_80px_80px_100px_auto]">
+                    <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_80px_80px_100px_minmax(140px,0.8fr)_auto]">
                       <input
                         aria-label={`Description source line ${lineNumber}`}
                         className="h-8 rounded border border-slate-300 px-2 text-xs"
@@ -401,8 +438,27 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
                         value={editForm.source_unit_price}
                         onChange={(event) => updateEditForm('source_unit_price', event.target.value)}
                       />
+                      <select
+                        aria-label={`RFQ line source line ${lineNumber}`}
+                        className="h-8 rounded border border-slate-300 px-2 text-xs"
+                        value={editForm.rfq_line_item_id}
+                        onChange={(event) => updateEditForm('rfq_line_item_id', event.target.value)}
+                      >
+                        <option value="">Unmapped</option>
+                        {rfqLineItems.map((line) => (
+                          <option key={line.id} value={line.id}>
+                            {line.description}
+                          </option>
+                        ))}
+                      </select>
                       <div className="flex items-center gap-1">
-                        <Button size="sm" variant="outline" type="button" onClick={() => saveEdit(liveLine.id)}>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          type="button"
+                          disabled={editForm.source_description.trim() === '' || manualSourceLines.updateSourceLine.isPending}
+                          onClick={() => saveEdit(liveLine.id)}
+                        >
                           <Save size={14} className="mr-1.5" />
                           Save source line {lineNumber}
                         </Button>
@@ -437,7 +493,8 @@ export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteI
                         size="sm"
                         variant="ghost"
                         type="button"
-                        onClick={() => manualSourceLines.deleteSourceLine.mutate({ quoteSubmissionId: quoteId, id: liveLine.id })}
+                        disabled={manualSourceLines.deleteSourceLine.isPending}
+                        onClick={() => deleteSourceLine(liveLine.id, lineNumber)}
                       >
                         <Trash2 size={14} className="mr-1.5" />
                         Delete source line {lineNumber}

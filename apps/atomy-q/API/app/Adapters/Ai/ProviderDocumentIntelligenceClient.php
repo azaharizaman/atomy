@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Adapters\Ai;
 
+use App\Adapters\Ai\Contracts\ProviderAiTransportInterface;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 
 final readonly class ProviderDocumentIntelligenceClient
 {
     public function __construct(
-        private ProviderAiTransport $transport,
+        private ProviderAiTransportInterface $transport,
     ) {}
 
     /**

@@ -50,10 +50,11 @@ final class NormalizationController extends Controller
      */
     private function serializeSourceLine(NormalizationSourceLine $line): array
     {
-        $rawData = $line->raw_data ?? [];
+        $rawData = is_array($line->raw_data) ? $line->raw_data : [];
         $provenance = is_array($rawData['provenance'] ?? null) ? $rawData['provenance'] : null;
         $origin = is_array($provenance) ? (string) ($provenance['origin'] ?? '') : '';
         $providerProvenance = is_array($rawData['provider_provenance'] ?? null) ? $rawData['provider_provenance'] : null;
+        unset($rawData['provenance'], $rawData['provider_provenance']);
         $conflictCount = $line->conflicts->count();
         $blockingIssueCount = $line->conflicts->whereNull('resolution')->count();
         $confidence = $line->quoteSubmission?->confidence;

@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace App\Adapters\Ai;
 
+use App\Adapters\Ai\Contracts\AiEndpointRegistryInterface;
+use App\Adapters\Ai\Contracts\ProviderAiTransportInterface;
+use App\Adapters\Ai\Exceptions\AiTransportFailedException;
+use App\Adapters\Ai\Exceptions\AiTransportInvalidResponseException;
+use App\Adapters\Ai\Exceptions\AiTransportUnavailableException;
 use Illuminate\Http\Client\Factory as HttpFactory;
-use RuntimeException;
 
-final readonly class ProviderAiTransport
+final readonly class ProviderAiTransport implements ProviderAiTransportInterface
 {
     public function __construct(
-        private ConfiguredAiEndpointRegistry $endpointRegistry,
+        private AiEndpointRegistryInterface $endpointRegistry,
         private HttpFactory $http,
     ) {}
 
@@ -22,7 +26,7 @@ final readonly class ProviderAiTransport
     {
         $endpointConfig = $this->endpointRegistry->endpointConfig($endpointGroup);
         if ($endpointConfig === null || $endpointConfig->enabled === false) {
-            throw new RuntimeException(sprintf('AI endpoint [%s] is unavailable.', $endpointGroup));
+            throw new AiTransportUnavailableException(sprintf('AI endpoint [%s] is unavailable.', $endpointGroup));
         }
 
         $request = $this->http
@@ -37,12 +41,12 @@ final readonly class ProviderAiTransport
 
         $response = $request->post($endpointConfig->endpointUri, $payload);
         if (!$response->successful()) {
-            throw new RuntimeException(sprintf('AI endpoint [%s] returned an unsuccessful response.', $endpointGroup));
+            throw new AiTransportFailedException(sprintf('AI endpoint [%s] returned an unsuccessful response.', $endpointGroup));
         }
 
         $data = $response->json();
-        if (!is_array($data)) {
-            throw new RuntimeException(sprintf('AI endpoint [%s] returned an invalid JSON payload.', $endpointGroup));
+        if (!is_array($data) || array_is_list($data)) {
+            throw new AiTransportInvalidResponseException(sprintf('AI endpoint [%s] returned an invalid JSON payload.', $endpointGroup));
         }
 
         /** @var array<string, mixed> $data */

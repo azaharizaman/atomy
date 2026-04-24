@@ -90,13 +90,12 @@ export function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
   });
   const extractionAvailable = aiStatus.isFeatureAvailable('quote_document_extraction');
   const showExtractionUnavailable =
-    !useMocks && aiStatus.shouldShowUnavailableMessage('quote_document_extraction') && !extractionAvailable;
+    !useMocks && aiStatus.shouldShowUnavailableMessage('quote_document_extraction');
   const providerName =
     submissions.find((row) => row.extraction_origin === 'provider' && row.provider_name != null)?.provider_name ??
     aiStatus.status.providerName ??
     null;
-  const normalizationReviewErrorMessage =
-    norm.error instanceof Error ? norm.error.message : 'Review data could not be loaded.';
+  const normalizationReviewErrorMessage = 'Review data could not be loaded.';
 
   const columns: ColumnDef<QuoteSubmissionRow>[] = [
     {

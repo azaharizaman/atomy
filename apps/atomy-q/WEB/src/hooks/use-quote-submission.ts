@@ -24,8 +24,6 @@ export interface QuoteSubmissionSummary {
   processing_completed_at?: string | null;
   parsed_at?: string | null;
   retry_count?: number | null;
-  extraction_origin?: string | null;
-  provider_name?: string | null;
 }
 
 function normalizeQuoteSubmission(payload: unknown): QuoteSubmissionSummary {
@@ -57,8 +55,6 @@ function normalizeQuoteSubmission(payload: unknown): QuoteSubmissionSummary {
     processing_completed_at: normalizeNullableString(raw?.processing_completed_at),
     parsed_at: normalizeNullableString(raw?.parsed_at),
     retry_count: normalizeNullableNumber(raw?.retry_count, 'retry_count'),
-    extraction_origin: normalizeNullableString(raw?.extraction_origin),
-    provider_name: normalizeNullableString(raw?.provider_name),
   };
 }
 
