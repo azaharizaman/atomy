@@ -61,9 +61,9 @@
 - Modify: `apps/atomy-q/API/config/atomy.php`
 - Modify: `apps/atomy-q/API/config/services.php`
 - Modify: `apps/atomy-q/API/app/Providers/AppServiceProvider.php`
-- Create: `apps/atomy-q/API/app/Adapters/Ai/ProviderEndpointRegistry.php`
-- Create: `apps/atomy-q/API/app/Adapters/Ai/ProviderHealthProbe.php`
-- Create if needed: provider-specific adapters such as `OpenRouterEndpointRegistry.php`, `OpenRouterHealthProbe.php`, `HuggingFaceEndpointRegistry.php`, and `HuggingFaceHealthProbe.php`
+- Create: `apps/atomy-q/API/app/Adapters/Ai/ConfiguredAiEndpointRegistry.php` and register it from `AppServiceProvider` as `AiEndpointRegistryInterface`
+- Create: `apps/atomy-q/API/app/Adapters/Ai/ConfiguredAiHealthProbe.php` and register it from `AppServiceProvider` as `AiHealthProbeInterface`
+- Create if needed: provider-specific adapters only if the shipped `ConfiguredAiEndpointRegistry.php` / `ConfiguredAiHealthProbe.php` split no longer covers the provider topology
 - Create: `apps/atomy-q/API/app/Adapters/Ai/AtomyAiCapabilityCatalog.php`
 - Create: `apps/atomy-q/API/app/Http/Controllers/Api/V1/AiStatusController.php`
 - Create: `apps/atomy-q/API/app/Http/Controllers/Api/V1/Concerns/InteractsWithAiAvailability.php`

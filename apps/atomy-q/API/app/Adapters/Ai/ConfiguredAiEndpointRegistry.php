@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Adapters\Ai;
 
-use App\Adapters\Ai\Contracts\AiEndpointRegistryInterface;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 use Nexus\MachineLearning\Enums\AiEndpointGroup;
 use Nexus\MachineLearning\ValueObjects\AiEndpointConfig;
+use App\Adapters\Ai\Contracts\AiEndpointRegistryInterface;
 
 final readonly class ConfiguredAiEndpointRegistry implements AiEndpointRegistryInterface
 {
@@ -84,11 +84,9 @@ final readonly class ConfiguredAiEndpointRegistry implements AiEndpointRegistryI
 
     private function providerKey(): string
     {
-        $providerKey = strtolower(trim((string) ($this->providerSection()['key'] ?? 'openrouter')));
+        $providerKey = strtolower(trim((string) ($this->providerSection()['key'] ?? '')));
 
-        return in_array($providerKey, ['openrouter', 'huggingface'], true)
-            ? $providerKey
-            : 'openrouter';
+        return $providerKey !== '' ? $providerKey : 'openrouter';
     }
 
     /**

@@ -6,13 +6,13 @@ namespace App\Adapters\Ai;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Throwable;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Factory;
 use Nexus\MachineLearning\Contracts\AiHealthProbeInterface;
 use Nexus\MachineLearning\Enums\AiHealth;
 use Nexus\MachineLearning\ValueObjects\AiEndpointConfig;
 use Nexus\MachineLearning\ValueObjects\AiEndpointHealthSnapshot;
-use Throwable;
 
 final readonly class ConfiguredAiHealthProbe implements AiHealthProbeInterface
 {

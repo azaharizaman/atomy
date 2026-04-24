@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Http;
 use Nexus\IntelligenceOperations\DTOs\AiCapabilityStatus;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSnapshot;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
+use Nexus\IntelligenceOperations\Contracts\AiStatusCoordinatorInterface;
 use Tests\Feature\Api\ApiTestCase;
 
 final class AiStatusApiTest extends ApiTestCase
@@ -227,5 +228,53 @@ final class AiStatusApiTest extends ApiTestCase
             'data.endpoint_groups.0.health',
             AiStatusSchema::HEALTH_UNAVAILABLE,
         );
+    }
+
+    public function testItFallsBackToMinimalStaticPayloadWhenCoordinatorSnapshotFails(): void
+    {
+        config()->set('atomy.ai.mode', AiStatusSchema::MODE_PROVIDER);
+        config()->set('atomy.ai.provider.key', ' anthropic ');
+        config()->set('atomy.ai.provider.name', '   ');
+
+        $this->app->instance(AiRuntimeStatusInterface::class, new readonly class implements AiRuntimeStatusInterface {
+            public function snapshot(): AiStatusSnapshot
+            {
+                throw new \RuntimeException('runtime probe failed');
+            }
+
+            public function capabilityStatus(string $featureKey): ?AiCapabilityStatus
+            {
+                return null;
+            }
+
+            public function providerName(): string
+            {
+                return 'anthropic';
+            }
+        });
+
+        $this->app->instance(
+            AiStatusCoordinatorInterface::class,
+            new readonly class implements AiStatusCoordinatorInterface {
+                public function snapshot(
+                    string $mode,
+                    array $endpointGroupHealthSnapshots,
+                    ?\DateTimeImmutable $generatedAt = null,
+                ): AiStatusSnapshot {
+                    throw new \RuntimeException('coordinator failed');
+                }
+            },
+        );
+
+        $response = $this->getJson('/api/v1/ai/status');
+
+        $response->assertOk();
+        $response->assertJsonPath('data.mode', AiStatusSchema::MODE_PROVIDER);
+        $response->assertJsonPath('data.global_health', AiStatusSchema::HEALTH_UNAVAILABLE);
+        $response->assertJsonPath('data.provider_name', 'anthropic');
+        $response->assertJsonPath('data.reason_codes.0', 'provider_unavailable');
+        $response->assertJsonCount(0, 'data.capability_definitions');
+        $response->assertJsonCount(0, 'data.capability_statuses');
+        $response->assertJsonCount(0, 'data.endpoint_groups');
     }
 }

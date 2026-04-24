@@ -574,33 +574,34 @@ This section is the operator-owned input contract. Without these inputs, provide
 
 ### Required Deployment Variables
 
-The exact names may evolve, but alpha requires the API to be supplied with configuration equivalent to:
+Current API code reads the following variables from `apps/atomy-q/API/config/atomy.php`:
 
 - `AI_MODE`
-- `AI_PROVIDER=openrouter`
-- `AI_PROVIDER_NAME=openrouter`
-- `AI_DOCUMENT_ENDPOINT_URL`
-- `AI_DOCUMENT_ENDPOINT_TOKEN`
-- `AI_DOCUMENT_MODEL_ID`
-- `AI_NORMALIZATION_ENDPOINT_URL`
-- `AI_NORMALIZATION_ENDPOINT_TOKEN`
-- `AI_NORMALIZATION_MODEL_ID`
-- `AI_SOURCING_RECOMMENDATION_ENDPOINT_URL`
-- `AI_SOURCING_RECOMMENDATION_ENDPOINT_TOKEN`
-- `AI_SOURCING_RECOMMENDATION_MODEL_ID`
-- `AI_COMPARISON_AWARD_ENDPOINT_URL`
-- `AI_COMPARISON_AWARD_ENDPOINT_TOKEN`
-- `AI_COMPARISON_AWARD_MODEL_ID`
-- `AI_INSIGHT_ENDPOINT_URL`
-- `AI_INSIGHT_ENDPOINT_TOKEN`
-- `AI_INSIGHT_MODEL_ID`
-- `AI_GOVERNANCE_ENDPOINT_URL`
-- `AI_GOVERNANCE_ENDPOINT_TOKEN`
-- `AI_GOVERNANCE_MODEL_ID`
-- `AI_REQUEST_TIMEOUT_SECONDS`
-- `AI_MAX_RETRIES`
-- `AI_HEALTH_FAILURE_THRESHOLD`
-- `AI_HEALTH_RECOVERY_THRESHOLD`
+- `AI_PROVIDER`
+- `AI_PROVIDER_NAME`
+- `AI_DEFAULT_AUTH_TOKEN` or `AI_AUTH_TOKEN`
+- `AI_DEFAULT_TIMEOUT_SECONDS` or `AI_TIMEOUT_SECONDS`
+- `AI_DOCUMENT_ENDPOINT`
+- `AI_DOCUMENT_AUTH_TOKEN`
+- `AI_NORMALIZATION_ENDPOINT`
+- `AI_NORMALIZATION_AUTH_TOKEN`
+- `AI_SOURCING_RECOMMENDATION_ENDPOINT`
+- `AI_SOURCING_RECOMMENDATION_AUTH_TOKEN`
+- `AI_COMPARISON_AWARD_ENDPOINT`
+- `AI_COMPARISON_AWARD_AUTH_TOKEN`
+- `AI_INSIGHT_ENDPOINT`
+- `AI_INSIGHT_AUTH_TOKEN`
+- `AI_GOVERNANCE_ENDPOINT`
+- `AI_GOVERNANCE_AUTH_TOKEN`
+
+The same config also consumes per-group timeout and healthcheck overrides when provided:
+
+- `AI_<GROUP>_TIMEOUT_SECONDS`
+- `AI_<GROUP>_HEALTH_URL`
+- `AI_<GROUP>_HEALTH_PATH`
+- `AI_<GROUP>_HEALTH_METHOD`
+
+`AI_<GROUP>_MODEL_ID` is not currently consumed by any config key or runtime call site. Keep it documented only as an aspirational future variable until code starts reading it.
 
 The WEB app requires only public mirrors such as:
 

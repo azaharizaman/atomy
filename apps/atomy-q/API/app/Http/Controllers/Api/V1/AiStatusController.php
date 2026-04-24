@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
-use App\Http\Controllers\Controller;
 use DateTimeImmutable;
 use DateTimeZone;
+use Throwable;
 use Illuminate\Http\JsonResponse;
-use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
 use Nexus\IntelligenceOperations\Contracts\AiStatusCoordinatorInterface;
 use Nexus\IntelligenceOperations\DTOs\AiEndpointHealthSnapshot;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
-use Throwable;
+use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
+use App\Http\Controllers\Controller;
 
 final class AiStatusController extends Controller
 {
@@ -69,13 +69,27 @@ final class AiStatusController extends Controller
             );
         }
 
-        $snapshot = app(AiStatusCoordinatorInterface::class)->snapshot(
-            $normalizedMode,
-            $endpointGroupHealthSnapshots,
-            $checkedAt,
-        );
+        try {
+            $snapshot = app(AiStatusCoordinatorInterface::class)->snapshot(
+                $normalizedMode,
+                $endpointGroupHealthSnapshots,
+                $checkedAt,
+            );
+            $payload = $snapshot->toArray();
+        } catch (Throwable $inner) {
+            report($inner);
 
-        $payload = $snapshot->toArray();
+            $payload = [
+                'mode' => $normalizedMode,
+                'global_health' => $health,
+                'reason_codes' => $reasonCodes,
+                'generated_at' => $checkedAt->format(DATE_ATOM),
+                'capability_definitions' => [],
+                'capability_statuses' => [],
+                'endpoint_groups' => [],
+            ];
+        }
+
         $payload['provider_name'] = $this->fallbackProviderName();
 
         return $payload;
@@ -105,10 +119,13 @@ final class AiStatusController extends Controller
             return $providerName;
         }
 
-        $providerKey = strtolower(trim((string) ($provider['key'] ?? 'openrouter')));
+        $providerKey = $provider['key'] ?? null;
+        if ($providerKey === null) {
+            return 'openrouter';
+        }
 
-        return in_array($providerKey, ['openrouter', 'huggingface'], true)
-            ? $providerKey
-            : 'openrouter';
+        $normalizedProviderKey = strtolower(trim((string) $providerKey));
+
+        return $normalizedProviderKey !== '' ? $normalizedProviderKey : 'openrouter';
     }
 }

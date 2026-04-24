@@ -56,11 +56,11 @@ return [
             'name' => (string) env('AI_PROVIDER_NAME', ''),
             'default_auth_token' => (string) env(
                 'AI_DEFAULT_AUTH_TOKEN',
-                (string) env('AI_AUTH_TOKEN', (string) env('HF_DEFAULT_AUTH_TOKEN', (string) env('HF_AUTH_TOKEN', ''))),
+                (string) env('AI_AUTH_TOKEN', ''),
             ),
             'default_timeout_seconds' => (int) env(
                 'AI_DEFAULT_TIMEOUT_SECONDS',
-                (int) env('AI_TIMEOUT_SECONDS', (int) env('HF_DEFAULT_TIMEOUT_SECONDS', (int) env('HF_TIMEOUT_SECONDS', 10))),
+                (int) env('AI_TIMEOUT_SECONDS', 10),
             ),
         ],
         'endpoints' => [

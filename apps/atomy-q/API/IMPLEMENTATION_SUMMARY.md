@@ -1,5 +1,10 @@
 # Implementation Summary - Atomy-Q Backend API
 
+## 2026-04-24 AI Runtime Config Cleanup
+
+- Removed the legacy `HF_DEFAULT_AUTH_TOKEN` / `HF_AUTH_TOKEN` and `HF_DEFAULT_TIMEOUT_SECONDS` / `HF_TIMEOUT_SECONDS` provider-level fallbacks from `config/atomy.php`; the global AI provider defaults now read only `AI_DEFAULT_AUTH_TOKEN` / `AI_AUTH_TOKEN` and `AI_DEFAULT_TIMEOUT_SECONDS` / `AI_TIMEOUT_SECONDS`.
+- TODO: Do not reintroduce the removed provider-level `HF_*` aliases. Operators should retire those legacy variables from runtime environments.
+
 ## 2026-04-22 Vendor OpenAPI Request Body Fix
 
 - Moved vendor create/update validation rules inline inside `VendorController::store` and `VendorController::update` so Scramble can infer the request body schema for `/vendors` and `/vendors/{id}`.
