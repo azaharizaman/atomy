@@ -375,3 +375,13 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - Updated `normalization_intelligence` to preserve manual continuity in the runtime capability catalog, matching the revised global AI fallback design.
 - Added `InteractsWithAiAvailability` so later controllers can centralize capability lookup and unavailable responses instead of duplicating status logic.
 - Added feature coverage for public access, mode handling, partial provider degradation, and response redaction in `tests/Feature/Api/V1/AiStatusApiTest.php` and `AiStatusVisibilityTest.php`.
+
+## 2026-04-24 AI Quote Intake Manual Continuity
+
+- `QuoteSubmissionController::upload` now honors the Plan 1 AI runtime state for document extraction when `AI_MODE` is `provider` or `off`; unavailable/disabled extraction leaves the uploaded quote in `needs_review` with truthful `EXTRACTION_UNAVAILABLE`/`EXTRACTION_DISABLED` status instead of letting legacy `QUOTE_INTELLIGENCE_MODE` fabricate deterministic success.
+- Added tenant-scoped manual source-line CRUD under `/api/v1/quote-submissions/{id}/source-lines`, including readiness recalculation, line-count updates, manual decision-trail events, and tenant-safe `404` behavior for cross-tenant quote/source-line access.
+- Manual source-line provenance is serialized through `raw_data.provenance` and response fields with `origin=manual`, acting user id, timestamp, and optional `note`/`reason`; manual rows explicitly return `ai_confidence`, `taxonomy_code`, `mapping_version`, and provider provenance as `null`.
+- Normalization source-line list responses now expose origin/provenance/provider provenance plus normalization AI availability metadata so WEB can distinguish manual continuity from unavailable AI suggestions.
+- Added shared provider adapter shell classes under `app/Adapters/Ai`: `ProviderAiTransport`, `ProviderDocumentIntelligenceClient`, and `ProviderNormalizationClient`. These centralize endpoint auth/timeout invocation without making network calls during feature tests.
+- Verification:
+  - `cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Feature/QuoteIngestionIntelligenceTest.php tests/Feature/QuoteIngestionPipelineTest.php tests/Feature/NormalizationReviewWorkflowTest.php` -> PASS (23 tests, 183 assertions).

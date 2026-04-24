@@ -8,6 +8,7 @@ import { RecordHeader } from '@/components/ds/RecordHeader';
 import { ConfidenceBadge } from '@/components/ds/Badge';
 import { SecondaryTabs } from '@/components/ds/Tabs';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
+import { useAiStatus } from '@/hooks/use-ai-status';
 import { useRfq } from '@/hooks/use-rfq';
 import { useQuoteSubmission } from '@/hooks/use-quote-submission';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
@@ -21,6 +22,7 @@ export default function QuoteIntakeDetailPage({
 }) {
   const router = useRouter();
   const { rfqId, quoteId } = React.use(params);
+  const aiStatus = useAiStatus();
   const { data: rfq } = useRfq(rfqId);
   const { data: submission } = useQuoteSubmission(quoteId);
   const [activeTab, setActiveTab] = React.useState('overview');
@@ -39,6 +41,9 @@ export default function QuoteIntakeDetailPage({
   const uploadedAt = submission?.submitted_at ?? null;
   const statusLabel = submission?.status === 'ready' ? 'Ready' : submission?.status === 'needs_review' ? 'Needs review' : submission?.status ?? 'Uploaded';
   const statusBadge = submission?.status === 'ready' ? 'approved' : submission?.status === 'needs_review' ? 'pending' : submission?.status === 'failed' ? 'error' : 'processing';
+  const showExtractionUnavailable =
+    !useMocks && aiStatus.shouldShowUnavailableMessage('quote_document_extraction');
+  const hideExtractionControls = !useMocks && aiStatus.shouldHideAiControls('quote_document_extraction');
 
   const breadcrumbItems = [
     { label: 'RFQs', href: '/rfqs' },
@@ -60,6 +65,11 @@ export default function QuoteIntakeDetailPage({
       {!useMocks && blockingCount > 0 && (
         <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
           <span className="font-semibold">Blocking issues:</span> {blockingCount} — resolve in normalize before comparison freeze.
+        </div>
+      )}
+      {showExtractionUnavailable && (
+        <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
+          <span className="font-semibold">AI extraction is unavailable.</span> Continue by entering source lines manually in Normalize.
         </div>
       )}
       <RecordHeader
@@ -134,7 +144,7 @@ export default function QuoteIntakeDetailPage({
           Accept & Normalize
         </Button>
         <Button size="sm" variant="ghost">Replace Document</Button>
-        <Button size="sm" variant="ghost">Re-Parse</Button>
+        {!hideExtractionControls && <Button size="sm" variant="ghost">Re-Parse</Button>}
       </div>
     </div>
   );

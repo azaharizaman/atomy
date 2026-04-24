@@ -9,7 +9,9 @@ use App\Adapters\Ai\ConfiguredAiEndpointRegistry;
 use App\Adapters\Ai\ConfiguredAiHealthProbe;
 use App\Adapters\Ai\AtomyAiCapabilityCatalog;
 use App\Adapters\Ai\Contracts\AiEndpointRegistryInterface;
+use App\Adapters\Ai\Contracts\ProviderAiTransportInterface;
 use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use App\Adapters\Ai\ProviderAiTransport;
 use App\Http\Idempotency\IdempotencyReplayResponseFactory;
 use App\Contracts\JwtServiceInterface;
 use App\Contracts\MfaChallengeStoreInterface;
@@ -213,6 +215,7 @@ class AppServiceProvider extends ServiceProvider
             return new ConfiguredAiEndpointRegistry($this->aiRuntimeConfig());
         });
         $this->app->singleton(AiEndpointRegistryInterface::class, ConfiguredAiEndpointRegistry::class);
+        $this->app->singleton(ProviderAiTransportInterface::class, ProviderAiTransport::class);
         $this->app->singleton(AiCapabilityCatalogInterface::class, AtomyAiCapabilityCatalog::class);
         $this->app->singleton(AiStatusCoordinatorInterface::class, AiStatusCoordinator::class);
         $this->app->singleton(AiHealthProbeInterface::class, static function ($app): AiHealthProbeInterface {

@@ -1,6 +1,7 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 vi.mock('@/lib/alpha-mode', async () => {
   const actual = await vi.importActual<typeof import('@/lib/alpha-mode')>('@/lib/alpha-mode');
@@ -22,6 +23,14 @@ import NegotiationsPage from './rfqs/[rfqId]/negotiations/page';
 import RfqDocumentsPage from './rfqs/[rfqId]/documents/page';
 import RiskPage from './rfqs/[rfqId]/risk/page';
 
+function renderWithQueryClient(ui: React.ReactElement) {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+
+  return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
+}
+
 describe('alpha deferred routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -42,10 +51,10 @@ describe('alpha deferred routes', () => {
     expect(screen.getByText('This feature will be available in future releases')).toBeInTheDocument();
   });
 
-  it('renders the shared deferred screen for hidden settings subpage', () => {
-    render(<SettingsUsersPage />);
+  it('renders the live settings users shell when routed directly', () => {
+    renderWithQueryClient(<SettingsUsersPage />);
     expect(screen.getByRole('heading', { name: 'Users & Roles' })).toBeInTheDocument();
-    expect(screen.getByText('This feature will be available in future releases')).toBeInTheDocument();
+    expect(screen.getByText('Loading users and roles…')).toBeInTheDocument();
   });
 
   it('renders the shared deferred screen for hidden RFQ negotiations page', () => {

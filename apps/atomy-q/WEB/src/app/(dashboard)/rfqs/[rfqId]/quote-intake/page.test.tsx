@@ -5,6 +5,7 @@ import { renderWithProviders } from '@/test/utils';
 
 const mockUseNormalizationReview = vi.fn();
 const mockUseQuoteSubmissions = vi.fn();
+const mockUseAiStatus = vi.fn();
 
 beforeAll(() => {
   process.env.NEXT_PUBLIC_USE_MOCKS = 'false';
@@ -24,6 +25,10 @@ vi.mock('@/hooks/use-normalization-review', () => ({
 
 vi.mock('@/hooks/use-quote-submissions', () => ({
   useQuoteSubmissions: (...args: unknown[]) => mockUseQuoteSubmissions(...args),
+}));
+
+vi.mock('@/hooks/use-ai-status', () => ({
+  useAiStatus: () => mockUseAiStatus(),
 }));
 
 import { QuoteIntakeListContent } from './page';
@@ -53,11 +58,21 @@ describe('QuoteIntakeListPage', () => {
           confidence: 'high',
           uploaded_at: '2026-03-31T00:00:00Z',
           blocking_issue_count: 0,
+          extraction_origin: 'provider',
+          provider_name: 'OpenRouter',
         },
       ],
       isLoading: false,
       isError: false,
       error: null,
+    });
+
+    mockUseAiStatus.mockReturnValue({
+      isFeatureAvailable: (featureKey: string) => featureKey === 'quote_document_extraction',
+      shouldHideAiControls: () => false,
+      shouldShowUnavailableMessage: () => false,
+      messageKeyForFeature: () => null,
+      status: { mode: 'provider', globalHealth: 'healthy', providerName: 'OpenRouter' },
     });
   });
 
@@ -67,6 +82,31 @@ describe('QuoteIntakeListPage', () => {
     expect(await screen.findByText(/blocking issues/i)).toBeInTheDocument();
     expect(screen.getByText('winner.pdf')).toBeInTheDocument();
     expect(screen.getByText('Winner Vendor', { selector: 'span' })).toBeInTheDocument();
+  });
+
+  it('makes provider-backed quote extraction visible when AI extraction is available', async () => {
+    renderWithProviders(<QuoteIntakeListContent rfqId="rfq-1" />);
+
+    expect(await screen.findByText(/ai-assisted quote extraction/i)).toBeInTheDocument();
+    expect(screen.getByText(/provider extraction active/i)).toBeInTheDocument();
+    expect(screen.getByText(/OpenRouter/i)).toBeInTheDocument();
+  });
+
+  it('keeps quote intake usable and scopes messaging when extraction AI is unavailable', async () => {
+    mockUseAiStatus.mockReturnValue({
+      isFeatureAvailable: () => false,
+      shouldHideAiControls: () => true,
+      shouldShowUnavailableMessage: (featureKey: string) => featureKey === 'quote_document_extraction',
+      messageKeyForFeature: () => 'ai.status.unavailable',
+      status: { mode: 'provider', globalHealth: 'degraded', providerName: null },
+    });
+
+    renderWithProviders(<QuoteIntakeListContent rfqId="rfq-1" />);
+
+    expect(await screen.findByText('winner.pdf')).toBeInTheDocument();
+    expect(screen.getByText(/ai extraction is unavailable/i)).toBeInTheDocument();
+    expect(screen.getByText(/continue by entering source lines manually/i)).toBeInTheDocument();
+    expect(screen.queryByText(/quote intake unavailable/i)).not.toBeInTheDocument();
   });
 
   it('renders an explicit unavailable state when quote submissions fail to load', async () => {
@@ -96,8 +136,9 @@ describe('QuoteIntakeListPage', () => {
 
     renderWithProviders(<QuoteIntakeListContent rfqId="rfq-1" />);
 
-    expect(await screen.findByText(/quote intake unavailable/i)).toBeInTheDocument();
-    expect(screen.getByText(/normalization review unavailable/i)).toBeInTheDocument();
-    expect(screen.queryByText(/blocking issues/i)).not.toBeInTheDocument();
+    expect(await screen.findByText('winner.pdf')).toBeInTheDocument();
+    expect(screen.getByText(/normalization review data unavailable/i)).toBeInTheDocument();
+    expect(screen.getByText(/review data could not be loaded/i)).toBeInTheDocument();
+    expect(screen.queryByText(/quote intake unavailable/i)).not.toBeInTheDocument();
   });
 });

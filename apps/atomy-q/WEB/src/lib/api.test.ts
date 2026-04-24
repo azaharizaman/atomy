@@ -24,6 +24,7 @@ describe('requiresIdempotencyKey', () => {
     expect(requiresIdempotencyKey('rfq-templates')).toBe(true);
     expect(requiresIdempotencyKey('rfq-templates/t/duplicate')).toBe(true);
     expect(requiresIdempotencyKey('rfq-templates/t/apply')).toBe(true);
+    expect(requiresIdempotencyKey('quote-submissions/q1/source-lines')).toBe(true);
     expect(requiresIdempotencyKey('projects')).toBe(true);
     expect(requiresIdempotencyKey('tasks')).toBe(true);
   });

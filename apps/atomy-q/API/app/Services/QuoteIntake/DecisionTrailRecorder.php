@@ -83,6 +83,27 @@ final readonly class DecisionTrailRecorder
         );
     }
 
+    public function recordManualSourceLineEvent(
+        string $tenantId,
+        string $rfqId,
+        string $quoteSubmissionId,
+        string $sourceLineId,
+        string $eventType,
+    ): void {
+        $this->record(
+            tenantId: $tenantId,
+            rfqId: $rfqId,
+            comparisonRunId: $quoteSubmissionId,
+            eventType: $eventType,
+            summary: [
+                'origin' => 'manual',
+                'quote_submission_id' => $quoteSubmissionId,
+                'source_line_id' => $sourceLineId,
+                'event_type' => $eventType,
+            ],
+        );
+    }
+
     /**
      * @param array<string, mixed> $summary Tenant-safe, machine-readable summary (counts, ids); avoid PII.
      */
@@ -93,30 +114,32 @@ final readonly class DecisionTrailRecorder
         string $eventType,
         array $summary,
     ): void {
-        $previous = DecisionTrailEntry::query()
-            ->where('tenant_id', $tenantId)
-            ->where('comparison_run_id', $comparisonRunId)
-            ->orderByDesc('sequence')
-            ->lockForUpdate()
-            ->first();
+        DB::transaction(static function () use ($tenantId, $rfqId, $comparisonRunId, $eventType, $summary): void {
+            $previous = DecisionTrailEntry::query()
+                ->where('tenant_id', $tenantId)
+                ->where('comparison_run_id', $comparisonRunId)
+                ->orderByDesc('sequence')
+                ->lockForUpdate()
+                ->first();
 
-        $sequence = max(1, ((int) ($previous?->sequence ?? 0)) + 1);
-        $previousHash = $previous?->entry_hash ?? hash('sha256', 'genesis:' . $comparisonRunId);
+            $sequence = max(1, ((int) ($previous?->sequence ?? 0)) + 1);
+            $previousHash = $previous?->entry_hash ?? hash('sha256', 'genesis:' . $comparisonRunId);
 
-        $payloadJson = json_encode($summary, JSON_THROW_ON_ERROR);
-        $payloadHash = hash('sha256', $payloadJson);
-        $entryHash = hash('sha256', $previousHash . $payloadHash . $sequence);
+            $payloadJson = json_encode($summary, JSON_THROW_ON_ERROR);
+            $payloadHash = hash('sha256', $payloadJson);
+            $entryHash = hash('sha256', $previousHash . $payloadHash . $sequence);
 
-        DecisionTrailEntry::query()->create([
-            'tenant_id' => $tenantId,
-            'comparison_run_id' => $comparisonRunId,
-            'rfq_id' => $rfqId,
-            'sequence' => $sequence,
-            'event_type' => $eventType,
-            'payload_hash' => $payloadHash,
-            'previous_hash' => $previousHash,
-            'entry_hash' => $entryHash,
-            'occurred_at' => now(),
-        ]);
+            DecisionTrailEntry::query()->create([
+                'tenant_id' => $tenantId,
+                'comparison_run_id' => $comparisonRunId,
+                'rfq_id' => $rfqId,
+                'sequence' => $sequence,
+                'event_type' => $eventType,
+                'payload_hash' => $payloadHash,
+                'previous_hash' => $previousHash,
+                'entry_hash' => $entryHash,
+                'occurred_at' => now(),
+            ]);
+        });
     }
 }

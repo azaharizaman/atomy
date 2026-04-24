@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
+use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\NormalizationOverrideRequest;
 use App\Http\Requests\NormalizationResolveConflictRequest;
@@ -17,10 +18,12 @@ use App\Services\QuoteIntake\QuoteSubmissionReadinessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 
 final class NormalizationController extends Controller
 {
     use ExtractsAuthContext;
+    use InteractsWithAiAvailability;
 
     public function __construct(
         private readonly QuoteSubmissionReadinessService $readiness,
@@ -47,6 +50,11 @@ final class NormalizationController extends Controller
      */
     private function serializeSourceLine(NormalizationSourceLine $line): array
     {
+        $rawData = is_array($line->raw_data) ? $line->raw_data : [];
+        $provenance = is_array($rawData['provenance'] ?? null) ? $rawData['provenance'] : null;
+        $origin = is_array($provenance) ? (string) ($provenance['origin'] ?? '') : '';
+        $providerProvenance = is_array($rawData['provider_provenance'] ?? null) ? $rawData['provider_provenance'] : null;
+        unset($rawData['provenance'], $rawData['provider_provenance']);
         $conflictCount = $line->conflicts->count();
         $blockingIssueCount = $line->conflicts->whereNull('resolution')->count();
         $confidence = $line->quoteSubmission?->confidence;
@@ -70,7 +78,10 @@ final class NormalizationController extends Controller
             'rfq_line_quantity' => $line->rfqLineItem?->quantity !== null ? (string) $line->rfqLineItem->quantity : null,
             'rfq_line_uom' => $line->rfqLineItem?->uom,
             'rfq_line_unit_price' => $line->rfqLineItem?->unit_price !== null ? (string) $line->rfqLineItem->unit_price : null,
-            'raw_data' => $line->raw_data ?? [],
+            'raw_data' => $rawData,
+            'origin' => $origin !== '' ? $origin : null,
+            'provenance' => $provenance,
+            'provider_provenance' => $providerProvenance,
             'sort_order' => $line->sort_order,
             'confidence' => $confidenceLabel,
             'conflict_count' => $conflictCount,
@@ -168,8 +179,28 @@ final class NormalizationController extends Controller
                 'source_line_count' => $items->count(),
                 'mapped_count' => $items->whereNotNull('rfq_line_item_id')->count(),
                 'blocking_issue_count' => $items->sum(fn (NormalizationSourceLine $line) => $line->conflicts->whereNull('resolution')->count()),
+                'ai_status' => [
+                    'normalization' => $this->normalizationCapabilityData(),
+                ],
             ],
         ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function normalizationCapabilityData(): array
+    {
+        $status = $this->aiCapabilityStatus('normalization_suggestions');
+
+        return [
+            'feature_key' => 'normalization_suggestions',
+            'status' => $status?->status ?? AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE,
+            'available' => $status?->available === true,
+            'manual_action_required' => $status?->available !== true,
+            'reason_codes' => $status?->reasonCodes ?? [],
+            'provider_provenance' => null,
+        ];
     }
 
     /** GET /normalization/{rfqId}/normalized-items */
