@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Concerns;
 
-use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
-use Illuminate\Http\JsonResponse;
+use DateTimeImmutable;
+use DateTimeZone;
+use Throwable;
+use Nexus\IntelligenceOperations\Contracts\AiStatusCoordinatorInterface;
 use Nexus\IntelligenceOperations\DTOs\AiCapabilityStatus;
+use Nexus\IntelligenceOperations\DTOs\AiEndpointHealthSnapshot;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSnapshot;
+use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use Illuminate\Http\JsonResponse;
 
 trait InteractsWithAiAvailability
 {
@@ -22,7 +27,12 @@ trait InteractsWithAiAvailability
 
         /** @var AiRuntimeStatusInterface $statusRuntime */
         $statusRuntime = app(AiRuntimeStatusInterface::class);
-        $this->cachedAiStatusSnapshot = $statusRuntime->snapshot();
+        try {
+            $this->cachedAiStatusSnapshot = $statusRuntime->snapshot();
+        } catch (Throwable $exception) {
+            report($exception);
+            $this->cachedAiStatusSnapshot = $this->fallbackAiStatusSnapshot();
+        }
 
         return $this->cachedAiStatusSnapshot;
     }
@@ -37,27 +47,119 @@ trait InteractsWithAiAvailability
         return $this->aiCapabilityStatus($featureKey)?->available === true;
     }
 
-    protected function aiUnavailableResponse(string $featureKey, int $statusCode = 503): JsonResponse
+    /**
+     * @param list<string> $reasonCodes
+     * @param array<string, scalar|null> $diagnostics
+     */
+    protected function aiUnavailableResponse(
+        string $featureKey,
+        int $statusCode = 503,
+        array $reasonCodes = [],
+        array $diagnostics = [],
+    ): JsonResponse
     {
         $capabilityStatus = $this->aiCapabilityStatus($featureKey);
         $statusSnapshot = $this->aiStatusSnapshot();
+        $resolvedReasonCodes = $reasonCodes !== []
+            ? array_values(array_unique(array_filter(array_map(
+                static fn (mixed $reasonCode): string => is_string($reasonCode) ? trim($reasonCode) : '',
+                $reasonCodes,
+            ), static fn (string $reasonCode): bool => $reasonCode !== '')))
+            : ($capabilityStatus?->reasonCodes ?? $statusSnapshot->reasonCodes);
+        $resolvedDiagnostics = ($diagnostics !== [] || $reasonCodes !== [])
+            ? ['mode' => $statusSnapshot->mode]
+            : ($capabilityStatus?->diagnostics ?? ['mode' => $statusSnapshot->mode]);
+
+        foreach ($diagnostics as $key => $value) {
+            if (!is_string($key) || trim($key) === '') {
+                continue;
+            }
+
+            if (!is_scalar($value) && $value !== null) {
+                continue;
+            }
+
+            $resolvedDiagnostics[$key] = $value;
+        }
 
         return response()->json([
             'message' => 'AI capability unavailable',
             'data' => [
                 'feature_key' => $featureKey,
                 'mode' => $statusSnapshot->mode,
-                'status' => $capabilityStatus?->status ?? AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE,
+                'status' => $capabilityStatus?->available === true
+                    ? AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE
+                    : ($capabilityStatus?->status ?? AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE),
                 'available' => false,
                 'fallback_ui_mode' => $capabilityStatus?->fallbackUiMode
                     ?? AiStatusSchema::FALLBACK_UI_MODE_SHOW_UNAVAILABLE_MESSAGE,
                 'message_key' => $capabilityStatus?->messageKey ?? 'ai.capability.unavailable',
                 'operator_critical' => $capabilityStatus?->operatorCritical ?? false,
-                'reason_codes' => $capabilityStatus?->reasonCodes ?? $statusSnapshot->reasonCodes,
-                'diagnostics' => $capabilityStatus?->diagnostics ?? [
-                    'mode' => $statusSnapshot->mode,
-                ],
+                'reason_codes' => $resolvedReasonCodes,
+                'diagnostics' => $resolvedDiagnostics,
             ],
         ], $statusCode);
+    }
+
+    /**
+     * Builds a safe status snapshot after runtime probing errors.
+     * The inner catch intentionally returns empty capability definitions/statuses
+     * so aiCapabilityStatus()/aiCapabilityAvailable() degrade to null/false.
+     */
+    private function fallbackAiStatusSnapshot(): AiStatusSnapshot
+    {
+        try {
+            $mode = config('atomy.ai.mode');
+        } catch (Throwable) {
+            $mode = null;
+        }
+
+        $normalizedMode = is_string($mode) && in_array($mode, AiStatusSchema::modes(), true)
+            ? $mode
+            : AiStatusSchema::MODE_PROVIDER;
+        $checkedAt = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $health = match ($normalizedMode) {
+            AiStatusSchema::MODE_OFF,
+            AiStatusSchema::MODE_DETERMINISTIC => AiStatusSchema::HEALTH_DISABLED,
+            default => AiStatusSchema::HEALTH_UNAVAILABLE,
+        };
+        $reasonCodes = match ($normalizedMode) {
+            AiStatusSchema::MODE_OFF => ['ai_disabled_by_config', 'endpoint_disabled_by_config'],
+            AiStatusSchema::MODE_DETERMINISTIC => ['deterministic_fallback_mode', 'endpoint_disabled_by_config'],
+            default => ['provider_unavailable', 'endpoint_group_unavailable'],
+        };
+        $endpointGroupHealthSnapshots = [];
+
+        foreach (AiStatusSchema::endpointGroups() as $endpointGroup) {
+            $endpointGroupHealthSnapshots[] = new AiEndpointHealthSnapshot(
+                endpointGroup: $endpointGroup,
+                health: $health,
+                checkedAt: $checkedAt,
+                reasonCodes: $reasonCodes,
+                diagnostics: [
+                    'mode' => $normalizedMode,
+                ],
+            );
+        }
+
+        try {
+            return app(AiStatusCoordinatorInterface::class)->snapshot(
+                $normalizedMode,
+                $endpointGroupHealthSnapshots,
+                $checkedAt,
+            );
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return new AiStatusSnapshot(
+                mode: $normalizedMode,
+                globalHealth: $health,
+                capabilityDefinitions: [],
+                capabilityStatuses: [],
+                endpointGroupHealthSnapshots: [],
+                reasonCodes: $reasonCodes,
+                generatedAt: $checkedAt,
+            );
+        }
     }
 }

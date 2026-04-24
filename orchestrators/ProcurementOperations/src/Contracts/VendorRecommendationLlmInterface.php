@@ -12,7 +12,7 @@ interface VendorRecommendationLlmInterface
     /**
      * @param list<VendorRecommendationScoredCandidate> $candidates
      *
-     * @return array<string, array<string, mixed>>
+     * @return array<string, mixed>
      */
     public function enrich(VendorRecommendationRequest $request, array $candidates): array;
 }

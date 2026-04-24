@@ -9,11 +9,13 @@ use DateTimeInterface;
 use DateTimeZone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Nexus\ProcurementML\ValueObjects\VendorRecommendationEligibleCandidate;
+use Nexus\ProcurementML\ValueObjects\VendorRecommendationExcludedCandidate;
 use Nexus\ProcurementOperations\Contracts\VendorRecommendationCoordinatorInterface;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationCandidate;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationRequest;
-use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationScoredCandidate;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
+use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
 use App\Http\Controllers\Controller;
 use App\Models\Rfq;
 use App\Models\RfqLineItem;
@@ -22,6 +24,7 @@ use App\Models\Vendor;
 final class VendorRecommendationController extends Controller
 {
     use ExtractsAuthContext;
+    use InteractsWithAiAvailability;
 
     public function store(
         Request $request,
@@ -33,6 +36,10 @@ final class VendorRecommendationController extends Controller
 
         if ($rfq === null) {
             return response()->json(['message' => 'RFQ not found'], 404);
+        }
+
+        if (! $this->aiCapabilityAvailable('vendor_ai_ranking')) {
+            return $this->aiUnavailableResponse('vendor_ai_ranking');
         }
 
         $validated = $request->validate([
@@ -70,39 +77,59 @@ final class VendorRecommendationController extends Controller
         );
 
         $result = $coordinator->recommend($recommendationRequest);
+
+        if (! $result->isAvailable()) {
+            return $this->aiUnavailableResponse(
+                'vendor_ai_ranking',
+                diagnostics: [
+                    'unavailable_reason' => $result->unavailableReason,
+                    'rfq_id' => $result->rfqId,
+                ],
+                reasonCodes: $result->unavailableReason !== null ? [$result->unavailableReason] : [],
+            );
+        }
+
         $candidateStatusById = $vendors->mapWithKeys(
             static fn (Vendor $vendor): array => [(string) $vendor->id => strtolower(trim((string) $vendor->status))],
         )->all();
+        $excludedCandidates = array_map(
+            static fn (VendorRecommendationExcludedCandidate $candidate): array => array_merge($candidate->toArray(), [
+                'status' => self::excludedCandidateStatus($candidate, $candidateStatusById),
+            ]),
+            $result->excludedCandidates,
+        );
 
         return response()->json([
             'data' => [
                 'tenant_id' => $result->tenantId,
                 'rfq_id' => $result->rfqId,
+                'status' => $result->status->value,
+                'eligible_candidates' => array_map(
+                    fn (VendorRecommendationEligibleCandidate $candidate): array => $this->serializeEligibleCandidate($candidate),
+                    $result->eligibleCandidates,
+                ),
+                'excluded_candidates' => $excludedCandidates,
+                'provider_explanation' => $result->providerExplanation,
+                'deterministic_reason_set' => $result->deterministicReasonSet,
+                'provenance' => $result->provenance?->toArray(),
                 'candidates' => array_map(
-                    fn (VendorRecommendationScoredCandidate $candidate): array => $this->serializeCandidate($candidate),
-                    $result->candidates,
+                    fn (VendorRecommendationEligibleCandidate $candidate): array => $this->serializeLegacyCandidate($candidate),
+                    $result->eligibleCandidates,
                 ),
-                'excluded_reasons' => array_map(
-                    static fn (array $reason): array => array_merge($reason, [
-                        'status' => self::excludedReasonStatus($reason, $candidateStatusById),
-                    ]),
-                    $result->excludedReasons,
-                ),
+                'excluded_reasons' => $excludedCandidates,
             ],
         ]);
     }
 
     /**
-     * @param array<string, mixed> $reason
      * @param array<string, string> $candidateStatusById
      */
-    private static function excludedReasonStatus(array $reason, array $candidateStatusById): string
+    private static function excludedCandidateStatus(
+        VendorRecommendationExcludedCandidate $candidate,
+        array $candidateStatusById,
+    ): string
     {
-        if (!array_key_exists('vendor_id', $reason)) {
-            return 'no_vendor_id';
-        }
-
-        $vendorId = trim((string) $reason['vendor_id']);
+        $vendorId = trim($candidate->vendorId);
         if ($vendorId === '') {
             return 'no_vendor_id';
         }
@@ -143,14 +170,29 @@ final class VendorRecommendationController extends Controller
         );
     }
 
-    private function serializeCandidate(VendorRecommendationScoredCandidate $candidate): array
+    private function serializeEligibleCandidate(VendorRecommendationEligibleCandidate $candidate): array
     {
         return [
             'vendor_id' => $candidate->vendorId,
             'vendor_name' => $candidate->vendorName,
             'fit_score' => $candidate->fitScore,
             'confidence_band' => $candidate->confidenceBand,
-            'recommended_reason_summary' => $candidate->recommendedReasonSummary,
+            'provider_explanation' => $candidate->providerExplanation,
+            'deterministic_reasons' => $candidate->deterministicReasons,
+            'llm_insights' => $candidate->llmInsights,
+            'warning_flags' => $candidate->warningFlags,
+            'warnings' => $candidate->warnings,
+        ];
+    }
+
+    private function serializeLegacyCandidate(VendorRecommendationEligibleCandidate $candidate): array
+    {
+        return [
+            'vendor_id' => $candidate->vendorId,
+            'vendor_name' => $candidate->vendorName,
+            'fit_score' => $candidate->fitScore,
+            'confidence_band' => $candidate->confidenceBand,
+            'recommended_reason_summary' => $candidate->providerExplanation,
             'deterministic_reasons' => $candidate->deterministicReasons,
             'llm_insights' => $candidate->llmInsights,
             'warning_flags' => $candidate->warningFlags,

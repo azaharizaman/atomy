@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
+use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,20 +13,14 @@ use Illuminate\Http\Request;
 final class RecommendationController extends Controller
 {
     use ExtractsAuthContext;
+    use InteractsWithAiAvailability;
 
     /**
      * GET /recommendations/:runId
      */
     public function show(Request $request, string $runId): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'run_id' => $runId,
-                'status' => 'completed',
-                'recommendations' => [],
-                'created_at' => null,
-            ],
-        ]);
+        return $this->aiUnavailableResponse('recommendation_ai_endpoint');
     }
 
     /**
@@ -33,14 +28,7 @@ final class RecommendationController extends Controller
      */
     public function mcda(Request $request, string $runId): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'run_id' => $runId,
-                'mcda_scores' => [],
-                'alternatives' => [],
-                'criteria_weights' => [],
-            ],
-        ]);
+        return $this->aiUnavailableResponse('recommendation_ai_endpoint');
     }
 
     /**
@@ -48,13 +36,7 @@ final class RecommendationController extends Controller
      */
     public function override(Request $request, string $runId): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'run_id' => $runId,
-                'override_applied' => true,
-                'recommendations' => [],
-            ],
-        ]);
+        return $this->aiUnavailableResponse('recommendation_ai_endpoint');
     }
 
     /**
@@ -62,12 +44,6 @@ final class RecommendationController extends Controller
      */
     public function rerun(Request $request, string $runId): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'run_id' => 'stub-new-run-id',
-                'status' => 'pending',
-                'previous_run_id' => $runId,
-            ],
-        ], 201);
+        return $this->aiUnavailableResponse('recommendation_ai_endpoint');
     }
 }

@@ -1,5 +1,17 @@
 # Implementation Summary - Atomy-Q Backend API
 
+## 2026-04-24 AI Sourcing Recommendation Runtime And Honest Gating
+
+- Added `App\Adapters\Ai\ProviderSourcingRecommendationClient`, which implements `VendorRecommendationLlmInterface` via the shared provider transport and calls the sourcing recommendation endpoint group with tenant-scoped RFQ context plus deterministic eligible candidates.
+- `AppServiceProvider` now binds `VendorRecommendationLlmInterface` to the provider client so provider-backed recommendation ranking is the runtime default in provider mode.
+- `VendorRecommendationController` now returns the plan-3 contract shape: `status`, `eligible_candidates`, `excluded_candidates`, `provider_explanation`, `deterministic_reason_set`, and `provenance`, while preserving the legacy `candidates` and `excluded_reasons` aliases for existing consumers.
+- AI ranking is now feature-gated through `vendor_ai_ranking`; when that capability is unavailable, degraded beyond policy, or the coordinator returns `unavailable`, the API returns a structured unavailable response instead of synthetic recommendation success.
+- `RecommendationController` now uses the same availability concern and returns honest structured unavailability for the still-unimplemented `recommendation_ai_endpoint` surface instead of advertising stub success.
+- `InteractsWithAiAvailability` now hardens runtime probing: it catches status snapshot failures, synthesizes a fallback snapshot, and prevents stale `available` diagnostics from leaking into unavailable responses.
+- `AtomyAiCapabilityCatalog` now exposes `vendor_ai_ranking` and `vendor_manual_selection`, while intentionally omitting `recommendation_ai_endpoint` from the public capability catalog until the endpoint is real.
+- Verification:
+  - `cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Unit/Adapters/Ai/AiAdaptersTest.php tests/Feature/Api/V1/VendorRecommendationApiTest.php tests/Feature/Api/V1/VendorRecommendationAiGateTest.php tests/Feature/Api/V1/AiStatusApiTest.php` -> PASS (18 tests, 152 assertions).
+
 ## 2026-04-24 AI Runtime Config Cleanup
 
 - Removed the legacy `HF_DEFAULT_AUTH_TOKEN` / `HF_AUTH_TOKEN` and `HF_DEFAULT_TIMEOUT_SECONDS` / `HF_TIMEOUT_SECONDS` provider-level fallbacks from `config/atomy.php`; the global AI provider defaults now read only `AI_DEFAULT_AUTH_TOKEN` / `AI_AUTH_TOKEN` and `AI_DEFAULT_TIMEOUT_SECONDS` / `AI_TIMEOUT_SECONDS`.

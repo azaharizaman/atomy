@@ -8,6 +8,7 @@ const mockUseRequisitionVendorSelection = vi.fn();
 const mockUseUpdateRequisitionVendorSelection = vi.fn();
 const mockUseVendorGovernanceMap = vi.fn();
 const mockUseVendorRecommendations = vi.fn();
+const mockUseAiStatus = vi.fn();
 
 vi.mock('@/hooks/use-vendors', () => ({
   useVendors: (...args: unknown[]) => mockUseVendors(...args),
@@ -31,6 +32,10 @@ vi.mock('@/hooks/use-vendor-governance', async () => {
 
 vi.mock('@/hooks/use-vendor-recommendations', () => ({
   useVendorRecommendations: (...args: unknown[]) => mockUseVendorRecommendations(...args),
+}));
+
+vi.mock('@/hooks/use-ai-status', () => ({
+  useAiStatus: () => mockUseAiStatus(),
 }));
 
 import { RfqVendorSelectionPanel } from './page';
@@ -83,6 +88,22 @@ const restrictedVendor = {
 describe('RfqVendorSelectionPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseAiStatus.mockReturnValue({
+      isFeatureAvailable: () => true,
+      shouldHideAiControls: () => false,
+      shouldShowUnavailableMessage: () => false,
+      messageKeyForFeature: () => null,
+      status: { mode: 'provider', globalHealth: 'healthy', providerName: 'OpenRouter' },
+    });
+    mockUseVendors.mockReturnValue({
+      data: {
+        items: [approvedVendor, secondApprovedVendor],
+        meta: { currentPage: 1, perPage: 25, total: 2, totalPages: 1 },
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
     mockUseRequisitionVendorSelection.mockReturnValue({
       data: [
         {
@@ -108,7 +129,16 @@ describe('RfqVendorSelectionPanel', () => {
       error: null,
     });
     mockUseVendorRecommendations.mockReturnValue({
-      data: { candidates: [], excludedReasons: [] },
+      data: {
+        status: 'available',
+        eligibleCandidates: [],
+        excludedCandidates: [],
+        providerExplanation: null,
+        deterministicReasonSet: [],
+        provenance: null,
+        candidates: [],
+        excludedReasons: [],
+      },
       isLoading: false,
       isError: false,
       error: null,
@@ -231,6 +261,60 @@ describe('RfqVendorSelectionPanel', () => {
     renderWithProviders(<RfqVendorSelectionPanel rfqId="rfq-1" />);
 
     expect(screen.getByText('Stale Evidence')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /save selection/i }));
+
+    await waitFor(() =>
+      expect(saveMutation).toHaveBeenCalledWith({
+        vendor_ids: ['vendor-1'],
+      }),
+    );
+  });
+
+  it('keeps manual selection usable while hiding recommendation affordances when AI ranking is unavailable', async () => {
+    const saveMutation = vi.fn().mockResolvedValue(undefined);
+    mockUseAiStatus.mockReturnValue({
+      isFeatureAvailable: () => false,
+      shouldHideAiControls: () => true,
+      shouldShowUnavailableMessage: (featureKey: string) => featureKey === 'vendor_ai_ranking',
+      messageKeyForFeature: () => 'ai.status.unavailable',
+      status: { mode: 'provider', globalHealth: 'degraded', providerName: 'OpenRouter' },
+    });
+    mockUseRequisitionVendorSelection.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    mockUseVendorRecommendations.mockReturnValue({
+      data: {
+        status: 'unavailable',
+        eligibleCandidates: [],
+        excludedCandidates: [],
+        providerExplanation: 'AI recommendation is unavailable. You can still manually select vendors.',
+        deterministicReasonSet: [],
+        provenance: { code: 'ai_unavailable' },
+        candidates: [],
+        excludedReasons: [],
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    mockUseUpdateRequisitionVendorSelection.mockReturnValue({
+      mutateAsync: saveMutation,
+      isPending: false,
+      isError: false,
+      error: null,
+    });
+
+    renderWithProviders(<RfqVendorSelectionPanel rfqId="rfq-1" />);
+
+    expect(screen.getByText(/ai recommendation is unavailable/i)).toBeInTheDocument();
+    expect(screen.getByText(/you can still manually select vendors/i)).toBeInTheDocument();
+    expect(screen.queryByText('Recommended')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /why alpha procurement/i })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('checkbox', { name: /alpha procurement/i }));
     fireEvent.click(screen.getByRole('button', { name: /save selection/i }));
 
     await waitFor(() =>

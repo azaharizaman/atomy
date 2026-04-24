@@ -100,6 +100,8 @@ final class AiStatusApiTest extends ApiTestCase
             'quote_reparse_extraction' => AiStatusSchema::CAPABILITY_GROUP_DOCUMENT_INTELLIGENCE,
             'normalization_suggestions' => AiStatusSchema::CAPABILITY_GROUP_NORMALIZATION_INTELLIGENCE,
             'normalization_manual_mapping' => AiStatusSchema::CAPABILITY_GROUP_NORMALIZATION_INTELLIGENCE,
+            'vendor_ai_ranking' => AiStatusSchema::CAPABILITY_GROUP_SOURCING_RECOMMENDATION_INTELLIGENCE,
+            'vendor_manual_selection' => AiStatusSchema::CAPABILITY_GROUP_SOURCING_RECOMMENDATION_INTELLIGENCE,
         ] as $featureKey => $capabilityGroup) {
             self::assertArrayHasKey($featureKey, $definitions);
             self::assertArrayHasKey($featureKey, $statuses);
@@ -118,6 +120,14 @@ final class AiStatusApiTest extends ApiTestCase
         self::assertFalse((bool) $definitions['normalization_manual_mapping']['requires_ai']);
         self::assertTrue((bool) $statuses['normalization_manual_mapping']['available']);
         self::assertSame(AiStatusSchema::CAPABILITY_STATUS_AVAILABLE, $statuses['normalization_manual_mapping']['status']);
+
+        self::assertTrue((bool) $definitions['vendor_ai_ranking']['requires_ai']);
+        self::assertFalse((bool) $definitions['vendor_ai_ranking']['has_manual_fallback']);
+        self::assertSame(AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE, $statuses['vendor_ai_ranking']['status']);
+        self::assertFalse((bool) $definitions['vendor_manual_selection']['requires_ai']);
+        self::assertTrue((bool) $statuses['vendor_manual_selection']['available']);
+        self::assertArrayNotHasKey('recommendation_ai_endpoint', $definitions);
+        self::assertArrayNotHasKey('recommendation_ai_endpoint', $statuses);
     }
 
     public function testItReflectsMixedProviderEndpointHealth(): void

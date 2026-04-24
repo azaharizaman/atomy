@@ -8,6 +8,7 @@ use App\Adapters\Ai\AiRuntimeStatusAdapter;
 use App\Adapters\Ai\ConfiguredAiEndpointRegistry;
 use App\Adapters\Ai\ConfiguredAiHealthProbe;
 use App\Adapters\Ai\AtomyAiCapabilityCatalog;
+use App\Adapters\Ai\ProviderSourcingRecommendationClient;
 use App\Adapters\Ai\Contracts\AiEndpointRegistryInterface;
 use App\Adapters\Ai\Contracts\ProviderAiTransportInterface;
 use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
@@ -92,7 +93,6 @@ use Nexus\ProcurementOperations\Contracts\VendorRecommendationLlmInterface;
 use Nexus\ProcurementOperations\Contracts\VendorScorerInterface;
 use Nexus\ProcurementOperations\Coordinators\VendorRecommendationCoordinator;
 use Nexus\ProcurementOperations\Services\DeterministicVendorScorer;
-use Nexus\ProcurementOperations\Services\NullVendorRecommendationLlm;
 use Nexus\ProcurementOperations\Services\SystemClock;
 use Nexus\Sourcing\Contracts\RfqStatusTransitionPolicyInterface;
 use Nexus\Sourcing\Services\RfqStatusTransitionPolicy;
@@ -209,7 +209,7 @@ class AppServiceProvider extends ServiceProvider
             VendorScorerInterface::class,
             static fn ($app): VendorScorerInterface => new DeterministicVendorScorer($app->make(ClockInterface::class)),
         );
-        $this->app->singleton(VendorRecommendationLlmInterface::class, NullVendorRecommendationLlm::class);
+        $this->app->singleton(VendorRecommendationLlmInterface::class, ProviderSourcingRecommendationClient::class);
         $this->app->singleton(VendorRecommendationCoordinatorInterface::class, VendorRecommendationCoordinator::class);
         $this->app->singleton(ConfiguredAiEndpointRegistry::class, function (): ConfiguredAiEndpointRegistry {
             return new ConfiguredAiEndpointRegistry($this->aiRuntimeConfig());

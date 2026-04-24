@@ -7,109 +7,125 @@ namespace Nexus\ProcurementOperations\Tests\Unit\Coordinators;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-
+use Nexus\MachineLearning\Enums\AiEndpointGroup;
+use Nexus\ProcurementML\ValueObjects\ProviderAiProvenance;
+use Nexus\ProcurementML\ValueObjects\VendorRecommendationResult;
 use Nexus\ProcurementOperations\Contracts\VendorRecommendationLlmInterface;
+use Nexus\ProcurementOperations\Contracts\VendorScorerInterface;
 use Nexus\ProcurementOperations\Coordinators\VendorRecommendationCoordinator;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationCandidate;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationRequest;
+use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationResult as DeterministicVendorRecommendationResult;
+use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationScoredCandidate;
 use Nexus\ProcurementOperations\Services\DeterministicVendorScorer;
-use Nexus\ProcurementOperations\Services\NullVendorRecommendationLlm;
 use Nexus\ProcurementOperations\Tests\Support\FixedRecommendationClock;
 
 #[CoversClass(VendorRecommendationCoordinator::class)]
 final class VendorRecommendationCoordinatorTest extends TestCase
 {
     #[Test]
-    public function returnsDeterministicResultsWhenNoLlmIsAvailable(): void
-    {
-        $coordinator = new VendorRecommendationCoordinator(
-            new DeterministicVendorScorer(new FixedRecommendationClock()),
-            new NullVendorRecommendationLlm(),
-        );
-
-        $result = $coordinator->recommend($this->request());
-
-        $this->assertSame('vendor-a', $result->candidates[0]->vendorId);
-        $this->assertSame([], $result->candidates[0]->llmInsights);
-        $this->assertContains('Category overlap: facilities.', $result->candidates[0]->deterministicReasons);
-    }
-
-    #[Test]
-    public function llmMayEnrichExplanation(): void
+    public function providerBackedInferenceRanksOnlyDeterministicEligibleCandidates(): void
     {
         $coordinator = new VendorRecommendationCoordinator(
             new DeterministicVendorScorer(new FixedRecommendationClock()),
             new FakeVendorRecommendationLlm([
-                'vendor-a' => [
-                    'score_delta' => 0,
-                    'reason_summary' => 'Strong narrative fit for facility response.',
-                    'insights' => ['Description mentions emergency maintenance, matching vendor profile.'],
+                'eligible_candidates' => [
+                    [
+                        'vendor_id' => 'vendor-a',
+                        'vendor_name' => 'Facility Experts',
+                        'provider_explanation' => 'Provider ranked vendor-a first.',
+                        'llm_insights' => ['High confidence in category fit.'],
+                    ],
                 ],
+                'provider_explanation' => 'Provider ranked the only approved vendor.',
+                'provenance' => $this->provenance()->toArray(),
             ]),
         );
 
         $result = $coordinator->recommend($this->request());
 
-        $this->assertSame('Strong narrative fit for facility response.', $result->candidates[0]->recommendedReasonSummary);
-        $this->assertSame(['Description mentions emergency maintenance, matching vendor profile.'], $result->candidates[0]->llmInsights);
+        self::assertInstanceOf(VendorRecommendationResult::class, $result);
+        self::assertTrue($result->isAvailable());
+        self::assertSame(['vendor-a'], array_map(static fn ($candidate): string => $candidate->vendorId, $result->eligibleCandidates));
+        self::assertSame(['draft-vendor'], array_map(static fn ($candidate): string => $candidate->vendorId, $result->excludedCandidates));
+        self::assertSame('Provider ranked the only approved vendor.', $result->providerExplanation);
+        self::assertSame(['High confidence in category fit.'], $result->eligibleCandidates[0]->llmInsights);
+        self::assertSame($this->provenance()->toArray(), $result->provenance?->toArray());
     }
 
     #[Test]
-    public function llmScoreAdjustmentIsBounded(): void
+    public function zeroCandidateProviderResponsesRemainAvailable(): void
     {
-        $baseline = (new DeterministicVendorScorer(new FixedRecommendationClock()))->score($this->request())->candidates[0]->fitScore;
         $coordinator = new VendorRecommendationCoordinator(
             new DeterministicVendorScorer(new FixedRecommendationClock()),
             new FakeVendorRecommendationLlm([
-                'vendor-a' => ['score_delta' => 50],
+                'eligible_candidates' => [],
+                'provider_explanation' => 'No approved vendors met the provider threshold.',
+                'provenance' => $this->provenance()->toArray(),
             ]),
         );
 
         $result = $coordinator->recommend($this->request());
 
-        $this->assertSame($baseline + VendorRecommendationCoordinator::MAX_LLM_SCORE_DELTA, $result->candidates[0]->fitScore);
+        self::assertTrue($result->isAvailable());
+        self::assertSame([], $result->eligibleCandidates);
+        self::assertSame('No approved vendors met the provider threshold.', $result->providerExplanation);
+        self::assertSame($this->provenance()->toArray(), $result->provenance?->toArray());
     }
 
     #[Test]
-    public function llmCannotIntroduceIneligibleOrUnknownVendors(): void
+    public function providerOutputThatIntroducesUnknownVendorsIsRejected(): void
     {
         $coordinator = new VendorRecommendationCoordinator(
             new DeterministicVendorScorer(new FixedRecommendationClock()),
             new FakeVendorRecommendationLlm([
-                'draft-vendor' => ['score_delta' => 10, 'reason_summary' => 'Should not surface.'],
-                'unknown-vendor' => ['score_delta' => 10, 'reason_summary' => 'Should not surface.'],
+                'eligible_candidates' => [
+                    [
+                        'vendor_id' => 'unknown-vendor',
+                        'provider_explanation' => 'Should not surface.',
+                    ],
+                ],
+                'provider_explanation' => 'Invented vendor.',
+                'provenance' => $this->provenance()->toArray(),
             ]),
         );
 
-        $result = $coordinator->recommend($this->request(includeDraft: true));
+        $result = $coordinator->recommend($this->request());
 
-        $this->assertSame(['vendor-a'], array_map(static fn ($candidate): string => $candidate->vendorId, $result->candidates));
-        $this->assertSame('draft-vendor', $result->excludedReasons[0]['vendor_id']);
+        self::assertFalse($result->isAvailable());
+        self::assertSame('provider_output_rejected', $result->unavailableReason);
+        self::assertSame([], $result->eligibleCandidates);
+        self::assertSame([], $result->excludedCandidates);
     }
 
-    private function request(bool $includeDraft = false): VendorRecommendationRequest
+    #[Test]
+    public function providerOutputWithEmptyExplanationsIsRejected(): void
     {
-        $candidates = [
-            new VendorRecommendationCandidate(
-                vendorId: 'vendor-a',
-                vendorName: 'Facility Experts',
-                status: 'approved',
-                categories: ['facilities'],
-                capabilities: ['emergency-maintenance'],
-                regions: ['MY'],
-            ),
-        ];
+        $coordinator = new VendorRecommendationCoordinator(
+            new EmptyExplanationScorer(),
+            new FakeVendorRecommendationLlm([
+                'eligible_candidates' => [
+                    [
+                        'vendor_id' => 'vendor-a',
+                        'vendor_name' => 'Facility Experts',
+                        'provider_explanation' => '',
+                    ],
+                ],
+                'provider_explanation' => '',
+                'provenance' => $this->provenance()->toArray(),
+            ]),
+        );
 
-        if ($includeDraft) {
-            $candidates[] = new VendorRecommendationCandidate(
-                vendorId: 'draft-vendor',
-                vendorName: 'Draft Vendor',
-                status: 'draft',
-                categories: ['facilities'],
-                regions: ['MY'],
-            );
-        }
+        $result = $coordinator->recommend($this->request());
 
+        self::assertFalse($result->isAvailable());
+        self::assertSame('provider_output_rejected', $result->unavailableReason);
+        self::assertSame([], $result->eligibleCandidates);
+        self::assertSame([], $result->excludedCandidates);
+    }
+
+    private function request(): VendorRecommendationRequest
+    {
         return new VendorRecommendationRequest(
             tenantId: 'tenant-1',
             rfqId: 'rfq-1',
@@ -118,7 +134,40 @@ final class VendorRecommendationCoordinatorTest extends TestCase
             geography: 'MY',
             spendBand: 'medium',
             lineItemSummary: ['maintenance response'],
-            candidates: $candidates,
+            candidates: [
+                new VendorRecommendationCandidate(
+                    vendorId: 'vendor-a',
+                    vendorName: 'Facility Experts',
+                    status: 'approved',
+                    categories: ['facilities'],
+                    capabilities: ['emergency-maintenance'],
+                    regions: ['MY'],
+                ),
+                new VendorRecommendationCandidate(
+                    vendorId: 'draft-vendor',
+                    vendorName: 'Draft Vendor',
+                    status: 'draft',
+                    categories: ['facilities'],
+                    regions: ['MY'],
+                ),
+            ],
+        );
+    }
+
+    private function provenance(): ProviderAiProvenance
+    {
+        return new ProviderAiProvenance(
+            providerName: 'openrouter',
+            endpointGroup: AiEndpointGroup::SOURCING_RECOMMENDATION,
+            modelRevision: 'openai/gpt-4.1-mini:2026-04-01',
+            promptTemplateVersion: 'vendor-ranking@2026-04-24',
+            requestTraceId: 'trace-vendor-123',
+            inputHash: 'sha256:input',
+            outputHash: 'sha256:output',
+            latencyMs: 653,
+            confidence: 0.91,
+            reliabilityHints: ['provider_confidence' => 'high'],
+            processedAt: new \DateTimeImmutable('2026-04-24T09:30:00+08:00'),
         );
     }
 }
@@ -126,14 +175,38 @@ final class VendorRecommendationCoordinatorTest extends TestCase
 final readonly class FakeVendorRecommendationLlm implements VendorRecommendationLlmInterface
 {
     /**
-     * @param array<string, array<string, mixed>> $enrichments
+     * @param array<string, mixed> $response
      */
-    public function __construct(private array $enrichments)
+    public function __construct(private array $response)
     {
     }
 
     public function enrich(VendorRecommendationRequest $request, array $candidates): array
     {
-        return $this->enrichments;
+        return $this->response;
+    }
+}
+
+final readonly class EmptyExplanationScorer implements VendorScorerInterface
+{
+    public function score(VendorRecommendationRequest $request): DeterministicVendorRecommendationResult
+    {
+        return new DeterministicVendorRecommendationResult(
+            tenantId: $request->tenantId,
+            rfqId: $request->rfqId,
+            candidates: [
+                new VendorRecommendationScoredCandidate(
+                    vendorId: 'vendor-a',
+                    vendorName: 'Facility Experts',
+                    fitScore: 85,
+                    confidenceBand: VendorRecommendationScoredCandidate::confidenceBandFor(85),
+                    recommendedReasonSummary: '',
+                    deterministicReasons: [],
+                    warningFlags: [],
+                    warnings: [],
+                ),
+            ],
+            excludedReasons: [],
+        );
     }
 }
