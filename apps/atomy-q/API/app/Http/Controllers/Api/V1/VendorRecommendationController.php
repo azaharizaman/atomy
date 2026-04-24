@@ -14,8 +14,8 @@ use Nexus\ProcurementML\ValueObjects\VendorRecommendationExcludedCandidate;
 use Nexus\ProcurementOperations\Contracts\VendorRecommendationCoordinatorInterface;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationCandidate;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationRequest;
-use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
+use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
 use App\Http\Controllers\Controller;
 use App\Models\Rfq;
 use App\Models\RfqLineItem;
@@ -92,6 +92,12 @@ final class VendorRecommendationController extends Controller
         $candidateStatusById = $vendors->mapWithKeys(
             static fn (Vendor $vendor): array => [(string) $vendor->id => strtolower(trim((string) $vendor->status))],
         )->all();
+        $excludedCandidates = array_map(
+            static fn (VendorRecommendationExcludedCandidate $candidate): array => array_merge($candidate->toArray(), [
+                'status' => self::excludedCandidateStatus($candidate, $candidateStatusById),
+            ]),
+            $result->excludedCandidates,
+        );
 
         return response()->json([
             'data' => [
@@ -102,12 +108,7 @@ final class VendorRecommendationController extends Controller
                     fn (VendorRecommendationEligibleCandidate $candidate): array => $this->serializeEligibleCandidate($candidate),
                     $result->eligibleCandidates,
                 ),
-                'excluded_candidates' => array_map(
-                    static fn (VendorRecommendationExcludedCandidate $candidate): array => array_merge($candidate->toArray(), [
-                        'status' => self::excludedCandidateStatus($candidate, $candidateStatusById),
-                    ]),
-                    $result->excludedCandidates,
-                ),
+                'excluded_candidates' => $excludedCandidates,
                 'provider_explanation' => $result->providerExplanation,
                 'deterministic_reason_set' => $result->deterministicReasonSet,
                 'provenance' => $result->provenance?->toArray(),
@@ -115,12 +116,7 @@ final class VendorRecommendationController extends Controller
                     fn (VendorRecommendationEligibleCandidate $candidate): array => $this->serializeLegacyCandidate($candidate),
                     $result->eligibleCandidates,
                 ),
-                'excluded_reasons' => array_map(
-                    static fn (VendorRecommendationExcludedCandidate $candidate): array => array_merge($candidate->toArray(), [
-                        'status' => self::excludedCandidateStatus($candidate, $candidateStatusById),
-                    ]),
-                    $result->excludedCandidates,
-                ),
+                'excluded_reasons' => $excludedCandidates,
             ],
         ]);
     }

@@ -36,15 +36,15 @@ final readonly class VendorRecommendationExcludedCandidate
     public function toArray(): array
     {
         return [
-            'vendor_id' => (string) $this->vendorId,
-            'vendor_name' => (string) $this->vendorName,
-            'reason' => (string) $this->reason,
+            'vendor_id' => $this->vendorId,
+            'vendor_name' => $this->vendorName,
+            'reason' => $this->reason,
         ];
     }
 
     private function assertNonEmpty(string $value, string $subject): void
     {
-        if (trim($value) === '') {
+        if ($value === '') {
             throw ProcurementMlContractException::invalidValue($subject);
         }
     }

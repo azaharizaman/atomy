@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Tests\Feature\Api\V1;
 
 use DateTimeImmutable;
+
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+
 use Nexus\IntelligenceOperations\DTOs\AiCapabilityStatus;
-use Nexus\IntelligenceOperations\DTOs\AiStatusSnapshot;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
+use Nexus\IntelligenceOperations\DTOs\AiStatusSnapshot;
+
 use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
 use App\Models\Rfq;
 use App\Models\Tenant;
@@ -118,6 +121,7 @@ final class VendorRecommendationAiGateTest extends ApiTestCase
         $response->assertJsonPath('data.feature_key', 'vendor_ai_ranking');
         $response->assertJsonPath('data.status', AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE);
         $response->assertJsonPath('data.reason_codes.0', 'provider_unavailable');
+        $response->assertJsonPath('data.diagnostics.mode', AiStatusSchema::MODE_PROVIDER);
     }
 
     /**

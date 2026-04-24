@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace Nexus\ProcurementOperations\Tests\Unit\Coordinators;
 
-use Nexus\MachineLearning\Enums\AiEndpointGroup;
-use Nexus\ProcurementML\ValueObjects\ProviderAiProvenance;
-use Nexus\ProcurementML\ValueObjects\VendorRecommendationResult;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Nexus\MachineLearning\Enums\AiEndpointGroup;
+use Nexus\ProcurementML\ValueObjects\ProviderAiProvenance;
+use Nexus\ProcurementML\ValueObjects\VendorRecommendationResult;
 use Nexus\ProcurementOperations\Contracts\VendorRecommendationLlmInterface;
+use Nexus\ProcurementOperations\Contracts\VendorScorerInterface;
 use Nexus\ProcurementOperations\Coordinators\VendorRecommendationCoordinator;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationCandidate;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationRequest;
+use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationResult as DeterministicVendorRecommendationResult;
+use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationScoredCandidate;
 use Nexus\ProcurementOperations\Services\DeterministicVendorScorer;
 use Nexus\ProcurementOperations\Tests\Support\FixedRecommendationClock;
 
@@ -46,7 +49,6 @@ final class VendorRecommendationCoordinatorTest extends TestCase
         self::assertSame(['vendor-a'], array_map(static fn ($candidate): string => $candidate->vendorId, $result->eligibleCandidates));
         self::assertSame(['draft-vendor'], array_map(static fn ($candidate): string => $candidate->vendorId, $result->excludedCandidates));
         self::assertSame('Provider ranked the only approved vendor.', $result->providerExplanation);
-        self::assertSame('vendor-a', $result->eligibleCandidates[0]->vendorId);
         self::assertSame(['High confidence in category fit.'], $result->eligibleCandidates[0]->llmInsights);
         self::assertSame($this->provenance()->toArray(), $result->provenance?->toArray());
     }
@@ -84,6 +86,32 @@ final class VendorRecommendationCoordinatorTest extends TestCase
                     ],
                 ],
                 'provider_explanation' => 'Invented vendor.',
+                'provenance' => $this->provenance()->toArray(),
+            ]),
+        );
+
+        $result = $coordinator->recommend($this->request());
+
+        self::assertFalse($result->isAvailable());
+        self::assertSame('provider_output_rejected', $result->unavailableReason);
+        self::assertSame([], $result->eligibleCandidates);
+        self::assertSame([], $result->excludedCandidates);
+    }
+
+    #[Test]
+    public function providerOutputWithEmptyExplanationsIsRejected(): void
+    {
+        $coordinator = new VendorRecommendationCoordinator(
+            new EmptyExplanationScorer(),
+            new FakeVendorRecommendationLlm([
+                'eligible_candidates' => [
+                    [
+                        'vendor_id' => 'vendor-a',
+                        'vendor_name' => 'Facility Experts',
+                        'provider_explanation' => '',
+                    ],
+                ],
+                'provider_explanation' => '',
                 'provenance' => $this->provenance()->toArray(),
             ]),
         );
@@ -156,5 +184,29 @@ final readonly class FakeVendorRecommendationLlm implements VendorRecommendation
     public function enrich(VendorRecommendationRequest $request, array $candidates): array
     {
         return $this->response;
+    }
+}
+
+final readonly class EmptyExplanationScorer implements VendorScorerInterface
+{
+    public function score(VendorRecommendationRequest $request): DeterministicVendorRecommendationResult
+    {
+        return new DeterministicVendorRecommendationResult(
+            tenantId: $request->tenantId,
+            rfqId: $request->rfqId,
+            candidates: [
+                new VendorRecommendationScoredCandidate(
+                    vendorId: 'vendor-a',
+                    vendorName: 'Facility Experts',
+                    fitScore: 85,
+                    confidenceBand: VendorRecommendationScoredCandidate::confidenceBandFor(85),
+                    recommendedReasonSummary: '',
+                    deterministicReasons: [],
+                    warningFlags: [],
+                    warnings: [],
+                ),
+            ],
+            excludedReasons: [],
+        );
     }
 }

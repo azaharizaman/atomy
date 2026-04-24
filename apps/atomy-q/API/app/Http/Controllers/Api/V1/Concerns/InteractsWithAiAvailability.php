@@ -8,12 +8,12 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Throwable;
 use Nexus\IntelligenceOperations\Contracts\AiStatusCoordinatorInterface;
-use Nexus\IntelligenceOperations\DTOs\AiEndpointHealthSnapshot;
-use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
-use Illuminate\Http\JsonResponse;
 use Nexus\IntelligenceOperations\DTOs\AiCapabilityStatus;
+use Nexus\IntelligenceOperations\DTOs\AiEndpointHealthSnapshot;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSnapshot;
+use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use Illuminate\Http\JsonResponse;
 
 trait InteractsWithAiAvailability
 {
@@ -64,7 +64,7 @@ trait InteractsWithAiAvailability
             ? array_values(array_unique(array_filter(array_map(
                 static fn (mixed $reasonCode): string => is_string($reasonCode) ? trim($reasonCode) : '',
                 $reasonCodes,
-            ))))
+            ), static fn (string $reasonCode): bool => $reasonCode !== '')))
             : ($capabilityStatus?->reasonCodes ?? $statusSnapshot->reasonCodes);
         $resolvedDiagnostics = ($diagnostics !== [] || $reasonCodes !== [])
             ? ['mode' => $statusSnapshot->mode]
@@ -101,9 +101,19 @@ trait InteractsWithAiAvailability
         ], $statusCode);
     }
 
+    /**
+     * Builds a safe status snapshot after runtime probing errors.
+     * The inner catch intentionally returns empty capability definitions/statuses
+     * so aiCapabilityStatus()/aiCapabilityAvailable() degrade to null/false.
+     */
     private function fallbackAiStatusSnapshot(): AiStatusSnapshot
     {
-        $mode = config('atomy.ai.mode');
+        try {
+            $mode = config('atomy.ai.mode');
+        } catch (Throwable) {
+            $mode = null;
+        }
+
         $normalizedMode = is_string($mode) && in_array($mode, AiStatusSchema::modes(), true)
             ? $mode
             : AiStatusSchema::MODE_PROVIDER;

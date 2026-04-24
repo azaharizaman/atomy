@@ -86,27 +86,28 @@ describe('vendor recommendations in RFQ vendor selection', () => {
       isError: false,
       error: null,
     });
+    const eligibleCandidates = [
+      {
+        vendorId: 'vendor-1',
+        vendorName: 'Alpha Procurement',
+        fitScore: 88,
+        confidenceBand: 'high',
+        recommendedReasonSummary: 'Strong facilities category fit.',
+        deterministicReasons: ['Category overlap: facilities.', 'Geography coverage matches SG.'],
+        llmInsights: ['Narrative mentions emergency response, matching Alpha capabilities.'],
+        warningFlags: ['sparse_historical_signal'],
+        warnings: ['No recent activity signal available.'],
+      },
+    ];
     mockUseVendorRecommendations.mockReturnValue({
       data: {
         status: 'available',
-        eligibleCandidates: [
-          {
-            vendorId: 'vendor-1',
-            vendorName: 'Alpha Procurement',
-            fitScore: 88,
-            confidenceBand: 'high',
-            recommendedReasonSummary: 'Strong facilities category fit.',
-            deterministicReasons: ['Category overlap: facilities.', 'Geography coverage matches SG.'],
-            llmInsights: ['Narrative mentions emergency response, matching Alpha capabilities.'],
-            warningFlags: ['sparse_historical_signal'],
-            warnings: ['No recent activity signal available.'],
-          },
-        ],
+        eligibleCandidates,
         excludedCandidates: [],
         providerExplanation: 'The AI ranking prioritizes facilities coverage and local response readiness.',
         deterministicReasonSet: ['Category overlap: facilities.', 'Geography coverage matches SG.'],
         provenance: { provider: 'openrouter', endpointGroup: 'vendor_ranking' },
-        candidates: [],
+        candidates: eligibleCandidates,
         excludedReasons: [],
       },
       isLoading: false,

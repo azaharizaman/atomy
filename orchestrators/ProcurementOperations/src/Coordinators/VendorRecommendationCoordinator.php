@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Nexus\ProcurementOperations\Coordinators;
 
 use DateTimeImmutable;
+use Throwable;
 use Nexus\MachineLearning\Enums\AiEndpointGroup;
-use Nexus\ProcurementML\Enums\VendorRecommendationResultStatus;
+use Nexus\ProcurementML\Exceptions\ProcurementMlContractException;
 use Nexus\ProcurementML\ValueObjects\ProviderAiProvenance;
 use Nexus\ProcurementML\ValueObjects\VendorRecommendationEligibleCandidate;
 use Nexus\ProcurementML\ValueObjects\VendorRecommendationExcludedCandidate;
@@ -18,8 +19,6 @@ use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationCa
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationRequest;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationResult as DeterministicVendorRecommendationResult;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationScoredCandidate;
-use Nexus\ProcurementOperations\Exceptions\InvalidVendorRecommendation;
-use Throwable;
 
 final readonly class VendorRecommendationCoordinator implements VendorRecommendationCoordinatorInterface
 {
@@ -49,56 +48,60 @@ final readonly class VendorRecommendationCoordinator implements VendorRecommenda
 
         [$providerExplanation, $providerCandidates, $provenance] = $parsed;
 
-        $eligibleCandidates = [];
-        foreach ($providerCandidates as $providerCandidate) {
-            $vendorId = trim((string) ($providerCandidate['vendor_id'] ?? ''));
-            $deterministicCandidate = $eligibleByVendorId[$vendorId];
+        try {
+            $eligibleCandidates = [];
+            foreach ($providerCandidates as $providerCandidate) {
+                $vendorId = trim((string) ($providerCandidate['vendor_id'] ?? ''));
+                $deterministicCandidate = $eligibleByVendorId[$vendorId];
 
-            $fitScore = $deterministicCandidate->fitScore;
-            if (array_key_exists('score_delta', $providerCandidate)) {
-                $delta = $this->boundedDelta($providerCandidate['score_delta']);
-                if ($delta === null) {
-                    return $this->unavailableResult($request, 'provider_output_rejected');
+                $fitScore = $deterministicCandidate->fitScore;
+                if (array_key_exists('score_delta', $providerCandidate)) {
+                    $delta = $this->boundedDelta($providerCandidate['score_delta']);
+                    if ($delta === null) {
+                        return $this->unavailableResult($request, 'provider_output_rejected');
+                    }
+
+                    $fitScore = max(0, min(100, $fitScore + $delta));
                 }
 
-                $fitScore = max(0, min(100, $fitScore + $delta));
+                $eligibleCandidates[] = new VendorRecommendationEligibleCandidate(
+                    vendorId: $deterministicCandidate->vendorId,
+                    vendorName: $deterministicCandidate->vendorName,
+                    fitScore: $fitScore,
+                    confidenceBand: VendorRecommendationScoredCandidate::confidenceBandFor($fitScore),
+                    providerExplanation: $this->providerCandidateExplanation(
+                        $providerCandidate,
+                        $providerExplanation,
+                        $deterministicCandidate->recommendedReasonSummary,
+                    ),
+                    deterministicReasons: $this->stringList($deterministicCandidate->deterministicReasons),
+                    llmInsights: $this->stringList($providerCandidate['llm_insights'] ?? []),
+                    warningFlags: $this->stringList($deterministicCandidate->warningFlags),
+                    warnings: $this->stringList($deterministicCandidate->warnings),
+                );
             }
 
-            $eligibleCandidates[] = new VendorRecommendationEligibleCandidate(
-                vendorId: $deterministicCandidate->vendorId,
-                vendorName: $deterministicCandidate->vendorName,
-                fitScore: $fitScore,
-                confidenceBand: VendorRecommendationScoredCandidate::confidenceBandFor($fitScore),
-                providerExplanation: $this->providerCandidateExplanation(
-                    $providerCandidate,
-                    $providerExplanation,
-                    $deterministicCandidate->recommendedReasonSummary,
-                ),
-                deterministicReasons: $this->stringList($deterministicCandidate->deterministicReasons),
-                llmInsights: $this->stringList($providerCandidate['llm_insights'] ?? []),
-                warningFlags: $this->stringList($deterministicCandidate->warningFlags),
-                warnings: $this->stringList($deterministicCandidate->warnings),
-            );
-        }
+            $excludedCandidates = [];
+            foreach ($deterministic->excludedReasons as $excludedReason) {
+                $excludedCandidates[] = new VendorRecommendationExcludedCandidate(
+                    vendorId: (string) $excludedReason['vendor_id'],
+                    vendorName: (string) $excludedReason['vendor_name'],
+                    reason: (string) $excludedReason['reason'],
+                );
+            }
 
-        $excludedCandidates = [];
-        foreach ($deterministic->excludedReasons as $excludedReason) {
-            $excludedCandidates[] = new VendorRecommendationExcludedCandidate(
-                vendorId: (string) $excludedReason['vendor_id'],
-                vendorName: (string) $excludedReason['vendor_name'],
-                reason: (string) $excludedReason['reason'],
+            return VendorRecommendationResult::available(
+                tenantId: $request->tenantId,
+                rfqId: $request->rfqId,
+                eligibleCandidates: $eligibleCandidates,
+                excludedCandidates: $excludedCandidates,
+                providerExplanation: $providerExplanation,
+                deterministicReasonSet: $this->deterministicReasonSet($deterministic),
+                provenance: $provenance,
             );
+        } catch (ProcurementMlContractException) {
+            return $this->unavailableResult($request, 'provider_output_rejected');
         }
-
-        return VendorRecommendationResult::available(
-            tenantId: $request->tenantId,
-            rfqId: $request->rfqId,
-            eligibleCandidates: $eligibleCandidates,
-            excludedCandidates: $excludedCandidates,
-            providerExplanation: $providerExplanation,
-            deterministicReasonSet: $this->deterministicReasonSet($deterministic),
-            provenance: $provenance,
-        );
     }
 
     /**
@@ -217,7 +220,7 @@ final readonly class VendorRecommendationCoordinator implements VendorRecommenda
                 reliabilityHints: $this->scalarMap($provenance['reliability_hints'] ?? []),
                 processedAt: $processedAt,
             );
-        } catch (InvalidVendorRecommendation) {
+        } catch (ProcurementMlContractException) {
             return null;
         } catch (Throwable) {
             return null;

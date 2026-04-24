@@ -9,6 +9,9 @@ use Nexus\ProcurementML\Exceptions\ProcurementMlContractException;
 
 final readonly class VendorRecommendationResult
 {
+    /** @var list<string> */
+    public array $deterministicReasonSet;
+
     /**
      * @param list<VendorRecommendationEligibleCandidate> $eligibleCandidates
      * @param list<VendorRecommendationExcludedCandidate> $excludedCandidates
@@ -21,7 +24,7 @@ final readonly class VendorRecommendationResult
         public array $eligibleCandidates,
         public array $excludedCandidates,
         public ?string $providerExplanation,
-        public array $deterministicReasonSet,
+        array $deterministicReasonSet,
         public ?ProviderAiProvenance $provenance,
         public ?string $unavailableReason,
     ) {
@@ -29,7 +32,8 @@ final readonly class VendorRecommendationResult
         $this->assertNonEmpty($this->rfqId, 'vendor recommendation RFQ id');
         $this->assertList($this->eligibleCandidates, VendorRecommendationEligibleCandidate::class, 'eligible candidates');
         $this->assertList($this->excludedCandidates, VendorRecommendationExcludedCandidate::class, 'excluded candidates');
-        $this->assertStringList($this->deterministicReasonSet, 'deterministic reason set');
+        $this->assertStringList($deterministicReasonSet, 'deterministic reason set');
+        $this->deterministicReasonSet = array_values(array_unique($this->normalizeList($deterministicReasonSet)));
 
         if ($this->status === VendorRecommendationResultStatus::AVAILABLE) {
             if ($this->provenance === null) {
@@ -117,7 +121,7 @@ final readonly class VendorRecommendationResult
                 $this->excludedCandidates,
             ),
             'provider_explanation' => $this->providerExplanation,
-            'deterministic_reason_set' => array_values(array_unique($this->normalizeList($this->deterministicReasonSet))),
+            'deterministic_reason_set' => $this->deterministicReasonSet,
             'provenance' => $this->provenance?->toArray(),
             'unavailable_reason' => $this->unavailableReason,
         ];

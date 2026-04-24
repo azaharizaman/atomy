@@ -8,6 +8,18 @@ use Nexus\ProcurementML\Exceptions\ProcurementMlContractException;
 
 final readonly class VendorRecommendationEligibleCandidate
 {
+    /** @var list<string> */
+    public array $deterministicReasons;
+
+    /** @var list<string> */
+    public array $llmInsights;
+
+    /** @var list<string> */
+    public array $warningFlags;
+
+    /** @var list<string> */
+    public array $warnings;
+
     /**
      * @param list<string> $deterministicReasons
      * @param list<string> $llmInsights
@@ -20,10 +32,10 @@ final readonly class VendorRecommendationEligibleCandidate
         public int $fitScore,
         public string $confidenceBand,
         public string $providerExplanation,
-        public array $deterministicReasons,
-        public array $llmInsights = [],
-        public array $warningFlags = [],
-        public array $warnings = [],
+        array $deterministicReasons,
+        array $llmInsights = [],
+        array $warningFlags = [],
+        array $warnings = [],
     ) {
         $this->assertNonEmpty($this->vendorId, 'eligible vendor id');
         $this->assertNonEmpty($this->vendorName, 'eligible vendor name');
@@ -34,10 +46,15 @@ final readonly class VendorRecommendationEligibleCandidate
             throw ProcurementMlContractException::invalidValue('eligible candidate fit score');
         }
 
-        $this->assertList($this->deterministicReasons, 'eligible candidate deterministic reasons');
-        $this->assertList($this->llmInsights, 'eligible candidate LLM insights');
-        $this->assertList($this->warningFlags, 'eligible candidate warning flags');
-        $this->assertList($this->warnings, 'eligible candidate warnings');
+        $this->assertList($deterministicReasons, 'eligible candidate deterministic reasons');
+        $this->assertList($llmInsights, 'eligible candidate LLM insights');
+        $this->assertList($warningFlags, 'eligible candidate warning flags');
+        $this->assertList($warnings, 'eligible candidate warnings');
+
+        $this->deterministicReasons = $this->normalizeList($deterministicReasons);
+        $this->llmInsights = $this->normalizeList($llmInsights);
+        $this->warningFlags = $this->normalizeList($warningFlags);
+        $this->warnings = $this->normalizeList($warnings);
     }
 
     /**
@@ -51,10 +68,10 @@ final readonly class VendorRecommendationEligibleCandidate
             'fit_score' => $this->fitScore,
             'confidence_band' => $this->confidenceBand,
             'provider_explanation' => $this->providerExplanation,
-            'deterministic_reasons' => array_values(array_unique($this->normalizeList($this->deterministicReasons))),
-            'llm_insights' => array_values(array_unique($this->normalizeList($this->llmInsights))),
-            'warning_flags' => array_values(array_unique($this->normalizeList($this->warningFlags))),
-            'warnings' => array_values(array_unique($this->normalizeList($this->warnings))),
+            'deterministic_reasons' => array_values(array_unique($this->deterministicReasons)),
+            'llm_insights' => array_values(array_unique($this->llmInsights)),
+            'warning_flags' => array_values(array_unique($this->warningFlags)),
+            'warnings' => array_values(array_unique($this->warnings)),
         ];
     }
 

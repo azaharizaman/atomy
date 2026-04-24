@@ -4,7 +4,7 @@
 
 - Updated `use-vendor-recommendations.ts` to normalize the plan-3 payload shape from the API: `eligible_candidates`, `excluded_candidates`, `provider_explanation`, `deterministic_reason_set`, `provenance`, and structured unavailable responses.
 - The RFQ vendor selection workspace now treats AI ranking as advisory only. It no longer auto-prefills the manual shortlist from AI recommendations; users explicitly choose and persist the final shortlist through the existing selected-vendors mutation.
-- The page now consumes shared AI status capability helpers so `vendor_ai_ranking` can be hidden or shown independently from `vendor_manual_selection`.
+- The page now consumes shared AI status capability helpers so `vendor_ai_ranking` recommendation controls are gated explicitly from AI status.
 - When AI ranking is unavailable, the page shows an explicit amber continuity banner and removes recommendation affordances while keeping the manual selection workflow fully usable.
 - Added focused regression coverage for the hook parser, unavailable-state rendering, and manual-selection continuity:
   - `src/hooks/use-vendor-recommendations.test.ts`

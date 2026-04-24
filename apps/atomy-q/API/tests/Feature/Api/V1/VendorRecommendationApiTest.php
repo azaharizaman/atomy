@@ -5,21 +5,23 @@ declare(strict_types=1);
 namespace Tests\Feature\Api\V1;
 
 use DateTimeImmutable;
+
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 use Nexus\IntelligenceOperations\DTOs\AiCapabilityStatus;
-use Nexus\IntelligenceOperations\DTOs\AiStatusSnapshot;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
+use Nexus\IntelligenceOperations\DTOs\AiStatusSnapshot;
+use Nexus\ProcurementOperations\Contracts\VendorRecommendationLlmInterface;
+use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationRequest;
+use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationScoredCandidate;
+
 use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
 use App\Models\Rfq;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Vendor;
-use Nexus\ProcurementOperations\Contracts\VendorRecommendationLlmInterface;
-use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationRequest;
-use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationScoredCandidate;
 use Tests\Feature\Api\ApiTestCase;
 
 final class VendorRecommendationApiTest extends ApiTestCase
