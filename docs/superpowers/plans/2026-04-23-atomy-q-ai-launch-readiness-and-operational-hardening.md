@@ -15,6 +15,7 @@
 - Endpoint-group observability and alerting
 - Quota, timeout, and degraded-state logging
 - Operator responsibility checklist for keys, tokens, endpoints, quotas, networking, and model ownership
+- Provider contract verification for every endpoint group
 - Staging validation and failure drills
 - Alpha release checklist and rollback posture
 - Final documentation alignment across spec, plans, env docs, and implementation summaries
@@ -63,6 +64,7 @@
   - `rfq_id`
   - `outcome`
   - `reason_code`
+- [ ] Confirm Plans 2-5 added these fields on their provider-backed call paths, then close gaps here rather than introducing observability only at the end.
 - [ ] Add degraded/unavailable alert flows through `Notifier` and `Outbox`.
 - [ ] Ensure alerts are capability-group aware so document extraction failures do not page the wrong operational owner.
 
@@ -94,6 +96,14 @@
   - timeout/retry storm drill
 - [ ] Capture expected API and WEB outcomes for each drill.
 - [ ] Verify no AI-only endpoint returns synthetic success payloads during drills.
+- [ ] Add provider contract tests for each endpoint group that verify the staging provider accepts the app request shape and returns a response that the capability mapper can validate:
+  - document extraction
+  - normalization suggestions
+  - sourcing recommendation
+  - comparison/award overlay
+  - insight summary
+  - governance narrative
+- [ ] Treat healthcheck-only success as insufficient for alpha release. Health proves reachability; provider contract tests prove integration compatibility.
 
 ## Task 4: Release Gating And Rollback
 

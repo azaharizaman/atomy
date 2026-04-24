@@ -12,6 +12,7 @@
 
 ## Scope
 
+- Feature-level policies that separate AI narratives from factual dashboard, RFQ, governance, and reporting data
 - Dashboard AI summaries
 - RFQ insights sidebar and overview narratives
 - Vendor governance and risk explanation surfaces
@@ -49,7 +50,7 @@
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/RiskComplianceController.php`
 - Create: `apps/atomy-q/API/app/Adapters/Ai/ProviderInsightClient.php`
 - Create: `apps/atomy-q/API/app/Adapters/Ai/ProviderGovernanceClient.php`
-- Create if needed: provider-specific implementations such as `OpenRouterInsightClient.php`, `OpenRouterGovernanceClient.php`, `HuggingFaceInsightClient.php`, and `HuggingFaceGovernanceClient.php`
+- Create or reuse a shared provider transport for OpenRouter/Hugging Face endpoint invocation, keeping insight/governance clients responsible only for capability-specific mapping and validation
 - Modify: `apps/atomy-q/API/routes/api.php`
 - Modify: `apps/atomy-q/API/openapi/openapi.json`
 
@@ -64,6 +65,12 @@
 
 - [ ] Ensure every summary or explanation payload preserves a link to the factual source data it summarizes.
 - [ ] Do not allow AI narrative to become the only returned representation for dashboard, governance, or report facts.
+- [ ] Add or update feature-level policies:
+  - `dashboard_ai_summary`
+  - `rfq_ai_insights`
+  - `governance_ai_narrative`
+  - `governance_manual_review`
+- [ ] Treat factual governance/manual review as a separate workflow from AI narrative enrichment, not as a fallback result for the narrative.
 - [ ] Model explicit reason codes for unavailable insight or governance summarization.
 
 ## Task 2: Add Provider-Backed InsightOperations Flows
@@ -71,6 +78,7 @@
 - [ ] Extend `InsightOperations` to request provider-backed dashboard and reporting summaries through the Plan 1 runtime contract.
 - [ ] Keep dashboard numeric cards and reporting datasets deterministic and available without AI.
 - [ ] Persist generated summary provenance where summaries are stored or cached.
+- [ ] Add structured logs for summary generation outcome, capability group, feature key, provider, endpoint group, reason code, and latency as part of this plan rather than deferring all observability to launch hardening.
 
 ## Task 3: Add Governance And Risk Narrative Enrichment
 

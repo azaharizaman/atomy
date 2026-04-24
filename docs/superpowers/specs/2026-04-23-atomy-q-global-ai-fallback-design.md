@@ -214,7 +214,9 @@ This means the system can be globally `degraded` while only some capability grou
 
 ## Capability Registry Contract
 
-Every AI-capable surface must map to a capability definition containing at least:
+Capability groups describe provider endpoint and runtime ownership. They are not fine-grained enough to decide every API or WEB behavior on their own. Every AI-capable surface must also map to a feature-level policy so the system can distinguish an AI-only ranking panel from a manual workflow that happens to use the same endpoint group.
+
+Every feature-level policy must contain at least:
 
 - `feature_key`
 - `capability_group`
@@ -223,6 +225,27 @@ Every AI-capable surface must map to a capability definition containing at least
 - `fallback_ui_mode`
 - `degradation_message_key`
 - `operator_critical`
+
+Recommended alpha feature keys include:
+
+- `quote_document_extraction`
+- `quote_source_line_manual_edit`
+- `quote_reparse_extraction`
+- `normalization_suggestions`
+- `normalization_manual_mapping`
+- `vendor_ai_ranking`
+- `vendor_manual_selection`
+- `comparison_ai_overlay`
+- `comparison_deterministic_matrix`
+- `award_ai_guidance`
+- `award_manual_submission`
+- `approval_ai_summary`
+- `approval_workflow_progression`
+- `dashboard_ai_summary`
+- `rfq_ai_insights`
+- `governance_ai_narrative`
+- `governance_manual_review`
+- `recommendation_ai_endpoint`
 
 Recommended `fallback_ui_mode` values:
 
@@ -237,6 +260,8 @@ The registry is authoritative for:
 - whether the API returns unavailable,
 - what message the UI shows,
 - whether operator alerts should fire for that capability.
+
+For example, `vendor_ai_ranking` belongs to `sourcing_recommendation_intelligence`, requires AI, and has no ranking fallback in alpha. `vendor_manual_selection` belongs to the same product area but does not require AI and remains callable when recommendation intelligence is unavailable. Do not model "manual selection exists" as a manual fallback for the AI ranking result.
 
 ## Surface Operating Model
 
@@ -607,6 +632,16 @@ The WEB app requires only public mirrors such as:
 
 - `NEXT_PUBLIC_AI_MODE`
 - `NEXT_PUBLIC_AI_STATUS_PATH`
+
+### Legacy Quote Intelligence Mode
+
+`QUOTE_INTELLIGENCE_MODE` existed before the global AI runtime contract. After the alpha AI-first transition, `AI_MODE` is the authoritative control plane for whether provider-backed quote intelligence is attempted. Any quote-intelligence-specific mode should be treated only as an adapter implementation detail for local development or diagnostics, and it must not override the Plan 1 capability/status decision.
+
+If both variables exist, use this precedence:
+
+1. `AI_MODE=off` disables provider-backed quote intelligence and requires manual continuity.
+2. `AI_MODE=provider` attempts provider-backed document and normalization intelligence when the feature policy and endpoint health allow it.
+3. `AI_MODE=deterministic` may use deterministic/local behavior for diagnostics and development, but alpha release verification must not treat this as provider-backed success.
 
 ### Explicit Operator Ownership
 

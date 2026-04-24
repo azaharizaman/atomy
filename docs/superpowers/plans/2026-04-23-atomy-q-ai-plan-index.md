@@ -40,12 +40,15 @@
 
 - `AI_MODE` is the alpha global control plane. No per-tenant AI toggle exists in alpha.
 - Alpha default must be `provider`, not `deterministic`.
+- Capability groups are endpoint/runtime groupings. Feature-level policies decide whether a specific API action or WEB affordance is AI-only, has manual continuity, or is deterministic/manual.
 - The main RFQ chain must remain manually operable when provider-backed AI is disabled, degraded, or offline.
 - AI-only surfaces must return truthful unavailable states. No controller, hook, or page may fabricate AI output.
 - Layer 1 stays provider-agnostic. Provider specifics belong in Layer 3 adapters and configuration.
 - Alpha runs with one globally selected provider for all capability groups. No mixed-provider topology or failover in alpha.
+- Provider adapters should share auth, timeout, retry, redaction, and trace handling through common Layer 3 transport primitives. Capability clients should focus on request/response mapping and validation.
 - Tenant isolation, not-found semantics, idempotency, and audit provenance rules apply to every plan.
 - Do not let narrative AI mutate authoritative governance, approval, or award records without deterministic validation and explicit human action.
+- Do not model a separate manual workflow as a fake fallback result for an AI-only output. For example, manual vendor selection remains available, but vendor AI ranking still returns unavailable when AI ranking cannot run.
 
 ## Cross-Plan Responsibilities
 
@@ -65,12 +68,15 @@ After each plan:
 - run affected API feature tests,
 - run affected WEB unit tests,
 - run targeted E2E coverage when the plan changes a full RFQ path,
+- verify feature-level capability policies for every touched AI surface,
+- verify provider-backed call paths emit structured logs and provenance fields introduced by that plan,
 - update the relevant `IMPLEMENTATION_SUMMARY.md` files,
 - request review before starting the next dependency plan.
 
 Before alpha release:
 
 - prove provider-backed AI is live in staging for every alpha endpoint group,
+- prove staging provider contract tests pass for every endpoint group, not only health probes,
 - prove `AI_MODE=off` manual continuity for the main RFQ chain,
 - prove degraded endpoint behavior yields truthful unavailable states,
 - prove audit/provenance is persisted and reviewable for every AI-assisted action,
