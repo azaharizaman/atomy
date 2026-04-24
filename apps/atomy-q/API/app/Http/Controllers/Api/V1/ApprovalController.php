@@ -4,21 +4,35 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use Throwable;
+use App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface;
+use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use App\Adapters\Ai\DTOs\ApprovalSummaryRequest;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
+use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
 use App\Http\Controllers\Controller;
 use App\Models\Approval;
 use App\Models\ComparisonRun;
 use App\Models\QuoteSubmission;
+use App\Services\QuoteIntake\DecisionTrailRecorder;
 use App\Services\QuoteIntake\QuoteSubmissionReadinessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Nexus\Common\Contracts\ClockInterface;
+use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 
 final class ApprovalController extends Controller
 {
     use ExtractsAuthContext;
+    use InteractsWithAiAvailability;
 
     public function __construct(
         private readonly QuoteSubmissionReadinessService $readinessService,
+        private readonly ComparisonAwardAiClientInterface $comparisonAwardAiClient,
+        private readonly DecisionTrailRecorder $decisionTrailRecorder,
+        private readonly AiRuntimeStatusInterface $aiRuntimeStatus,
+        private readonly ClockInterface $clock,
     ) {}
 
     /**
@@ -93,35 +107,7 @@ final class ApprovalController extends Controller
      */
     public function show(Request $request, string $id): JsonResponse
     {
-        $tenantId = $this->tenantId($request);
-
-        /** @var Approval|null $approval */
-        $approval = Approval::query()
-            ->where('tenant_id', $tenantId)
-            ->where('id', $id)
-            ->with([
-                'rfq' => static function ($relation) use ($tenantId): void {
-                    $relation
-                        ->where('tenant_id', $tenantId)
-                        ->select('id', 'title', 'tenant_id', 'rfq_number');
-                },
-                'comparisonRun' => static function ($relation) use ($tenantId): void {
-                    $relation
-                        ->where('tenant_id', $tenantId)
-                        ->select('id', 'name', 'status', 'is_preview', 'tenant_id');
-                },
-                'requestedBy' => static function ($relation) use ($tenantId): void {
-                    $relation
-                        ->where('tenant_id', $tenantId)
-                        ->select('id', 'name', 'email', 'tenant_id');
-                },
-                'approvedByUser' => static function ($relation) use ($tenantId): void {
-                    $relation
-                        ->where('tenant_id', $tenantId)
-                        ->select('id', 'name', 'email', 'tenant_id');
-                },
-            ])
-            ->first();
+        $approval = $this->loadApprovalWithRelations($this->tenantId($request), $id);
 
         if ($approval === null) {
             return response()->json(['message' => 'Approval not found'], 404);
@@ -130,6 +116,71 @@ final class ApprovalController extends Controller
         return response()->json([
             'data' => $this->serializeApprovalDetail($approval),
         ]);
+    }
+
+    /**
+     * GET /approvals/:id/summary
+     * Scoped by tenant_id.
+     */
+    public function summary(Request $request, string $id): JsonResponse
+    {
+        $approval = $this->loadApprovalWithRelations($this->tenantId($request), $id);
+        if ($approval === null) {
+            return response()->json(['message' => 'Approval not found'], 404);
+        }
+
+        $comparisonRun = $approval->comparisonRun;
+        if (! $comparisonRun instanceof ComparisonRun) {
+            return response()->json(['message' => 'Comparison run not found'], 404);
+        }
+
+        $storedSummary = $this->storedApprovalSummary($comparisonRun, (string) $approval->id);
+        if ($storedSummary === null) {
+            return response()->json(['message' => 'Approval summary not found'], 404);
+        }
+
+        return response()->json([
+            'data' => [
+                'ai_summary' => $storedSummary,
+            ],
+        ]);
+    }
+
+    /**
+     * POST /approvals/:id/summary/generate
+     * Scoped by tenant_id.
+     */
+    public function generateSummary(Request $request, string $id): JsonResponse
+    {
+        $approval = $this->loadApprovalWithRelations($this->tenantId($request), $id);
+        if ($approval === null) {
+            return response()->json(['message' => 'Approval not found'], 404);
+        }
+
+        $comparisonRun = $approval->comparisonRun;
+        if (! $comparisonRun instanceof ComparisonRun) {
+            return response()->json(['message' => 'Comparison run not found'], 404);
+        }
+
+        $storedSummary = $this->storedApprovalSummary($comparisonRun, (string) $approval->id);
+        if ($storedSummary !== null) {
+            return response()->json([
+                'data' => [
+                    'ai_summary' => $storedSummary,
+                ],
+            ]);
+        }
+
+        $artifact = $this->buildApprovalSummaryEnvelope($approval, $comparisonRun);
+        if (($artifact['available'] ?? false) === true) {
+            $this->persistApprovalSummaryArtifact($comparisonRun, $approval, $artifact);
+        }
+
+        return response()->json([
+            'data' => [
+                'ai_summary' => $artifact,
+            ],
+        ], ($artifact['available'] ?? false) === true ? 200 : 503);
     }
 
     /**
@@ -422,5 +473,251 @@ final class ApprovalController extends Controller
         $row['created_at'] = $approval->created_at?->toAtomString();
 
         return $row;
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @param array<string, mixed>|null $provenance
+     * @return array<string, mixed>
+     */
+    private function artifactEnvelope(
+        string $featureKey,
+        string $capabilityGroup,
+        array $payload,
+        ?array $provenance = null,
+    ): array {
+        return [
+            'feature_key' => $featureKey,
+            'capability_group' => $capabilityGroup,
+            'available' => true,
+            'status' => AiStatusSchema::CAPABILITY_STATUS_AVAILABLE,
+            'manual_continuity' => 'available',
+            'payload' => $payload,
+            'provenance' => $provenance,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function unavailableArtifactEnvelope(string $featureKey, string $capabilityGroup): array
+    {
+        $capabilityStatus = $this->aiCapabilityStatus($featureKey);
+        $statusSnapshot = $this->aiStatusSnapshot();
+
+        return [
+            'feature_key' => $featureKey,
+            'capability_group' => $capabilityGroup,
+            'available' => false,
+            'status' => $capabilityStatus?->status ?? AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE,
+            'manual_continuity' => 'available',
+            'fallback_ui_mode' => $capabilityStatus?->fallbackUiMode ?? AiStatusSchema::FALLBACK_UI_MODE_SHOW_UNAVAILABLE_MESSAGE,
+            'message_key' => $capabilityStatus?->messageKey ?? 'ai.capability.unavailable',
+            'reason_codes' => $capabilityStatus?->reasonCodes ?? $statusSnapshot->reasonCodes,
+            'diagnostics' => $capabilityStatus?->diagnostics ?? ['mode' => $statusSnapshot->mode],
+            'payload' => null,
+            'provenance' => [
+                'source' => 'deterministic',
+                'endpoint_group' => AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD,
+                'provider_name' => $this->providerName(),
+                'generated_at' => $this->clock->now()->format(DATE_ATOM),
+            ],
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    private function providerArtifactProvenance(array $payload, string $endpointGroup): array
+    {
+        $provenance = is_array($payload['provenance'] ?? null) ? $payload['provenance'] : [];
+
+        return array_replace($provenance, [
+            'source' => 'provider',
+            'provider_name' => $this->providerName(),
+            'endpoint_group' => $endpointGroup,
+            'generated_at' => $provenance['generated_at'] ?? $this->clock->now()->format(DATE_ATOM),
+        ]);
+    }
+
+    private function providerName(): ?string
+    {
+        try {
+            $providerName = $this->aiRuntimeStatus->providerName();
+        } catch (Throwable) {
+            return null;
+        }
+
+        return is_string($providerName) && trim($providerName) !== '' ? trim($providerName) : null;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function serializeComparisonContext(ComparisonRun $comparisonRun): array
+    {
+        $responsePayload = is_array($comparisonRun->response_payload) ? $comparisonRun->response_payload : [];
+
+        return [
+            'comparison_run' => [
+                'id' => (string) $comparisonRun->id,
+                'status' => (string) $comparisonRun->status,
+                'is_preview' => (bool) ($comparisonRun->is_preview ?? false),
+                'version' => (int) ($comparisonRun->version ?? 1),
+            ],
+            'snapshot' => is_array($responsePayload['snapshot'] ?? null) ? $responsePayload['snapshot'] : null,
+            'matrix' => is_array($comparisonRun->matrix_payload) ? $comparisonRun->matrix_payload : null,
+            'readiness' => is_array($comparisonRun->readiness_payload) ? $comparisonRun->readiness_payload : null,
+            'approval' => is_array($comparisonRun->approval_payload) ? $comparisonRun->approval_payload : null,
+            'ai_overlay' => is_array($responsePayload['ai_overlay'] ?? null) ? $responsePayload['ai_overlay'] : null,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function storedApprovalSummary(ComparisonRun $comparisonRun, string $approvalId): ?array
+    {
+        $responsePayload = $comparisonRun->response_payload ?? [];
+        if (! is_array($responsePayload)) {
+            return null;
+        }
+
+        $artifact = $responsePayload['ai_artifacts']['approval_summary'][$approvalId] ?? null;
+
+        return is_array($artifact) ? $artifact : null;
+    }
+
+    /**
+     * @param array<string, mixed> $artifact
+     */
+    private function persistApprovalSummaryArtifact(ComparisonRun $comparisonRun, Approval $approval, array $artifact): void
+    {
+        DB::transaction(function () use ($comparisonRun, $approval, $artifact): void {
+            /** @var ComparisonRun $lockedRun */
+            $lockedRun = ComparisonRun::query()
+                ->where('id', $comparisonRun->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $responsePayload = $lockedRun->response_payload ?? [];
+            if (! is_array($responsePayload)) {
+                $responsePayload = [];
+            }
+
+            $artifacts = $responsePayload['ai_artifacts'] ?? [];
+            if (! is_array($artifacts)) {
+                $artifacts = [];
+            }
+
+            $summaryArtifacts = $artifacts['approval_summary'] ?? [];
+            if (! is_array($summaryArtifacts)) {
+                $summaryArtifacts = [];
+            }
+
+            $summaryArtifacts[(string) $approval->id] = $artifact;
+            $artifacts['approval_summary'] = $summaryArtifacts;
+            $responsePayload['ai_artifacts'] = $artifacts;
+            $lockedRun->response_payload = $responsePayload;
+            $lockedRun->save();
+
+            $this->decisionTrailRecorder->recordAiArtifactGenerated(
+                tenantId: (string) $approval->tenant_id,
+                rfqId: (string) $approval->rfq_id,
+                comparisonRunId: (string) $approval->comparison_run_id,
+                eventType: 'approval_ai_summary_generated:' . (string) $approval->id,
+                summary: [
+                    'artifact_kind' => 'approval_ai_summary',
+                    'artifact_origin' => 'provider_drafted',
+                    'feature_key' => 'approval_ai_summary',
+                    'approval_id' => (string) $approval->id,
+                    'artifact' => $artifact,
+                    'provenance' => is_array($artifact['provenance'] ?? null) ? $artifact['provenance'] : [],
+                ],
+            );
+        });
+    }
+
+    private function loadApprovalWithRelations(string $tenantId, string $id): ?Approval
+    {
+        /** @var Approval|null $approval */
+        $approval = Approval::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $id)
+            ->with([
+                'rfq' => static function ($relation) use ($tenantId): void {
+                    $relation
+                        ->where('tenant_id', $tenantId)
+                        ->select('id', 'title', 'tenant_id', 'rfq_number');
+                },
+                'comparisonRun' => static function ($relation) use ($tenantId): void {
+                    $relation
+                        ->where('tenant_id', $tenantId)
+                        ->select(
+                            'id',
+                            'name',
+                            'status',
+                            'is_preview',
+                            'tenant_id',
+                            'response_payload',
+                            'matrix_payload',
+                            'readiness_payload',
+                            'approval_payload',
+                            'version',
+                        );
+                },
+                'requestedBy' => static function ($relation) use ($tenantId): void {
+                    $relation
+                        ->where('tenant_id', $tenantId)
+                        ->select('id', 'name', 'email', 'tenant_id');
+                },
+                'approvedByUser' => static function ($relation) use ($tenantId): void {
+                    $relation
+                        ->where('tenant_id', $tenantId)
+                        ->select('id', 'name', 'email', 'tenant_id');
+                },
+            ])
+            ->first();
+
+        return $approval;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buildApprovalSummaryEnvelope(Approval $approval, ComparisonRun $comparisonRun): array
+    {
+        if (! $this->aiCapabilityAvailable('approval_ai_summary')) {
+            return $this->unavailableArtifactEnvelope(
+                featureKey: 'approval_ai_summary',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_GOVERNANCE_INTELLIGENCE,
+            );
+        }
+
+        try {
+            $summary = $this->comparisonAwardAiClient->approvalSummary(new ApprovalSummaryRequest(
+                tenantId: (string) $approval->tenant_id,
+                approvalId: (string) $approval->id,
+                rfqId: (string) $approval->rfq_id,
+                comparisonRunId: (string) $approval->comparison_run_id,
+                approval: $this->serializeApprovalDetail($approval),
+                comparisonContext: $this->serializeComparisonContext($comparisonRun),
+            ))->payload;
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return $this->unavailableArtifactEnvelope(
+                featureKey: 'approval_ai_summary',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_GOVERNANCE_INTELLIGENCE,
+            );
+        }
+
+        return $this->artifactEnvelope(
+            featureKey: 'approval_ai_summary',
+            capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_GOVERNANCE_INTELLIGENCE,
+            payload: $summary,
+            provenance: $this->providerArtifactProvenance($summary, AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD),
+        );
     }
 }

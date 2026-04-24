@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use Closure;
+use App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface;
+use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use App\Adapters\Ai\DTOs\ComparisonOverlayRequest;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
+use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ComparisonFinalizeRequest;
 use App\Http\Requests\ComparisonPreviewRequest;
@@ -18,6 +23,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
+use Throwable;
+use Nexus\Common\Contracts\ClockInterface;
+use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 use Nexus\QuotationIntelligence\Contracts\BatchQuoteComparisonCoordinatorInterface;
 use Nexus\QuotationIntelligence\Exceptions\ComparisonNotReadyException;
 use Nexus\QuotationIntelligence\Exceptions\QuotationIntelligenceException;
@@ -25,12 +33,16 @@ use Nexus\QuotationIntelligence\Exceptions\QuotationIntelligenceException;
 final class ComparisonRunController extends Controller
 {
     use ExtractsAuthContext;
+    use InteractsWithAiAvailability;
 
     public function __construct(
         private readonly ComparisonSnapshotService $snapshotService,
         private readonly QuoteSubmissionReadinessService $readinessService,
         private readonly DecisionTrailRecorder $decisionTrail,
         private readonly BatchQuoteComparisonCoordinatorInterface $comparisonCoordinator,
+        private readonly ComparisonAwardAiClientInterface $comparisonAwardAiClient,
+        private readonly AiRuntimeStatusInterface $aiRuntimeStatus,
+        private readonly ClockInterface $clock,
     ) {}
 
     /**
@@ -99,6 +111,7 @@ final class ComparisonRunController extends Controller
                 'status' => $run->status,
                 'is_preview' => (bool) $run->is_preview,
                 'snapshot' => $run->response_payload['snapshot'] ?? null,
+                'ai_overlay' => $this->storedAiOverlay($run),
                 'created_at' => $run->created_at?->toAtomString(),
             ],
         ]);
@@ -172,6 +185,14 @@ final class ComparisonRunController extends Controller
             'discarded_by' => null,
         ]);
 
+        $aiOverlay = $this->buildComparisonAiOverlay(
+            $tenantId,
+            (string) $rfq->id,
+            'preview',
+            $comparison,
+        );
+        $this->persistComparisonAiOverlay($run, $aiOverlay);
+
         return response()->json([
             'data' => [
                 'id' => $run->id,
@@ -181,6 +202,7 @@ final class ComparisonRunController extends Controller
                 'matrix' => $run->matrix_payload,
                 'readiness' => $run->readiness_payload,
                 'approval' => $run->approval_payload,
+                'ai_overlay' => $aiOverlay,
                 'created_at' => $run->created_at?->toAtomString(),
             ],
         ], 201);
@@ -296,7 +318,10 @@ final class ComparisonRunController extends Controller
                     ],
                 );
 
-                return ['run' => $run];
+                return [
+                    'run' => $run,
+                    'comparison' => $comparison,
+                ];
             });
         } catch (ComparisonNotReadyException $exception) {
             return $this->notReadyResponse($exception);
@@ -306,6 +331,15 @@ final class ComparisonRunController extends Controller
 
         /** @var ComparisonRun $run */
         $run = $result['run'];
+        $comparison = $result['comparison'];
+        $aiOverlay = $this->buildComparisonAiOverlay(
+            $tenantId,
+            (string) $rfq->id,
+            'final',
+            $comparison,
+            $snapshot,
+        );
+        $this->persistComparisonAiOverlay($run, $aiOverlay);
 
         return response()->json([
             'data' => [
@@ -315,8 +349,27 @@ final class ComparisonRunController extends Controller
                 'snapshot' => $snapshot,
                 'matrix' => $run->matrix_payload,
                 'readiness' => $run->readiness_payload,
+                'ai_overlay' => $aiOverlay,
             ],
         ], 201);
+    }
+
+    /**
+     * GET /comparison-runs/:id/overlay
+     * Scoped by tenant_id.
+     */
+    public function overlay(Request $request, string $id): JsonResponse
+    {
+        $run = $this->runForTenant($this->tenantId($request), $id);
+        if ($run === null) {
+            return response()->json(['message' => 'Comparison run not found'], 404);
+        }
+
+        return response()->json([
+            'data' => [
+                'ai_overlay' => $this->storedAiOverlay($run),
+            ],
+        ]);
     }
 
     /**
@@ -418,6 +471,195 @@ final class ComparisonRunController extends Controller
             'code' => class_basename($exception),
             'error' => $exception->getMessage(),
         ], 422);
+    }
+
+    /**
+     * @param array<string, mixed> $comparison
+     * @param array<string, mixed>|null $snapshot
+     * @return array<string, mixed>
+     */
+    private function buildComparisonAiOverlay(
+        string $tenantId,
+        string $rfqId,
+        string $mode,
+        array $comparison,
+        ?array $snapshot = null,
+    ): array {
+        if (! $this->aiCapabilityAvailable('comparison_ai_overlay')) {
+            return $this->comparisonAiUnavailableOverlay();
+        }
+
+        try {
+            $overlay = $this->comparisonAwardAiClient->comparisonOverlay(new ComparisonOverlayRequest(
+                tenantId: $tenantId,
+                rfqId: $rfqId,
+                mode: $mode,
+                comparison: $comparison,
+                snapshot: $snapshot,
+            ))->payload;
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return $this->comparisonAiUnavailableOverlay();
+        }
+
+        return $this->artifactEnvelope(
+            featureKey: 'comparison_ai_overlay',
+            capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_COMPARISON_INTELLIGENCE,
+            available: true,
+            payload: $overlay,
+            provenance: $this->providerArtifactProvenance($overlay, AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD),
+        );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function comparisonAiUnavailableOverlay(): array
+    {
+        $capabilityStatus = $this->aiCapabilityStatus('comparison_ai_overlay');
+        $statusSnapshot = $this->aiStatusSnapshot();
+
+        return $this->artifactEnvelope(
+            featureKey: 'comparison_ai_overlay',
+            capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_COMPARISON_INTELLIGENCE,
+            available: false,
+            payload: null,
+            provenance: [
+                'source' => 'deterministic',
+                'endpoint_group' => AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD,
+                'provider_name' => $this->providerName(),
+                'generated_at' => $this->clock->now()->format(DATE_ATOM),
+            ],
+            status: $capabilityStatus?->status ?? AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE,
+            fallbackUiMode: $capabilityStatus?->fallbackUiMode ?? AiStatusSchema::FALLBACK_UI_MODE_SHOW_UNAVAILABLE_MESSAGE,
+            messageKey: $capabilityStatus?->messageKey ?? 'ai.capability.unavailable',
+            reasonCodes: $capabilityStatus?->reasonCodes ?? $statusSnapshot->reasonCodes,
+            diagnostics: $capabilityStatus?->diagnostics ?? ['mode' => $statusSnapshot->mode],
+        );
+    }
+
+    /**
+     * Persist the optional AI overlay separately from the deterministic comparison snapshot.
+     *
+     * @param array<string, mixed> $aiOverlay
+     */
+    private function persistComparisonAiOverlay(ComparisonRun $run, array $aiOverlay): void
+    {
+        DB::transaction(Closure::fromCallable(function () use ($run, $aiOverlay): void {
+            /** @var ComparisonRun $lockedRun */
+            $lockedRun = ComparisonRun::query()
+                ->where('id', $run->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $responsePayload = $lockedRun->response_payload ?? [];
+            if (! is_array($responsePayload)) {
+                $responsePayload = [];
+            }
+
+            $artifacts = $responsePayload['ai_artifacts'] ?? [];
+            if (! is_array($artifacts)) {
+                $artifacts = [];
+            }
+
+            $artifacts['ai_overlay'] = $aiOverlay;
+            $responsePayload['ai_artifacts'] = $artifacts;
+            unset($responsePayload['ai_overlay']);
+
+            $lockedRun->response_payload = $responsePayload;
+            $lockedRun->save();
+
+            $this->decisionTrail->recordAiArtifactGenerated(
+                tenantId: (string) $lockedRun->tenant_id,
+                rfqId: (string) $lockedRun->rfq_id,
+                comparisonRunId: (string) $lockedRun->id,
+                eventType: 'comparison_ai_overlay_generated',
+                summary: [
+                    'artifact_kind' => 'comparison_ai_overlay',
+                    'artifact_origin' => $aiOverlay['available'] === true ? 'provider_drafted' : 'manual_continuity',
+                    'feature_key' => $aiOverlay['feature_key'] ?? 'comparison_ai_overlay',
+                    'available' => $aiOverlay['available'] ?? false,
+                    'artifact' => $aiOverlay,
+                    'provenance' => is_array($aiOverlay['provenance'] ?? null) ? $aiOverlay['provenance'] : [],
+                ],
+            );
+        }));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function storedAiOverlay(ComparisonRun $run): array
+    {
+        $responsePayload = is_array($run->response_payload) ? $run->response_payload : [];
+        $overlay = $responsePayload['ai_artifacts']['ai_overlay'] ?? $responsePayload['ai_overlay'] ?? null;
+        if (is_array($overlay)) {
+            return $overlay;
+        }
+
+        return $this->comparisonAiUnavailableOverlay();
+    }
+
+    /**
+     * @param array<string, mixed>|null $payload
+     * @param array<string, mixed>|null $provenance
+     * @param array<int, string>|null $reasonCodes
+     * @param array<string, mixed>|null $diagnostics
+     * @return array<string, mixed>
+     */
+    private function artifactEnvelope(
+        string $featureKey,
+        string $capabilityGroup,
+        bool $available,
+        ?array $payload,
+        ?array $provenance = null,
+        string $status = AiStatusSchema::CAPABILITY_STATUS_AVAILABLE,
+        ?string $fallbackUiMode = null,
+        ?string $messageKey = null,
+        ?array $reasonCodes = null,
+        ?array $diagnostics = null,
+    ): array {
+        return [
+            'feature_key' => $featureKey,
+            'capability_group' => $capabilityGroup,
+            'available' => $available,
+            'status' => $status,
+            'manual_continuity' => 'available',
+            'fallback_ui_mode' => $fallbackUiMode,
+            'message_key' => $messageKey,
+            'reason_codes' => $reasonCodes ?? [],
+            'diagnostics' => $diagnostics ?? [],
+            'payload' => $payload,
+            'provenance' => $provenance,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    private function providerArtifactProvenance(array $payload, string $endpointGroup): array
+    {
+        $provenance = is_array($payload['provenance'] ?? null) ? $payload['provenance'] : [];
+
+        return array_replace($provenance, [
+            'source' => 'provider',
+            'provider_name' => $this->providerName(),
+            'endpoint_group' => $endpointGroup,
+            'generated_at' => $provenance['generated_at'] ?? $this->clock->now()->format(DATE_ATOM),
+        ]);
+    }
+
+    private function providerName(): ?string
+    {
+        try {
+            $providerName = $this->aiRuntimeStatus->providerName();
+        } catch (Throwable) {
+            return null;
+        }
+
+        return is_string($providerName) && trim($providerName) !== '' ? trim($providerName) : null;
     }
 
     private function deferredControlResponse(Request $request, string $id): JsonResponse

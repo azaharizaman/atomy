@@ -29,6 +29,13 @@ export interface ComparisonRunSnapshot {
   vendors: ComparisonRunSnapshotVendor[];
 }
 
+export interface ComparisonRunAiOverlay {
+  featureKey: string;
+  available: boolean;
+  payload: Record<string, unknown> | null;
+  provenance: Record<string, unknown> | null;
+}
+
 export interface ComparisonRunDetail {
   id: string;
   rfqId: string;
@@ -36,6 +43,7 @@ export interface ComparisonRunDetail {
   status: string;
   isPreview: boolean;
   snapshot: ComparisonRunSnapshot | null;
+  aiOverlay: ComparisonRunAiOverlay | null;
   createdAt: string | null;
 }
 
@@ -159,6 +167,38 @@ function normalizeSnapshot(payload: unknown): ComparisonRunSnapshot | null {
   };
 }
 
+function normalizeProvenance(value: unknown): Record<string, unknown> | null {
+  return isObject(value) ? value : null;
+}
+
+function normalizeAiOverlay(payload: unknown): ComparisonRunAiOverlay | null {
+  if (payload === null || payload === undefined) {
+    return null;
+  }
+
+  if (!isObject(payload)) {
+    throw new Error('Comparison run AI overlay must be an object.');
+  }
+
+  const featureKey = toText(payload.feature_key ?? payload.featureKey);
+  if (featureKey === null) {
+    throw new Error('Comparison run AI overlay is missing feature_key.');
+  }
+
+  if (typeof payload.available !== 'boolean') {
+    throw new Error('Comparison run AI overlay has invalid available state.');
+  }
+
+  const overlayPayload = isObject(payload.payload) ? payload.payload : null;
+
+  return {
+    featureKey,
+    available: payload.available,
+    payload: overlayPayload,
+    provenance: normalizeProvenance(payload.provenance),
+  };
+}
+
 function normalizeComparisonRun(payload: unknown): ComparisonRunDetail {
   const raw = unwrapResponse(payload);
   if (!isObject(raw)) {
@@ -181,6 +221,12 @@ function normalizeComparisonRun(payload: unknown): ComparisonRunDetail {
       ? raw.response_payload
       : undefined;
   const snapshotPayload = raw.snapshot ?? responsePayload?.snapshot;
+  const aiOverlayPayload =
+    raw.ai_overlay ??
+    raw.aiOverlay ??
+    responsePayload?.ai_overlay ??
+    responsePayload?.aiOverlay ??
+    null;
   const isPreviewValue = raw.is_preview ?? raw.isPreview;
   const isPreview = typeof isPreviewValue === 'boolean'
     ? isPreviewValue
@@ -195,6 +241,7 @@ function normalizeComparisonRun(payload: unknown): ComparisonRunDetail {
     status: toText(raw.status) ?? 'draft',
     isPreview,
     snapshot: normalizeSnapshot(snapshotPayload),
+    aiOverlay: normalizeAiOverlay(aiOverlayPayload),
     createdAt: toText(raw.created_at ?? raw.createdAt),
   };
 }
@@ -213,6 +260,7 @@ async function buildMockComparisonRun(runId: string, rfqId?: string): Promise<Co
       status: 'draft',
       isPreview: true,
       snapshot: null,
+      aiOverlay: null,
       createdAt: null,
     };
   }
@@ -230,6 +278,7 @@ async function buildMockComparisonRun(runId: string, rfqId?: string): Promise<Co
       currencyMeta: {},
       vendors: [],
     },
+    aiOverlay: null,
     createdAt: null,
   };
 }

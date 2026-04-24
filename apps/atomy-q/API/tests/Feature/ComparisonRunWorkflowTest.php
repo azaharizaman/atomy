@@ -4,15 +4,24 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface;
+use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use App\Adapters\Ai\DTOs\ComparisonOverlayRequest;
+use App\Adapters\Ai\DTOs\ComparisonOverlayResponse;
 use App\Models\ComparisonRun;
+use App\Models\DecisionTrailEntry;
 use App\Models\NormalizationSourceLine;
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
 use App\Models\RfqLineItem;
 use App\Models\User;
+use DateTimeImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Nexus\IntelligenceOperations\DTOs\AiCapabilityStatus;
+use Nexus\IntelligenceOperations\DTOs\AiStatusSnapshot;
+use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 use Nexus\QuotationIntelligence\Contracts\BatchQuoteComparisonCoordinatorInterface;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
 use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterface;
@@ -62,6 +71,44 @@ final class ComparisonRunWorkflowTest extends ApiTestCase
         app()->forgetInstance(QuotationIntelligenceCoordinatorInterface::class);
         app()->forgetInstance(OrchestratorContentProcessorInterface::class);
         app()->forgetInstance(SemanticMapperInterface::class);
+    }
+
+    /**
+     * @param array<string, AiCapabilityStatus> $capabilityStatuses
+     */
+    private function bindAiRuntimeStatus(array $capabilityStatuses): void
+    {
+        $snapshot = new AiStatusSnapshot(
+            mode: AiStatusSchema::MODE_PROVIDER,
+            globalHealth: AiStatusSchema::HEALTH_DEGRADED,
+            capabilityDefinitions: [],
+            capabilityStatuses: $capabilityStatuses,
+            endpointGroupHealthSnapshots: [],
+            reasonCodes: ['provider_unavailable'],
+            generatedAt: new DateTimeImmutable('2026-04-24T11:00:00+08:00'),
+        );
+
+        $this->app->instance(AiRuntimeStatusInterface::class, new readonly class($snapshot) implements AiRuntimeStatusInterface {
+            public function __construct(
+                private AiStatusSnapshot $snapshot,
+            ) {
+            }
+
+            public function snapshot(): AiStatusSnapshot
+            {
+                return $this->snapshot;
+            }
+
+            public function capabilityStatus(string $featureKey): ?AiCapabilityStatus
+            {
+                return $this->snapshot->capabilityStatuses[$featureKey] ?? null;
+            }
+
+            public function providerName(): string
+            {
+                return 'openrouter';
+            }
+        });
     }
 
     /**
@@ -149,6 +196,25 @@ final class ComparisonRunWorkflowTest extends ApiTestCase
 
     public function test_preview_comparison_run_returns_real_persisted_id_and_live_payloads(): void
     {
+        $this->bindAiRuntimeStatus([
+            'comparison_ai_overlay' => new AiCapabilityStatus(
+                featureKey: 'comparison_ai_overlay',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_COMPARISON_INTELLIGENCE,
+                endpointGroup: AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD,
+                fallbackUiMode: AiStatusSchema::FALLBACK_UI_MODE_SHOW_UNAVAILABLE_MESSAGE,
+                messageKey: 'ai.comparison_ai_overlay.unavailable',
+                status: AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE,
+                available: false,
+                reasonCodes: ['provider_unavailable'],
+                operatorCritical: true,
+                diagnostics: ['mode' => AiStatusSchema::MODE_PROVIDER],
+            ),
+        ]);
+        $comparisonAwardClient = $this->createMock(ComparisonAwardAiClientInterface::class);
+        $comparisonAwardClient->expects($this->never())->method('comparisonOverlay');
+        $comparisonAwardClient->expects($this->never())->method('awardDebriefDraft');
+        $this->app->instance(ComparisonAwardAiClientInterface::class, $comparisonAwardClient);
+
         $user = $this->createUser();
         [$rfq] = $this->seedReadyComparisonContext($user);
 
@@ -166,6 +232,9 @@ final class ComparisonRunWorkflowTest extends ApiTestCase
         $this->assertFalse(str_starts_with((string) $response->json('data.id'), 'cr-preview-'));
         $this->assertNotEmpty($response->json('data.matrix.clusters'));
         $this->assertSame(true, $response->json('data.readiness.is_ready'));
+        $response->assertJsonPath('data.ai_overlay.available', false);
+        $this->assertSame('comparison_ai_overlay', $response->json('data.ai_overlay.feature_key'));
+        $this->assertSame('deterministic', $response->json('data.ai_overlay.provenance.source'));
 
         $this->assertDatabaseHas('comparison_runs', [
             'id' => $response->json('data.id'),
@@ -174,10 +243,37 @@ final class ComparisonRunWorkflowTest extends ApiTestCase
             'is_preview' => true,
             'status' => 'preview',
         ]);
+        $this->assertDatabaseHas('decision_trail_entries', [
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'comparison_run_id' => $response->json('data.id'),
+            'event_type' => 'comparison_ai_overlay_generated',
+        ]);
     }
 
     public function test_final_comparison_uses_final_coordinator_path(): void
     {
+        $this->bindAiRuntimeStatus([
+            'comparison_ai_overlay' => new AiCapabilityStatus(
+                featureKey: 'comparison_ai_overlay',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_COMPARISON_INTELLIGENCE,
+                endpointGroup: AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD,
+                fallbackUiMode: AiStatusSchema::FALLBACK_UI_MODE_SHOW_UNAVAILABLE_MESSAGE,
+                messageKey: 'ai.comparison_ai_overlay.unavailable',
+                status: AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE,
+                available: false,
+                reasonCodes: ['provider_unavailable'],
+                operatorCritical: true,
+                diagnostics: ['mode' => AiStatusSchema::MODE_PROVIDER],
+            ),
+        ]);
+        $comparisonAwardClient = $this->createMock(ComparisonAwardAiClientInterface::class);
+        $comparisonAwardClient->expects($this->never())->method('comparisonOverlay');
+        $comparisonAwardClient->expects($this->never())->method('awardGuidance');
+        $comparisonAwardClient->expects($this->never())->method('awardDebriefDraft');
+        $comparisonAwardClient->expects($this->never())->method('approvalSummary');
+        $this->app->instance(ComparisonAwardAiClientInterface::class, $comparisonAwardClient);
+
         $user = $this->createUser();
         [$rfq] = $this->seedReadyComparisonContext($user);
 
@@ -217,6 +313,8 @@ final class ComparisonRunWorkflowTest extends ApiTestCase
         $response->assertJsonPath('data.status', 'final');
         $response->assertJsonPath('data.matrix.clusters', []);
         $response->assertJsonPath('data.readiness.is_ready', true);
+        $response->assertJsonPath('data.ai_overlay.available', false);
+        $response->assertJsonPath('data.ai_overlay.provenance.source', 'deterministic');
         $this->assertDatabaseHas('comparison_runs', [
             'tenant_id' => $user->tenant_id,
             'rfq_id' => $rfq->id,
@@ -325,6 +423,89 @@ final class ComparisonRunWorkflowTest extends ApiTestCase
         $readinessResponse->assertOk();
         $readinessResponse->assertJsonPath('data.id', (string) $run->id);
         $readinessResponse->assertJsonPath('data.readiness.is_ready', true);
+
+        $showResponse = $this->getJson(
+            '/api/v1/comparison-runs/' . $run->id,
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+        $showResponse->assertOk();
+        $showResponse->assertJsonPath('data.ai_overlay.feature_key', 'comparison_ai_overlay');
+    }
+
+    public function test_overlay_endpoint_returns_persisted_ai_overlay_for_tenant(): void
+    {
+        $this->bindAiRuntimeStatus([
+            'comparison_ai_overlay' => new AiCapabilityStatus(
+                featureKey: 'comparison_ai_overlay',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_COMPARISON_INTELLIGENCE,
+                endpointGroup: AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD,
+                fallbackUiMode: AiStatusSchema::FALLBACK_UI_MODE_SHOW_MANUAL_CONTINUITY_BANNER,
+                messageKey: 'ai.comparison_ai_overlay.available',
+                status: AiStatusSchema::CAPABILITY_STATUS_AVAILABLE,
+                available: true,
+                reasonCodes: [],
+                operatorCritical: true,
+                diagnostics: ['mode' => AiStatusSchema::MODE_PROVIDER],
+            ),
+        ]);
+
+        $comparisonAwardClient = $this->createMock(ComparisonAwardAiClientInterface::class);
+        $comparisonAwardClient->expects($this->once())
+            ->method('comparisonOverlay')
+            ->with($this->callback(static function (ComparisonOverlayRequest $request): bool {
+                return $request->tenantId !== ''
+                    && $request->rfqId !== ''
+                    && $request->mode === 'preview';
+            }))
+            ->willReturn(new ComparisonOverlayResponse([
+                'headline' => 'Vendor One is lowest risk',
+                'recommendations' => ['prefer_vendor_one'],
+            ]));
+        $comparisonAwardClient->expects($this->never())->method('awardGuidance');
+        $comparisonAwardClient->expects($this->never())->method('awardDebriefDraft');
+        $comparisonAwardClient->expects($this->never())->method('approvalSummary');
+        $this->app->instance(ComparisonAwardAiClientInterface::class, $comparisonAwardClient);
+
+        $user = $this->createUser();
+        [$rfq] = $this->seedReadyComparisonContext($user);
+
+        $previewResponse = $this->postJson(
+            '/api/v1/comparison-runs/preview',
+            ['rfq_id' => (string) $rfq->id],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $previewResponse->assertCreated();
+        $previewResponse->assertJsonPath('data.ai_overlay.available', true);
+        $previewResponse->assertJsonPath('data.ai_overlay.payload.headline', 'Vendor One is lowest risk');
+
+        $runId = (string) $previewResponse->json('data.id');
+
+        $overlayResponse = $this->getJson(
+            '/api/v1/comparison-runs/' . $runId . '/overlay',
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $overlayResponse->assertOk();
+        $overlayResponse->assertJsonPath('data.ai_overlay.available', true);
+        $overlayResponse->assertJsonPath('data.ai_overlay.payload.recommendations.0', 'prefer_vendor_one');
+        $overlayResponse->assertJsonPath('data.ai_overlay.provenance.source', 'provider');
+
+        $entry = DecisionTrailEntry::query()
+            ->where('tenant_id', $user->tenant_id)
+            ->where('comparison_run_id', $runId)
+            ->where('event_type', 'comparison_ai_overlay_generated')
+            ->first();
+
+        $this->assertNotNull($entry);
+
+        $trailResponse = $this->getJson(
+            '/api/v1/decision-trail/' . $entry->id,
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+        $trailResponse->assertOk();
+        $trailResponse->assertJsonPath('data.metadata.artifact_origin', 'provider_drafted');
+        $trailResponse->assertJsonPath('data.metadata.artifact_kind', 'comparison_ai_overlay');
     }
 
     public function test_matrix_and_readiness_endpoints_return_404_for_wrong_tenant(): void
@@ -361,6 +542,11 @@ final class ComparisonRunWorkflowTest extends ApiTestCase
 
         $this->getJson(
             '/api/v1/comparison-runs/' . $run->id . '/readiness',
+            $this->authHeaders((string) $otherUser->tenant_id, (string) $otherUser->id),
+        )->assertStatus(404);
+
+        $this->getJson(
+            '/api/v1/comparison-runs/' . $run->id . '/overlay',
             $this->authHeaders((string) $otherUser->tenant_id, (string) $otherUser->id),
         )->assertStatus(404);
     }

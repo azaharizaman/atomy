@@ -1,5 +1,36 @@
 # Implementation Summary - Atomy-Q Backend API
 
+## 2026-04-24 AI Comparison Overlay, Award Guidance, And Approval Summary Endpoints
+
+- Added `App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface` and `App\Adapters\Ai\ProviderComparisonAwardClient` as the comparison/award provider client on top of the shared `ProviderAiTransport`, bound in `AppServiceProvider`.
+- Expanded `AtomyAiCapabilityCatalog` with plan-4 feature policies:
+  - `comparison_ai_overlay`
+  - `comparison_deterministic_matrix`
+  - `award_ai_guidance`
+  - `award_manual_submission`
+  - `approval_ai_summary`
+  - `approval_workflow_progression`
+- `ComparisonRunController` now:
+  - uses `InteractsWithAiAvailability`,
+  - persists AI overlay data separately in `comparison_runs.response_payload.ai_overlay`,
+  - includes `ai_overlay` in preview/final/show responses,
+  - exposes `GET /api/v1/comparison-runs/{id}/overlay` for explicit overlay retrieval,
+  - records decision-trail evidence that distinguishes frozen comparison facts from provider-drafted overlay artifacts.
+- `AwardController` now exposes `GET /api/v1/awards/{id}/guidance` and `GET /api/v1/awards/{id}/debrief-draft/{vendorId}` as AI-only endpoints grounded in the frozen comparison run context, while manual award creation/signoff/debrief remain deterministic and fully usable. Generated guidance and debrief drafts are cached under the owning frozen comparison run for later review.
+- `ApprovalController` now exposes `GET /api/v1/approvals/{id}/summary` as an AI-only drafting aid while keeping approval progression deterministic and user-authoritative, and it caches generated summaries under the owning frozen comparison run for reviewability.
+- Comparison overlay, award guidance, award debrief draft, and approval summary now use a consistent artifact-envelope shape with `feature_key`, `available`, `payload`, and `provenance`, while unavailable cases stay truthful and scoped.
+- Persisted artifacts are returned before runtime availability checks, so previously generated guidance/summary/overlay artifacts remain readable even if the provider later degrades.
+- `decision_trail_entries.summary_payload` now stores the tenant-safe artifact summary used to hash the event, and `DecisionTrailController` reads that durable summary first so artifact provenance does not silently change if `comparison_runs.response_payload` is later edited or pruned. Current JSON shape:
+  - `artifact_kind`: string
+  - `artifact_origin`: string
+  - `feature_key`: string
+  - `award_id` / `approval_id` / `vendor_id`: optional string ids
+  - `available`: optional boolean
+  - `provenance`: optional object matching the persisted artifact provenance envelope
+  - `artifact`: optional object holding the persisted artifact envelope itself
+- Verification:
+  - `cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Feature/ComparisonRunWorkflowTest.php tests/Feature/AwardWorkflowTest.php tests/Feature/ApprovalAlphaPathTest.php` -> PASS (30 tests, 203 assertions).
+
 ## 2026-04-24 AI Sourcing Recommendation Runtime And Honest Gating
 
 - Added `App\Adapters\Ai\ProviderSourcingRecommendationClient`, which implements `VendorRecommendationLlmInterface` via the shared provider transport and calls the sourcing recommendation endpoint group with tenant-scoped RFQ context plus deterministic eligible candidates.

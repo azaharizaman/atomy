@@ -5,7 +5,10 @@ import Link from 'next/link';
 import { PageHeader } from '@/components/ds/FilterBar';
 import { Card, EmptyState, SectionCard, InfoGrid } from '@/components/ds/Card';
 import { StatusBadge } from '@/components/ds/Badge';
+import { AiStatusChip } from '@/components/ai/ai-status-chip';
+import { AiUnavailableCallout } from '@/components/ai/ai-unavailable-callout';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
+import { useAiStatus } from '@/hooks/use-ai-status';
 import { useRfq } from '@/hooks/use-rfq';
 import { useComparisonRun } from '@/hooks/use-comparison-run';
 import { useComparisonRunMatrix } from '@/hooks/use-comparison-run-matrix';
@@ -140,6 +143,25 @@ function SnapshotLinesCard({
   );
 }
 
+function JsonBlock({ title, value }: { title: string; value: Record<string, unknown> }) {
+  let content: string;
+
+  try {
+    content = JSON.stringify(value, null, 2);
+  } catch (error) {
+    content = `Unable to stringify value: ${error instanceof Error ? error.message : 'Unknown error'}`;
+  }
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{title}</p>
+      <pre className="overflow-x-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-700">
+        {content}
+      </pre>
+    </div>
+  );
+}
+
 function MatrixClusterCard({
   cluster,
 }: {
@@ -205,6 +227,7 @@ function MatrixClusterCard({
 
 export function ComparisonRunDetailPageContent({ rfqId, runId }: { rfqId: string; runId: string }) {
   const { data: rfq } = useRfq(rfqId);
+  const aiStatus = useAiStatus();
   const runQuery = useComparisonRun(runId, { rfqId });
   const matrixQuery = useComparisonRunMatrix(runId, { rfqId });
   const readinessQuery = useComparisonRunReadiness(runId, { rfqId });
@@ -222,6 +245,11 @@ export function ComparisonRunDetailPageContent({ rfqId, runId }: { rfqId: string
 
   const isReady = Boolean(readiness?.isReady);
   const isPreviewOnly = Boolean(readiness?.isPreviewOnly);
+  const showComparisonOverlayUnavailable =
+    aiStatus.shouldShowUnavailableMessage('comparison_ai_overlay');
+  const hideComparisonOverlay = aiStatus.shouldHideAiControls('comparison_ai_overlay');
+  const comparisonOverlay = run?.aiOverlay ?? null;
+  const isComparisonOverlayUnavailable = comparisonOverlay?.available === false || showComparisonOverlayUnavailable;
 
   if (runQuery.isLoading || matrixQuery.isLoading || readinessQuery.isLoading) {
     return (
@@ -342,6 +370,48 @@ export function ComparisonRunDetailPageContent({ rfqId, runId }: { rfqId: string
           />
         )}
       </SectionCard>
+
+      {!hideComparisonOverlay || showComparisonOverlayUnavailable ? (
+      <SectionCard
+        title="AI overlay"
+        subtitle="Optional provider-derived guidance. Deterministic matrix and snapshot remain authoritative."
+        actions={
+            comparisonOverlay?.available === true ? (
+              <AiStatusChip tone="available" label="AI-derived" />
+            ) : null
+          }
+        >
+          {comparisonOverlay?.available === true && comparisonOverlay.payload != null ? (
+            <div className="space-y-4">
+              <InfoGrid
+                cols={3}
+                items={[
+                  { label: 'Feature key', value: comparisonOverlay.featureKey },
+                  { label: 'Available', value: comparisonOverlay.available ? 'Yes' : 'No' },
+                  { label: 'Payload', value: 'Present' },
+                ]}
+              />
+              <JsonBlock title="Provider payload" value={comparisonOverlay.payload} />
+              {comparisonOverlay.provenance ? <JsonBlock title="Provenance" value={comparisonOverlay.provenance} /> : null}
+            </div>
+          ) : isComparisonOverlayUnavailable ? (
+            <AiUnavailableCallout
+              title="Comparison AI overlay unavailable"
+              messageKey={aiStatus.messageKeyForFeature('comparison_ai_overlay')}
+              fallbackCopy="Deterministic comparison data above remains the source of truth."
+            />
+          ) : (
+            <div className="space-y-2">
+              <p className="text-sm text-slate-700">
+                Provider guidance can surface anomalies, outlier pricing, and recommendation notes without changing the frozen matrix.
+              </p>
+              <p className="text-xs text-slate-500">
+                Treat this as an interpretive layer only; the matrix, readiness output, and snapshot stay primary.
+              </p>
+            </div>
+          )}
+        </SectionCard>
+      ) : null}
     </div>
   );
 }

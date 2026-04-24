@@ -1,5 +1,21 @@
 # Implementation Summary
 
+## 2026-04-24 Comparison/Award/Approval AI Overlay UX (Plan 4)
+
+- Added scoped AI-assist surfaces for the comparison run detail, RFQ award workspace, and RFQ approvals list without changing deterministic/manual authority paths.
+- `comparison-runs/[runId]/page.tsx` now renders a dedicated **AI overlay** panel that honors the persisted artifact envelope returned by the API, so previously stored unavailable overlays do not flip to generic “available” chrome after provider recovery. Matrix/readiness/snapshot remain the source of truth.
+- `award/page.tsx` now renders an optional **AI guidance** panel plus a provider-backed **AI debrief draft** helper for each non-winning vendor. Users can review provenance, apply the draft into the editable textarea, and still send a fully manual debrief.
+- `approvals/page.tsx` now renders a non-blocking **AI summary aid** panel that honors the persisted artifact envelope for the selected approval, while the approval list and navigation remain fully usable.
+- `use-comparison-run.ts`, `use-award-guidance.ts`, `use-award-debrief-draft.ts`, and `use-approval-summary.ts` now normalize the shared artifact contract used by these Plan 4 AI surfaces.
+- Unavailable AI is now shown only in the corresponding AI panel via `AiUnavailableCallout`, rather than degrading whole pages.
+- Added focused regression coverage:
+  - `src/hooks/use-comparison-run.test.ts`
+  - `src/app/(dashboard)/rfqs/[rfqId]/comparison-runs/[runId]/page.test.tsx`
+  - `src/app/(dashboard)/rfqs/[rfqId]/award/page.test.tsx`
+  - `src/app/(dashboard)/rfqs/[rfqId]/approvals/page.test.tsx`
+- Verification:
+  - `cd apps/atomy-q/WEB && npm run test:unit -- src/hooks/use-comparison-run.test.ts 'src/app/(dashboard)/rfqs/[rfqId]/comparison-runs/[runId]/page.test.tsx' 'src/app/(dashboard)/rfqs/[rfqId]/award/page.test.tsx' 'src/app/(dashboard)/rfqs/[rfqId]/approvals/page.test.tsx'` -> PASS.
+
 ## 2026-04-24 Vendor Recommendation Manual-Continuity UX
 
 - Updated `use-vendor-recommendations.ts` to normalize the plan-3 payload shape from the API: `eligible_candidates`, `excluded_candidates`, `provider_explanation`, `deterministic_reason_set`, `provenance`, and structured unavailable responses.

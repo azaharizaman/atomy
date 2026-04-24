@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\QuoteIntake;
 
 use App\Models\DecisionTrailEntry;
+use InvalidArgumentException;
 use Illuminate\Support\Facades\DB;
 
 final readonly class DecisionTrailRecorder
@@ -83,6 +84,46 @@ final readonly class DecisionTrailRecorder
         );
     }
 
+    /**
+     * Record one of the AI artifact events used by the RFQ sourcing chain.
+     *
+     * Allowed values are `comparison_ai_overlay_generated`,
+     * `award_ai_guidance_generated:{awardId}`,
+     * `award_ai_debrief_draft_generated`,
+     * and `approval_ai_summary_generated:{approvalId}`.
+     *
+     * @param array{
+     *     artifact_kind: string,
+     *     artifact_origin: string,
+     *     feature_key: string,
+     *     award_id?: string,
+     *     approval_id?: string,
+     *     vendor_id?: string,
+     *     available?: bool,
+     *     provenance?: array<string, mixed>|null,
+     *     artifact?: array<string, mixed>|null
+     * } $summary Tenant-safe, machine-readable summary (counts, ids); avoid PII.
+     */
+    public function recordAiArtifactGenerated(
+        string $tenantId,
+        string $rfqId,
+        string $comparisonRunId,
+        string $eventType,
+        array $summary,
+    ): void {
+        if (! $this->isAllowedAiArtifactEventType($eventType)) {
+            throw new InvalidArgumentException('Unsupported AI artifact decision-trail event type: ' . $eventType);
+        }
+
+        $this->record(
+            tenantId: $tenantId,
+            rfqId: $rfqId,
+            comparisonRunId: $comparisonRunId,
+            eventType: $eventType,
+            summary: $summary,
+        );
+    }
+
     public function recordManualSourceLineEvent(
         string $tenantId,
         string $rfqId,
@@ -135,11 +176,25 @@ final readonly class DecisionTrailRecorder
                 'rfq_id' => $rfqId,
                 'sequence' => $sequence,
                 'event_type' => $eventType,
+                'summary_payload' => $summary,
                 'payload_hash' => $payloadHash,
                 'previous_hash' => $previousHash,
                 'entry_hash' => $entryHash,
                 'occurred_at' => now(),
             ]);
         });
+    }
+
+    private function isAllowedAiArtifactEventType(string $eventType): bool
+    {
+        if ($eventType === 'comparison_ai_overlay_generated' || $eventType === 'award_ai_debrief_draft_generated') {
+            return true;
+        }
+
+        if (preg_match('/^award_ai_guidance_generated:[^:]+$/', $eventType) === 1) {
+            return true;
+        }
+
+        return preg_match('/^approval_ai_summary_generated:[^:]+$/', $eventType) === 1;
     }
 }

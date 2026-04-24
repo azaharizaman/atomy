@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface;
+use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use App\Adapters\Ai\DTOs\AwardDebriefDraftRequest;
+use App\Adapters\Ai\DTOs\AwardDebriefDraftResponse;
+use App\Adapters\Ai\DTOs\AwardGuidanceRequest;
+use App\Adapters\Ai\DTOs\AwardGuidanceResponse;
 use App\Models\Award;
 use App\Models\ComparisonRun;
 use App\Models\DecisionTrailEntry;
@@ -11,10 +17,14 @@ use App\Models\QuoteSubmission;
 use App\Models\Rfq;
 use App\Models\RfqLineItem;
 use App\Models\User;
+use DateTimeImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Nexus\IntelligenceOperations\DTOs\AiCapabilityStatus;
+use Nexus\IntelligenceOperations\DTOs\AiStatusSnapshot;
+use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 use Tests\Feature\Api\ApiTestCase;
 
 final class AwardWorkflowTest extends ApiTestCase
@@ -51,6 +61,44 @@ final class AwardWorkflowTest extends ApiTestCase
         ]);
 
         return $user;
+    }
+
+    /**
+     * @param array<string, AiCapabilityStatus> $capabilityStatuses
+     */
+    private function bindAiRuntimeStatus(array $capabilityStatuses): void
+    {
+        $snapshot = new AiStatusSnapshot(
+            mode: AiStatusSchema::MODE_PROVIDER,
+            globalHealth: AiStatusSchema::HEALTH_DEGRADED,
+            capabilityDefinitions: [],
+            capabilityStatuses: $capabilityStatuses,
+            endpointGroupHealthSnapshots: [],
+            reasonCodes: ['provider_unavailable'],
+            generatedAt: new DateTimeImmutable('2026-04-24T11:00:00+08:00'),
+        );
+
+        $this->app->instance(AiRuntimeStatusInterface::class, new readonly class($snapshot) implements AiRuntimeStatusInterface {
+            public function __construct(
+                private AiStatusSnapshot $snapshot,
+            ) {
+            }
+
+            public function snapshot(): AiStatusSnapshot
+            {
+                return $this->snapshot;
+            }
+
+            public function capabilityStatus(string $featureKey): ?AiCapabilityStatus
+            {
+                return $this->snapshot->capabilityStatuses[$featureKey] ?? null;
+            }
+
+            public function providerName(): string
+            {
+                return 'openrouter';
+            }
+        });
     }
 
     /**
@@ -163,6 +211,25 @@ final class AwardWorkflowTest extends ApiTestCase
 
     public function test_single_winner_award_workflow_records_decision_trail_and_allows_debrief_before_signoff(): void
     {
+        $this->bindAiRuntimeStatus([
+            'award_ai_guidance' => new AiCapabilityStatus(
+                featureKey: 'award_ai_guidance',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_AWARD_INTELLIGENCE,
+                endpointGroup: AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD,
+                fallbackUiMode: AiStatusSchema::FALLBACK_UI_MODE_SHOW_UNAVAILABLE_MESSAGE,
+                messageKey: 'ai.award_ai_guidance.unavailable',
+                status: AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE,
+                available: false,
+                reasonCodes: ['provider_unavailable'],
+                operatorCritical: true,
+                diagnostics: ['mode' => AiStatusSchema::MODE_PROVIDER],
+            ),
+        ]);
+        $comparisonAwardClient = $this->createMock(ComparisonAwardAiClientInterface::class);
+        $comparisonAwardClient->expects($this->never())->method('awardGuidance');
+        $comparisonAwardClient->expects($this->never())->method('awardDebriefDraft');
+        $this->app->instance(ComparisonAwardAiClientInterface::class, $comparisonAwardClient);
+
         [$user, $rfq, $run, $quote] = $this->seedAwardPrerequisites($this->createUser());
 
         $createResponse = $this->postJson(
@@ -179,6 +246,12 @@ final class AwardWorkflowTest extends ApiTestCase
 
         $createResponse->assertCreated();
         $awardId = (string) $createResponse->json('data.id');
+
+        $guidanceResponse = $this->getJson(
+            '/api/v1/awards/' . $awardId . '/guidance',
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+        $guidanceResponse->assertNotFound();
 
         $loserVendorId = (string) Str::ulid();
         QuoteSubmission::query()->create([
@@ -254,6 +327,238 @@ final class AwardWorkflowTest extends ApiTestCase
         );
     }
 
+    public function test_generate_guidance_persists_provider_payload_for_award(): void
+    {
+        $this->bindAiRuntimeStatus([
+            'award_ai_guidance' => new AiCapabilityStatus(
+                featureKey: 'award_ai_guidance',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_AWARD_INTELLIGENCE,
+                endpointGroup: AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD,
+                fallbackUiMode: AiStatusSchema::FALLBACK_UI_MODE_SHOW_MANUAL_CONTINUITY_BANNER,
+                messageKey: 'ai.award_ai_guidance.available',
+                status: AiStatusSchema::CAPABILITY_STATUS_AVAILABLE,
+                available: true,
+                reasonCodes: [],
+                operatorCritical: true,
+                diagnostics: ['mode' => AiStatusSchema::MODE_PROVIDER],
+            ),
+        ]);
+        $comparisonAwardClient = $this->createMock(ComparisonAwardAiClientInterface::class);
+        $comparisonAwardClient->expects($this->once())
+            ->method('awardGuidance')
+            ->with($this->callback(static function (AwardGuidanceRequest $request): bool {
+                return $request->tenantId !== ''
+                    && $request->awardId !== ''
+                    && $request->comparisonRunId !== ''
+                    && isset($request->comparisonContext['snapshot'], $request->comparisonContext['matrix']);
+            }))
+            ->willReturn(new AwardGuidanceResponse([
+                'headline' => 'Proceed with the lowest compliant vendor.',
+                'risk_flags' => ['single_source_dependency'],
+            ]));
+        $comparisonAwardClient->expects($this->never())->method('comparisonOverlay');
+        $comparisonAwardClient->expects($this->never())->method('awardDebriefDraft');
+        $comparisonAwardClient->expects($this->never())->method('approvalSummary');
+        $this->app->instance(ComparisonAwardAiClientInterface::class, $comparisonAwardClient);
+
+        [$user, $rfq, $run, $award] = $this->seedAward($this->createUser());
+
+        $response = $this->postJson(
+            '/api/v1/awards/' . $award->id . '/guidance/generate',
+            [],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $response->assertOk();
+        $response->assertJsonPath('data.ai_guidance.feature_key', 'award_ai_guidance');
+        $response->assertJsonPath('data.ai_guidance.available', true);
+        $response->assertJsonPath('data.ai_guidance.payload.headline', 'Proceed with the lowest compliant vendor.');
+        $response->assertJsonPath('data.ai_guidance.provenance.source', 'provider');
+
+        $readResponse = $this->getJson(
+            '/api/v1/awards/' . $award->id . '/guidance',
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $readResponse->assertOk();
+        $readResponse->assertJsonPath('data.ai_guidance.payload.headline', 'Proceed with the lowest compliant vendor.');
+
+        $run = $run->fresh();
+        $storedGuidance = $run?->response_payload['ai_artifacts']['award_guidance'][$award->id] ?? null;
+        $this->assertIsArray($storedGuidance);
+        $this->assertSame('award_ai_guidance', $storedGuidance['feature_key'] ?? null);
+        $this->assertSame(true, $storedGuidance['available'] ?? null);
+
+        $entry = DecisionTrailEntry::query()
+            ->where('tenant_id', $user->tenant_id)
+            ->where('comparison_run_id', $run->id)
+            ->where('event_type', 'award_ai_guidance_generated:' . $award->id)
+            ->first();
+        $this->assertNotNull($entry);
+
+        $trailResponse = $this->getJson(
+            '/api/v1/decision-trail/' . $entry->id,
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+        $trailResponse->assertOk();
+        $trailResponse->assertJsonPath('data.metadata.artifact_origin', 'provider_drafted');
+        $trailResponse->assertJsonPath('data.metadata.artifact_kind', 'award_ai_guidance');
+        $trailResponse->assertJsonPath('data.metadata.artifact_subject_id', $award->id);
+        $trailResponse->assertJsonPath('data.metadata.provenance.source', 'provider');
+    }
+
+    public function test_guidance_returns_persisted_artifact_when_runtime_is_unavailable(): void
+    {
+        [$user, , $run, $award] = $this->seedAward($this->createUser());
+
+        $artifact = [
+            'feature_key' => 'award_ai_guidance',
+            'capability_group' => AiStatusSchema::CAPABILITY_GROUP_AWARD_INTELLIGENCE,
+            'available' => true,
+            'status' => AiStatusSchema::CAPABILITY_STATUS_AVAILABLE,
+            'manual_continuity' => 'available',
+            'payload' => ['headline' => 'Persisted guidance'],
+            'provenance' => [
+                'source' => 'provider',
+                'provider_name' => 'openrouter',
+                'endpoint_group' => AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD,
+            ],
+        ];
+
+        $run->response_payload = array_replace_recursive((array) $run->response_payload, [
+            'ai_artifacts' => [
+                'award_guidance' => [
+                    (string) $award->id => $artifact,
+                ],
+            ],
+        ]);
+        $run->save();
+
+        $this->bindAiRuntimeStatus([
+            'award_ai_guidance' => new AiCapabilityStatus(
+                featureKey: 'award_ai_guidance',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_AWARD_INTELLIGENCE,
+                endpointGroup: AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD,
+                fallbackUiMode: AiStatusSchema::FALLBACK_UI_MODE_SHOW_MANUAL_CONTINUITY_BANNER,
+                messageKey: 'ai.award_ai_guidance.unavailable',
+                status: AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE,
+                available: false,
+                reasonCodes: ['provider_unavailable'],
+                operatorCritical: true,
+                diagnostics: ['mode' => AiStatusSchema::MODE_PROVIDER],
+            ),
+        ]);
+
+        $comparisonAwardClient = $this->createMock(ComparisonAwardAiClientInterface::class);
+        $comparisonAwardClient->expects($this->never())->method('awardGuidance');
+        $comparisonAwardClient->expects($this->never())->method('awardDebriefDraft');
+        $comparisonAwardClient->expects($this->never())->method('comparisonOverlay');
+        $comparisonAwardClient->expects($this->never())->method('approvalSummary');
+        $this->app->instance(ComparisonAwardAiClientInterface::class, $comparisonAwardClient);
+
+        $response = $this->getJson(
+            '/api/v1/awards/' . $award->id . '/guidance',
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $response->assertOk();
+        $response->assertJsonPath('data.ai_guidance.available', true);
+        $response->assertJsonPath('data.ai_guidance.payload.headline', 'Persisted guidance');
+    }
+
+    public function test_debrief_draft_returns_provider_payload_for_non_winning_vendor(): void
+    {
+        $this->bindAiRuntimeStatus([
+            'award_ai_guidance' => new AiCapabilityStatus(
+                featureKey: 'award_ai_guidance',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_AWARD_INTELLIGENCE,
+                endpointGroup: AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD,
+                fallbackUiMode: AiStatusSchema::FALLBACK_UI_MODE_SHOW_MANUAL_CONTINUITY_BANNER,
+                messageKey: 'ai.award_ai_guidance.available',
+                status: AiStatusSchema::CAPABILITY_STATUS_AVAILABLE,
+                available: true,
+                reasonCodes: [],
+                operatorCritical: true,
+                diagnostics: ['mode' => AiStatusSchema::MODE_PROVIDER],
+            ),
+        ]);
+
+        [$user, $rfq, $run, $award] = $this->seedAward($this->createUser());
+        $loserVendorId = (string) Str::ulid();
+
+        QuoteSubmission::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'vendor_id' => $loserVendorId,
+            'vendor_name' => 'Runner Up Vendor',
+            'status' => 'ready',
+            'submitted_at' => now(),
+            'confidence' => 88.0,
+            'line_items_count' => 1,
+            'warnings_count' => 0,
+            'errors_count' => 0,
+        ]);
+
+        $comparisonAwardClient = $this->createMock(ComparisonAwardAiClientInterface::class);
+        $comparisonAwardClient->expects($this->never())->method('comparisonOverlay');
+        $comparisonAwardClient->expects($this->never())->method('awardGuidance');
+        $comparisonAwardClient->expects($this->never())->method('approvalSummary');
+        $comparisonAwardClient->expects($this->once())
+            ->method('awardDebriefDraft')
+            ->with($this->callback(static function (AwardDebriefDraftRequest $request) use ($award, $loserVendorId): bool {
+                return $request->awardId === $award->id
+                    && $request->vendorId === $loserVendorId
+                    && isset($request->comparisonContext['snapshot']);
+            }))
+            ->willReturn(new AwardDebriefDraftResponse([
+                'draft_message' => 'Thank you for your proposal. The award went to a lower-risk commercial bid.',
+                'talking_points' => ['pricing variance', 'delivery confidence'],
+            ]));
+        $this->app->instance(ComparisonAwardAiClientInterface::class, $comparisonAwardClient);
+
+        $response = $this->postJson(
+            '/api/v1/awards/' . $award->id . '/debrief-draft/' . $loserVendorId . '/generate',
+            [],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $response->assertOk();
+        $response->assertJsonPath('data.ai_debrief_draft.feature_key', 'award_ai_guidance');
+
+        $readResponse = $this->getJson(
+            '/api/v1/awards/' . $award->id . '/debrief-draft/' . $loserVendorId,
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $readResponse->assertOk();
+        $readResponse->assertJsonPath('data.ai_debrief_draft.feature_key', 'award_ai_guidance');
+        $response->assertJsonPath('data.ai_debrief_draft.available', true);
+        $response->assertJsonPath('data.ai_debrief_draft.payload.draft_message', 'Thank you for your proposal. The award went to a lower-risk commercial bid.');
+        $response->assertJsonPath('data.ai_debrief_draft.provenance.source', 'provider');
+
+        $run = $run->fresh();
+        $storedDraft = $run?->response_payload['ai_artifacts']['award_debrief_draft'][$award->id][$loserVendorId] ?? null;
+        $this->assertIsArray($storedDraft);
+        $this->assertSame('award_ai_guidance', $storedDraft['feature_key'] ?? null);
+
+        $entry = DecisionTrailEntry::query()
+            ->where('tenant_id', $user->tenant_id)
+            ->where('comparison_run_id', $run->id)
+            ->where('event_type', 'award_ai_debrief_draft_generated')
+            ->first();
+        $this->assertNotNull($entry);
+
+        $trailResponse = $this->getJson(
+            '/api/v1/decision-trail/' . $entry->id,
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+        $trailResponse->assertOk();
+        $trailResponse->assertJsonPath('data.metadata.artifact_kind', 'award_ai_debrief_draft');
+        $trailResponse->assertJsonPath('data.metadata.artifact_subject_id', $loserVendorId);
+        $trailResponse->assertJsonPath('data.metadata.award_id', $award->id);
+        $trailResponse->assertJsonPath('data.metadata.provenance.source', 'provider');
+    }
+
     public function test_store_rejects_non_final_comparison_run_for_award_creation(): void
     {
         [$user, $rfq, $run, $quote] = $this->seedAwardPrerequisites($this->createUser());
@@ -320,6 +625,12 @@ final class AwardWorkflowTest extends ApiTestCase
         );
         $indexResponse->assertOk();
         $indexResponse->assertJsonCount(0, 'data');
+
+        $guidanceResponse = $this->getJson(
+            '/api/v1/awards/' . $award->id . '/guidance',
+            $this->authHeaders((string) $otherUser->tenant_id, (string) $otherUser->id),
+        );
+        $guidanceResponse->assertNotFound();
 
         $signoffResponse = $this->postJson(
             '/api/v1/awards/' . $award->id . '/signoff',
