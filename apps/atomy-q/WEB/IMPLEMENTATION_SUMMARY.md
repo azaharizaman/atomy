@@ -2,7 +2,7 @@
 
 ## 2026-04-23 WEB AI Status Consumption And Shared UX Primitives
 
-- Added a strict AI status normalization layer in `src/lib/ai-status.ts` for `/api/v1/ai/status`, including runtime-path sanitization, typed capability/endpoint parsing, and safe fallback snapshots for `off`, `unknown`, and request-error states.
+- Added a strict AI status normalization layer in `src/lib/ai-status.ts` for `/api/v1/ai/status`, including runtime-path sanitization, typed capability/endpoint parsing, authoritative live `provider_name` consumption with env bootstrap fallback, and safe fallback snapshots for `off`, `unknown`, and request-error states.
 - Added shared AI capability helpers in `src/lib/ai-capabilities.ts` so consumers can consistently answer feature availability, whether AI controls should be hidden, whether an unavailable message should be shown, and which message key to surface.
 - Added `src/hooks/use-ai-status.ts` plus `src/providers/ai-provider.tsx` as the shared query/context entrypoint. The provider is mounted in `src/app/layout.tsx` between `QueryProvider` and `AuthProvider`, and it fails open so shell/navigation children still render when the status request fails.
 - Added reusable AI UI primitives:
@@ -289,6 +289,6 @@
 
 ## 2026-04-23 AI Runtime Env Preparation
 
-- Updated `apps/atomy-q/WEB/.env.example` for the approved AI-first rollout posture so `NEXT_PUBLIC_AI_MODE` now defaults to `provider` instead of `off`.
-- Kept `NEXT_PUBLIC_AI_STATUS_PATH` as the public runtime truth source and added `NEXT_PUBLIC_AI_PROVIDER_NAME=huggingface` as an optional UI/operator-facing label for the planned shared AI status surface.
+- Updated `apps/atomy-q/WEB/.env.example` for the approved AI-first rollout posture so `NEXT_PUBLIC_AI_MODE` now documents the selected-provider bootstrap contract, with `provider` describing the live selected-provider path rather than a Hugging Face-only mode.
+- Kept `NEXT_PUBLIC_AI_STATUS_PATH` as the public runtime truth source and `NEXT_PUBLIC_AI_PROVIDER_NAME` as a bootstrap-only operator label; the live status payload now owns `provider_name` when present, with `openrouter` as the alpha default and `huggingface` as the supported alternative.
 - The WEB example still keeps mocks disabled by default so developers can exercise real API-backed and future real Hugging Face-backed flows once the implementation plans land.

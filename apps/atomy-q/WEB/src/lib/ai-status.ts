@@ -213,8 +213,12 @@ function mapCollection<T>(
   return mapRecord(value, context, mapEntry);
 }
 
-function getProviderName(): string | null {
+function getBootstrapProviderName(): string | null {
   return optionalText(process.env.NEXT_PUBLIC_AI_PROVIDER_NAME);
+}
+
+function resolveProviderName(value: unknown): string | null {
+  return optionalText(value) ?? getBootstrapProviderName();
 }
 
 export function createAiStatusFallback(
@@ -228,7 +232,7 @@ export function createAiStatusFallback(
       overrides?.globalHealth ?? (kind === 'off' ? 'disabled' : kind === 'unknown' ? 'unknown' : 'unknown'),
     reasonCodes: overrides?.reasonCodes ?? [],
     generatedAt: overrides?.generatedAt ?? null,
-    providerName: getProviderName(),
+    providerName: getBootstrapProviderName(),
     capabilityDefinitions: {},
     capabilityStatuses: {},
     endpointGroups: {},
@@ -242,7 +246,7 @@ export function createMockAiStatusSnapshot(): AiStatusSnapshot {
     globalHealth: 'degraded',
     reasonCodes: ['AI_STATUS_MOCK_MODE'],
     generatedAt: null,
-    providerName: getProviderName(),
+    providerName: getBootstrapProviderName(),
     capabilityDefinitions: {},
     capabilityStatuses: {},
     endpointGroups: {},
@@ -256,7 +260,7 @@ export function createDeterministicAiStatusSnapshot(): AiStatusSnapshot {
     globalHealth: 'degraded',
     reasonCodes: ['deterministic_fallback_mode'],
     generatedAt: null,
-    providerName: getProviderName(),
+    providerName: getBootstrapProviderName(),
     capabilityDefinitions: {},
     capabilityStatuses: {},
     endpointGroups: {},
@@ -273,7 +277,7 @@ export function normalizeAiStatusPayload(payload: unknown): AiStatusSnapshot {
     globalHealth: requireText(data.global_health ?? data.globalHealth, 'global_health', 'Invalid AI status payload'),
     reasonCodes: requireStringArray(data.reason_codes ?? data.reasonCodes ?? [], 'reason_codes', 'Invalid AI status payload'),
     generatedAt: optionalText(data.generated_at ?? data.generatedAt),
-    providerName: getProviderName(),
+    providerName: resolveProviderName(data.provider_name ?? data.providerName),
     capabilityDefinitions: mapCollection(
       data.capability_definitions ?? data.capabilityDefinitions ?? {},
       'Invalid AI status payload: capability_definitions',

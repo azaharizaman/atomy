@@ -37,6 +37,7 @@ describe('useAiStatus', () => {
     mockGet.mockResolvedValue({
       data: {
         data: {
+          provider_name: 'openrouter',
           mode: 'provider',
           global_health: 'healthy',
           reason_codes: [],
@@ -92,11 +93,34 @@ describe('useAiStatus', () => {
 
     expect(mockGet).toHaveBeenCalledWith('/ai/status');
     expect(result.current.status.mode).toBe('provider');
-    expect(result.current.status.providerName).toBe('huggingface');
+    expect(result.current.status.providerName).toBe('openrouter');
     expect(result.current.isFeatureAvailable('rfq_insights')).toBe(true);
     expect(result.current.shouldHideAiControls('rfq_insights')).toBe(false);
     expect(result.current.shouldShowUnavailableMessage('rfq_insights')).toBe(false);
     expect(result.current.messageKeyForFeature('rfq_insights')).toBeNull();
+  });
+
+  it('falls back to the bootstrap provider name when the live payload omits provider_name', async () => {
+    mockGet.mockResolvedValue({
+      data: {
+        data: {
+          mode: 'provider',
+          global_health: 'healthy',
+          reason_codes: [],
+          generated_at: '2026-04-23T10:00:00Z',
+          capability_definitions: [],
+          capability_statuses: {},
+          endpoint_groups: [],
+        },
+      },
+    });
+
+    const wrapper = createAiWrapper();
+    const { result } = renderHook(() => useAiStatus(), { wrapper });
+
+    await waitFor(() => expect(result.current.isReady).toBe(true));
+
+    expect(result.current.status.providerName).toBe('huggingface');
   });
 
   it('exposes degraded capability helpers from fallback ui mode and message key', async () => {
@@ -160,6 +184,55 @@ describe('useAiStatus', () => {
     expect(result.current.shouldHideAiControls('quote_summary')).toBe(false);
     expect(result.current.shouldShowUnavailableMessage('quote_summary')).toBe(true);
     expect(result.current.messageKeyForFeature('quote_summary')).toBe('ai.status.provider_unavailable');
+  });
+
+  it('keeps manual-continuity fallback modes visible while still surfacing an unavailable message', async () => {
+    mockGet.mockResolvedValue({
+      data: {
+        data: {
+          mode: 'provider',
+          global_health: 'healthy',
+          reason_codes: [],
+          generated_at: '2026-04-23T10:07:00Z',
+          capability_definitions: [
+            {
+              feature_key: 'normalization_intelligence',
+              capability_group: 'normalization_intelligence',
+              requires_ai: true,
+              has_manual_fallback: true,
+              fallback_ui_mode: 'show_manual_continuity_banner',
+              degradation_message_key: 'ai.normalization_intelligence.continuity',
+              operator_critical: false,
+              endpoint_group: 'normalization',
+            },
+          ],
+          capability_statuses: {
+            normalization_intelligence: {
+              feature_key: 'normalization_intelligence',
+              capability_group: 'normalization_intelligence',
+              endpoint_group: 'normalization',
+              status: 'unavailable',
+              available: false,
+              fallback_ui_mode: 'show_manual_continuity_banner',
+              message_key: 'ai.status.provider_unavailable',
+              operator_critical: false,
+              reason_codes: ['AI_NORMALIZATION_MANUAL_CONTINUITY'],
+              diagnostics: {},
+            },
+          },
+          endpoint_groups: [],
+        },
+      },
+    });
+
+    const wrapper = createAiWrapper();
+    const { result } = renderHook(() => useAiStatus(), { wrapper });
+
+    await waitFor(() => expect(result.current.isReady).toBe(true));
+
+    expect(result.current.shouldHideAiControls('normalization_intelligence')).toBe(false);
+    expect(result.current.shouldShowUnavailableMessage('normalization_intelligence')).toBe(true);
+    expect(result.current.messageKeyForFeature('normalization_intelligence')).toBe('ai.status.provider_unavailable');
   });
 
   it('shows an unavailable message when an unavailable feature has unknown fallback mode', async () => {

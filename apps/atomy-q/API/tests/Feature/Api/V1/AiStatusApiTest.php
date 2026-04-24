@@ -28,21 +28,24 @@ final class AiStatusApiTest extends ApiTestCase
                 'capability_definitions',
                 'capability_statuses',
                 'endpoint_groups',
+                'provider_name',
             ],
         ]);
+        $response->assertJsonPath('data.provider_name', 'openrouter');
     }
 
     public function testItReturnsDisabledStatusWhenAiModeIsOff(): void
     {
         config()->set('atomy.ai.mode', AiStatusSchema::MODE_OFF);
-        config()->set('atomy.ai.provider.name', 'hf-public');
-        config()->set('atomy.ai.endpoints.document.uri', 'https://hf.example.test/document');
+        config()->set('atomy.ai.provider.key', 'openrouter');
+        config()->set('atomy.ai.endpoints.document.uri', 'https://openrouter.example.test/document');
 
         $response = $this->getJson('/api/v1/ai/status');
 
         $response->assertOk();
         $response->assertJsonPath('data.mode', AiStatusSchema::MODE_OFF);
         $response->assertJsonPath('data.global_health', AiStatusSchema::HEALTH_DISABLED);
+        $response->assertJsonPath('data.provider_name', 'openrouter');
         $response->assertJsonPath(
             'data.capability_statuses.document_intelligence.status',
             AiStatusSchema::CAPABILITY_STATUS_DISABLED,
@@ -69,7 +72,13 @@ final class AiStatusApiTest extends ApiTestCase
         );
         $response->assertJsonPath(
             'data.capability_statuses.normalization_intelligence.status',
-            AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE,
+            AiStatusSchema::CAPABILITY_STATUS_DEGRADED,
+        );
+        $capabilityDefinitions = collect($response->json('data.capability_definitions'))->keyBy('feature_key');
+        self::assertTrue((bool) $capabilityDefinitions['normalization_intelligence']['has_manual_fallback']);
+        self::assertSame(
+            AiStatusSchema::FALLBACK_UI_MODE_SHOW_MANUAL_CONTINUITY_BANNER,
+            $capabilityDefinitions['normalization_intelligence']['fallback_ui_mode'],
         );
         $this->assertContains('deterministic_fallback_mode', $response->json('data.reason_codes'));
     }
@@ -77,6 +86,7 @@ final class AiStatusApiTest extends ApiTestCase
     public function testItReflectsMixedProviderEndpointHealth(): void
     {
         config()->set('atomy.ai.mode', AiStatusSchema::MODE_PROVIDER);
+        config()->set('atomy.ai.provider.key', 'huggingface');
         config()->set('atomy.ai.provider.name', 'hf-public');
         config()->set('atomy.ai.provider.default_timeout_seconds', 5);
         config()->set('atomy.ai.provider.default_auth_token', 'hf-secret-token');
@@ -101,6 +111,7 @@ final class AiStatusApiTest extends ApiTestCase
 
         $response->assertOk();
         $response->assertJsonPath('data.mode', AiStatusSchema::MODE_PROVIDER);
+        $response->assertJsonPath('data.provider_name', 'hf-public');
         $response->assertJsonPath('data.global_health', AiStatusSchema::HEALTH_DEGRADED);
         $response->assertJsonPath(
             'data.capability_statuses.document_intelligence.status',
@@ -108,7 +119,7 @@ final class AiStatusApiTest extends ApiTestCase
         );
         $response->assertJsonPath(
             'data.capability_statuses.normalization_intelligence.status',
-            AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE,
+            AiStatusSchema::CAPABILITY_STATUS_DEGRADED,
         );
         $response->assertJsonPath(
             'data.capability_statuses.governance_intelligence.status',
@@ -119,6 +130,9 @@ final class AiStatusApiTest extends ApiTestCase
         self::assertSame(AiStatusSchema::HEALTH_HEALTHY, $endpointGroups['document']['health']);
         self::assertSame(AiStatusSchema::HEALTH_UNAVAILABLE, $endpointGroups['normalization']['health']);
         self::assertSame(AiStatusSchema::HEALTH_DEGRADED, $endpointGroups['governance']['health']);
+        self::assertSame('hf-public', $endpointGroups['document']['diagnostics']['provider_name']);
+        self::assertSame('hf-public', $endpointGroups['normalization']['diagnostics']['provider_name']);
+        self::assertSame('hf-public', $endpointGroups['governance']['diagnostics']['provider_name']);
 
         Http::assertSent(static fn ($request): bool => $request->url() === 'https://hf.example.test/document/health');
         Http::assertNotSent(static fn ($request): bool => $request->url() === 'https://hf.example.test/document');
@@ -167,12 +181,16 @@ final class AiStatusApiTest extends ApiTestCase
 
         $response->assertOk();
         $response->assertJsonPath('data.mode', AiStatusSchema::MODE_PROVIDER);
+        $response->assertJsonPath('data.provider_name', 'openrouter');
+        self::assertNotEmpty($response->json('data.capability_definitions'));
+        self::assertNotEmpty($response->json('data.capability_statuses'));
         self::assertNotEmpty($response->json('data.endpoint_groups'));
     }
 
     public function testItReturnsStableUnavailablePayloadWhenRuntimeSnapshotThrows(): void
     {
         config()->set('atomy.ai.mode', AiStatusSchema::MODE_PROVIDER);
+        config()->set('atomy.ai.provider.key', 'openrouter');
 
         $this->app->instance(AiRuntimeStatusInterface::class, new readonly class implements AiRuntimeStatusInterface {
             public function snapshot(): AiStatusSnapshot
@@ -184,16 +202,30 @@ final class AiStatusApiTest extends ApiTestCase
             {
                 return null;
             }
+
+            public function providerName(): string
+            {
+                return 'openrouter';
+            }
         });
 
         $response = $this->getJson('/api/v1/ai/status');
 
         $response->assertOk();
         $response->assertJsonPath('data.mode', AiStatusSchema::MODE_PROVIDER);
-        $response->assertJsonPath('data.global_health', AiStatusSchema::HEALTH_UNAVAILABLE);
-        $response->assertJsonPath('data.reason_codes.0', 'provider_unavailable');
-        $response->assertJsonPath('data.capability_definitions', []);
-        $response->assertJsonPath('data.capability_statuses', []);
-        $response->assertJsonPath('data.endpoint_groups', []);
+        $response->assertJsonPath('data.global_health', AiStatusSchema::HEALTH_DEGRADED);
+        $response->assertJsonPath('data.provider_name', 'openrouter');
+        $this->assertContains('provider_unavailable', $response->json('data.reason_codes'));
+        self::assertNotEmpty($response->json('data.capability_definitions'));
+        self::assertNotEmpty($response->json('data.capability_statuses'));
+        self::assertNotEmpty($response->json('data.endpoint_groups'));
+        $response->assertJsonPath(
+            'data.capability_statuses.normalization_intelligence.status',
+            AiStatusSchema::CAPABILITY_STATUS_DEGRADED,
+        );
+        $response->assertJsonPath(
+            'data.endpoint_groups.0.health',
+            AiStatusSchema::HEALTH_UNAVAILABLE,
+        );
     }
 }

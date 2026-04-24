@@ -12,4 +12,6 @@ interface AiRuntimeStatusInterface
     public function snapshot(): AiStatusSnapshot;
 
     public function capabilityStatus(string $featureKey): ?AiCapabilityStatus;
+
+    public function providerName(): string;
 }

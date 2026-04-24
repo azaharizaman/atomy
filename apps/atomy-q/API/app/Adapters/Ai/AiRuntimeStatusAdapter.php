@@ -6,6 +6,7 @@ namespace App\Adapters\Ai;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Throwable;
 
 use Nexus\IntelligenceOperations\Contracts\AiStatusCoordinatorInterface;
 use Nexus\IntelligenceOperations\DTOs\AiCapabilityStatus;
@@ -29,50 +30,59 @@ final readonly class AiRuntimeStatusAdapter implements AiRuntimeStatusInterface
 
     public function snapshot(): AiStatusSnapshot
     {
-        $mode = $this->endpointRegistry->mode();
         $checkedAt = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-        $endpointSnapshots = [];
+        $mode = AiStatusSchema::MODE_PROVIDER;
 
-        foreach ($this->endpointRegistry->endpointGroups() as $endpointGroup) {
-            if ($mode === AiStatusSchema::MODE_OFF) {
-                $endpointSnapshots[] = $this->buildStaticEndpointSnapshot(
-                    endpointGroup: $endpointGroup,
-                    health: AiStatusSchema::HEALTH_DISABLED,
-                    checkedAt: $checkedAt,
-                    reasonCodes: ['ai_disabled_by_config', 'endpoint_disabled_by_config'],
-                );
+        try {
+            $mode = $this->endpointRegistry->mode();
+            $endpointSnapshots = [];
 
-                continue;
+            foreach ($this->endpointRegistry->endpointGroups() as $endpointGroup) {
+                if ($mode === AiStatusSchema::MODE_OFF) {
+                    $endpointSnapshots[] = $this->buildStaticEndpointSnapshot(
+                        endpointGroup: $endpointGroup,
+                        mode: $mode,
+                        health: AiStatusSchema::HEALTH_DISABLED,
+                        checkedAt: $checkedAt,
+                        reasonCodes: ['ai_disabled_by_config', 'endpoint_disabled_by_config'],
+                    );
+
+                    continue;
+                }
+
+                if ($mode === AiStatusSchema::MODE_DETERMINISTIC) {
+                    $endpointSnapshots[] = $this->buildStaticEndpointSnapshot(
+                        endpointGroup: $endpointGroup,
+                        mode: $mode,
+                        health: AiStatusSchema::HEALTH_DISABLED,
+                        checkedAt: $checkedAt,
+                        reasonCodes: ['deterministic_fallback_mode', 'endpoint_disabled_by_config'],
+                    );
+
+                    continue;
+                }
+
+                $endpointConfig = $this->endpointRegistry->endpointConfig($endpointGroup);
+
+                if ($endpointConfig === null) {
+                    $endpointSnapshots[] = $this->buildStaticEndpointSnapshot(
+                        endpointGroup: $endpointGroup,
+                        mode: $mode,
+                        health: AiStatusSchema::HEALTH_UNAVAILABLE,
+                        checkedAt: $checkedAt,
+                        reasonCodes: ['endpoint_not_configured'],
+                    );
+
+                    continue;
+                }
+
+                $endpointSnapshots[] = $this->mapRuntimeSnapshot($this->healthProbe->probe($endpointConfig));
             }
 
-            if ($mode === AiStatusSchema::MODE_DETERMINISTIC) {
-                $endpointSnapshots[] = $this->buildStaticEndpointSnapshot(
-                    endpointGroup: $endpointGroup,
-                    health: AiStatusSchema::HEALTH_DISABLED,
-                    checkedAt: $checkedAt,
-                    reasonCodes: ['deterministic_fallback_mode', 'endpoint_disabled_by_config'],
-                );
-
-                continue;
-            }
-
-            $endpointConfig = $this->endpointRegistry->endpointConfig($endpointGroup);
-
-            if ($endpointConfig === null) {
-                $endpointSnapshots[] = $this->buildStaticEndpointSnapshot(
-                    endpointGroup: $endpointGroup,
-                    health: AiStatusSchema::HEALTH_UNAVAILABLE,
-                    checkedAt: $checkedAt,
-                    reasonCodes: ['endpoint_not_configured'],
-                );
-
-                continue;
-            }
-
-            $endpointSnapshots[] = $this->mapRuntimeSnapshot($this->healthProbe->probe($endpointConfig));
+            return $this->statusCoordinator->snapshot($mode, $endpointSnapshots, $checkedAt);
+        } catch (Throwable) {
+            return $this->buildFallbackSnapshot($mode, $checkedAt);
         }
-
-        return $this->statusCoordinator->snapshot($mode, $endpointSnapshots, $checkedAt);
     }
 
     public function capabilityStatus(string $featureKey): ?AiCapabilityStatus
@@ -80,11 +90,21 @@ final readonly class AiRuntimeStatusAdapter implements AiRuntimeStatusInterface
         return $this->snapshot()->capabilityStatuses[$featureKey] ?? null;
     }
 
+    public function providerName(): string
+    {
+        try {
+            return $this->endpointRegistry->providerName();
+        } catch (Throwable) {
+            return 'openrouter';
+        }
+    }
+
     /**
      * @param list<string> $reasonCodes
      */
     private function buildStaticEndpointSnapshot(
         string $endpointGroup,
+        string $mode,
         string $health,
         DateTimeImmutable $checkedAt,
         array $reasonCodes,
@@ -95,9 +115,41 @@ final readonly class AiRuntimeStatusAdapter implements AiRuntimeStatusInterface
             checkedAt: $checkedAt,
             reasonCodes: $reasonCodes,
             diagnostics: [
-                'mode' => $this->endpointRegistry->mode(),
+                'mode' => $mode,
                 'endpoint_group' => $endpointGroup,
+                'provider_name' => $this->providerName(),
             ],
+        );
+    }
+
+    private function buildFallbackSnapshot(string $mode, DateTimeImmutable $checkedAt): AiStatusSnapshot
+    {
+        $endpointSnapshots = [];
+        $health = match ($mode) {
+            AiStatusSchema::MODE_OFF,
+            AiStatusSchema::MODE_DETERMINISTIC => AiStatusSchema::HEALTH_DISABLED,
+            default => AiStatusSchema::HEALTH_UNAVAILABLE,
+        };
+        $reasonCodes = match ($mode) {
+            AiStatusSchema::MODE_OFF => ['ai_disabled_by_config', 'endpoint_disabled_by_config'],
+            AiStatusSchema::MODE_DETERMINISTIC => ['deterministic_fallback_mode', 'endpoint_disabled_by_config'],
+            default => ['provider_unavailable', 'endpoint_group_unavailable'],
+        };
+
+        foreach (AiStatusSchema::endpointGroups() as $endpointGroup) {
+            $endpointSnapshots[] = $this->buildStaticEndpointSnapshot(
+                endpointGroup: $endpointGroup,
+                mode: $mode,
+                health: $health,
+                checkedAt: $checkedAt,
+                reasonCodes: $reasonCodes,
+            );
+        }
+
+        return $this->statusCoordinator->snapshot(
+            $mode,
+            $endpointSnapshots,
+            $checkedAt,
         );
     }
 
