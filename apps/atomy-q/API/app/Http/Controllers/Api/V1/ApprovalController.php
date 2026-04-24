@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api\V1;
 use Throwable;
 use App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface;
 use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use App\Adapters\Ai\DTOs\ApprovalSummaryRequest;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
 use App\Http\Controllers\Controller;
@@ -17,6 +18,7 @@ use App\Services\QuoteIntake\DecisionTrailRecorder;
 use App\Services\QuoteIntake\QuoteSubmissionReadinessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Nexus\Common\Contracts\ClockInterface;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 
 final class ApprovalController extends Controller
@@ -27,6 +29,9 @@ final class ApprovalController extends Controller
     public function __construct(
         private readonly QuoteSubmissionReadinessService $readinessService,
         private readonly ComparisonAwardAiClientInterface $comparisonAwardAiClient,
+        private readonly DecisionTrailRecorder $decisionTrailRecorder,
+        private readonly AiRuntimeStatusInterface $aiRuntimeStatus,
+        private readonly ClockInterface $clock,
     ) {}
 
     /**
@@ -226,14 +231,14 @@ final class ApprovalController extends Controller
         }
 
         try {
-            $summary = $this->comparisonAwardAiClient->approvalSummary([
-                'tenant_id' => $tenantId,
-                'approval_id' => $approval->id,
-                'rfq_id' => $approval->rfq_id,
-                'comparison_run_id' => $approval->comparison_run_id,
-                'approval' => $this->serializeApprovalDetail($approval),
-                'comparison_context' => $this->serializeComparisonContext($comparisonRun),
-            ]);
+            $summary = $this->comparisonAwardAiClient->approvalSummary(new ApprovalSummaryRequest(
+                tenantId: $tenantId,
+                approvalId: (string) $approval->id,
+                rfqId: (string) $approval->rfq_id,
+                comparisonRunId: (string) $approval->comparison_run_id,
+                approval: $this->serializeApprovalDetail($approval),
+                comparisonContext: $this->serializeComparisonContext($comparisonRun),
+            ))->payload;
         } catch (Throwable $exception) {
             report($exception);
 
@@ -601,7 +606,7 @@ final class ApprovalController extends Controller
                 'source' => 'deterministic',
                 'endpoint_group' => AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD,
                 'provider_name' => $this->providerName(),
-                'generated_at' => now()->toIso8601String(),
+                'generated_at' => $this->clock->now()->format(DATE_ATOM),
             ],
         ];
     }
@@ -618,14 +623,14 @@ final class ApprovalController extends Controller
             'source' => 'provider',
             'provider_name' => $this->providerName(),
             'endpoint_group' => $endpointGroup,
-            'generated_at' => $provenance['generated_at'] ?? now()->toIso8601String(),
+            'generated_at' => $provenance['generated_at'] ?? $this->clock->now()->format(DATE_ATOM),
         ]);
     }
 
     private function providerName(): ?string
     {
         try {
-            $providerName = app(AiRuntimeStatusInterface::class)->providerName();
+            $providerName = $this->aiRuntimeStatus->providerName();
         } catch (Throwable) {
             return null;
         }
@@ -696,7 +701,7 @@ final class ApprovalController extends Controller
         $comparisonRun->response_payload = $responsePayload;
         $comparisonRun->save();
 
-        app(DecisionTrailRecorder::class)->recordAiArtifactGenerated(
+        $this->decisionTrailRecorder->recordAiArtifactGenerated(
             tenantId: (string) $approval->tenant_id,
             rfqId: (string) $approval->rfq_id,
             comparisonRunId: (string) $approval->comparison_run_id,

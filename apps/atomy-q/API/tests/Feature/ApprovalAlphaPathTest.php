@@ -10,6 +10,8 @@ use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSnapshot;
 use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
 use App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface;
+use App\Adapters\Ai\DTOs\ApprovalSummaryRequest;
+use App\Adapters\Ai\DTOs\ApprovalSummaryResponse;
 use App\Models\Approval;
 use App\Models\ComparisonRun;
 use App\Models\DecisionTrailEntry;
@@ -277,15 +279,15 @@ final class ApprovalAlphaPathTest extends ApiTestCase
         $comparisonAwardClient = $this->createMock(ComparisonAwardAiClientInterface::class);
         $comparisonAwardClient->expects($this->once())
             ->method('approvalSummary')
-            ->with($this->callback(function (array $payload) use ($tenantId, $approval, $run): bool {
-                return ($payload['tenant_id'] ?? null) === $tenantId
-                    && ($payload['approval_id'] ?? null) === $approval->id
-                    && ($payload['comparison_run_id'] ?? null) === $run->id;
+            ->with($this->callback(function (ApprovalSummaryRequest $request) use ($tenantId, $approval, $run): bool {
+                return $request->tenantId === $tenantId
+                    && $request->approvalId === (string) $approval->id
+                    && $request->comparisonRunId === (string) $run->id;
             }))
-            ->willReturn([
+            ->willReturn(new ApprovalSummaryResponse([
                 'headline' => 'Approval can proceed with the frozen comparison evidence.',
                 'risk_flags' => ['variance_with_policy'],
-            ]);
+            ]));
         $comparisonAwardClient->expects($this->never())->method('comparisonOverlay');
         $comparisonAwardClient->expects($this->never())->method('awardGuidance');
         $comparisonAwardClient->expects($this->never())->method('awardDebriefDraft');

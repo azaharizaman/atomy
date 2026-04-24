@@ -6,6 +6,10 @@ namespace Tests\Feature;
 
 use App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface;
 use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use App\Adapters\Ai\DTOs\AwardDebriefDraftRequest;
+use App\Adapters\Ai\DTOs\AwardDebriefDraftResponse;
+use App\Adapters\Ai\DTOs\AwardGuidanceRequest;
+use App\Adapters\Ai\DTOs\AwardGuidanceResponse;
 use App\Models\Award;
 use App\Models\ComparisonRun;
 use App\Models\DecisionTrailEntry;
@@ -345,15 +349,16 @@ final class AwardWorkflowTest extends ApiTestCase
         $comparisonAwardClient = $this->createMock(ComparisonAwardAiClientInterface::class);
         $comparisonAwardClient->expects($this->once())
             ->method('awardGuidance')
-            ->with($this->callback(static function (array $payload): bool {
-                return isset($payload['tenant_id'], $payload['award_id'], $payload['comparison_run_id'], $payload['comparison_context'])
-                    && is_array($payload['comparison_context'])
-                    && isset($payload['comparison_context']['snapshot'], $payload['comparison_context']['matrix']);
+            ->with($this->callback(static function (AwardGuidanceRequest $request): bool {
+                return $request->tenantId !== ''
+                    && $request->awardId !== ''
+                    && $request->comparisonRunId !== ''
+                    && isset($request->comparisonContext['snapshot'], $request->comparisonContext['matrix']);
             }))
-            ->willReturn([
+            ->willReturn(new AwardGuidanceResponse([
                 'headline' => 'Proceed with the lowest compliant vendor.',
                 'risk_flags' => ['single_source_dependency'],
-            ]);
+            ]));
         $comparisonAwardClient->expects($this->never())->method('comparisonOverlay');
         $comparisonAwardClient->expects($this->never())->method('awardDebriefDraft');
         $comparisonAwardClient->expects($this->never())->method('approvalSummary');
@@ -494,15 +499,15 @@ final class AwardWorkflowTest extends ApiTestCase
         $comparisonAwardClient->expects($this->never())->method('approvalSummary');
         $comparisonAwardClient->expects($this->once())
             ->method('awardDebriefDraft')
-            ->with($this->callback(static function (array $payload) use ($award, $loserVendorId): bool {
-                return ($payload['award_id'] ?? null) === $award->id
-                    && ($payload['vendor_id'] ?? null) === $loserVendorId
-                    && is_array($payload['comparison_context'] ?? null);
+            ->with($this->callback(static function (AwardDebriefDraftRequest $request) use ($award, $loserVendorId): bool {
+                return $request->awardId === $award->id
+                    && $request->vendorId === $loserVendorId
+                    && isset($request->comparisonContext['snapshot']);
             }))
-            ->willReturn([
+            ->willReturn(new AwardDebriefDraftResponse([
                 'draft_message' => 'Thank you for your proposal. The award went to a lower-risk commercial bid.',
                 'talking_points' => ['pricing variance', 'delivery confidence'],
-            ]);
+            ]));
         $this->app->instance(ComparisonAwardAiClientInterface::class, $comparisonAwardClient);
 
         $response = $this->getJson(

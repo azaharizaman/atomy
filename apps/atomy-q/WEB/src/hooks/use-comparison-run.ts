@@ -185,13 +185,17 @@ function normalizeAiOverlay(payload: unknown): ComparisonRunAiOverlay | null {
     throw new Error('Comparison run AI overlay is missing feature_key.');
   }
 
+  if (typeof payload.available !== 'boolean') {
+    throw new Error('Comparison run AI overlay has invalid available state.');
+  }
+
   const overlayPayload = isObject(payload.payload) ? payload.payload : null;
 
   return {
     featureKey,
-    available: payload.available === true,
+    available: payload.available,
     payload: overlayPayload,
-    provenance: normalizeProvenance(payload.provenance ?? overlayPayload?.provenance),
+    provenance: normalizeProvenance(payload.provenance),
   };
 }
 

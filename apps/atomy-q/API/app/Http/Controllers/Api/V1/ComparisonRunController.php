@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface;
 use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use App\Adapters\Ai\DTOs\ComparisonOverlayRequest;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
 use App\Http\Controllers\Controller;
@@ -22,6 +23,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 use Throwable;
+use Nexus\Common\Contracts\ClockInterface;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 use Nexus\QuotationIntelligence\Contracts\BatchQuoteComparisonCoordinatorInterface;
 use Nexus\QuotationIntelligence\Exceptions\ComparisonNotReadyException;
@@ -38,6 +40,8 @@ final class ComparisonRunController extends Controller
         private readonly DecisionTrailRecorder $decisionTrail,
         private readonly BatchQuoteComparisonCoordinatorInterface $comparisonCoordinator,
         private readonly ComparisonAwardAiClientInterface $comparisonAwardAiClient,
+        private readonly AiRuntimeStatusInterface $aiRuntimeStatus,
+        private readonly ClockInterface $clock,
     ) {}
 
     /**
@@ -480,20 +484,18 @@ final class ComparisonRunController extends Controller
         array $comparison,
         ?array $snapshot = null,
     ): array {
-        $payload = [
-            'tenant_id' => $tenantId,
-            'rfq_id' => $rfqId,
-            'mode' => $mode,
-            'comparison' => $comparison,
-            'snapshot' => $snapshot,
-        ];
-
         if (! $this->aiCapabilityAvailable('comparison_ai_overlay')) {
             return $this->comparisonAiUnavailableOverlay();
         }
 
         try {
-            $overlay = $this->comparisonAwardAiClient->comparisonOverlay($payload);
+            $overlay = $this->comparisonAwardAiClient->comparisonOverlay(new ComparisonOverlayRequest(
+                tenantId: $tenantId,
+                rfqId: $rfqId,
+                mode: $mode,
+                comparison: $comparison,
+                snapshot: $snapshot,
+            ))->payload;
         } catch (Throwable $exception) {
             report($exception);
 
@@ -526,7 +528,7 @@ final class ComparisonRunController extends Controller
                 'source' => 'deterministic',
                 'endpoint_group' => AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD,
                 'provider_name' => $this->providerName(),
-                'generated_at' => now()->toIso8601String(),
+                'generated_at' => $this->clock->now()->format(DATE_ATOM),
             ],
             status: $capabilityStatus?->status ?? AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE,
             fallbackUiMode: $capabilityStatus?->fallbackUiMode ?? AiStatusSchema::FALLBACK_UI_MODE_SHOW_UNAVAILABLE_MESSAGE,
@@ -536,6 +538,11 @@ final class ComparisonRunController extends Controller
         );
     }
 
+    /**
+     * Persist the optional AI overlay separately from the deterministic comparison snapshot.
+     *
+     * @param array<string, mixed> $aiOverlay
+     */
     private function persistComparisonAiOverlay(ComparisonRun $run, array $aiOverlay): void
     {
         $responsePayload = $run->response_payload ?? [];
@@ -622,14 +629,14 @@ final class ComparisonRunController extends Controller
             'source' => 'provider',
             'provider_name' => $this->providerName(),
             'endpoint_group' => $endpointGroup,
-            'generated_at' => $provenance['generated_at'] ?? now()->toIso8601String(),
+            'generated_at' => $provenance['generated_at'] ?? $this->clock->now()->format(DATE_ATOM),
         ]);
     }
 
     private function providerName(): ?string
     {
         try {
-            $providerName = app(AiRuntimeStatusInterface::class)->providerName();
+            $providerName = $this->aiRuntimeStatus->providerName();
         } catch (Throwable) {
             return null;
         }

@@ -4,29 +4,35 @@ declare(strict_types=1);
 
 namespace App\Adapters\Ai\Contracts;
 
+use App\Adapters\Ai\DTOs\ApprovalSummaryRequest;
+use App\Adapters\Ai\DTOs\ApprovalSummaryResponse;
+use App\Adapters\Ai\DTOs\AwardDebriefDraftRequest;
+use App\Adapters\Ai\DTOs\AwardDebriefDraftResponse;
+use App\Adapters\Ai\DTOs\AwardGuidanceRequest;
+use App\Adapters\Ai\DTOs\AwardGuidanceResponse;
+use App\Adapters\Ai\DTOs\ComparisonOverlayRequest;
+use App\Adapters\Ai\DTOs\ComparisonOverlayResponse;
+use App\Adapters\Ai\Exceptions\ComparisonAwardAiException;
+
 interface ComparisonAwardAiClientInterface
 {
     /**
-     * @param array<string, mixed> $payload
-     * @return array<string, mixed>
+     * @throws ComparisonAwardAiException
      */
-    public function comparisonOverlay(array $payload): array;
+    public function comparisonOverlay(ComparisonOverlayRequest $request): ComparisonOverlayResponse;
 
     /**
-     * @param array<string, mixed> $payload
-     * @return array<string, mixed>
+     * @throws ComparisonAwardAiException
      */
-    public function awardGuidance(array $payload): array;
+    public function awardGuidance(AwardGuidanceRequest $request): AwardGuidanceResponse;
 
     /**
-     * @param array<string, mixed> $payload
-     * @return array<string, mixed>
+     * @throws ComparisonAwardAiException
      */
-    public function awardDebriefDraft(array $payload): array;
+    public function awardDebriefDraft(AwardDebriefDraftRequest $request): AwardDebriefDraftResponse;
 
     /**
-     * @param array<string, mixed> $payload
-     * @return array<string, mixed>
+     * @throws ComparisonAwardAiException
      */
-    public function approvalSummary(array $payload): array;
+    public function approvalSummary(ApprovalSummaryRequest $request): ApprovalSummaryResponse;
 }

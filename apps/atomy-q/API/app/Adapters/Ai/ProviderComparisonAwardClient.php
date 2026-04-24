@@ -4,9 +4,18 @@ declare(strict_types=1);
 
 namespace App\Adapters\Ai;
 
-use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
+use App\Adapters\Ai\DTOs\ApprovalSummaryRequest;
+use App\Adapters\Ai\DTOs\ApprovalSummaryResponse;
+use App\Adapters\Ai\DTOs\AwardDebriefDraftRequest;
+use App\Adapters\Ai\DTOs\AwardDebriefDraftResponse;
+use App\Adapters\Ai\DTOs\AwardGuidanceRequest;
+use App\Adapters\Ai\DTOs\AwardGuidanceResponse;
+use App\Adapters\Ai\DTOs\ComparisonOverlayRequest;
+use App\Adapters\Ai\DTOs\ComparisonOverlayResponse;
 use App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface;
 use App\Adapters\Ai\Contracts\ProviderAiTransportInterface;
+use App\Adapters\Ai\Exceptions\ComparisonAwardAiException;
+use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 
 final readonly class ProviderComparisonAwardClient implements ComparisonAwardAiClientInterface
 {
@@ -16,50 +25,70 @@ final readonly class ProviderComparisonAwardClient implements ComparisonAwardAiC
     }
 
     /**
-     * @param array<string, mixed> $payload
-     * @return array<string, mixed>
+     * @throws ComparisonAwardAiException
      */
-    public function comparisonOverlay(array $payload): array
+    public function comparisonOverlay(ComparisonOverlayRequest $request): ComparisonOverlayResponse
     {
-        return $this->transport->invoke(AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD, [
-            'action' => 'comparison_overlay',
-            ...$payload,
-        ]);
+        $payload = $request->toPayload();
+
+        try {
+            return new ComparisonOverlayResponse($this->transport->invoke(AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD, [
+                ...$payload,
+                'action' => 'comparison_overlay',
+            ]));
+        } catch (\Throwable $e) {
+            throw ComparisonAwardAiException::fromThrowable($e, 'comparison_overlay', $payload);
+        }
     }
 
     /**
-     * @param array<string, mixed> $payload
-     * @return array<string, mixed>
+     * @throws ComparisonAwardAiException
      */
-    public function awardGuidance(array $payload): array
+    public function awardGuidance(AwardGuidanceRequest $request): AwardGuidanceResponse
     {
-        return $this->transport->invoke(AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD, [
-            'action' => 'award_guidance',
-            ...$payload,
-        ]);
+        $payload = $request->toPayload();
+
+        try {
+            return new AwardGuidanceResponse($this->transport->invoke(AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD, [
+                ...$payload,
+                'action' => 'award_guidance',
+            ]));
+        } catch (\Throwable $e) {
+            throw ComparisonAwardAiException::fromThrowable($e, 'award_guidance', $payload);
+        }
     }
 
     /**
-     * @param array<string, mixed> $payload
-     * @return array<string, mixed>
+     * @throws ComparisonAwardAiException
      */
-    public function awardDebriefDraft(array $payload): array
+    public function awardDebriefDraft(AwardDebriefDraftRequest $request): AwardDebriefDraftResponse
     {
-        return $this->transport->invoke(AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD, [
-            'action' => 'award_debrief_draft',
-            ...$payload,
-        ]);
+        $payload = $request->toPayload();
+
+        try {
+            return new AwardDebriefDraftResponse($this->transport->invoke(AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD, [
+                ...$payload,
+                'action' => 'award_debrief_draft',
+            ]));
+        } catch (\Throwable $e) {
+            throw ComparisonAwardAiException::fromThrowable($e, 'award_debrief_draft', $payload);
+        }
     }
 
     /**
-     * @param array<string, mixed> $payload
-     * @return array<string, mixed>
+     * @throws ComparisonAwardAiException
      */
-    public function approvalSummary(array $payload): array
+    public function approvalSummary(ApprovalSummaryRequest $request): ApprovalSummaryResponse
     {
-        return $this->transport->invoke(AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD, [
-            'action' => 'approval_summary',
-            ...$payload,
-        ]);
+        $payload = $request->toPayload();
+
+        try {
+            return new ApprovalSummaryResponse($this->transport->invoke(AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD, [
+                ...$payload,
+                'action' => 'approval_summary',
+            ]));
+        } catch (\Throwable $e) {
+            throw ComparisonAwardAiException::fromThrowable($e, 'approval_summary', $payload);
+        }
     }
 }

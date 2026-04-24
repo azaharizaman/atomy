@@ -486,7 +486,7 @@ describe('RfqAwardPage', () => {
 
     renderWithProviders(<RfqAwardPageContent rfqId="rfq-1" />);
 
-    await screen.findByText('Award AI guidance unavailable');
+    expect(await screen.findByText('Award AI guidance unavailable')).toBeInTheDocument();
     expect(screen.queryByText('Award payload rejected')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /finalize award/i })).toBeEnabled();
   });

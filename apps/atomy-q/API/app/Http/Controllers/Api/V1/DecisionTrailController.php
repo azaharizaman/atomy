@@ -173,6 +173,10 @@ final class DecisionTrailController extends Controller
 
         if (str_starts_with($entry->event_type, 'award_ai_guidance_generated:')) {
             $awardId = substr($entry->event_type, strlen('award_ai_guidance_generated:'));
+            if ($awardId === '') {
+                return $base;
+            }
+
             $artifact = $this->artifactFromEntry($entry, ['ai_artifacts', 'award_guidance', $awardId]);
 
             return array_merge($base, $this->artifactMetadata(
@@ -187,10 +191,13 @@ final class DecisionTrailController extends Controller
             $summary = is_array($entry->summary_payload) ? $entry->summary_payload : [];
             $awardId = is_string($summary['award_id'] ?? null) ? $summary['award_id'] : null;
             $vendorId = is_string($summary['vendor_id'] ?? null) ? $summary['vendor_id'] : null;
-            $artifact = $this->artifactFromEntry(
-                $entry,
-                ['ai_artifacts', 'award_debrief_draft', $awardId ?? '', $vendorId ?? ''],
-            );
+            $artifact = null;
+            if ($awardId !== null && $awardId !== '' && $vendorId !== null && $vendorId !== '') {
+                $artifact = $this->artifactFromEntry(
+                    $entry,
+                    ['ai_artifacts', 'award_debrief_draft', $awardId, $vendorId],
+                );
+            }
 
             return array_merge($base, $this->artifactMetadata(
                 artifactKind: 'award_ai_debrief_draft',
@@ -281,6 +288,7 @@ final class DecisionTrailController extends Controller
 
     /**
      * @param array<string, mixed>|null $artifact
+     * @param array<string, mixed> $extra
      * @return array<string, mixed>
      */
     private function artifactMetadata(

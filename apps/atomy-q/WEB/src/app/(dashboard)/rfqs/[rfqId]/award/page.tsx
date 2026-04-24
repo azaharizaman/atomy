@@ -86,29 +86,36 @@ export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
     },
     [finalRunDetailQuery.data?.snapshot, finalRunMatrixQuery.data],
   );
-  const nonWinners = displayAward?.comparison?.vendors?.length
-    ? displayAward.comparison.vendors.filter((vendor) => vendor.vendor_id !== '' && vendor.vendor_id !== displayAward.vendor_id)
-    : [];
+  const nonWinners = React.useMemo(
+    () => (
+      displayAward?.comparison?.vendors?.length
+        ? displayAward.comparison.vendors.filter((vendor) => vendor.vendor_id !== '' && vendor.vendor_id !== displayAward.vendor_id)
+        : []
+    ),
+    [displayAward?.comparison?.vendors, displayAward?.vendor_id],
+  );
   const awardAmount = formatAmount(displayAward?.amount ?? null, displayAward?.currency ?? null);
   const isFinalEvidenceLoading = shouldLoadFinalRunEvidence && (finalRunDetailQuery.isLoading || finalRunMatrixQuery.isLoading);
   const showAwardGuidanceUnavailable = aiStatus.shouldShowUnavailableMessage('award_ai_guidance');
   const hideAwardGuidance = aiStatus.shouldHideAiControls('award_ai_guidance');
   const awardGuidanceQuery = useAwardGuidance(displayAward?.id ?? '', {
-    enabled: Boolean(displayAward?.id),
+    enabled: Boolean(displayAward?.id) && !useMocks,
   });
   const awardGuidance = awardGuidanceQuery.data ?? null;
   const awardGuidancePayload = awardGuidance?.payload ?? null;
   const debriefDraftQuery = useAwardDebriefDraft(displayAward?.id ?? '', selectedDraftVendorId, {
-    enabled: Boolean(displayAward?.id) && Boolean(selectedDraftVendorId),
+    enabled: Boolean(displayAward?.id) && Boolean(selectedDraftVendorId) && !useMocks,
   });
   const debriefDraft = debriefDraftQuery.data ?? null;
   const debriefDraftPayload = debriefDraft?.payload ?? null;
+  // `draft_message` is the canonical provider field; `message` remains accepted for older alpha payloads.
   const debriefDraftText =
     typeof debriefDraftPayload?.draft_message === 'string'
       ? debriefDraftPayload.draft_message
       : typeof debriefDraftPayload?.message === 'string'
         ? debriefDraftPayload.message
         : '';
+  const isAwardGuidanceUnavailable = awardGuidance?.available === false || showAwardGuidanceUnavailable;
 
   React.useEffect(() => {
     if (selectedVendorId === '' && awardCandidates[0]?.vendorId) {
@@ -321,13 +328,7 @@ export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
                   <JsonBlock title="Provider payload" value={awardGuidancePayload} />
                   {awardGuidance.provenance ? <JsonBlock title="Provenance" value={awardGuidance.provenance} /> : null}
                 </div>
-              ) : awardGuidance?.available === false ? (
-                <AiUnavailableCallout
-                  title="Award AI guidance unavailable"
-                  messageKey={aiStatus.messageKeyForFeature('award_ai_guidance')}
-                  fallbackCopy="Manual award creation, sign-off, and debrief drafting remain available."
-                />
-              ) : showAwardGuidanceUnavailable ? (
+              ) : isAwardGuidanceUnavailable ? (
                 <AiUnavailableCallout
                   title="Award AI guidance unavailable"
                   messageKey={aiStatus.messageKeyForFeature('award_ai_guidance')}

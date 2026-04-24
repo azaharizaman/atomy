@@ -84,6 +84,13 @@ final readonly class DecisionTrailRecorder
     }
 
     /**
+     * Record one of the AI artifact events used by the RFQ sourcing chain.
+     *
+     * Allowed values are `comparison_ai_overlay_generated`,
+     * `award_ai_guidance_generated:{awardId}`,
+     * `award_ai_debrief_draft_generated`,
+     * and `approval_ai_summary_generated:{approvalId}`.
+     *
      * @param array<string, mixed> $summary Tenant-safe, machine-readable summary (counts, ids); avoid PII.
      */
     public function recordAiArtifactGenerated(

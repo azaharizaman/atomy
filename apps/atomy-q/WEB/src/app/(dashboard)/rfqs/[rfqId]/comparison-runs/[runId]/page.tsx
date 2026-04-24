@@ -144,11 +144,19 @@ function SnapshotLinesCard({
 }
 
 function JsonBlock({ title, value }: { title: string; value: Record<string, unknown> }) {
+  let content: string;
+
+  try {
+    content = JSON.stringify(value, null, 2);
+  } catch (error) {
+    content = `Unable to stringify value: ${error instanceof Error ? error.message : 'Unknown error'}`;
+  }
+
   return (
     <div className="space-y-2">
       <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{title}</p>
       <pre className="overflow-x-auto rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-700">
-        {JSON.stringify(value, null, 2)}
+        {content}
       </pre>
     </div>
   );
@@ -241,6 +249,7 @@ export function ComparisonRunDetailPageContent({ rfqId, runId }: { rfqId: string
     aiStatus.shouldShowUnavailableMessage('comparison_ai_overlay');
   const hideComparisonOverlay = aiStatus.shouldHideAiControls('comparison_ai_overlay');
   const comparisonOverlay = run?.aiOverlay ?? null;
+  const isComparisonOverlayUnavailable = comparisonOverlay?.available === false || showComparisonOverlayUnavailable;
 
   if (runQuery.isLoading || matrixQuery.isLoading || readinessQuery.isLoading) {
     return (
@@ -372,7 +381,7 @@ export function ComparisonRunDetailPageContent({ rfqId, runId }: { rfqId: string
             ) : null
           }
         >
-          {comparisonOverlay?.available === true && comparisonOverlay.payload !== null ? (
+          {comparisonOverlay?.available === true && comparisonOverlay.payload != null ? (
             <div className="space-y-4">
               <InfoGrid
                 cols={3}
@@ -385,13 +394,7 @@ export function ComparisonRunDetailPageContent({ rfqId, runId }: { rfqId: string
               <JsonBlock title="Provider payload" value={comparisonOverlay.payload} />
               {comparisonOverlay.provenance ? <JsonBlock title="Provenance" value={comparisonOverlay.provenance} /> : null}
             </div>
-          ) : comparisonOverlay?.available === false ? (
-            <AiUnavailableCallout
-              title="Comparison AI overlay unavailable"
-              messageKey={aiStatus.messageKeyForFeature('comparison_ai_overlay')}
-              fallbackCopy="Deterministic comparison data above remains the source of truth."
-            />
-          ) : showComparisonOverlayUnavailable ? (
+          ) : isComparisonOverlayUnavailable ? (
             <AiUnavailableCallout
               title="Comparison AI overlay unavailable"
               messageKey={aiStatus.messageKeyForFeature('comparison_ai_overlay')}

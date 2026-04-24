@@ -1,8 +1,8 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, screen, waitFor } from '@testing-library/react';
-import { renderWithProviders } from '@/test/utils';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { normalizeApprovalSummary } from '@/hooks/use-approval-summary';
+import { renderWithProviders } from '@/test/utils';
 
 let aiStatusData = {
   isFeatureAvailable: () => true,
@@ -134,7 +134,6 @@ describe('ApprovalsListPage', () => {
     expect(screen.getAllByText('approval-1').length).toBeGreaterThan(0);
     expect(screen.getByText(/approval can proceed with the frozen comparison evidence/i)).toBeInTheDocument();
     expect(screen.getAllByText(/openrouter/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText('approval-1').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Compliance review').length).toBeGreaterThan(0);
     expect(mockUseApprovalSummary).toHaveBeenCalledWith('approval-1', expect.objectContaining({ enabled: true }));
   });
@@ -144,8 +143,10 @@ describe('ApprovalsListPage', () => {
 
     expect(await screen.findByText(/approval can proceed with the frozen comparison evidence/i)).toBeInTheDocument();
 
-    const checkboxes = screen.getAllByRole('checkbox');
-    fireEvent.click(checkboxes[2]);
+    const financeCell = screen.getByText('Finance review');
+    const financeRow = financeCell.closest('tr');
+    expect(financeRow).not.toBeNull();
+    fireEvent.click(within(financeRow as HTMLTableRowElement).getByRole('checkbox'));
 
     await waitFor(() => expect(screen.getByText(/finance can clear this review/i)).toBeInTheDocument());
     expect(mockUseApprovalSummary).toHaveBeenCalledWith('approval-2', expect.objectContaining({ enabled: true }));
@@ -171,43 +172,5 @@ describe('ApprovalsListPage', () => {
     expect(await screen.findByRole('heading', { name: 'AI summary aid' })).toBeInTheDocument();
     expect(screen.getByText('Approval AI summary unavailable')).toBeInTheDocument();
     expect(screen.getByText('approval-1')).toBeInTheDocument();
-  });
-
-  it('normalizes provider summary payloads with provenance when present', () => {
-    expect(
-      normalizeApprovalSummary({
-        data: {
-          ai_summary: {
-            feature_key: 'approval_ai_summary',
-            available: true,
-            payload: {
-              headline: 'Approval can proceed with the frozen comparison evidence.',
-              provenance: {
-                provider: 'openrouter',
-                endpoint_group: 'comparison_award',
-              },
-            },
-            provenance: {
-              provider: 'openrouter',
-              endpoint_group: 'comparison_award',
-            },
-          },
-        },
-      }),
-    ).toMatchObject({
-      featureKey: 'approval_ai_summary',
-      available: true,
-      payload: {
-        headline: 'Approval can proceed with the frozen comparison evidence.',
-        provenance: {
-          provider: 'openrouter',
-          endpoint_group: 'comparison_award',
-        },
-      },
-      provenance: {
-        provider: 'openrouter',
-        endpoint_group: 'comparison_award',
-      },
-    });
   });
 });

@@ -6,6 +6,8 @@ namespace Tests\Feature;
 
 use App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface;
 use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use App\Adapters\Ai\DTOs\ComparisonOverlayRequest;
+use App\Adapters\Ai\DTOs\ComparisonOverlayResponse;
 use App\Models\ComparisonRun;
 use App\Models\DecisionTrailEntry;
 use App\Models\NormalizationSourceLine;
@@ -230,7 +232,7 @@ final class ComparisonRunWorkflowTest extends ApiTestCase
         $this->assertFalse(str_starts_with((string) $response->json('data.id'), 'cr-preview-'));
         $this->assertNotEmpty($response->json('data.matrix.clusters'));
         $this->assertSame(true, $response->json('data.readiness.is_ready'));
-        $this->assertFalse((bool) $response->json('data.ai_overlay.available'));
+        $response->assertJsonPath('data.ai_overlay.available', false);
         $this->assertSame('comparison_ai_overlay', $response->json('data.ai_overlay.feature_key'));
         $this->assertSame('deterministic', $response->json('data.ai_overlay.provenance.source'));
 
@@ -450,15 +452,15 @@ final class ComparisonRunWorkflowTest extends ApiTestCase
         $comparisonAwardClient = $this->createMock(ComparisonAwardAiClientInterface::class);
         $comparisonAwardClient->expects($this->once())
             ->method('comparisonOverlay')
-            ->with($this->callback(static function (array $payload): bool {
-                return ($payload['tenant_id'] ?? null) !== null
-                    && ($payload['rfq_id'] ?? null) !== null
-                    && ($payload['mode'] ?? null) === 'preview';
+            ->with($this->callback(static function (ComparisonOverlayRequest $request): bool {
+                return $request->tenantId !== ''
+                    && $request->rfqId !== ''
+                    && $request->mode === 'preview';
             }))
-            ->willReturn([
+            ->willReturn(new ComparisonOverlayResponse([
                 'headline' => 'Vendor One is lowest risk',
                 'recommendations' => ['prefer_vendor_one'],
-            ]);
+            ]));
         $comparisonAwardClient->expects($this->never())->method('awardGuidance');
         $comparisonAwardClient->expects($this->never())->method('awardDebriefDraft');
         $comparisonAwardClient->expects($this->never())->method('approvalSummary');

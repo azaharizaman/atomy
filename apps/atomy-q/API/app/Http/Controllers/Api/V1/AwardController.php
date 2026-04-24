@@ -7,6 +7,8 @@ namespace App\Http\Controllers\Api\V1;
 use Throwable;
 use App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface;
 use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use App\Adapters\Ai\DTOs\AwardDebriefDraftRequest;
+use App\Adapters\Ai\DTOs\AwardGuidanceRequest;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
 use App\Http\Controllers\Controller;
@@ -20,6 +22,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Nexus\Common\Contracts\ClockInterface;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 
 final class AwardController extends Controller
@@ -29,6 +32,8 @@ final class AwardController extends Controller
 
     public function __construct(
         private readonly ComparisonAwardAiClientInterface $comparisonAwardAiClient,
+        private readonly DecisionTrailRecorder $decisionTrailRecorder,
+        private readonly ClockInterface $clock,
     ) {}
 
     /**
@@ -190,14 +195,14 @@ final class AwardController extends Controller
         }
 
         try {
-            $guidance = $this->comparisonAwardAiClient->awardGuidance([
-                'tenant_id' => $tenantId,
-                'award_id' => $award->id,
-                'rfq_id' => $award->rfq_id,
-                'comparison_run_id' => $award->comparison_run_id,
-                'award' => $this->serializeAward($award),
-                'comparison_context' => $this->serializeComparisonContext($comparisonRun),
-            ]);
+            $guidance = $this->comparisonAwardAiClient->awardGuidance(new AwardGuidanceRequest(
+                tenantId: $tenantId,
+                awardId: (string) $award->id,
+                rfqId: (string) $award->rfq_id,
+                comparisonRunId: (string) $award->comparison_run_id,
+                award: $this->serializeAward($award),
+                comparisonContext: $this->serializeComparisonContext($comparisonRun),
+            ))->payload;
         } catch (Throwable $exception) {
             report($exception);
 
@@ -279,20 +284,20 @@ final class AwardController extends Controller
         }
 
         try {
-            $draft = $this->comparisonAwardAiClient->awardDebriefDraft([
-                'tenant_id' => $tenantId,
-                'award_id' => $award->id,
-                'rfq_id' => $award->rfq_id,
-                'comparison_run_id' => $award->comparison_run_id,
-                'vendor_id' => $vendorId,
-                'award' => $this->serializeAward($award),
-                'losing_vendor' => [
+            $draft = $this->comparisonAwardAiClient->awardDebriefDraft(new AwardDebriefDraftRequest(
+                tenantId: $tenantId,
+                awardId: (string) $award->id,
+                rfqId: (string) $award->rfq_id,
+                comparisonRunId: (string) $award->comparison_run_id,
+                vendorId: $vendorId,
+                award: $this->serializeAward($award),
+                losingVendor: [
                     'vendor_id' => (string) $losingSubmission->vendor_id,
                     'vendor_name' => $losingSubmission->vendor_name,
                     'quote_submission_id' => (string) $losingSubmission->id,
                 ],
-                'comparison_context' => $this->serializeComparisonContext($comparisonRun),
-            ]);
+                comparisonContext: $this->serializeComparisonContext($comparisonRun),
+            ))->payload;
         } catch (Throwable $exception) {
             report($exception);
 
@@ -625,7 +630,7 @@ final class AwardController extends Controller
                 'source' => 'deterministic',
                 'endpoint_group' => AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD,
                 'provider_name' => $this->providerName(),
-                'generated_at' => now()->toIso8601String(),
+                'generated_at' => $this->clock->now()->format(DATE_ATOM),
             ],
         ];
     }
@@ -642,7 +647,7 @@ final class AwardController extends Controller
             'source' => 'provider',
             'provider_name' => $this->providerName(),
             'endpoint_group' => $endpointGroup,
-            'generated_at' => $provenance['generated_at'] ?? now()->toIso8601String(),
+            'generated_at' => $provenance['generated_at'] ?? $this->clock->now()->format(DATE_ATOM),
         ]);
     }
 
@@ -735,7 +740,7 @@ final class AwardController extends Controller
         $comparisonRun->response_payload = $responsePayload;
         $comparisonRun->save();
 
-        app(DecisionTrailRecorder::class)->recordAiArtifactGenerated(
+        $this->decisionTrailRecorder->recordAiArtifactGenerated(
             tenantId: (string) $award->tenant_id,
             rfqId: (string) $award->rfq_id,
             comparisonRunId: (string) $award->comparison_run_id,
@@ -787,7 +792,7 @@ final class AwardController extends Controller
         $comparisonRun->response_payload = $responsePayload;
         $comparisonRun->save();
 
-        app(DecisionTrailRecorder::class)->recordAiArtifactGenerated(
+        $this->decisionTrailRecorder->recordAiArtifactGenerated(
             tenantId: (string) $award->tenant_id,
             rfqId: (string) $award->rfq_id,
             comparisonRunId: (string) $award->comparison_run_id,

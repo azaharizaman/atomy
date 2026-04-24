@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchLiveOrFail } from '@/lib/api-live';
 import { isObject, toText, unwrapResponse } from '@/hooks/normalize-utils';
 
+const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
+
 export interface AwardDebriefDraft {
   featureKey: string;
   available: boolean;
@@ -15,7 +17,7 @@ function normalizeProvenance(value: unknown): Record<string, unknown> | null {
   return isObject(value) ? value : null;
 }
 
-function normalizeAwardDebriefDraft(payload: unknown): AwardDebriefDraft {
+export function normalizeAwardDebriefDraft(payload: unknown): AwardDebriefDraft {
   const raw = unwrapResponse(payload);
   if (!isObject(raw)) {
     throw new Error('Award debrief draft payload must be an object.');
@@ -35,9 +37,13 @@ function normalizeAwardDebriefDraft(payload: unknown): AwardDebriefDraft {
     throw new Error('Award debrief draft payload is missing feature_key.');
   }
 
+  if (typeof draft.available !== 'boolean') {
+    throw new Error('Award debrief draft payload has invalid available state.');
+  }
+
   return {
     featureKey,
-    available: draft.available === true,
+    available: draft.available,
     payload: isObject(draft.payload) ? draft.payload : null,
     provenance: normalizeProvenance(draft.provenance),
   };
@@ -50,7 +56,7 @@ export function useAwardDebriefDraft(
 ) {
   return useQuery({
     queryKey: ['award-debrief-draft', awardId, vendorId],
-    enabled: Boolean(awardId) && Boolean(vendorId) && options?.enabled !== false,
+    enabled: Boolean(awardId) && Boolean(vendorId) && options?.enabled !== false && !useMocks,
     queryFn: async (): Promise<AwardDebriefDraft> => {
       const data = await fetchLiveOrFail(
         `/awards/${encodeURIComponent(awardId)}/debrief-draft/${encodeURIComponent(vendorId)}`,
@@ -63,5 +69,3 @@ export function useAwardDebriefDraft(
     },
   });
 }
-
-export { normalizeAwardDebriefDraft };

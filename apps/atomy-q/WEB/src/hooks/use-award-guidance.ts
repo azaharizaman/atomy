@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchLiveOrFail } from '@/lib/api-live';
 import { isObject, toText, unwrapResponse } from '@/hooks/normalize-utils';
 
+const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
+
 export interface AwardAiGuidance {
   featureKey: string;
   available: boolean;
@@ -46,7 +48,7 @@ function normalizeAwardAiGuidance(payload: unknown): AwardAiGuidance {
 export function useAwardGuidance(awardId: string, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ['award-guidance', awardId],
-    enabled: Boolean(awardId) && options?.enabled !== false,
+    enabled: Boolean(awardId) && options?.enabled !== false && !useMocks,
     queryFn: async (): Promise<AwardAiGuidance> => {
       const data = await fetchLiveOrFail(`/awards/${encodeURIComponent(awardId)}/guidance`);
       if (data === undefined) {

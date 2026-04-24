@@ -44,15 +44,21 @@ export function ApprovalsListPageContent({ rfqId }: { rfqId: string }) {
   const { data: rfq } = useRfq(rfqId);
   const aiStatus = useAiStatus();
   const { data } = useApprovalsList({ rfq_id: rfqId, status: 'pending' });
-  const scopedItems = (data?.items ?? []).filter((a) => a.rfq_id === rfqId);
-  const approvals: ApprovalRow[] = scopedItems.map((a) => ({
-    id: a.id,
-    rfqId: a.rfq_id,
-    type: a.type,
-    summary: a.summary,
-    priority: normalizePriority(a.priority),
-    assignee: a.assignee ?? 'Unassigned',
-  }));
+  const scopedItems = React.useMemo(
+    () => (data?.items ?? []).filter((a) => a.rfq_id === rfqId),
+    [data?.items, rfqId],
+  );
+  const approvals: ApprovalRow[] = React.useMemo(
+    () => scopedItems.map((a) => ({
+      id: a.id,
+      rfqId: a.rfq_id,
+      type: a.type,
+      summary: a.summary,
+      priority: normalizePriority(a.priority),
+      assignee: a.assignee ?? 'Unassigned',
+    })),
+    [scopedItems],
+  );
 
   const breadcrumbItems = [
     { label: 'RFQs', href: '/rfqs' },
@@ -62,6 +68,8 @@ export function ApprovalsListPageContent({ rfqId }: { rfqId: string }) {
   const showApprovalSummaryUnavailable = aiStatus.shouldShowUnavailableMessage('approval_ai_summary');
   const hideApprovalSummary = aiStatus.shouldHideAiControls('approval_ai_summary');
   const [selectedApprovalId, setSelectedApprovalId] = React.useState('');
+  const approvalIdsKey = React.useMemo(() => approvals.map((approval) => approval.id).join(','), [approvals]);
+
   React.useEffect(() => {
     if (approvals.length === 0) {
       if (selectedApprovalId !== '') {
@@ -73,13 +81,14 @@ export function ApprovalsListPageContent({ rfqId }: { rfqId: string }) {
     if (selectedApprovalId === '' || approvals.every((approval) => approval.id !== selectedApprovalId)) {
       setSelectedApprovalId(approvals[0].id);
     }
-  }, [approvals, selectedApprovalId]);
+  }, [approvalIdsKey, approvals, selectedApprovalId]);
 
   const selectedApproval = approvals.find((approval) => approval.id === selectedApprovalId) ?? approvals[0] ?? null;
-  const approvalSummaryQuery = useApprovalSummary(selectedApproval?.id ?? '', {
-    enabled: Boolean(selectedApproval?.id),
+  const approvalSummaryQuery = useApprovalSummary(selectedApprovalId, {
+    enabled: Boolean(selectedApprovalId),
   });
   const approvalSummary = approvalSummaryQuery.data ?? null;
+  const isApprovalSummaryUnavailable = approvalSummary?.available === false || showApprovalSummaryUnavailable;
 
   const columns: ColumnDef<ApprovalRow>[] = [
     {
@@ -131,13 +140,7 @@ export function ApprovalsListPageContent({ rfqId }: { rfqId: string }) {
                 <JsonBlock title="Provenance" value={approvalSummary.provenance} />
               ) : null}
             </div>
-          ) : approvalSummary?.available === false ? (
-            <AiUnavailableCallout
-              title="Approval AI summary unavailable"
-              messageKey={aiStatus.messageKeyForFeature('approval_ai_summary')}
-              fallbackCopy="Approval routing and sign-off remain available without AI summary aid."
-            />
-          ) : showApprovalSummaryUnavailable ? (
+          ) : isApprovalSummaryUnavailable ? (
             <AiUnavailableCallout
               title="Approval AI summary unavailable"
               messageKey={aiStatus.messageKeyForFeature('approval_ai_summary')}
@@ -178,8 +181,7 @@ export function ApprovalsListPageContent({ rfqId }: { rfqId: string }) {
         selectable={approvals.length > 0}
         selectedIds={selectedApprovalId !== '' ? [selectedApprovalId] : []}
         onSelectChange={(ids) => {
-          const nextId = ids.length > 0 ? String(ids[ids.length - 1]) : approvals[0]?.id ?? '';
-          setSelectedApprovalId(nextId);
+          setSelectedApprovalId(ids.length > 0 ? String(ids[ids.length - 1]) : '');
         }}
         onRowClick={(row) => router.push(`/rfqs/${encodeURIComponent(rfqId)}/approvals/${encodeURIComponent(row.id)}`)}
         emptyState={

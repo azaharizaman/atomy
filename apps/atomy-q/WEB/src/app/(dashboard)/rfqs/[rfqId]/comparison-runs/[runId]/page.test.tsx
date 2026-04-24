@@ -258,9 +258,7 @@ describe('ComparisonRunDetailPage', () => {
             provider: 'openrouter',
           },
         },
-        provenance: {
-          provider: 'openrouter',
-        },
+        provenance: null,
       },
     });
   });

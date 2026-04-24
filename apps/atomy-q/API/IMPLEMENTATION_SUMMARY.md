@@ -20,7 +20,14 @@
 - `ApprovalController` now exposes `GET /api/v1/approvals/{id}/summary` as an AI-only drafting aid while keeping approval progression deterministic and user-authoritative, and it caches generated summaries under the owning frozen comparison run for reviewability.
 - Comparison overlay, award guidance, award debrief draft, and approval summary now use a consistent artifact-envelope shape with `feature_key`, `available`, `payload`, and `provenance`, while unavailable cases stay truthful and scoped.
 - Persisted artifacts are returned before runtime availability checks, so previously generated guidance/summary/overlay artifacts remain readable even if the provider later degrades.
-- `decision_trail_entries.summary_payload` now stores the tenant-safe artifact summary used to hash the event, and `DecisionTrailController` reads that durable summary first so artifact provenance does not silently change if `comparison_runs.response_payload` is later edited or pruned.
+- `decision_trail_entries.summary_payload` now stores the tenant-safe artifact summary used to hash the event, and `DecisionTrailController` reads that durable summary first so artifact provenance does not silently change if `comparison_runs.response_payload` is later edited or pruned. Current JSON shape:
+  - `artifact_kind`: string
+  - `artifact_origin`: string
+  - `feature_key`: string
+  - `award_id` / `approval_id` / `vendor_id`: optional string ids
+  - `available`: optional boolean
+  - `provenance`: optional object matching the persisted artifact provenance envelope
+  - `artifact`: optional object holding the persisted artifact envelope itself
 - Verification:
   - `cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Feature/ComparisonRunWorkflowTest.php tests/Feature/AwardWorkflowTest.php tests/Feature/ApprovalAlphaPathTest.php` -> PASS (30 tests, 203 assertions).
 
