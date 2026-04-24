@@ -1,8 +1,31 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 import { fetchLiveOrFail } from '@/lib/api-live';
 import { isObject, toText } from '@/hooks/normalize-utils';
+
+export interface ManualSourceLineInput {
+  source_description: string;
+  source_quantity?: string | null;
+  source_uom?: string | null;
+  source_unit_price?: string | null;
+  reason?: string | null;
+}
+
+export interface CreateManualSourceLineInput extends ManualSourceLineInput {
+  quoteSubmissionId: string;
+}
+
+export interface UpdateManualSourceLineInput extends ManualSourceLineInput {
+  id: string;
+  quoteSubmissionId: string;
+}
+
+export interface DeleteManualSourceLineInput {
+  id: string;
+  quoteSubmissionId: string;
+}
 
 export interface NormalizationSourceLineRow {
   id: string;
@@ -24,6 +47,9 @@ export interface NormalizationSourceLineRow {
   blocking_issue_count: number | null;
   has_blocking_issue: boolean;
   quote_submission_status: string | null;
+  extraction_origin?: string | null;
+  origin?: string | null;
+  provider_name?: string | null;
 }
 
 function normalizeSourceLines(payload: unknown): NormalizationSourceLineRow[] {
@@ -85,6 +111,10 @@ function normalizeSourceLines(payload: unknown): NormalizationSourceLineRow[] {
         row.quote_submission_status !== undefined && row.quote_submission_status !== null
           ? String(row.quote_submission_status)
           : null,
+      extraction_origin:
+        row.extraction_origin !== undefined && row.extraction_origin !== null ? String(row.extraction_origin) : null,
+      origin: row.origin !== undefined && row.origin !== null ? String(row.origin) : null,
+      provider_name: row.provider_name !== undefined && row.provider_name !== null ? String(row.provider_name) : null,
     };
   });
 }
@@ -118,4 +148,62 @@ export function useNormalizationSourceLines(rfqId: string, options?: { enabled?:
     },
     enabled,
   });
+}
+
+function manualPayload(input: ManualSourceLineInput) {
+  return {
+    source_description: input.source_description,
+    source_quantity: input.source_quantity ?? null,
+    source_uom: input.source_uom ?? null,
+    source_unit_price: input.source_unit_price ?? null,
+    origin: 'manual',
+    reason: input.reason ?? null,
+  };
+}
+
+export function useManualNormalizationSourceLineMutations(rfqId: string) {
+  const qc = useQueryClient();
+
+  function invalidate(): void {
+    qc.invalidateQueries({ queryKey: ['normalization-source-lines', rfqId] });
+    qc.invalidateQueries({ queryKey: ['normalization-conflicts', rfqId] });
+    qc.invalidateQueries({ queryKey: ['quote-submissions', 'list', rfqId] });
+    qc.invalidateQueries({ queryKey: ['rfqs', rfqId, 'overview'] });
+  }
+
+  const createSourceLine = useMutation({
+    mutationFn: async (input: CreateManualSourceLineInput) => {
+      const { quoteSubmissionId, ...payloadInput } = input;
+      const { data } = await api.post(
+        `/quote-submissions/${encodeURIComponent(quoteSubmissionId)}/source-lines`,
+        manualPayload(payloadInput),
+      );
+      return data;
+    },
+    onSuccess: invalidate,
+  });
+
+  const updateSourceLine = useMutation({
+    mutationFn: async (input: UpdateManualSourceLineInput) => {
+      const { quoteSubmissionId, id, ...payloadInput } = input;
+      const { data } = await api.put(
+        `/quote-submissions/${encodeURIComponent(quoteSubmissionId)}/source-lines/${encodeURIComponent(id)}`,
+        manualPayload(payloadInput),
+      );
+      return data;
+    },
+    onSuccess: invalidate,
+  });
+
+  const deleteSourceLine = useMutation({
+    mutationFn: async (input: DeleteManualSourceLineInput) => {
+      const { data } = await api.delete(
+        `/quote-submissions/${encodeURIComponent(input.quoteSubmissionId)}/source-lines/${encodeURIComponent(input.id)}`,
+      );
+      return data;
+    },
+    onSuccess: invalidate,
+  });
+
+  return { createSourceLine, updateSourceLine, deleteSourceLine };
 }

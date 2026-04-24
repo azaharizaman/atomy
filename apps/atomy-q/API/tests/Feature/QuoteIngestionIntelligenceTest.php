@@ -374,6 +374,8 @@ final class QuoteIngestionIntelligenceTest extends ApiTestCase
 
     public function test_upload_and_process_creates_intelligent_source_lines(): void
     {
+        config()->set('atomy.ai.mode', 'deterministic');
+
         $user = $this->createUser();
         $rfq = $this->createRfqWithLineItems($user);
 

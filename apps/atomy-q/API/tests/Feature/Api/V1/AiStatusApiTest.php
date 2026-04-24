@@ -84,6 +84,42 @@ final class AiStatusApiTest extends ApiTestCase
         $this->assertContains('deterministic_fallback_mode', $response->json('data.reason_codes'));
     }
 
+    public function testItExposesQuoteIntakeAndNormalizationFeaturePolicies(): void
+    {
+        config()->set('atomy.ai.mode', AiStatusSchema::MODE_DETERMINISTIC);
+
+        $response = $this->getJson('/api/v1/ai/status');
+
+        $response->assertOk();
+
+        $definitions = collect($response->json('data.capability_definitions'))->keyBy('feature_key');
+        $statuses = collect($response->json('data.capability_statuses'));
+
+        foreach ([
+            'quote_document_extraction' => AiStatusSchema::CAPABILITY_GROUP_DOCUMENT_INTELLIGENCE,
+            'quote_reparse_extraction' => AiStatusSchema::CAPABILITY_GROUP_DOCUMENT_INTELLIGENCE,
+            'normalization_suggestions' => AiStatusSchema::CAPABILITY_GROUP_NORMALIZATION_INTELLIGENCE,
+            'normalization_manual_mapping' => AiStatusSchema::CAPABILITY_GROUP_NORMALIZATION_INTELLIGENCE,
+        ] as $featureKey => $capabilityGroup) {
+            self::assertArrayHasKey($featureKey, $definitions);
+            self::assertArrayHasKey($featureKey, $statuses);
+            self::assertSame($capabilityGroup, $definitions[$featureKey]['capability_group']);
+            self::assertSame($capabilityGroup, $statuses[$featureKey]['capability_group']);
+        }
+
+        self::assertTrue((bool) $definitions['quote_document_extraction']['requires_ai']);
+        self::assertTrue((bool) $definitions['quote_document_extraction']['has_manual_fallback']);
+        self::assertSame(AiStatusSchema::ENDPOINT_GROUP_DOCUMENT, $definitions['quote_document_extraction']['endpoint_group']);
+        self::assertSame(
+            AiStatusSchema::FALLBACK_UI_MODE_SHOW_MANUAL_CONTINUITY_BANNER,
+            $definitions['quote_document_extraction']['fallback_ui_mode'],
+        );
+
+        self::assertFalse((bool) $definitions['normalization_manual_mapping']['requires_ai']);
+        self::assertTrue((bool) $statuses['normalization_manual_mapping']['available']);
+        self::assertSame(AiStatusSchema::CAPABILITY_STATUS_AVAILABLE, $statuses['normalization_manual_mapping']['status']);
+    }
+
     public function testItReflectsMixedProviderEndpointHealth(): void
     {
         config()->set('atomy.ai.mode', AiStatusSchema::MODE_PROVIDER);

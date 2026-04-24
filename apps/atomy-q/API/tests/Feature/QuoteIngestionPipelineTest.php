@@ -20,6 +20,8 @@ use App\Adapters\QuotationIntelligence\DeterministicContentProcessor;
 use App\Adapters\QuotationIntelligence\DeterministicSemanticMapper;
 use App\Adapters\QuotationIntelligence\DormantLlmContentProcessor;
 use App\Adapters\QuotationIntelligence\DormantLlmSemanticMapper;
+use App\Adapters\Ai\ProviderDocumentIntelligenceClient;
+use App\Adapters\Ai\ProviderNormalizationClient;
 use App\Jobs\ProcessQuoteSubmissionJob;
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
@@ -164,6 +166,8 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
 
     public function test_upload_triggers_job(): void
     {
+        config()->set('atomy.ai.mode', 'deterministic');
+
         $user = $this->createUser();
         $rfq = $this->createRfq($user);
 
@@ -190,6 +194,7 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         self::assertSame('deterministic', $contract['quote_intelligence']['mode']);
 
         config()->set('atomy', $contract);
+        config()->set('atomy.ai.mode', 'deterministic');
         $this->resetQuoteIntelligenceBindings();
         self::assertInstanceOf(DeterministicContentProcessor::class, app()->make(OrchestratorContentProcessorInterface::class));
         self::assertInstanceOf(DeterministicSemanticMapper::class, app()->make(SemanticMapperInterface::class));
@@ -236,9 +241,9 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
             ]);
 
         $response->assertCreated();
-        $response->assertJsonPath('data.status', 'failed');
-        $response->assertJsonPath('data.error_code', 'INTELLIGENCE_FAILED');
-        $response->assertJsonPath('data.error_message', 'Quote intelligence processing failed.');
+        $response->assertJsonPath('data.status', 'needs_review');
+        $response->assertJsonPath('data.error_code', 'EXTRACTION_UNAVAILABLE');
+        $response->assertJsonPath('data.error_message', 'Quote document extraction is unavailable. Manual action required.');
     }
 
     public function test_quote_intelligence_llm_mode_semantic_mapper_is_dormant(): void
@@ -273,6 +278,65 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         $contentProcessor->analyze(storage_path('app/quote-submissions/configured-llm.pdf'));
     }
 
+    public function test_upload_preserves_manual_continuity_when_document_ai_is_unavailable(): void
+    {
+        $this->resetQuoteIntelligenceBindings();
+        config()->set('atomy.ai.mode', 'provider');
+        config()->set('atomy.ai.endpoints.document.uri', '');
+        config()->set('atomy.quote_intelligence.mode', 'deterministic');
+
+        $user = $this->createUser();
+        $rfq = $this->createRfq($user);
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/quote-submissions/upload', [
+                'rfq_id' => $rfq->id,
+                'vendor_id' => (string) Str::ulid(),
+                'vendor_name' => 'Manual Continuity Vendor',
+                'file' => UploadedFile::fake()->create('quote.pdf', 12, 'application/pdf'),
+            ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.status', 'needs_review');
+        $response->assertJsonPath('data.error_code', 'EXTRACTION_UNAVAILABLE');
+        $response->assertJsonPath('data.ai_status.extraction.status', 'degraded');
+        $response->assertJsonPath('data.ai_status.extraction.manual_action_required', true);
+        $response->assertJsonPath('data.ai_status.normalization.status', 'degraded');
+        $response->assertJsonPath('data.confidence', null);
+
+        $submission = QuoteSubmission::query()->findOrFail((string) $response->json('data.id'));
+        self::assertSame('needs_review', $submission->status);
+        self::assertSame('EXTRACTION_UNAVAILABLE', $submission->error_code);
+        self::assertNull($submission->confidence);
+        self::assertSame(0, $submission->normalizationSourceLines()->count());
+    }
+
+    public function test_provider_ai_clients_are_bound_without_legacy_quote_mode_overriding_plan_status(): void
+    {
+        $this->resetQuoteIntelligenceBindings();
+        config()->set('atomy.ai.mode', 'off');
+        config()->set('atomy.quote_intelligence.mode', 'deterministic');
+
+        self::assertInstanceOf(ProviderDocumentIntelligenceClient::class, app()->make(ProviderDocumentIntelligenceClient::class));
+        self::assertInstanceOf(ProviderNormalizationClient::class, app()->make(ProviderNormalizationClient::class));
+
+        $user = $this->createUser();
+        $rfq = $this->createRfq($user);
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/quote-submissions/upload', [
+                'rfq_id' => $rfq->id,
+                'vendor_id' => (string) Str::ulid(),
+                'vendor_name' => 'AI Off Vendor',
+                'file' => UploadedFile::fake()->create('quote.pdf', 12, 'application/pdf'),
+            ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.status', 'needs_review');
+        $response->assertJsonPath('data.error_code', 'EXTRACTION_DISABLED');
+        $response->assertJsonPath('data.ai_status.extraction.available', false);
+    }
+
     public function test_unsupported_quote_intelligence_mode_fails_safe_through_pipeline(): void
     {
         $this->resetQuoteIntelligenceBindings();
@@ -296,9 +360,9 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
             ]);
 
         $response->assertCreated();
-        $response->assertJsonPath('data.status', 'failed');
-        $response->assertJsonPath('data.error_code', 'INTELLIGENCE_FAILED');
-        $response->assertJsonPath('data.error_message', 'Quote intelligence processing failed.');
+        $response->assertJsonPath('data.status', 'needs_review');
+        $response->assertJsonPath('data.error_code', 'EXTRACTION_UNAVAILABLE');
+        $response->assertJsonPath('data.error_message', 'Quote document extraction is unavailable. Manual action required.');
     }
 
     public function test_job_failed_path_sanitizes_retry_exhaustion_error_message(): void

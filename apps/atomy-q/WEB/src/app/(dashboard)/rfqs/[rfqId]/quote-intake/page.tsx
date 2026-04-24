@@ -11,6 +11,7 @@ import type { StatusVariant } from '@/components/ds/tokens';
 import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
 import { FilterBar } from '@/components/ds/FilterBar';
 import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
+import { useAiStatus } from '@/hooks/use-ai-status';
 import { useRfq } from '@/hooks/use-rfq';
 import { useNormalizationReview } from '@/hooks/use-normalization-review';
 import { useQuoteSubmissions, type QuoteSubmissionRow } from '@/hooks/use-quote-submissions';
@@ -56,6 +57,7 @@ export function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
   const rfq = rfqQuery.data;
   const norm = useNormalizationReview(rfqId, { enabled: !useMocks });
   const submissionsQuery = useQuoteSubmissions(rfqId);
+  const aiStatus = useAiStatus();
   const submissions = submissionsQuery.data ?? [];
   const [statusFilter, setStatusFilter] = React.useState('');
   const [vendorFilter, setVendorFilter] = React.useState('');
@@ -66,8 +68,8 @@ export function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
     { label: 'Quote Intake' },
   ];
 
-  if (rfqQuery.isError || submissionsQuery.isError || (!useMocks && norm.isError)) {
-    const pageError = rfqQuery.error ?? submissionsQuery.error ?? norm.error;
+  if (rfqQuery.isError || submissionsQuery.isError) {
+    const pageError = rfqQuery.error ?? submissionsQuery.error;
     const errorMessage = pageError instanceof Error ? pageError.message : 'Live quote intake data is unavailable.';
     return (
       <div className="space-y-5">
@@ -86,6 +88,15 @@ export function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
     if (vendorFilter && q.vendor_name !== vendorFilter) return false;
     return true;
   });
+  const extractionAvailable = aiStatus.isFeatureAvailable('quote_document_extraction');
+  const showExtractionUnavailable =
+    !useMocks && aiStatus.shouldShowUnavailableMessage('quote_document_extraction') && !extractionAvailable;
+  const providerName =
+    submissions.find((row) => row.extraction_origin === 'provider' && row.provider_name != null)?.provider_name ??
+    aiStatus.status.providerName ??
+    null;
+  const normalizationReviewErrorMessage =
+    norm.error instanceof Error ? norm.error.message : 'Review data could not be loaded.';
 
   const columns: ColumnDef<QuoteSubmissionRow>[] = [
     {
@@ -120,10 +131,27 @@ export function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
   return (
     <div className="space-y-5">
       <WorkspaceBreadcrumbs items={breadcrumbItems} />
+      {!useMocks && extractionAvailable && (
+        <Card className="border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-950">
+          <span className="font-semibold">AI-assisted quote extraction</span> — provider extraction active
+          {providerName ? ` via ${providerName}` : ''}.
+        </Card>
+      )}
+      {showExtractionUnavailable && (
+        <Card className="border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
+          <span className="font-semibold">AI extraction is unavailable.</span> Upload succeeded. Continue by entering source lines manually in the normalize workspace.
+        </Card>
+      )}
       {!useMocks && norm.hasBlockingIssues && (
         <Card className="border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
           <span className="font-semibold">Blocking issues</span> — {norm.blockingIssueCount} open issue(s) in normalization.
           Review the normalize workspace before freezing comparison.
+        </Card>
+      )}
+      {!useMocks && norm.isError && (
+        <Card className="border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
+          <span className="font-semibold">Normalization review data unavailable</span> — source quotes remain available.
+          <span className="ml-1">{normalizationReviewErrorMessage}</span>
         </Card>
       )}
       <PageHeader

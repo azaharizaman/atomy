@@ -15,6 +15,8 @@ export interface QuoteSubmissionRow {
   uploaded_at: string | null;
   blocking_issue_count: number;
   original_filename?: string | null;
+  extraction_origin?: string | null;
+  provider_name?: string | null;
 }
 
 function normalizeQuoteSubmissionRows(payload: unknown, isMockMode = false): QuoteSubmissionRow[] {
@@ -69,6 +71,9 @@ function normalizeQuoteSubmissionRows(payload: unknown, isMockMode = false): Quo
       blocking_issue_count: blockingIssueCount,
       original_filename:
         row.original_filename !== undefined && row.original_filename !== null ? String(row.original_filename) : null,
+      extraction_origin:
+        row.extraction_origin !== undefined && row.extraction_origin !== null ? String(row.extraction_origin) : null,
+      provider_name: row.provider_name !== undefined && row.provider_name !== null ? String(row.provider_name) : null,
     };
   });
 }

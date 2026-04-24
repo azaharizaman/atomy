@@ -1,10 +1,14 @@
 import React from 'react';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
 
 const mockUseNormalizationReview = vi.fn();
 const mockUseNormalizationSourceLines = vi.fn();
+const mockCreateSourceLine = vi.fn();
+const mockUpdateSourceLine = vi.fn();
+const mockDeleteSourceLine = vi.fn();
+const mockUseAiStatus = vi.fn();
 
 beforeAll(() => {
   process.env.NEXT_PUBLIC_USE_MOCKS = 'false';
@@ -20,6 +24,11 @@ vi.mock('@/hooks/use-normalization-review', async (importOriginal) => {
 
 vi.mock('@/hooks/use-normalization-source-lines', () => ({
   useNormalizationSourceLines: (...args: unknown[]) => mockUseNormalizationSourceLines(...args),
+  useManualNormalizationSourceLineMutations: () => ({
+    createSourceLine: { mutate: mockCreateSourceLine, isPending: false, isError: false, error: null },
+    updateSourceLine: { mutate: mockUpdateSourceLine, isPending: false, isError: false, error: null },
+    deleteSourceLine: { mutate: mockDeleteSourceLine, isPending: false, isError: false, error: null },
+  }),
 }));
 
 vi.mock('@/hooks/use-freeze-comparison', () => ({
@@ -32,6 +41,10 @@ vi.mock('@/hooks/use-freeze-comparison', () => ({
 
 vi.mock('@/hooks/use-rfq', () => ({
   useRfq: () => ({ data: { title: 'RFQ' } }),
+}));
+
+vi.mock('@/hooks/use-ai-status', () => ({
+  useAiStatus: () => mockUseAiStatus(),
 }));
 
 import { NormalizePageContent } from './page';
@@ -102,6 +115,15 @@ describe('NormalizeQuotePage', () => {
       isError: false,
       error: null,
     });
+
+    mockUseAiStatus.mockReturnValue({
+      isFeatureAvailable: (featureKey: string) =>
+        featureKey === 'quote_document_extraction' || featureKey === 'normalization_suggestions',
+      shouldHideAiControls: () => false,
+      shouldShowUnavailableMessage: () => false,
+      messageKeyForFeature: () => null,
+      status: { mode: 'provider', globalHealth: 'healthy', providerName: 'OpenRouter' },
+    });
   });
 
   it('shows blocking issues before allowing freeze', async () => {
@@ -129,9 +151,10 @@ describe('NormalizeQuotePage', () => {
 
     renderWithProviders(<NormalizePageContent rfqId="r1" quoteId="q1" />);
 
-    expect(await screen.findByText(/normalize workspace unavailable/i)).toBeInTheDocument();
+    expect(await screen.findByText(/source lines unavailable/i)).toBeInTheDocument();
     expect(screen.getByText(/normalization source lines unavailable/i)).toBeInTheDocument();
-    expect(screen.queryByText(/no source lines yet/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /description/i })).toBeInTheDocument();
+    expect(screen.queryByText(/normalize workspace unavailable/i)).not.toBeInTheDocument();
   });
 
   it('renders an explicit unavailable state when normalization review fails in live mode', async () => {
@@ -150,8 +173,62 @@ describe('NormalizeQuotePage', () => {
 
     renderWithProviders(<NormalizePageContent rfqId="r1" quoteId="q1" />);
 
-    expect(await screen.findByText(/normalize workspace unavailable/i)).toBeInTheDocument();
+    expect(await screen.findByText(/normalization review unavailable/i)).toBeInTheDocument();
     expect(screen.getByText(/normalization review unavailable/i)).toBeInTheDocument();
-    expect(screen.queryByText(/no source lines yet/i)).not.toBeInTheDocument();
+    expect(screen.getByText('Widget A')).toBeInTheDocument();
+    expect(screen.queryByText(/normalize workspace unavailable/i)).not.toBeInTheDocument();
+  });
+
+  it('shows manual source-line entry controls when extraction is degraded', async () => {
+    mockUseAiStatus.mockReturnValue({
+      isFeatureAvailable: () => false,
+      shouldHideAiControls: (featureKey: string) => featureKey === 'quote_document_extraction',
+      shouldShowUnavailableMessage: (featureKey: string) => featureKey === 'quote_document_extraction',
+      messageKeyForFeature: () => 'ai.status.degraded',
+      status: { mode: 'provider', globalHealth: 'degraded', providerName: null },
+    });
+
+    renderWithProviders(<NormalizePageContent rfqId="r1" quoteId="q1" />);
+
+    expect(await screen.findByText(/ai extraction is unavailable/i)).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: /description/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /add source line/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /manual assist/i })).not.toBeInTheDocument();
+  });
+
+  it('submits manual source-line create, update, and delete actions', async () => {
+    renderWithProviders(<NormalizePageContent rfqId="r1" quoteId="q1" />);
+
+    fireEvent.change(await screen.findByRole('textbox', { name: /description/i }), {
+      target: { value: 'Manual freight line' },
+    });
+    fireEvent.change(screen.getByLabelText(/quantity/i), { target: { value: '1' } });
+    fireEvent.change(screen.getByLabelText(/uom/i), { target: { value: 'lot' } });
+    fireEvent.change(screen.getByLabelText(/unit price/i), { target: { value: '250' } });
+    fireEvent.click(screen.getByRole('button', { name: /add source line/i }));
+
+    expect(mockCreateSourceLine).toHaveBeenCalledWith({
+      quoteSubmissionId: 'q1',
+      source_description: 'Manual freight line',
+      source_quantity: '1',
+      source_uom: 'lot',
+      source_unit_price: '250',
+      reason: 'Manual entry from normalization workspace',
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /edit source line 1/i }));
+    fireEvent.click(screen.getByRole('button', { name: /save source line 1/i }));
+    expect(mockUpdateSourceLine).toHaveBeenCalledWith({
+      quoteSubmissionId: 'q1',
+      id: 'line-1',
+      source_description: 'Widget A',
+      source_quantity: '2',
+      source_uom: 'ea',
+      source_unit_price: null,
+      reason: 'Manual correction from normalization workspace',
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /delete source line 1/i }));
+    expect(mockDeleteSourceLine).toHaveBeenCalledWith({ quoteSubmissionId: 'q1', id: 'line-1' });
   });
 });
