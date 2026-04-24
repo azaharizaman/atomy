@@ -1,13 +1,19 @@
 # IntelligenceOperations Implementation Summary
 
 ## Contracts
-- Contracts are in `src/Contracts`, including `ModelLifecycleCoordinatorInterface`, `ModelRegistryPortInterface`, `ModelTrainingPortInterface`, `ModelTelemetryPortInterface`, and `DataDriftPortInterface`.
+- Contracts are in `src/Contracts`, including `ModelLifecycleCoordinatorInterface`, `ModelRegistryPortInterface`, `ModelTrainingPortInterface`, `ModelTelemetryPortInterface`, `DataDriftPortInterface`, and the AI runtime-facing `AiStatusCoordinatorInterface`.
+- `AiStatusCoordinatorInterface` accepts local endpoint-health snapshots and a scalar AI mode string, keeping Layer 2 independent from `Nexus\MachineLearning`.
 
 ## DTOs And Data Models
-- DTOs in `src/DTOs` include `ModelDeploymentRequest` and `ModelHealthSnapshot`.
+- DTOs in `src/DTOs` include `ModelDeploymentRequest`, `ModelHealthSnapshot`, `AiCapabilityDefinition`, `AiCapabilityStatus`, `AiEndpointHealthSnapshot`, `AiStatusSchema`, and `AiStatusSnapshot`.
+- `AiStatusSchema` centralizes local AI mode, health, endpoint-group, fallback-mode, status, and allowlisted reason-code constants plus sanitization helpers.
+- `AiCapabilityStatus` models application-facing AI capability states with explicit `available`, `degraded`, `disabled`, and `unavailable` outcomes plus operator-safe diagnostics.
+- `AiEndpointHealthSnapshot` and `AiStatusSnapshot` sanitize diagnostics and reason codes so unsafe endpoint metadata is not exposed through serialization, with constructor-level redaction for raw snapshot properties.
+- `AiStatusSnapshot` aggregates mode, endpoint-group health, capability policy, and reason codes for API use through `toArray()`.
 
 ## Coordinators
 - `src/Coordinators/ModelLifecycleCoordinator.php` orchestrates deployment, retraining, and health-evaluation paths.
+- `src/Coordinators/AiStatusCoordinator.php` combines AI mode, endpoint health snapshots, and capability fallback policy into a single sanitized status snapshot using only orchestrator-local DTOs and rejects duplicate capability feature keys.
 
 ## Workflows And State Progression
 - `src/Workflows/ModelDeploymentWorkflow.php` validates deployment requests, registers versions, and emits deployment telemetry.
@@ -26,3 +32,4 @@
 
 ## Integration Notes And Coverage
 - Unit and integration tests under `tests/Unit` and `tests/Integration` validate deployment/retraining/health orchestration behavior.
+- `tests/Unit/Coordinators/AiStatusCoordinatorTest.php` covers partial endpoint failure handling, off-mode disablement, deterministic fallback behavior, unused endpoint-group isolation, snapshot-level reason-code sanitization, and secret-safe diagnostics.

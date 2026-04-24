@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
+
 return [
     'api_version' => 'v1',
     'api_prefix' => 'api/v1',
@@ -44,6 +46,102 @@ return [
             'base_url' => (string) env('QUOTE_INTELLIGENCE_LLM_BASE_URL', ''),
             'api_key' => (string) env('QUOTE_INTELLIGENCE_LLM_API_KEY', ''),
             'timeout_seconds' => (int) env('QUOTE_INTELLIGENCE_LLM_TIMEOUT_SECONDS', 30),
+        ],
+    ],
+
+    'ai' => [
+        'mode' => (string) env('AI_MODE', AiStatusSchema::MODE_DETERMINISTIC),
+        'provider' => [
+            'key' => (string) env('AI_PROVIDER', 'openrouter'),
+            'name' => (string) env('AI_PROVIDER_NAME', ''),
+            'default_auth_token' => (string) env(
+                'AI_DEFAULT_AUTH_TOKEN',
+                (string) env('AI_AUTH_TOKEN', ''),
+            ),
+            'default_timeout_seconds' => (int) env(
+                'AI_DEFAULT_TIMEOUT_SECONDS',
+                (int) env('AI_TIMEOUT_SECONDS', 10),
+            ),
+        ],
+        'endpoints' => [
+            'document' => [
+                'uri' => (string) env('AI_DOCUMENT_ENDPOINT', (string) env('HF_DOCUMENT_ENDPOINT', '')),
+                'auth_token' => (string) env('AI_DOCUMENT_AUTH_TOKEN', (string) env('HF_DOCUMENT_AUTH_TOKEN', '')),
+                'timeout_seconds' => (int) env(
+                    'AI_DOCUMENT_TIMEOUT_SECONDS',
+                    (int) env('HF_DOCUMENT_TIMEOUT_SECONDS', 10),
+                ),
+                'health_url' => (string) env('AI_DOCUMENT_HEALTH_URL', (string) env('HF_DOCUMENT_HEALTH_URL', '')),
+                'health_path' => (string) env('AI_DOCUMENT_HEALTH_PATH', (string) env('HF_DOCUMENT_HEALTH_PATH', '/health')),
+                'health_method' => (string) env('AI_DOCUMENT_HEALTH_METHOD', (string) env('HF_DOCUMENT_HEALTH_METHOD', 'GET')),
+            ],
+            'normalization' => [
+                'uri' => (string) env('AI_NORMALIZATION_ENDPOINT', (string) env('HF_NORMALIZATION_ENDPOINT', '')),
+                'auth_token' => (string) env('AI_NORMALIZATION_AUTH_TOKEN', (string) env('HF_NORMALIZATION_AUTH_TOKEN', '')),
+                'timeout_seconds' => (int) env(
+                    'AI_NORMALIZATION_TIMEOUT_SECONDS',
+                    (int) env('HF_NORMALIZATION_TIMEOUT_SECONDS', 10),
+                ),
+                'health_url' => (string) env('AI_NORMALIZATION_HEALTH_URL', (string) env('HF_NORMALIZATION_HEALTH_URL', '')),
+                'health_path' => (string) env('AI_NORMALIZATION_HEALTH_PATH', (string) env('HF_NORMALIZATION_HEALTH_PATH', '/health')),
+                'health_method' => (string) env('AI_NORMALIZATION_HEALTH_METHOD', (string) env('HF_NORMALIZATION_HEALTH_METHOD', 'GET')),
+            ],
+            'sourcing_recommendation' => [
+                'uri' => (string) env(
+                    'AI_SOURCING_RECOMMENDATION_ENDPOINT',
+                    (string) env('HF_SOURCING_RECOMMENDATION_ENDPOINT', ''),
+                ),
+                'auth_token' => (string) env(
+                    'AI_SOURCING_RECOMMENDATION_AUTH_TOKEN',
+                    (string) env('HF_SOURCING_RECOMMENDATION_AUTH_TOKEN', ''),
+                ),
+                'timeout_seconds' => (int) env(
+                    'AI_SOURCING_RECOMMENDATION_TIMEOUT_SECONDS',
+                    (int) env('HF_SOURCING_RECOMMENDATION_TIMEOUT_SECONDS', 10),
+                ),
+                'health_url' => (string) env(
+                    'AI_SOURCING_RECOMMENDATION_HEALTH_URL',
+                    (string) env('HF_SOURCING_RECOMMENDATION_HEALTH_URL', ''),
+                ),
+                'health_path' => (string) env(
+                    'AI_SOURCING_RECOMMENDATION_HEALTH_PATH',
+                    (string) env('HF_SOURCING_RECOMMENDATION_HEALTH_PATH', '/health'),
+                ),
+                'health_method' => (string) env(
+                    'AI_SOURCING_RECOMMENDATION_HEALTH_METHOD',
+                    (string) env('HF_SOURCING_RECOMMENDATION_HEALTH_METHOD', 'GET'),
+                ),
+            ],
+            'comparison_award' => [
+                'uri' => (string) env('AI_COMPARISON_AWARD_ENDPOINT', (string) env('HF_COMPARISON_AWARD_ENDPOINT', '')),
+                'auth_token' => (string) env(
+                    'AI_COMPARISON_AWARD_AUTH_TOKEN',
+                    (string) env('HF_COMPARISON_AWARD_AUTH_TOKEN', ''),
+                ),
+                'timeout_seconds' => (int) env(
+                    'AI_COMPARISON_AWARD_TIMEOUT_SECONDS',
+                    (int) env('HF_COMPARISON_AWARD_TIMEOUT_SECONDS', 10),
+                ),
+                'health_url' => (string) env('AI_COMPARISON_AWARD_HEALTH_URL', (string) env('HF_COMPARISON_AWARD_HEALTH_URL', '')),
+                'health_path' => (string) env('AI_COMPARISON_AWARD_HEALTH_PATH', (string) env('HF_COMPARISON_AWARD_HEALTH_PATH', '/health')),
+                'health_method' => (string) env('AI_COMPARISON_AWARD_HEALTH_METHOD', (string) env('HF_COMPARISON_AWARD_HEALTH_METHOD', 'GET')),
+            ],
+            'insight' => [
+                'uri' => (string) env('AI_INSIGHT_ENDPOINT', (string) env('HF_INSIGHT_ENDPOINT', '')),
+                'auth_token' => (string) env('AI_INSIGHT_AUTH_TOKEN', (string) env('HF_INSIGHT_AUTH_TOKEN', '')),
+                'timeout_seconds' => (int) env('AI_INSIGHT_TIMEOUT_SECONDS', (int) env('HF_INSIGHT_TIMEOUT_SECONDS', 10)),
+                'health_url' => (string) env('AI_INSIGHT_HEALTH_URL', (string) env('HF_INSIGHT_HEALTH_URL', '')),
+                'health_path' => (string) env('AI_INSIGHT_HEALTH_PATH', (string) env('HF_INSIGHT_HEALTH_PATH', '/health')),
+                'health_method' => (string) env('AI_INSIGHT_HEALTH_METHOD', (string) env('HF_INSIGHT_HEALTH_METHOD', 'GET')),
+            ],
+            'governance' => [
+                'uri' => (string) env('AI_GOVERNANCE_ENDPOINT', (string) env('HF_GOVERNANCE_ENDPOINT', '')),
+                'auth_token' => (string) env('AI_GOVERNANCE_AUTH_TOKEN', (string) env('HF_GOVERNANCE_AUTH_TOKEN', '')),
+                'timeout_seconds' => (int) env('AI_GOVERNANCE_TIMEOUT_SECONDS', (int) env('HF_GOVERNANCE_TIMEOUT_SECONDS', 10)),
+                'health_url' => (string) env('AI_GOVERNANCE_HEALTH_URL', (string) env('HF_GOVERNANCE_HEALTH_URL', '')),
+                'health_path' => (string) env('AI_GOVERNANCE_HEALTH_PATH', (string) env('HF_GOVERNANCE_HEALTH_PATH', '/health')),
+                'health_method' => (string) env('AI_GOVERNANCE_HEALTH_METHOD', (string) env('HF_GOVERNANCE_HEALTH_METHOD', 'GET')),
+            ],
         ],
     ],
 ];

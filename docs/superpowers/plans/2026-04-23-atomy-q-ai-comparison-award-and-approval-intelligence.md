@@ -12,6 +12,7 @@
 
 ## Scope
 
+- Feature-level policies that separate AI overlays/drafting from deterministic comparison, award, and approval authority
 - Provider-backed comparison explanations, anomaly summaries, and recommendation overlays
 - Provider-backed award guidance, debrief drafting, and rationale assistance
 - Optional AI approval drafting aids for summary/explanation, not approval authority
@@ -29,7 +30,7 @@
   - `orchestrators/ProcurementOperations`: award guidance coordination and recommendation-to-award rationale bridging.
   - `orchestrators/ApprovalOperations`: optional approval drafting aids that never supersede workflow authority.
 - **Layer 3**
-  - `apps/atomy-q/API`: comparison, award, and approval controllers; Hugging Face comparison/award adapter; persistence; routes; OpenAPI.
+  - `apps/atomy-q/API`: comparison, award, and approval controllers; provider-specific comparison/award adapter; persistence; routes; OpenAPI.
   - `apps/atomy-q/WEB`: comparison run screens, award workspace, approval pages, decision-trail views.
 
 ## File Structure
@@ -48,7 +49,8 @@
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/ApprovalController.php`
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/OperationalApprovalController.php`
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/DecisionTrailController.php`
-- Create: `apps/atomy-q/API/app/Adapters/Ai/HuggingFaceComparisonAwardClient.php`
+- Create: `apps/atomy-q/API/app/Adapters/Ai/ProviderComparisonAwardClient.php`
+- Create or reuse a shared provider transport for OpenRouter/Hugging Face endpoint invocation, keeping the comparison/award client responsible only for capability-specific mapping and validation
 - Modify: `apps/atomy-q/API/routes/api.php`
 - Modify: `apps/atomy-q/API/openapi/openapi.json`
 - Add or refine persistence models/migrations if AI overlays and provenance need dedicated storage
@@ -66,13 +68,21 @@
 
 - [ ] Refactor response contracts so deterministic matrix/freeze data is available independently of AI commentary.
 - [ ] Do not overload one field with both authoritative comparison facts and optional AI interpretation.
+- [ ] Add or update feature-level policies:
+  - `comparison_ai_overlay` is AI-derived and may be unavailable.
+  - `comparison_deterministic_matrix` remains available from normalized data.
+  - `award_ai_guidance` is AI-derived and may be unavailable.
+  - `award_manual_submission` remains user-authoritative.
+  - `approval_ai_summary` is AI-derived and may be unavailable.
+  - `approval_workflow_progression` remains deterministic and user-authoritative.
+- [ ] Store AI overlays separately from frozen comparison facts, either as dedicated records or as an explicit nested overlay section keyed to comparison run/version.
 - [ ] If needed, add dedicated endpoints or nested payload sections for AI overlays to keep failure semantics explicit.
 
 ## Task 2: Add Provider-Backed Comparison Intelligence
 
 - [ ] Coordinate provider-backed anomaly explanations and comparison recommendations from normalized RFQ data.
 - [ ] Preserve deterministic ranking, tie-handling, and freeze behavior even when AI overlays are unavailable.
-- [ ] Persist overlay provenance and reasoning snapshots against the comparison run or decision trail.
+- [ ] Persist overlay provenance and reasoning snapshots against the comparison run/version or decision trail without mutating frozen matrix facts.
 
 ## Task 3: Add Award Guidance And Debrief Drafting
 

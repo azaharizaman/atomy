@@ -46,6 +46,7 @@
         "nexus/idempotency": "*@dev",
         "nexus/identity": "*@dev",
         "nexus/identity-operations": "*@dev",
+        "nexus/intelligence-operations": "*@dev",
         "nexus/insight-operations": "*@dev",
         "nexus/laravel-approval-operations-adapter": "*@dev",
         "nexus/laravel-idempotency-adapter": "*@dev",

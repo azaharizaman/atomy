@@ -12,6 +12,21 @@
 
 `Nexus\Intelligence` is a framework-agnostic AI orchestration engine that enables domain packages (Procurement, Sales, Finance) to leverage external AI services for real-time anomaly detection and predictive analytics while maintaining strict architectural decoupling and enterprise-grade reliability.
 
+## 🧩 Layer 1 Runtime Contracts
+
+This package now includes provider-neutral AI runtime contracts in `src/Enums`, `src/ValueObjects`, and `src/Contracts` for downstream application layers that need AI mode parsing, capability metadata, endpoint health, and serializable runtime snapshots.
+
+### Added contract surface
+
+- `AiMode` with legacy `llm` alias support for `provider`
+- `AiHealth` for runtime health states
+- `AiEndpointGroup` for provider-neutral endpoint groups
+- `AiCapabilityGroup` for document, normalization, sourcing recommendation, comparison, award, insight, and governance intelligence
+- `AiFallbackUiMode` for UI fallback behavior
+- `AiCapabilityDefinition`, `AiCapabilityStatus`, `AiEndpointConfig`, `AiEndpointHealthSnapshot`, and `AiRuntimeSnapshot`
+- `AiRuntimeContractException` for invalid runtime/config inputs
+- `AiCapabilityCatalogInterface`, `AiRuntimeStatusProviderInterface`, and `AiHealthProbeInterface`
+
 ---
 
 ## 📦 Package Structure

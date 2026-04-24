@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\AccountController;
+use App\Http\Controllers\Api\V1\AiStatusController;
 use App\Http\Controllers\Api\V1\ApprovalController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\AwardController;
@@ -55,6 +56,8 @@ Route::prefix('auth')->group(function (): void {
     Route::post('logout', [AuthController::class, 'logout']);
     Route::post('device-trust', [AuthController::class, 'deviceTrust']);
 });
+
+Route::get('ai/status', [AiStatusController::class, 'show']);
 
 /*
 |--------------------------------------------------------------------------

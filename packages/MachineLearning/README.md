@@ -53,6 +53,18 @@ The MachineLearning package enables domain packages (Receivable, Payable, Procur
 - **Usage Tracking**: Per-domain, per-tenant cost and token monitoring
 - **Audit Logging**: Complete decision trail for compliance (GDPR Article 22)
 
+### Layer 1 AI Runtime Contracts
+
+The package now exposes provider-neutral runtime contracts for application layers that need to render, monitor, or probe AI availability without binding to a specific vendor.
+
+- **AI mode parsing**: `off`, `provider`, `deterministic`, plus legacy `llm` compatibility
+- **Global health states**: `disabled`, `healthy`, `degraded`, `unavailable`
+- **Endpoint groups**: `document`, `normalization`, `sourcing_recommendation`, `comparison_award`, `insight`, `governance`
+- **Capability groups**: document, normalization, sourcing recommendation, comparison, award, insight, and governance intelligence
+- **Endpoint health snapshots**: operator-safe diagnostics for endpoint-group status
+- **Capability status snapshots**: typed runtime status entries with stable serialization order
+- **Runtime snapshots**: serializable arrays for API and WEB consumers
+
 ## Architecture
 
 ### Package Structure (v2.0)

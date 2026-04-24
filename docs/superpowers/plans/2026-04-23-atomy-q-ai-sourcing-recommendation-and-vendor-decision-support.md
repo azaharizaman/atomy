@@ -4,7 +4,7 @@
 
 **Goal:** Deliver real provider-backed vendor recommendation and shortlist reasoning in alpha while ensuring vendor selection remains manually operable when recommendation intelligence is degraded or offline.
 
-**Architecture:** Procurement recommendation vocabulary lives in Layer 1. `orchestrators/ProcurementOperations` remains the orchestration home because the existing recommendation contracts already live there and the alpha scope is tightly tied to RFQ vendor decision support. Layer 3 provides the Hugging Face sourcing recommendation adapter, API gating, provenance persistence, and vendor workspace UX.
+**Architecture:** Procurement recommendation vocabulary lives in Layer 1. `orchestrators/ProcurementOperations` remains the orchestration home because the existing recommendation contracts already live there and the alpha scope is tightly tied to RFQ vendor decision support. Layer 3 provides the single-provider sourcing recommendation adapter, API gating, provenance persistence, and vendor workspace UX.
 
 **Tech Stack:** PHP 8.3, Laravel, Nexus packages, ProcurementOperations, React/TypeScript, PHPUnit, Vitest.
 
@@ -12,6 +12,7 @@
 
 ## Scope
 
+- Feature-level policies that separate AI ranking from manual vendor selection
 - Provider-backed vendor recommendation and explanation
 - Recommendation provenance and decision-trail persistence
 - Truthful unavailable state for AI-only ranking behavior
@@ -28,7 +29,7 @@
   - `orchestrators/ProcurementOperations`: recommendation orchestration, deterministic guards, candidate eligibility enforcement, bounded acceptance of provider output.
   - Keep recommendation in `ProcurementOperations` for alpha. Do not introduce a second orchestration home unless post-alpha reuse forces it.
 - **Layer 3**
-  - `apps/atomy-q/API`: Hugging Face sourcing recommendation adapter, controller/API contract, persistence and decision-trail integration.
+  - `apps/atomy-q/API`: provider-specific sourcing recommendation adapter, controller/API contract, persistence and decision-trail integration.
   - `apps/atomy-q/WEB`: vendors page, recommendation display, shortlist editing UX, unavailable-state messaging.
 
 ## File Structure
@@ -45,7 +46,8 @@
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/VendorRecommendationController.php`
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/RecommendationController.php`
 - Modify: `apps/atomy-q/API/app/Http/Controllers/Api/V1/RequisitionVendorSelectionController.php`
-- Create: `apps/atomy-q/API/app/Adapters/Ai/HuggingFaceSourcingRecommendationClient.php`
+- Create: `apps/atomy-q/API/app/Adapters/Ai/ProviderSourcingRecommendationClient.php`
+- Create or reuse a shared provider transport for OpenRouter/Hugging Face endpoint invocation, keeping the sourcing client responsible only for capability-specific mapping and validation
 - Modify: `apps/atomy-q/API/routes/api.php`
 - Modify: `apps/atomy-q/API/openapi/openapi.json`
 - Create or modify: API feature tests for recommendation AI gating and provenance
@@ -59,6 +61,8 @@
 
 - [ ] Move procurement-specific recommendation vocabulary that should outlive the current app adapter into `packages/ProcurementML`.
 - [ ] Keep deterministic eligibility checks authoritative even when provider-backed ranking is active.
+- [ ] Add or update feature-level policies so `vendor_ai_ranking` is AI-only while `vendor_manual_selection` remains callable when AI is unavailable.
+- [ ] Do not model manual vendor selection as a fallback result for AI ranking. It is a separate workflow path.
 - [ ] Model recommendation results so they distinguish:
   - eligible candidates,
   - excluded candidates,
@@ -68,15 +72,16 @@
 
 ## Task 2: Upgrade ProcurementOperations Recommendation Flow
 
-- [ ] Refactor `VendorRecommendationCoordinator` so provider-backed inference is the alpha default when sourcing recommendation capability is available.
+- [ ] Refactor `VendorRecommendationCoordinator` so provider-backed inference is the alpha default when the `vendor_ai_ranking` feature policy is available.
 - [ ] Keep deterministic scoring as a validation layer, not a fake substitute for provider recommendation in normal alpha operation.
 - [ ] Reject provider output that introduces ineligible vendors, crosses tenant boundaries, or lacks sufficient context.
+- [ ] Treat a valid zero-candidate provider result as different from AI unavailable. The former returns an empty recommendation with provenance; the latter returns the structured unavailable response.
 - [ ] Persist recommendation provenance and expose it to the decision trail.
 
 ## Task 3: Add API Gating, Provenance, And Truthful Failure Behavior
 
 - [ ] Ensure vendor recommendation endpoints consult the Plan 1 AI status contract before invoking provider logic.
-- [ ] For AI-only ranking functions, return explicit unavailable responses when the sourcing recommendation capability is disabled or degraded beyond policy.
+- [ ] For AI-only ranking functions, return explicit unavailable responses when `vendor_ai_ranking` is disabled or degraded beyond policy.
 - [ ] Preserve manual vendor selection APIs and pages even when recommendation is unavailable.
 - [ ] Ensure controller responses do not blur “no recommendation because AI is unavailable” with “recommendation returned zero candidates”.
 

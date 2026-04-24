@@ -1,5 +1,10 @@
 # Implementation Summary - Atomy-Q Backend API
 
+## 2026-04-24 AI Runtime Config Cleanup
+
+- Removed the legacy `HF_DEFAULT_AUTH_TOKEN` / `HF_AUTH_TOKEN` and `HF_DEFAULT_TIMEOUT_SECONDS` / `HF_TIMEOUT_SECONDS` provider-level fallbacks from `config/atomy.php`; the global AI provider defaults now read only `AI_DEFAULT_AUTH_TOKEN` / `AI_AUTH_TOKEN` and `AI_DEFAULT_TIMEOUT_SECONDS` / `AI_TIMEOUT_SECONDS`.
+- TODO: Do not reintroduce the removed provider-level `HF_*` aliases. Operators should retire those legacy variables from runtime environments.
+
 ## 2026-04-22 Vendor OpenAPI Request Body Fix
 
 - Moved vendor create/update validation rules inline inside `VendorController::store` and `VendorController::update` so Scramble can infer the request body schema for `/vendors` and `/vendors/{id}`.
@@ -358,3 +363,15 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - Added `declare(strict_types=1);` to `config/cors.php` immediately after `<?php` to align with repository strict-types rules for PHP files.
 - Verification:
   - `cd apps/atomy-q/API && php -l config/cors.php` -> PASS (no syntax errors).
+
+## 2026-04-23 AI Runtime Env Preparation
+
+- Updated `apps/atomy-q/API/.env.example` to match the approved 2026-04-23 AI-first plan set: `AI_MODE=provider` remains the target alpha default, `AI_PROVIDER`/`AI_PROVIDER_NAME` now define the single globally selected provider, and the example uses generic `AI_*` endpoint variables for document, normalization, sourcing recommendation, comparison/award, insight, and governance capability groups.
+- Added shared/default provider auth and retry placeholders plus per-endpoint auth, timeout, model id, and model revision fields so Layer 3 adapters can be wired against real provider-managed endpoints without inventing a second env contract during implementation. Kept legacy `HF_*` aliases documented as transition-only compatibility inputs for endpoint/token/timeout migration.
+- Kept the existing `QUOTE_INTELLIGENCE_*` variables explicitly labeled as legacy pre-Plan-1 compatibility settings so the current dormant adapter path is documented until the runtime migration lands.
+- Added a public `GET /api/v1/ai/status` endpoint with a stable `data` envelope backed by Layer 2 `AiStatusCoordinatorInterface`, including authoritative `provider_name` and a non-empty fallback payload when runtime probing throws.
+- Added Layer 3 AI runtime adapters under `app/Adapters/Ai/` for capability cataloging, provider-selected endpoint registry/config mapping, health probing, and status aggregation.
+- Added API config parsing for `AI_MODE`, `AI_PROVIDER`, `AI_PROVIDER_NAME`, and generic per-capability endpoint URI/auth token/timeout settings in `config/atomy.php`, with transition aliases for legacy `HF_*` endpoint inputs.
+- Updated `normalization_intelligence` to preserve manual continuity in the runtime capability catalog, matching the revised global AI fallback design.
+- Added `InteractsWithAiAvailability` so later controllers can centralize capability lookup and unavailable responses instead of duplicating status logic.
+- Added feature coverage for public access, mode handling, partial provider degradation, and response redaction in `tests/Feature/Api/V1/AiStatusApiTest.php` and `AiStatusVisibilityTest.php`.
