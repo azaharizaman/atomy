@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapters\QuotationIntelligence;
 
+use Illuminate\Support\Facades\Storage;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
 use Nexus\Tenant\Contracts\TenantContextInterface;
 use App\Models\QuoteSubmission;
@@ -73,7 +74,7 @@ final readonly class DeterministicContentProcessor implements OrchestratorConten
 
     private function resolveRelativePath(string $storagePath): string
     {
-        $prefix = storage_path('app') . DIRECTORY_SEPARATOR;
+        $prefix = rtrim(Storage::disk('local')->path(''), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
         if (str_starts_with($storagePath, $prefix)) {
             return substr($storagePath, strlen($prefix));
         }

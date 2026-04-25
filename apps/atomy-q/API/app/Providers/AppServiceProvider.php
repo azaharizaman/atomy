@@ -20,6 +20,8 @@ use App\Adapters\Ai\Contracts\ProviderSourcingRecommendationClientInterface;
 use App\Adapters\Ai\ProviderAiTransport;
 use App\Adapters\Ai\ProviderComparisonAwardClient;
 use App\Adapters\Ai\ProviderDocumentIntelligenceClient;
+use App\Adapters\Ai\Support\OpenRouterDocumentExtractionMapper;
+use App\Adapters\Ai\Support\OpenRouterDocumentPayloadFactory;
 use App\Adapters\Ai\ProviderGovernanceClient;
 use App\Adapters\Ai\ProviderInsightClient;
 use App\Adapters\Ai\ProviderNormalizationClient;
@@ -164,6 +166,7 @@ use App\Adapters\QuotationIntelligence\DeterministicContentProcessor;
 use App\Adapters\QuotationIntelligence\DeterministicSemanticMapper;
 use App\Adapters\QuotationIntelligence\DormantLlmContentProcessor;
 use App\Adapters\QuotationIntelligence\DormantLlmSemanticMapper;
+use App\Adapters\QuotationIntelligence\ProviderQuoteContentProcessor;
 use App\Adapters\QuotationIntelligence\Support\InMemoryUomRepository;
 use App\Adapters\QuotationIntelligence\Support\StaticExchangeRateProvider;
 use App\Adapters\QuoteIngestion\EloquentQuoteSubmissionQuery;
@@ -181,6 +184,7 @@ use Nexus\QuotationIntelligence\Services\ComparisonReadinessValidator;
 use Nexus\QuotationIntelligence\Services\QuoteComparisonMatrixService;
 use Nexus\QuotationIntelligence\Services\WeightedVendorScoringService;
 use Nexus\QuotationIntelligence\Services\HighRiskApprovalGateService;
+use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 use Nexus\ApprovalOperations\Contracts\ApprovalCommentPersistInterface;
 use Nexus\ApprovalOperations\Contracts\ApprovalInstancePersistInterface;
 use Nexus\ApprovalOperations\Contracts\ApprovalInstanceQueryInterface;
@@ -233,6 +237,20 @@ class AppServiceProvider extends ServiceProvider
             VendorScorerInterface::class,
             static fn ($app): VendorScorerInterface => new DeterministicVendorScorer($app->make(ClockInterface::class)),
         );
+        $this->app->singleton(OpenRouterDocumentPayloadFactory::class, function (): OpenRouterDocumentPayloadFactory {
+            return new OpenRouterDocumentPayloadFactory(
+                modelId: (string) config('atomy.ai.endpoints.document.model_id', ''),
+                parserPlugin: (string) config('atomy.ai.endpoints.document.parser_plugin', 'file-parser'),
+                pdfEngine: (string) config('atomy.ai.endpoints.document.pdf_engine', 'mistral-ocr'),
+                maxFileSizeBytes: (int) config('atomy.ai.endpoints.document.max_file_size_bytes', 10_485_760),
+            );
+        });
+        $this->app->singleton(OpenRouterDocumentExtractionMapper::class, function (): OpenRouterDocumentExtractionMapper {
+            /** @var array<string, string> $currencyMappings */
+            $currencyMappings = (array) config('atomy.ai.endpoints.document.currency_mappings', ['RM' => 'MYR']);
+
+            return new OpenRouterDocumentExtractionMapper($currencyMappings);
+        });
         $this->app->singleton(ProviderDocumentIntelligenceClient::class);
         $this->app->singleton(
             ProviderDocumentIntelligenceClientInterface::class,
@@ -339,6 +357,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(OrchestratorProcurementManagerInterface::class, OrchestratorProcurementManager::class);
         $this->app->singleton(DecisionTrailWriterInterface::class, AtomyDecisionTrailWriter::class);
         $this->app->bind(OrchestratorContentProcessorInterface::class, function (): OrchestratorContentProcessorInterface {
+            $aiMode = (string) config('atomy.ai.mode', AiStatusSchema::MODE_DETERMINISTIC);
+            if ($aiMode === AiStatusSchema::MODE_PROVIDER) {
+                return new ProviderQuoteContentProcessor(
+                    $this->app->make(ProviderDocumentIntelligenceClientInterface::class),
+                    $this->app->make(TenantContextInterface::class),
+                );
+            }
+
             $mode = (string) config('atomy.quote_intelligence.mode', 'deterministic');
 
             if ($mode === 'deterministic') {

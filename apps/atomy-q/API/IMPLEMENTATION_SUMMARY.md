@@ -479,3 +479,12 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - Added shared provider adapter shell classes under `app/Adapters/Ai`: `ProviderAiTransport`, `ProviderDocumentIntelligenceClient`, and `ProviderNormalizationClient`. These centralize endpoint auth/timeout invocation without making network calls during feature tests.
 - Verification:
   - `cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Feature/QuoteIngestionIntelligenceTest.php tests/Feature/QuoteIngestionPipelineTest.php tests/Feature/NormalizationReviewWorkflowTest.php` -> PASS (23 tests, 183 assertions).
+
+## 2026-04-25 Provider Quote Extraction Path
+
+- `AI_MODE=provider` now binds quote upload/reparse extraction through `ProviderQuoteContentProcessor` instead of allowing legacy `QUOTE_INTELLIGENCE_MODE` to override the alpha provider path.
+- Added `DocumentExtractionRequest`, `OpenRouterDocumentPayloadFactory`, and `OpenRouterDocumentExtractionMapper` so the document adapter can send stored quotation PDFs to OpenRouter chat completions with base64 `file_data`, `file-parser`, and `mistral-ocr`, then map JSON content back into the existing source-line contract.
+- The provider mapper now normalizes `RM` to `MYR` by default, and that currency alias table is configurable through `AI_DOCUMENT_CURRENCY_MAPPINGS` for other provider-specific abbreviations.
+- Quotation document storage-path resolution now uses the configured Laravel `local` disk root (`Storage::disk('local')->path(...)`) instead of assuming `storage/app`, which was breaking real PDF reads on the provider path. Existing files on the same `local` disk do not require re-upload or migration.
+- Added document parser and payload guard config/env surface: `AI_DOCUMENT_PARSER_PLUGIN`, `AI_DOCUMENT_PDF_ENGINE`, `AI_DOCUMENT_MAX_FILE_SIZE_BYTES`, and `AI_DOCUMENT_CURRENCY_MAPPINGS`.
+- Added provider extraction coverage in `ProviderQuoteExtractionTest` plus binding regression coverage in `QuoteIngestionPipelineTest`.

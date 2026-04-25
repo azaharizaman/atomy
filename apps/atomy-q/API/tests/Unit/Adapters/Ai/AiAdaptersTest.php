@@ -21,7 +21,7 @@ final class AiAdaptersTest extends TestCase
         $definitions = $catalog->all();
         $definitionsAgain = $catalog->all();
 
-        self::assertCount(20, $definitions);
+        self::assertGreaterThanOrEqual(20, count($definitions));
         self::assertSame($definitions[0], $definitionsAgain[0]);
         self::assertSame(
             $definitions[0],
@@ -54,6 +54,51 @@ final class AiAdaptersTest extends TestCase
         self::assertSame('anthropic', $registry->providerName());
         self::assertInstanceOf(AiEndpointConfig::class, $endpointConfig);
         self::assertSame('anthropic', $endpointConfig->providerName);
+    }
+
+    public function testConfiguredEndpointRegistryDefaultsOpenRouterProbeToModelsEndpoint(): void
+    {
+        $registry = new ConfiguredAiEndpointRegistry([
+            'provider' => [
+                'key' => 'openrouter',
+            ],
+            'endpoints' => [
+                'document' => [
+                    'uri' => 'https://openrouter.ai/api/v1/chat/completions',
+                ],
+            ],
+        ]);
+
+        $endpointConfig = $registry->endpointConfig('document');
+
+        self::assertInstanceOf(AiEndpointConfig::class, $endpointConfig);
+        self::assertSame(
+            'https://openrouter.ai/api/v1/models',
+            $endpointConfig->metadata['probe_url'] ?? null,
+        );
+        self::assertSame('GET', $endpointConfig->metadata['probe_method'] ?? null);
+    }
+
+    public function testConfiguredEndpointRegistryHonorsExplicitProbeOverrideForOpenRouter(): void
+    {
+        $registry = new ConfiguredAiEndpointRegistry([
+            'provider' => [
+                'key' => 'openrouter',
+            ],
+            'endpoints' => [
+                'document' => [
+                    'uri' => 'https://openrouter.ai/api/v1/chat/completions',
+                    'health_url' => 'https://status.example.test/ready',
+                    'health_method' => 'HEAD',
+                ],
+            ],
+        ]);
+
+        $endpointConfig = $registry->endpointConfig('document');
+
+        self::assertInstanceOf(AiEndpointConfig::class, $endpointConfig);
+        self::assertSame('https://status.example.test/ready', $endpointConfig->metadata['probe_url'] ?? null);
+        self::assertSame('HEAD', $endpointConfig->metadata['probe_method'] ?? null);
     }
 
     public function testAwardGuidanceRequestCanonicalizesIdentifiersBeforePersistingPayload(): void

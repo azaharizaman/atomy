@@ -10,12 +10,15 @@
     "generate:api": "openapi-ts -i ../openapi/openapi.json -o src/generated/api -c @hey-api/client-fetch",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
+    "test:unit:provider-quote-fixtures": "vitest run --config tests/support/vitest.provider-quote.config.ts",
     "test:e2e": "playwright test",
     "test:e2e:ci": "playwright test --reporter=line",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "PWDEBUG=1 playwright test",
-    "test:e2e:install": "playwright install --with-deps"
+    "test:e2e:install": "playwright install --with-deps",
+    "test:e2e:provider-quote:fake": "cross-env NEXT_PUBLIC_AI_MODE=provider playwright test tests/provider-quote-e2e.spec.ts",
+    "test:e2e:provider-quote:live": "cross-env AI_PROVIDER_E2E=true AI_MODE=provider NEXT_PUBLIC_AI_MODE=provider playwright test tests/provider-quote-live.spec.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -45,6 +48,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "jsdom": "^26.1.0",

@@ -121,6 +121,11 @@ final readonly class ConfiguredAiEndpointRegistry implements AiEndpointRegistryI
             return $healthUrl;
         }
 
+        $providerProbeUrl = $this->providerProbeUrl($endpointUri);
+        if ($providerProbeUrl !== null) {
+            return $providerProbeUrl;
+        }
+
         $healthPath = trim((string) ($endpoint['health_path'] ?? '/health'));
         if ($healthPath === '') {
             $healthPath = '/health';
@@ -138,9 +143,44 @@ final readonly class ConfiguredAiEndpointRegistry implements AiEndpointRegistryI
      */
     private function resolveProbeMethod(array $endpoint): string
     {
+        if (trim((string) ($endpoint['health_url'] ?? '')) === '') {
+            $providerProbeMethod = $this->providerProbeMethod();
+            if ($providerProbeMethod !== null) {
+                return $providerProbeMethod;
+            }
+        }
+
         $method = strtoupper(trim((string) ($endpoint['health_method'] ?? 'GET')));
 
         return $method === '' ? 'GET' : $method;
+    }
+
+    private function providerProbeUrl(string $endpointUri): ?string
+    {
+        if ($this->providerKey() !== 'openrouter') {
+            return null;
+        }
+
+        $parts = parse_url($endpointUri);
+        if (!is_array($parts)) {
+            return null;
+        }
+
+        $scheme = isset($parts['scheme']) && is_string($parts['scheme']) ? $parts['scheme'] : null;
+        $host = isset($parts['host']) && is_string($parts['host']) ? $parts['host'] : null;
+
+        if ($scheme === null || $host === null || $scheme === '' || $host === '') {
+            return null;
+        }
+
+        $port = isset($parts['port']) ? ':' . (int) $parts['port'] : '';
+
+        return sprintf('%s://%s%s/api/v1/models', $scheme, $host, $port);
+    }
+
+    private function providerProbeMethod(): ?string
+    {
+        return $this->providerKey() === 'openrouter' ? 'GET' : null;
     }
 
     private function nullableString(mixed $value): ?string

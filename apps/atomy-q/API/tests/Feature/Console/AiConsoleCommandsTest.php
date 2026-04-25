@@ -30,6 +30,8 @@ use App\Adapters\Ai\DTOs\InsightSummaryRequest;
 use App\Adapters\Ai\ProviderDocumentIntelligenceClient;
 use App\Adapters\Ai\ProviderNormalizationClient;
 use App\Adapters\Ai\ProviderSourcingRecommendationClient;
+use App\Adapters\Ai\Support\OpenRouterDocumentExtractionMapper;
+use App\Adapters\Ai\Support\OpenRouterDocumentPayloadFactory;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Log\LogManager;
 use App\Services\Ai\AiOperationalAlertPublisher;
@@ -116,7 +118,11 @@ final class AiConsoleCommandsTest extends TestCase
             ->withAnyParameters()
             ->willReturn(['ok' => true]);
 
-        $this->app->instance(ProviderDocumentIntelligenceClient::class, new ProviderDocumentIntelligenceClient($transport));
+        $this->app->instance(ProviderDocumentIntelligenceClient::class, new ProviderDocumentIntelligenceClient(
+            $transport,
+            new OpenRouterDocumentPayloadFactory('model-a', 'file-parser', 'mistral-ocr'),
+            new OpenRouterDocumentExtractionMapper(),
+        ));
         $this->app->instance(ProviderDocumentIntelligenceClientInterface::class, $this->app->make(ProviderDocumentIntelligenceClient::class));
         $this->app->instance(ProviderNormalizationClient::class, new ProviderNormalizationClient($transport));
         $this->app->instance(ProviderNormalizationClientInterface::class, $this->app->make(ProviderNormalizationClient::class));
