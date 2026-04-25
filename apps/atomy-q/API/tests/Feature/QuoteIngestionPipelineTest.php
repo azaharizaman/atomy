@@ -20,8 +20,12 @@ use App\Adapters\QuotationIntelligence\DeterministicContentProcessor;
 use App\Adapters\QuotationIntelligence\DeterministicSemanticMapper;
 use App\Adapters\QuotationIntelligence\DormantLlmContentProcessor;
 use App\Adapters\QuotationIntelligence\DormantLlmSemanticMapper;
+use App\Adapters\QuotationIntelligence\ProviderQuoteContentProcessor;
 use App\Adapters\Ai\ProviderDocumentIntelligenceClient;
 use App\Adapters\Ai\ProviderNormalizationClient;
+use App\Adapters\Ai\Contracts\AiEndpointRegistryInterface;
+use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use App\Adapters\Ai\ConfiguredAiEndpointRegistry;
 use App\Jobs\ProcessQuoteSubmissionJob;
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
@@ -44,6 +48,7 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
             'foreign_key_constraints' => true,
         ]);
         $app['config']->set('queue.default', 'sync');
+        $app['config']->set('atomy.ai.mode', 'deterministic');
 
         return $app;
     }
@@ -120,6 +125,9 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         app()->forgetInstance(QuotationIntelligenceCoordinatorInterface::class);
         app()->forgetInstance(QuoteIngestionOrchestrator::class);
         app()->forgetInstance(BatchQuoteComparisonCoordinatorInterface::class);
+        app()->forgetInstance(ConfiguredAiEndpointRegistry::class);
+        app()->forgetInstance(AiEndpointRegistryInterface::class);
+        app()->forgetInstance(AiRuntimeStatusInterface::class);
     }
 
     /**
@@ -241,9 +249,9 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
             ]);
 
         $response->assertCreated();
-        $response->assertJsonPath('data.status', 'needs_review');
-        $response->assertJsonPath('data.error_code', 'EXTRACTION_UNAVAILABLE');
-        $response->assertJsonPath('data.error_message', 'Quote document extraction is unavailable. Manual action required.');
+        $response->assertJsonPath('data.status', 'failed');
+        $response->assertJsonPath('data.error_code', 'INTELLIGENCE_FAILED');
+        $response->assertJsonPath('data.error_message', QuoteIngestionOrchestrator::GENERIC_FAILURE_MESSAGE);
     }
 
     public function test_quote_intelligence_llm_mode_semantic_mapper_is_dormant(): void
@@ -280,10 +288,10 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
 
     public function test_upload_preserves_manual_continuity_when_document_ai_is_unavailable(): void
     {
-        $this->resetQuoteIntelligenceBindings();
         config()->set('atomy.ai.mode', 'provider');
         config()->set('atomy.ai.endpoints.document.uri', '');
         config()->set('atomy.quote_intelligence.mode', 'deterministic');
+        $this->resetQuoteIntelligenceBindings();
 
         $user = $this->createUser();
         $rfq = $this->createRfq($user);
@@ -313,9 +321,9 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
 
     public function test_provider_ai_clients_are_bound_without_legacy_quote_mode_overriding_plan_status(): void
     {
-        $this->resetQuoteIntelligenceBindings();
         config()->set('atomy.ai.mode', 'off');
         config()->set('atomy.quote_intelligence.mode', 'deterministic');
+        $this->resetQuoteIntelligenceBindings();
 
         self::assertInstanceOf(ProviderDocumentIntelligenceClient::class, app()->make(ProviderDocumentIntelligenceClient::class));
         self::assertInstanceOf(ProviderNormalizationClient::class, app()->make(ProviderNormalizationClient::class));
@@ -335,6 +343,18 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         $response->assertJsonPath('data.status', 'needs_review');
         $response->assertJsonPath('data.error_code', 'EXTRACTION_DISABLED');
         $response->assertJsonPath('data.ai_status.extraction.available', false);
+    }
+
+    public function test_provider_mode_binds_provider_quote_content_processor_without_legacy_override(): void
+    {
+        config()->set('atomy.ai.mode', 'provider');
+        config()->set('atomy.quote_intelligence.mode', 'unsupported-mode');
+        $this->resetQuoteIntelligenceBindings();
+
+        self::assertInstanceOf(
+            ProviderQuoteContentProcessor::class,
+            app()->make(OrchestratorContentProcessorInterface::class),
+        );
     }
 
     public function test_unsupported_quote_intelligence_mode_fails_safe_through_pipeline(): void
@@ -360,9 +380,9 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
             ]);
 
         $response->assertCreated();
-        $response->assertJsonPath('data.status', 'needs_review');
-        $response->assertJsonPath('data.error_code', 'EXTRACTION_UNAVAILABLE');
-        $response->assertJsonPath('data.error_message', 'Quote document extraction is unavailable. Manual action required.');
+        $response->assertJsonPath('data.status', 'failed');
+        $response->assertJsonPath('data.error_code', 'INTELLIGENCE_FAILED');
+        $response->assertJsonPath('data.error_message', QuoteIngestionOrchestrator::GENERIC_FAILURE_MESSAGE);
     }
 
     public function test_job_failed_path_sanitizes_retry_exhaustion_error_message(): void

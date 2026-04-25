@@ -58,12 +58,21 @@ The strongest rectification signal is that the alpha-critical backend flows pass
 - Operator: pending.
 - WEB URL: pending.
 - API URL: pending.
-- Runtime posture: pending; expected `NEXT_PUBLIC_USE_MOCKS=false`, `QUEUE_CONNECTION=sync`, `QUOTE_INTELLIGENCE_MODE=deterministic`.
+- Runtime posture: pending; expected `NEXT_PUBLIC_USE_MOCKS=false`, `AI_MODE=provider`, `NEXT_PUBLIC_AI_MODE=provider`, `QUEUE_CONNECTION=sync`, `AI_DOCUMENT_PARSER_PLUGIN=file-parser`, `AI_DOCUMENT_PDF_ENGINE=mistral-ocr`.
 - Storage verification result: pending; expected `php artisan atomy:verify-storage-disk --disk=s3 --path-prefix=alpha-storage-smoke`.
 - Queue verification note: pending; not required for the main alpha smoke because the staging posture is `QUEUE_CONNECTION=sync`.
 - Golden-path smoke result: pending; requires a true staging mocks-off run against deployed WEB and API origins.
 
 If a true staging mocks-off smoke has not been completed, design-partner readiness is not yet earned and the release remains internal alpha only.
+
+## Latest Provider Quote Fixture Support Evidence - 2026-04-25
+
+This section is preparatory local-support evidence for the provider-backed quote-upload release gate. It does not replace staging verification or a live-provider smoke run.
+
+- `cd apps/atomy-q/WEB && npm run test:unit:provider-quote-fixtures`: PASS. 1 file, 2 tests. This proves the WEB support loader reads the current `sample/*/metadata.json` folders, ignores `sample/metadata.example.json`, and resolves quotation PDF paths from each requisition folder.
+- `cd apps/atomy-q/WEB && npx playwright test tests/provider-quote-e2e.spec.ts --list`: PASS. Fixture-backed fake-provider Playwright entrypoint loads successfully.
+- `cd apps/atomy-q/WEB && npx playwright test tests/provider-quote-live.spec.ts --list`: PASS. Live-provider Playwright entrypoint loads successfully with the `AI_PROVIDER_E2E=true` gate still enforced inside the spec.
+- Local blocker: end-to-end browser/API verification for provider-backed quote upload and normalization was not run in this slice because no confirmed local API/provider stack was exercised here. The support layer is ready for that run once the target services are available.
 
 ## Alpha Change Control Ledger (Post-Task-8 Remediation)
 

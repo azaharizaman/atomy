@@ -23,6 +23,7 @@ use Nexus\QuotationIntelligence\Exceptions\InvalidNormalizationContextException;
 use Nexus\QuotationIntelligence\Exceptions\MissingRfqContextException;
 use Nexus\QuotationIntelligence\Exceptions\SemanticMappingException;
 use Nexus\QuotationIntelligence\Exceptions\TenantContextNotFoundException;
+use Nexus\QuotationIntelligence\Exceptions\UomNormalizationException;
 use Nexus\Document\ValueObjects\ContentAnalysisResult;
 use Nexus\Document\ValueObjects\DocumentType;
 use Psr\Log\LoggerInterface;
@@ -506,5 +507,94 @@ final class EndToEndQuoteProcessingTest extends TestCase
 
         $this->assertCount(1, $result['lines']);
         $this->assertSame('rfq-line-1', $result['lines'][0]['rfq_line_id']);
+    }
+
+    public function test_preserves_line_and_degrades_confidence_when_uom_normalization_fails(): void
+    {
+        $processor = $this->createMock(OrchestratorContentProcessorInterface::class);
+        $repo = $this->createMock(OrchestratorDocumentRepositoryInterface::class);
+        $tenantRepository = $this->createMock(OrchestratorTenantRepositoryInterface::class);
+        $procurementManager = $this->createMock(OrchestratorProcurementManagerInterface::class);
+        $mapper = $this->createMock(SemanticMapperInterface::class);
+        $normService = $this->createMock(QuoteNormalizationServiceInterface::class);
+        $termsExtractor = $this->createMock(CommercialTermsExtractorInterface::class);
+        $riskService = $this->createMock(RiskAssessmentServiceInterface::class);
+        $logger = $this->createMock(LoggerInterface::class);
+
+        $document = $this->createMock(QuotationDocumentInterface::class);
+        $document->method('getTenantId')->willReturn('tenant-1');
+        $document->method('getMetadata')->willReturn(['rfq_id' => 'rfq-1']);
+        $document->method('getStoragePath')->willReturn('/tmp/quote.pdf');
+        $repo->method('findById')->willReturn($document);
+
+        $tenant = $this->createMock(OrchestratorTenantInterface::class);
+        $tenant->method('getCurrency')->willReturn('USD');
+        $tenantRepository->method('findById')->willReturn($tenant);
+
+        $line = $this->createMock(OrchestratorRequisitionLineInterface::class);
+        $line->method('getUnit')->willReturn('JOB');
+        $requisition = $this->createMock(OrchestratorRequisitionInterface::class);
+        $requisition->method('getLines')->willReturn([$line]);
+        $procurementManager->method('getRequisition')->willReturn($requisition);
+
+        $analysis = new ContentAnalysisResult(
+            predictedType: DocumentType::PDF,
+            confidenceScore: 0.95,
+            extractedMetadata: [
+                'lines' => [[
+                    'rfq_line_id' => 'rfq-line-1',
+                    'description' => 'Honeywell thermostat',
+                    'quantity' => 1,
+                    'unit' => 'EA',
+                    'unit_price' => 185,
+                ]],
+            ],
+            containsPII: false,
+            suggestedTags: [],
+            rawAnalysis: []
+        );
+        $processor->method('analyze')->willReturn($analysis);
+
+        $mapper->method('mapToTaxonomy')->willReturn(['code' => '41112209', 'confidence' => 0.95, 'version' => '1.0.0']);
+        $mapper->method('validateCode')->willReturn(true);
+        $normService->method('normalizeQuantity')
+            ->willThrowException(new UomNormalizationException('Cannot convert EA to JOB'));
+        $normService->method('normalizePrice')->willReturn(185.0);
+        $termsExtractor->method('extract')->willReturn([]);
+        $riskService->method('assess')->willReturn([]);
+
+        $coordinator = new QuotationIntelligenceCoordinator(
+            $processor,
+            $repo,
+            $tenantRepository,
+            $procurementManager,
+            $mapper,
+            $normService,
+            $termsExtractor,
+            $riskService,
+            $logger
+        );
+
+        $result = $coordinator->processQuote('tenant-1', 'doc-123');
+
+        $this->assertCount(1, $result['lines']);
+        $this->assertSame(1.0, $result['lines'][0]['normalized_quantity']);
+        $this->assertSame(0.6, $result['lines'][0]['ai_confidence']);
+        $this->assertSame(
+            'uom_conversion_failed',
+            $result['lines'][0]['metadata']['normalization_warnings'][0]['code']
+        );
+        $this->assertSame(
+            'EA',
+            $result['lines'][0]['metadata']['normalization_warnings'][0]['quoted_unit']
+        );
+        $this->assertSame(
+            'JOB',
+            $result['lines'][0]['metadata']['normalization_warnings'][0]['base_unit']
+        );
+        $this->assertSame(
+            'Cannot convert EA to JOB',
+            $result['lines'][0]['metadata']['normalization_warnings'][0]['message']
+        );
     }
 }

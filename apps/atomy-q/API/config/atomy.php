@@ -51,6 +51,7 @@ return [
 
     'ai' => [
         'mode' => (string) env('AI_MODE', AiStatusSchema::MODE_DETERMINISTIC),
+        'sample_path' => (string) env('AI_SAMPLE_PATH', ''),
         'provider' => [
             'key' => (string) env('AI_PROVIDER', 'openrouter'),
             'name' => (string) env('AI_PROVIDER_NAME', ''),
@@ -86,6 +87,33 @@ return [
                 'retry_backoff_ms' => (int) env('AI_DOCUMENT_RETRY_BACKOFF_MS', (int) env('HF_DOCUMENT_RETRY_BACKOFF_MS', 0)),
                 'model_id' => (string) env('AI_DOCUMENT_MODEL_ID', (string) env('HF_DOCUMENT_MODEL_ID', '')),
                 'model_revision' => (string) env('AI_DOCUMENT_MODEL_REVISION', (string) env('HF_DOCUMENT_MODEL_REVISION', '')),
+                'parser_plugin' => (string) env('AI_DOCUMENT_PARSER_PLUGIN', 'file-parser'),
+                'pdf_engine' => (string) env('AI_DOCUMENT_PDF_ENGINE', 'mistral-ocr'),
+                'max_file_size_bytes' => (int) env('AI_DOCUMENT_MAX_FILE_SIZE_BYTES', 10 * 1024 * 1024),
+                'currency_mappings' => array_replace(
+                    ['RM' => 'MYR'],
+                    (static function (mixed $value): array {
+                        if (!is_string($value) || trim($value) === '') {
+                            return [];
+                        }
+
+                        $decoded = json_decode($value, true);
+                        if (!is_array($decoded)) {
+                            return [];
+                        }
+
+                        $filtered = [];
+                        foreach ($decoded as $key => $mappedValue) {
+                            if (!is_string($key) || trim($key) === '' || !is_string($mappedValue) || trim($mappedValue) === '') {
+                                continue;
+                            }
+
+                            $filtered[trim($key)] = trim($mappedValue);
+                        }
+
+                        return $filtered;
+                    })(env('AI_DOCUMENT_CURRENCY_MAPPINGS'))
+                ),
                 'health_url' => (string) env('AI_DOCUMENT_HEALTH_URL', (string) env('HF_DOCUMENT_HEALTH_URL', '')),
                 'health_path' => (string) env('AI_DOCUMENT_HEALTH_PATH', (string) env('HF_DOCUMENT_HEALTH_PATH', '/health')),
                 'health_method' => (string) env('AI_DOCUMENT_HEALTH_METHOD', (string) env('HF_DOCUMENT_HEALTH_METHOD', 'GET')),

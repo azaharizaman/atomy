@@ -9,6 +9,7 @@ use App\Models\QuoteSubmission;
 use App\Models\Rfq;
 use App\Models\RfqLineItem;
 use App\Models\Tenant;
+use Illuminate\Support\Facades\Storage;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorRequisitionInterface;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorRequisitionLineInterface;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorTenantInterface;
@@ -45,7 +46,7 @@ trait WrapsModels
                     'vendor_id' => $this->submission->vendor_id,
                 ]; 
             }
-            public function getStoragePath(): string { return storage_path('app/' . $this->submission->file_path); }
+            public function getStoragePath(): string { return Storage::disk('local')->path($this->submission->file_path); }
         };
     }
 

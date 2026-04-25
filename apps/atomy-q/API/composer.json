@@ -46,8 +46,8 @@
         "nexus/idempotency": "*@dev",
         "nexus/identity": "*@dev",
         "nexus/identity-operations": "*@dev",
-        "nexus/intelligence-operations": "*@dev",
         "nexus/insight-operations": "*@dev",
+        "nexus/intelligence-operations": "*@dev",
         "nexus/laravel-approval-operations-adapter": "*@dev",
         "nexus/laravel-idempotency-adapter": "*@dev",
         "nexus/laravel-identity-adapter": "*@dev",
@@ -84,8 +84,7 @@
         "nexus/uom": "*@dev",
         "nexus/vendor": "*@dev",
         "nexus/vendor-laravel-adapter": "*@dev",
-        "nexus/workflow": "*@dev",
-        "predis/predis": "^2.2"
+        "nexus/workflow": "*@dev"
     },
     "require-dev": {
         "dedoc/scramble": "^0.13.15",

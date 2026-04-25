@@ -53,26 +53,21 @@ final readonly class AtomyDecisionTrailWriter implements DecisionTrailWriterInte
 
             $results = [];
             $comparisonRunId = $this->resolveComparisonRunId($tenantId, $resolvedRfqId, $idempotencyKey);
+            $lastEntry = DecisionTrailEntry::query()
+                ->where('tenant_id', $tenantId)
+                ->where('comparison_run_id', $comparisonRunId)
+                ->orderByDesc('sequence')
+                ->lockForUpdate()
+                ->first();
 
             $currentPreviousHash = $previousHash;
             if ($currentPreviousHash === '') {
-                $last = DecisionTrailEntry::query()
-                    ->where('tenant_id', $tenantId)
-                    ->where('comparison_run_id', $comparisonRunId)
-                    ->orderByDesc('sequence')
-                    ->lockForUpdate()
-                    ->first();
-
-                $currentPreviousHash = $last?->entry_hash ?? str_repeat('0', 64);
+                $currentPreviousHash = $lastEntry?->entry_hash ?? str_repeat('0', 64);
             }
 
             $nextSequence = max(
                 $startingSequence,
-                ((int) DecisionTrailEntry::query()
-                    ->where('tenant_id', $tenantId)
-                    ->where('comparison_run_id', $comparisonRunId)
-                    ->lockForUpdate()
-                    ->max('sequence')) + 1
+                ((int) ($lastEntry?->sequence ?? 0)) + 1
             );
 
             $occurredAt = now();

@@ -81,6 +81,7 @@
     },
     "assertions": {
       "upload_status": [
+        "uploaded",
         "ready",
         "needs_review"
       ],

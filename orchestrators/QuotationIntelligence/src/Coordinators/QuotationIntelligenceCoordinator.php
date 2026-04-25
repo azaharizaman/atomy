@@ -18,6 +18,7 @@ use Nexus\QuotationIntelligence\Exceptions\InvalidNormalizationContextException;
 use Nexus\QuotationIntelligence\Exceptions\MissingRfqContextException;
 use Nexus\QuotationIntelligence\Exceptions\TenantContextNotFoundException;
 use Nexus\QuotationIntelligence\Exceptions\SemanticMappingException;
+use Nexus\QuotationIntelligence\Exceptions\UomNormalizationException;
 use Nexus\QuotationIntelligence\DTOs\NormalizedQuoteLine;
 use Nexus\QuotationIntelligence\ValueObjects\NormalizationContext;
 use Nexus\QuotationIntelligence\ValueObjects\ExtractionEvidence;
@@ -145,14 +146,35 @@ final readonly class QuotationIntelligenceCoordinator implements QuotationIntell
                     sprintf('Invalid taxonomy mapping payload for RFQ line "%s"', (string)$line['rfq_line_id'])
                 );
             }
+            $lineConfidence = (float) $mapping['confidence'];
+            $normalizationWarnings = [];
 
             // B. Normalization (UoM)
             $quotedUnit = $line['unit'] ?? 'UNIT';
-            $normQty = $this->normalizationService->normalizeQuantity(
-                (float)$line['quantity'],
-                (string)$quotedUnit,
-                $baseUnit
-            );
+            try {
+                $normQty = $this->normalizationService->normalizeQuantity(
+                    (float)$line['quantity'],
+                    (string)$quotedUnit,
+                    $baseUnit
+                );
+            } catch (UomNormalizationException $exception) {
+                $this->logger->warning('Proceeding with quoted quantity after UoM normalization failure', [
+                    'document_id' => $documentId,
+                    'rfq_id' => $rfqId,
+                    'rfq_line_id' => (string) $line['rfq_line_id'],
+                    'quoted_unit' => (string) $quotedUnit,
+                    'base_unit' => $baseUnit,
+                    'error_message' => $exception->getMessage(),
+                ]);
+                $normQty = (float) $line['quantity'];
+                $lineConfidence = min($lineConfidence, 0.6);
+                $normalizationWarnings[] = [
+                    'code' => 'uom_conversion_failed',
+                    'quoted_unit' => (string) $quotedUnit,
+                    'base_unit' => $baseUnit,
+                    'message' => $exception->getMessage(),
+                ];
+            }
 
             // C. Normalization (Currency)
             $quotedCurrency = $line['currency'] ?? $baseCurrency;
@@ -186,13 +208,14 @@ final readonly class QuotationIntelligenceCoordinator implements QuotationIntell
                 normalizedQuantity: (float)$normQty,
                 quotedUnitPrice: (float)$line['unit_price'],
                 normalizedUnitPrice: (float)$normPrice,
-                aiConfidence: (float)$mapping['confidence'],
+                aiConfidence: $lineConfidence,
                 snippets: [$snippet],
                 metadata: [
                     'vendor_id' => (string)($document->getMetadata()['vendor_id'] ?? ''),
                     'mapping_version' => (string)$mapping['version'],
                     'normalization_context' => $normalizationContext->toArray(),
                     'commercial_terms' => $commercialTerms,
+                    'normalization_warnings' => $normalizationWarnings,
                 ]
             );
         }

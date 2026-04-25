@@ -12,6 +12,15 @@ const webServerCommand =
   process.env.PLAYWRIGHT_WEB_SERVER_COMMAND ?? `npm run dev -- --port ${port}`;
 // When USE_EXISTING_SERVER=1, assume app is already running (no webServer). Set PLAYWRIGHT_BASE_URL if not on 3100.
 const useExistingServer = process.env.PLAYWRIGHT_USE_EXISTING_SERVER === '1';
+const webServerEnv: Record<string, string> = {
+  NEXT_PUBLIC_USE_MOCKS: process.env.NEXT_PUBLIC_USE_MOCKS ?? 'false',
+  NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1',
+  E2E_API_URL: process.env.E2E_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api/v1',
+};
+
+if (process.env.NEXT_PUBLIC_AI_MODE !== undefined) {
+  webServerEnv.NEXT_PUBLIC_AI_MODE = process.env.NEXT_PUBLIC_AI_MODE;
+}
 
 export default defineConfig({
   testDir: './tests',
@@ -34,11 +43,7 @@ export default defineConfig({
           url: baseURL,
           reuseExistingServer: !isCI,
           timeout: 120000,
-          env: {
-            NEXT_PUBLIC_USE_MOCKS: process.env.NEXT_PUBLIC_USE_MOCKS ?? 'false',
-            NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-            E2E_API_URL: process.env.E2E_API_URL,
-          },
+          env: webServerEnv,
         },
       }),
   projects: [

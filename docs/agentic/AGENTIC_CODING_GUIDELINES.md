@@ -79,6 +79,11 @@ On-demand guidance for recurring implementation and review patterns. Keep this f
 - Cause: review threads remain open after fixes, tests contain dead helpers, or assertions only cover happy-path payload shape.
 - Fix: sweep unresolved threads, remove dead test code, and assert contract-critical fields.
 
+### Review-loop memory drift
+
+- Cause: review findings are fixed locally, but the reusable lesson is left only in the conversation or PR thread.
+- Fix: after each review cycle, capture the durable rule in `docs/agentic/AGENT_LEARNINGS.md` and/or this file before finalizing the branch.
+
 ## Pre-Finalization Checklist
 
 - [ ] Tenant-safe reads, writes, eager loads, deletes, and ACL checks verified.
@@ -91,6 +96,7 @@ On-demand guidance for recurring implementation and review patterns. Keep this f
 - [ ] Exceptions are domain-specific and sanitized for operator-facing output.
 - [ ] Numeric, array, identifier, and readonly-constructor edge cases are guarded.
 - [ ] Tests and docs match the final behavior.
+- [ ] Reusable review-loop lessons from this cycle were captured in `docs/agentic/`.
 
 ## Multi-Agent Roles
 
@@ -98,4 +104,3 @@ On-demand guidance for recurring implementation and review patterns. Keep this f
 - Developer: implementation and local logic against agreed contracts.
 - QA: verification, regression coverage, and edge-case review.
 - Maintenance: dependency, documentation, and cleanup work.
-
