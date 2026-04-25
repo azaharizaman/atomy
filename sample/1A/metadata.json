@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "requisition_id": "panasonic-compressor-rfq-limbang-2018",
+  "title": "Panasonic Compressor 2.5HP quotation comparison",
+  "buyer": {
+    "name": "One Medicare Sdn Bhd",
+    "tenant_reference": "default-alpha-buyer"
+  },
+  "currency": "MYR",
+  "submission_deadline_days_from_now": 14,
+  "rfq_line_items": [
+    {
+      "line_reference": "LINE-001",
+      "description": "Supply and delivery Panasonic air cond compressor 2.5HP",
+      "quantity": 1,
+      "uom": "EA",
+      "expected_keywords": [
+        "Panasonic",
+        "compressor",
+        "2.5HP",
+        "air cond"
+      ]
+    }
+  ],
+  "quotes": [
+    {
+      "vendor_reference": "lico-electrical-tyres",
+      "vendor_name": "LICO Electrical and Tyres Enterprise Sdn Bhd",
+      "file": "1A-1.pdf",
+      "mime_type": "application/pdf",
+      "expected": {
+        "quote_number": "QUOT/LMW/2018/6357",
+        "quote_date": "2018-12-03",
+        "currency": "RM",
+        "total_amount": 1150.00,
+        "line_count_min": 1,
+        "line_keywords": [
+          "Panasonic air cond",
+          "COMPRESSOR",
+          "2.5HP",
+          "B092513X"
+        ],
+        "payment_terms_keywords": [],
+        "validity_keywords": []
+      }
+    },
+    {
+      "vendor_reference": "ffc-enterprise",
+      "vendor_name": "FFC Enterprise",
+      "file": "1A-B.pdf",
+      "mime_type": "application/pdf",
+      "expected": {
+        "quote_number": "QUOT/LMW/2018/6358",
+        "quote_date": "2018-11-28",
+        "currency": "RM",
+        "total_amount": 1580.00,
+        "line_count_min": 1,
+        "line_keywords": [
+          "Panasonic Compressor",
+          "2.5HP",
+          "supply and delivery"
+        ],
+        "payment_terms_keywords": [],
+        "validity_keywords": []
+      }
+    }
+  ],
+  "e2e": {
+    "requires_live_provider": true,
+    "provider": "openrouter",
+    "document_parser": {
+      "plugin": "file-parser",
+      "pdf_engine": "mistral-ocr"
+    },
+    "assertions": {
+      "upload_status": [
+        "ready",
+        "needs_review"
+      ],
+      "source_lines_min": 1,
+      "allow_manual_mapping_completion": true
+    }
+  }
+}

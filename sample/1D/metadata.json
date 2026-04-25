@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "requisition_id": "biohazard-cabinet-ppm-rcbm-2018",
+  "title": "Biohazard safety cabinet PPM quotation",
+  "buyer": {
+    "name": "One Medicare Sdn Bhd",
+    "tenant_reference": "default-alpha-buyer"
+  },
+  "currency": "MYR",
+  "submission_deadline_days_from_now": 14,
+  "rfq_line_items": [
+    {
+      "line_reference": "LINE-001",
+      "description": "Mobilization of personnel and instruments for testing and servicing of biohazard safety cabinet",
+      "quantity": 1,
+      "uom": "JOB",
+      "expected_keywords": [
+        "biohazard safety cabinet",
+        "test",
+        "service",
+        "HEPA filter",
+        "fumigation"
+      ]
+    },
+    {
+      "line_reference": "LINE-002",
+      "description": "Testing and servicing of biohazard safety cabinet",
+      "quantity": 2,
+      "uom": "EA",
+      "expected_keywords": [
+        "Noise level test",
+        "Airflow velocity",
+        "Particle count",
+        "HEPA filter scanning",
+        "UV light test"
+      ]
+    }
+  ],
+  "quotes": [
+    {
+      "vendor_reference": "dian-permata",
+      "vendor_name": "Dian Permata Sdn. Bhd.",
+      "file": "1D-1.pdf",
+      "mime_type": "application/pdf",
+      "expected": {
+        "quote_number": "DP/OMSB/301118/379",
+        "quote_date": "2018-11-30",
+        "currency": "RM",
+        "total_amount": 4300.00,
+        "subtotal_amount": 4500.00,
+        "discount_amount": 200.00,
+        "line_count_min": 2,
+        "line_keywords": [
+          "Mobilization of personnel & instrument",
+          "Test and service of Biohazard safety cabinet",
+          "HEPA Filter Scanning Test",
+          "Fumigation"
+        ],
+        "payment_terms_keywords": [
+          "TBA"
+        ],
+        "validity_keywords": [
+          "90 days"
+        ]
+      }
+    }
+  ],
+  "e2e": {
+    "requires_live_provider": true,
+    "provider": "openrouter",
+    "document_parser": {
+      "plugin": "file-parser",
+      "pdf_engine": "mistral-ocr"
+    },
+    "assertions": {
+      "upload_status": [
+        "ready",
+        "needs_review"
+      ],
+      "source_lines_min": 1,
+      "allow_manual_mapping_completion": true
+    }
+  }
+}

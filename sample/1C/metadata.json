@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "requisition_id": "honeywell-thermostat-rfq-bintulu-2018",
+  "title": "Honeywell thermostat quotation comparison",
+  "buyer": {
+    "name": "One Medicare Sdn Bhd",
+    "tenant_reference": "default-alpha-buyer"
+  },
+  "currency": "MYR",
+  "submission_deadline_days_from_now": 14,
+  "rfq_line_items": [
+    {
+      "line_reference": "LINE-001",
+      "description": "Supply Honeywell thermostat / digital temperature thermostat with fan speed controller",
+      "quantity": 1,
+      "uom": "EA",
+      "expected_keywords": [
+        "Honeywell",
+        "thermostat",
+        "temperature",
+        "fan speed controller"
+      ]
+    }
+  ],
+  "quotes": [
+    {
+      "vendor_reference": "solidcool-aircond",
+      "vendor_name": "SOLIDCOOL Air Cond. & Refrigeration Sdn. Bhd.",
+      "file": "1C-1.pdf",
+      "mime_type": "application/pdf",
+      "expected": {
+        "quote_number": null,
+        "quote_date": "2018-10-31",
+        "currency": "RM",
+        "total_amount": 185.00,
+        "line_count_min": 1,
+        "line_keywords": [
+          "Honeywell thermostat",
+          "fan speed controller",
+          "1 pc"
+        ],
+        "payment_terms_keywords": [],
+        "validity_keywords": []
+      }
+    },
+    {
+      "vendor_reference": "ssl-engineering",
+      "vendor_name": "SSL Engineering",
+      "file": "1C-2.pdf",
+      "mime_type": "application/pdf",
+      "expected": {
+        "quote_number": "SSLE-18-Q295",
+        "quote_date": "2018-11-05",
+        "currency": "RM",
+        "total_amount": 250.00,
+        "line_count_min": 1,
+        "line_keywords": [
+          "Honeywell TF228WN/C",
+          "digital temperature thermostat"
+        ],
+        "payment_terms_keywords": [],
+        "validity_keywords": [
+          "60 days"
+        ]
+      }
+    }
+  ],
+  "e2e": {
+    "requires_live_provider": true,
+    "provider": "openrouter",
+    "document_parser": {
+      "plugin": "file-parser",
+      "pdf_engine": "mistral-ocr"
+    },
+    "assertions": {
+      "upload_status": [
+        "ready",
+        "needs_review"
+      ],
+      "source_lines_min": 1,
+      "allow_manual_mapping_completion": true
+    }
+  }
+}

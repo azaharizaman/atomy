@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "requisition_id": "office-it-equipment-rfq-kuching-2020",
+  "title": "IT equipment quotation comparison",
+  "buyer": {
+    "name": "One Medicare Sdn Bhd",
+    "tenant_reference": "default-alpha-buyer"
+  },
+  "currency": "MYR",
+  "submission_deadline_days_from_now": 14,
+  "rfq_line_items": [
+    {
+      "line_reference": "LINE-001",
+      "description": "Touchscreen monitor infrared touch 43 inch",
+      "quantity": 2,
+      "uom": "EA",
+      "expected_keywords": [
+        "touchscreen",
+        "43 inch",
+        "infrared touch",
+        "monitor"
+      ]
+    },
+    {
+      "line_reference": "LINE-002",
+      "description": "Dell OptiPlex All-in-One desktop computer",
+      "quantity": 1,
+      "uom": "EA",
+      "expected_keywords": [
+        "Dell",
+        "OptiPlex",
+        "All-in-One",
+        "Intel i5"
+      ]
+    },
+    {
+      "line_reference": "LINE-003",
+      "description": "Wall monitor arm mounting bracket",
+      "quantity": 6,
+      "uom": "EA",
+      "expected_keywords": [
+        "Ergotron",
+        "wall monitor arm",
+        "mount"
+      ]
+    }
+  ],
+  "quotes": [
+    {
+      "vendor_reference": "exclusive-core-niaga-monitor",
+      "vendor_name": "Exclusive Core Niaga Sdn Bhd",
+      "file": "1G-1.pdf",
+      "mime_type": "application/pdf",
+      "expected": {
+        "quote_number": "QUO/2020/142",
+        "quote_date": "2020-11-27",
+        "currency": "RM",
+        "total_amount": 15800.00,
+        "line_count_min": 1,
+        "line_keywords": [
+          "TOUCHSCREEN MONITOR",
+          "INFRARED TOUCH",
+          "43INCH",
+          "MON100T"
+        ],
+        "payment_terms_keywords": [
+          "Cash On Delivery",
+          "COD"
+        ],
+        "validity_keywords": [
+          "30 days"
+        ]
+      }
+    },
+    {
+      "vendor_reference": "exclusive-core-niaga-aio",
+      "vendor_name": "Exclusive Core Niaga Sdn Bhd",
+      "file": "1G-2.pdf",
+      "mime_type": "application/pdf",
+      "expected": {
+        "quote_number": "QUO/2020/143",
+        "quote_date": "2020-11-27",
+        "currency": "RM",
+        "total_amount": 4300.00,
+        "line_count_min": 1,
+        "line_keywords": [
+          "OptiPlex 3280 All-in-One XCTO",
+          "Intel Core i5-10500T",
+          "Windows 10 Pro"
+        ],
+        "payment_terms_keywords": [
+          "Cash On Delivery",
+          "COD"
+        ],
+        "validity_keywords": [
+          "30 days"
+        ]
+      }
+    },
+    {
+      "vendor_reference": "pc-image",
+      "vendor_name": "PC Image Sdn Bhd",
+      "file": "1G-3.pdf",
+      "mime_type": "application/pdf",
+      "expected": {
+        "quote_number": "AS/2511/11",
+        "quote_date": "2020-11-25",
+        "currency": "RM",
+        "total_amount": 27990.00,
+        "line_count_min": 2,
+        "line_keywords": [
+          "Dell OptiPlex 5480 All-in-One XCTO",
+          "Intel Core i5-10500T",
+          "Ergotron MXV Wall Monitor Arm"
+        ],
+        "payment_terms_keywords": [
+          "30 days from the date of invoice"
+        ],
+        "validity_keywords": [
+          "14 days"
+        ]
+      }
+    }
+  ],
+  "e2e": {
+    "requires_live_provider": true,
+    "provider": "openrouter",
+    "document_parser": {
+      "plugin": "file-parser",
+      "pdf_engine": "mistral-ocr"
+    },
+    "assertions": {
+      "upload_status": [
+        "ready",
+        "needs_review"
+      ],
+      "source_lines_min": 1,
+      "allow_manual_mapping_completion": true
+    }
+  }
+}
