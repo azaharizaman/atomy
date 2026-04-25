@@ -584,5 +584,17 @@ final class EndToEndQuoteProcessingTest extends TestCase
             'uom_conversion_failed',
             $result['lines'][0]['metadata']['normalization_warnings'][0]['code']
         );
+        $this->assertSame(
+            'EA',
+            $result['lines'][0]['metadata']['normalization_warnings'][0]['quoted_unit']
+        );
+        $this->assertSame(
+            'JOB',
+            $result['lines'][0]['metadata']['normalization_warnings'][0]['base_unit']
+        );
+        $this->assertSame(
+            'Cannot convert EA to JOB',
+            $result['lines'][0]['metadata']['normalization_warnings'][0]['message']
+        );
     }
 }

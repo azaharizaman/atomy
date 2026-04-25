@@ -7,7 +7,7 @@ import { discoverProviderQuoteFixtures, parseProviderQuoteFixture } from './prov
 
 describe('providerQuoteFixtures', () => {
   it('parses the sample metadata example and resolves quote pdf paths', () => {
-    const sampleDir = path.resolve(process.cwd(), '../../..', 'sample');
+    const sampleDir = path.resolve(__dirname, '../../../../../sample');
     const fixture = parseProviderQuoteFixture({
       baseDir: sampleDir,
       metadataPath: path.resolve(sampleDir, 'metadata.example.json'),
@@ -24,7 +24,7 @@ describe('providerQuoteFixtures', () => {
   });
 
   it('discovers folder-based metadata fixtures and ignores the root example file', () => {
-    const sampleDir = path.resolve(process.cwd(), '../../..', 'sample');
+    const sampleDir = path.resolve(__dirname, '../../../../../sample');
     const fixtures = discoverProviderQuoteFixtures(sampleDir);
 
     expect(fixtures.length).toBeGreaterThan(0);

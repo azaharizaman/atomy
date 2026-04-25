@@ -10,6 +10,8 @@ const liveEnabled = process.env.AI_PROVIDER_E2E === 'true';
 const requestedFixtureId = process.env.PROVIDER_QUOTE_FIXTURE?.trim() ?? '';
 const sampleRoot = path.resolve(__dirname, '../../../../sample');
 const discoveredFixtures = discoverProviderQuoteFixtures(sampleRoot);
+// Default to one live fixture to control provider cost and quota pressure; set
+// AI_PROVIDER_E2E=true plus PROVIDER_QUOTE_FIXTURE=<requisition_id> to target another sample.
 const fixtures = requestedFixtureId === ''
   ? discoveredFixtures.slice(0, 1)
   : discoveredFixtures.filter((fixture) => fixture.requisitionId === requestedFixtureId);
@@ -121,7 +123,7 @@ test.describe('provider-backed quote e2e with live OpenRouter', () => {
         expect(uploadResponse.ok()).toBeTruthy();
 
         const uploadPayload = await uploadResponse.json();
-        expect(['uploaded', ...fixture.e2e.assertions.uploadStatus]).toContain(uploadPayload.data?.status);
+        expect(fixture.e2e.assertions.uploadStatus).toContain(uploadPayload.data?.status);
       }
 
       await expect

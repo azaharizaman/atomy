@@ -488,3 +488,8 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - Quotation document storage-path resolution now uses the configured Laravel `local` disk root (`Storage::disk('local')->path(...)`) instead of assuming `storage/app`, which was breaking real PDF reads on the provider path. Existing files on the same `local` disk do not require re-upload or migration.
 - Added document parser and payload guard config/env surface: `AI_DOCUMENT_PARSER_PLUGIN`, `AI_DOCUMENT_PDF_ENGINE`, `AI_DOCUMENT_MAX_FILE_SIZE_BYTES`, and `AI_DOCUMENT_CURRENCY_MAPPINGS`.
 - Added provider extraction coverage in `ProviderQuoteExtractionTest` plus binding regression coverage in `QuoteIngestionPipelineTest`.
+
+## Verification
+
+- `cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Feature/ProviderQuoteExtractionTest.php tests/Feature/QuoteIngestionPipelineTest.php`
+- `cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Unit/Adapters/Ai/DocumentExtractionRequestTest.php tests/Unit/Adapters/Ai/OpenRouterDocumentPayloadFactoryTest.php tests/Unit/Adapters/Ai/OpenRouterDocumentExtractionMapperTest.php tests/Unit/Adapters/Ai/ProviderDocumentIntelligenceClientTest.php`

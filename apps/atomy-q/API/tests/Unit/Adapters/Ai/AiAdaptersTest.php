@@ -101,6 +101,28 @@ final class AiAdaptersTest extends TestCase
         self::assertSame('HEAD', $endpointConfig->metadata['probe_method'] ?? null);
     }
 
+    public function testConfiguredEndpointRegistryHonorsExplicitHealthPathAndMethodBeforeProviderDefaults(): void
+    {
+        $registry = new ConfiguredAiEndpointRegistry([
+            'provider' => [
+                'key' => 'openrouter',
+            ],
+            'endpoints' => [
+                'document' => [
+                    'uri' => 'https://openrouter.ai/api/v1/chat/completions',
+                    'health_path' => '/status',
+                    'health_method' => 'post',
+                ],
+            ],
+        ]);
+
+        $endpointConfig = $registry->endpointConfig('document');
+
+        self::assertInstanceOf(AiEndpointConfig::class, $endpointConfig);
+        self::assertSame('https://openrouter.ai/api/v1/chat/completions/status', $endpointConfig->metadata['probe_url'] ?? null);
+        self::assertSame('POST', $endpointConfig->metadata['probe_method'] ?? null);
+    }
+
     public function testAwardGuidanceRequestCanonicalizesIdentifiersBeforePersistingPayload(): void
     {
         $request = new AwardGuidanceRequest(

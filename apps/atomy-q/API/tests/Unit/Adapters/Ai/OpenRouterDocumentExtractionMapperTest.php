@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Adapters\Ai;
 
-use PHPUnit\Framework\TestCase;
+use App\Adapters\Ai\Exceptions\AiTransportInvalidResponseException;
 use App\Adapters\Ai\Support\OpenRouterDocumentExtractionMapper;
+use PHPUnit\Framework\TestCase;
 
 final class OpenRouterDocumentExtractionMapperTest extends TestCase
 {
@@ -73,7 +74,7 @@ final class OpenRouterDocumentExtractionMapperTest extends TestCase
     {
         $mapper = new OpenRouterDocumentExtractionMapper();
 
-        $this->expectException(\App\Adapters\Ai\Exceptions\AiTransportInvalidResponseException::class);
+        $this->expectException(AiTransportInvalidResponseException::class);
         $this->expectExceptionMessage('Document provider response content was not valid JSON.');
 
         $mapper->map([
@@ -89,9 +90,59 @@ final class OpenRouterDocumentExtractionMapperTest extends TestCase
     {
         $mapper = new OpenRouterDocumentExtractionMapper();
 
-        $this->expectException(\App\Adapters\Ai\Exceptions\AiTransportInvalidResponseException::class);
+        $this->expectException(AiTransportInvalidResponseException::class);
         $this->expectExceptionMessage('Document provider response did not include message content.');
 
         $mapper->map([]);
+    }
+
+    public function testItStripsAnyCaseInsensitiveMarkdownFenceAndParsesFormattedNumbers(): void
+    {
+        $mapper = new OpenRouterDocumentExtractionMapper();
+
+        $result = $mapper->map([
+            'choices' => [[
+                'message' => [
+                    'content' => <<<JSON
+```JSON
+{"currency":"RM","total_amount":"(1,234.56)","line_items":[{"description":"Pump","quantity":"1,234.56","unit_price":"(45.67)","total":"1,188.89"}]}
+```
+JSON,
+                ],
+            ]],
+        ]);
+
+        self::assertSame('MYR', $result['currency']);
+        self::assertSame(-1234.56, $result['total_amount']);
+        self::assertSame(1234.56, $result['lines'][0]['quantity']);
+        self::assertSame(-45.67, $result['lines'][0]['unit_price']);
+        self::assertSame(1188.89, $result['lines'][0]['total']);
+    }
+
+    public function testItRejectsAmbiguousLocaleFormattedNumbers(): void
+    {
+        $mapper = new OpenRouterDocumentExtractionMapper();
+
+        $result = $mapper->map([
+            'choices' => [[
+                'message' => [
+                    'content' => json_encode([
+                        'currency' => 'RM',
+                        'total_amount' => '1.234,56',
+                        'line_items' => [[
+                            'description' => 'Pump',
+                            'quantity' => '1.234,56',
+                            'unit_price' => '12-3',
+                            'total' => '1.234,56',
+                        ]],
+                    ], JSON_THROW_ON_ERROR),
+                ],
+            ]],
+        ]);
+
+        self::assertNull($result['total_amount']);
+        self::assertSame(1.0, $result['lines'][0]['quantity']);
+        self::assertNull($result['lines'][0]['unit_price']);
+        self::assertNull($result['lines'][0]['total']);
     }
 }

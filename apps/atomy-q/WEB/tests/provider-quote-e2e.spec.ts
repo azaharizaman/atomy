@@ -5,7 +5,7 @@ import { expect, test } from '@playwright/test';
 import { seedAuthSession } from './playwright-auth-bootstrap';
 import { discoverProviderQuoteFixtures } from './support/providerQuoteFixtures';
 
-const fixtures = discoverProviderQuoteFixtures(path.resolve(process.cwd(), '../../..', 'sample'));
+const fixtures = discoverProviderQuoteFixtures(path.resolve(__dirname, '../../../../sample'));
 const fixture = fixtures[0];
 const rfqId = 'rfq-provider-fake';
 

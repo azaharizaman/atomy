@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Adapters\QuotationIntelligence;
 
+use RuntimeException;
 use App\Models\QuoteSubmission;
+use App\Models\RfqLineItem;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Nexus\Tenant\Contracts\TenantContextInterface;
 use App\Adapters\Ai\DTOs\DocumentExtractionRequest;
+use App\Adapters\Ai\Support\DocumentExtractionValueCoercer;
 use Nexus\QuotationIntelligence\Exceptions\QuotationIntelligenceException;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
 use App\Adapters\Ai\Contracts\ProviderDocumentIntelligenceClientInterface;
@@ -84,7 +87,11 @@ final readonly class ProviderQuoteContentProcessor implements OrchestratorConten
             return substr($storagePath, strlen($prefix));
         }
 
-        return basename($storagePath);
+        throw new RuntimeException(sprintf(
+            'QuoteSubmission.file_path could not be resolved because [%s] is outside the expected local storage prefix [%s].',
+            $storagePath,
+            $prefix,
+        ));
     }
 
     /**
@@ -99,7 +106,8 @@ final readonly class ProviderQuoteContentProcessor implements OrchestratorConten
         }
 
         $lines = [];
-        foreach (($result['lines'] ?? []) as $index => $line) {
+        $claimedRfqLineIds = [];
+        foreach (($result['lines'] ?? []) as $line) {
             if (!is_array($line)) {
                 continue;
             }
@@ -111,23 +119,31 @@ final readonly class ProviderQuoteContentProcessor implements OrchestratorConten
                 continue;
             }
 
-            $rfqLineItem = $this->matchRfqLineItem($rfqLineItems->all(), $description, (int) $index);
+            $rfqLineItem = $this->matchRfqLineItem($rfqLineItems->all(), $description, array_keys($claimedRfqLineIds));
             if ($rfqLineItem === null) {
                 continue;
             }
 
+            $claimedRfqLineIds[(string) $rfqLineItem->id] = true;
+
+            $quantity = DocumentExtractionValueCoercer::floatOrNull($line['quantity'] ?? null) ?? 1.0;
+            $unitPrice = DocumentExtractionValueCoercer::floatOrNull($line['unit_price'] ?? null) ?? 0.0;
+            $terms = DocumentExtractionValueCoercer::stringOrNull($line['terms'] ?? null)
+                ?? DocumentExtractionValueCoercer::stringOrNull($result['payment_terms'] ?? null)
+                ?? '';
+
             $lines[] = [
                 'rfq_line_id' => (string) $rfqLineItem->id,
                 'description' => $description,
-                'quantity' => isset($line['quantity']) ? (float) $line['quantity'] : 1.0,
-                'unit_price' => isset($line['unit_price']) ? (float) $line['unit_price'] : 0.0,
+                'quantity' => $quantity,
+                'unit_price' => $unitPrice,
                 'unit' => is_string($line['unit'] ?? null) && trim((string) $line['unit']) !== ''
                     ? (string) $line['unit']
                     : (string) ($rfqLineItem->uom ?? 'EA'),
                 'currency' => is_string($line['currency'] ?? null) && trim((string) $line['currency']) !== ''
                     ? (string) $line['currency']
                     : (string) ($rfqLineItem->currency ?? $result['currency'] ?? 'USD'),
-                'terms' => is_string($line['terms'] ?? null) ? (string) $line['terms'] : ($result['payment_terms'] ?? ''),
+                'terms' => $terms,
                 'bbox' => ['x' => 0, 'y' => 0, 'w' => 0, 'h' => 0],
             ];
         }
@@ -136,15 +152,20 @@ final readonly class ProviderQuoteContentProcessor implements OrchestratorConten
     }
 
     /**
-     * @param array<int, mixed> $rfqLineItems
+     * @param array<int, RfqLineItem> $rfqLineItems
+     * @param list<string> $excludedRfqLineIds
      */
-    private function matchRfqLineItem(array $rfqLineItems, string $description, int $index): mixed
+    private function matchRfqLineItem(array $rfqLineItems, string $description, array $excludedRfqLineIds = []): ?RfqLineItem
     {
         $normalizedDescription = Str::of($description)->lower()->toString();
         $bestItem = null;
         $bestScore = -1;
 
         foreach ($rfqLineItems as $candidate) {
+            if (in_array((string) $candidate->id, $excludedRfqLineIds, true)) {
+                continue;
+            }
+
             $candidateDescription = Str::of((string) ($candidate->description ?? ''))->lower()->toString();
             $score = 0;
 
@@ -168,6 +189,6 @@ final readonly class ProviderQuoteContentProcessor implements OrchestratorConten
             return $bestItem;
         }
 
-        return $rfqLineItems[$index] ?? $rfqLineItems[0] ?? null;
+        return null;
     }
 }

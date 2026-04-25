@@ -6,8 +6,9 @@ namespace App\Adapters\Ai\Support;
 
 use InvalidArgumentException;
 use App\Adapters\Ai\DTOs\DocumentExtractionRequest;
+use App\Adapters\Ai\Contracts\DocumentPayloadFactoryInterface;
 
-final readonly class OpenRouterDocumentPayloadFactory
+final readonly class OpenRouterDocumentPayloadFactory implements DocumentPayloadFactoryInterface
 {
     public function __construct(
         private string $modelId,

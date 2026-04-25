@@ -35,8 +35,8 @@ Cross-platform examples:
 
 - POSIX shell:
   - `cd apps/atomy-q/WEB && PROVIDER_QUOTE_FIXTURE=aircond-compressor-repair-rfq-sibu-2019 AI_PROVIDER_E2E=true npm run test:e2e:provider-quote:live`
-- `npm` script with bundled `cross-env`:
-  - `cd apps/atomy-q/WEB && npm run test:e2e:provider-quote:live -- --grep "aircond-compressor-repair-rfq-sibu-2019"`
+- `npm` script with bundled `cross-env` and fixture selection:
+  - `cd apps/atomy-q/WEB && npx cross-env AI_PROVIDER_E2E=true PROVIDER_QUOTE_FIXTURE=aircond-compressor-repair-rfq-sibu-2019 npm run test:e2e:provider-quote:live`
 - Windows PowerShell:
   - `cd apps/atomy-q/WEB; $env:AI_PROVIDER_E2E='true'; $env:PROVIDER_QUOTE_FIXTURE='aircond-compressor-repair-rfq-sibu-2019'; npm run test:e2e:provider-quote:live`
 - Windows CMD:

@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Tests\Unit\Adapters\Ai;
 
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
-use App\Adapters\Ai\ProviderDocumentIntelligenceClient;
 use App\Adapters\Ai\Contracts\ProviderAiTransportInterface;
 use App\Adapters\Ai\DTOs\DocumentExtractionRequest;
+use App\Adapters\Ai\ProviderDocumentIntelligenceClient;
 use App\Adapters\Ai\Support\OpenRouterDocumentExtractionMapper;
 use App\Adapters\Ai\Support\OpenRouterDocumentPayloadFactory;
 use PHPUnit\Framework\TestCase;

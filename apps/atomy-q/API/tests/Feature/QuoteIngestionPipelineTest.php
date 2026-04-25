@@ -309,7 +309,7 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         $response->assertJsonPath('data.error_code', 'EXTRACTION_UNAVAILABLE');
         $response->assertJsonPath('data.ai_status.extraction.status', 'degraded');
         $response->assertJsonPath('data.ai_status.extraction.manual_action_required', true);
-        $response->assertJsonPath('data.ai_status.normalization.status', 'available');
+        $response->assertJsonPath('data.ai_status.normalization.status', 'degraded');
         $response->assertJsonPath('data.confidence', null);
 
         $submission = QuoteSubmission::query()->findOrFail((string) $response->json('data.id'));

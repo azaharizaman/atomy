@@ -8,9 +8,11 @@ use App\Adapters\Ai\AiRuntimeStatusAdapter;
 use App\Adapters\Ai\AtomyAiCapabilityCatalog;
 use App\Adapters\Ai\ConfiguredAiEndpointRegistry;
 use App\Adapters\Ai\ConfiguredAiHealthProbe;
-use App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface;
 use App\Adapters\Ai\Contracts\AiEndpointRegistryInterface;
 use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface;
+use App\Adapters\Ai\Contracts\DocumentExtractionMapperInterface;
+use App\Adapters\Ai\Contracts\DocumentPayloadFactoryInterface;
 use App\Adapters\Ai\Contracts\ProviderAiTransportInterface;
 use App\Adapters\Ai\Contracts\ProviderDocumentIntelligenceClientInterface;
 use App\Adapters\Ai\Contracts\ProviderGovernanceClientInterface;
@@ -245,12 +247,20 @@ class AppServiceProvider extends ServiceProvider
                 maxFileSizeBytes: (int) config('atomy.ai.endpoints.document.max_file_size_bytes', 10_485_760),
             );
         });
+        $this->app->singleton(
+            DocumentPayloadFactoryInterface::class,
+            static fn ($app): DocumentPayloadFactoryInterface => $app->make(OpenRouterDocumentPayloadFactory::class),
+        );
         $this->app->singleton(OpenRouterDocumentExtractionMapper::class, function (): OpenRouterDocumentExtractionMapper {
             /** @var array<string, string> $currencyMappings */
             $currencyMappings = (array) config('atomy.ai.endpoints.document.currency_mappings', ['RM' => 'MYR']);
 
             return new OpenRouterDocumentExtractionMapper($currencyMappings);
         });
+        $this->app->singleton(
+            DocumentExtractionMapperInterface::class,
+            static fn ($app): DocumentExtractionMapperInterface => $app->make(OpenRouterDocumentExtractionMapper::class),
+        );
         $this->app->singleton(ProviderDocumentIntelligenceClient::class);
         $this->app->singleton(
             ProviderDocumentIntelligenceClientInterface::class,

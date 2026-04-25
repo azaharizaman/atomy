@@ -51,6 +51,7 @@ return [
 
     'ai' => [
         'mode' => (string) env('AI_MODE', AiStatusSchema::MODE_DETERMINISTIC),
+        'sample_path' => (string) env('AI_SAMPLE_PATH', ''),
         'provider' => [
             'key' => (string) env('AI_PROVIDER', 'openrouter'),
             'name' => (string) env('AI_PROVIDER_NAME', ''),
@@ -97,8 +98,20 @@ return [
                         }
 
                         $decoded = json_decode($value, true);
+                        if (!is_array($decoded)) {
+                            return [];
+                        }
 
-                        return is_array($decoded) ? $decoded : [];
+                        $filtered = [];
+                        foreach ($decoded as $key => $mappedValue) {
+                            if (!is_string($key) || trim($key) === '' || !is_string($mappedValue) || trim($mappedValue) === '') {
+                                continue;
+                            }
+
+                            $filtered[trim($key)] = trim($mappedValue);
+                        }
+
+                        return $filtered;
                     })(env('AI_DOCUMENT_CURRENCY_MAPPINGS'))
                 ),
                 'health_url' => (string) env('AI_DOCUMENT_HEALTH_URL', (string) env('HF_DOCUMENT_HEALTH_URL', '')),

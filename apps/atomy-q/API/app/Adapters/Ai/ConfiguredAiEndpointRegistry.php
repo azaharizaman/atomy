@@ -121,21 +121,21 @@ final readonly class ConfiguredAiEndpointRegistry implements AiEndpointRegistryI
             return $healthUrl;
         }
 
+        $healthPath = trim((string) ($endpoint['health_path'] ?? ''));
+        if ($healthPath !== '') {
+            if ($healthPath[0] !== '/') {
+                $healthPath = '/' . $healthPath;
+            }
+
+            return rtrim($endpointUri, '/') . $healthPath;
+        }
+
         $providerProbeUrl = $this->providerProbeUrl($endpointUri);
         if ($providerProbeUrl !== null) {
             return $providerProbeUrl;
         }
 
-        $healthPath = trim((string) ($endpoint['health_path'] ?? '/health'));
-        if ($healthPath === '') {
-            $healthPath = '/health';
-        }
-
-        if ($healthPath[0] !== '/') {
-            $healthPath = '/' . $healthPath;
-        }
-
-        return rtrim($endpointUri, '/') . $healthPath;
+        return rtrim($endpointUri, '/') . '/health';
     }
 
     /**
@@ -143,6 +143,11 @@ final readonly class ConfiguredAiEndpointRegistry implements AiEndpointRegistryI
      */
     private function resolveProbeMethod(array $endpoint): string
     {
+        $method = strtoupper(trim((string) ($endpoint['health_method'] ?? '')));
+        if ($method !== '') {
+            return $method;
+        }
+
         if (trim((string) ($endpoint['health_url'] ?? '')) === '') {
             $providerProbeMethod = $this->providerProbeMethod();
             if ($providerProbeMethod !== null) {
@@ -150,9 +155,7 @@ final readonly class ConfiguredAiEndpointRegistry implements AiEndpointRegistryI
             }
         }
 
-        $method = strtoupper(trim((string) ($endpoint['health_method'] ?? 'GET')));
-
-        return $method === '' ? 'GET' : $method;
+        return 'GET';
     }
 
     private function providerProbeUrl(string $endpointUri): ?string

@@ -144,8 +144,13 @@ function parseQuote(
   const quote = expectRecord(value, name);
   const expected = expectRecord(quote.expected, `${name}.expected`);
   const file = expectString(quote.file, `${name}.file`);
-  const filePath = path.join(baseDir, file);
-  if (!fs.existsSync(filePath)) {
+  const filePath = path.resolve(baseDir, file);
+  const relativePath = path.relative(baseDir, filePath);
+  if (
+    relativePath.startsWith('..')
+    || path.isAbsolute(relativePath)
+    || !fs.existsSync(filePath)
+  ) {
     throw new Error(`Invalid provider quote fixture: ${name}.file resolved to missing file ${filePath}.`);
   }
 
@@ -217,7 +222,7 @@ function expectString(value: unknown, name: string): string {
     throw new Error(`Invalid provider quote fixture: ${name} must be a non-empty string.`);
   }
 
-  return value;
+  return value.trim();
 }
 
 function expectStringArray(value: unknown, name: string): string[] {

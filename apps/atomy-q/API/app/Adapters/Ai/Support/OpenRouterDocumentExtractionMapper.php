@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Adapters\Ai\Support;
 
+use App\Adapters\Ai\Contracts\DocumentExtractionMapperInterface;
 use App\Adapters\Ai\Exceptions\AiTransportInvalidResponseException;
 
-final readonly class OpenRouterDocumentExtractionMapper
+final readonly class OpenRouterDocumentExtractionMapper implements DocumentExtractionMapperInterface
 {
     /**
      * @param array<string, string> $currencyMappings
@@ -76,12 +77,7 @@ final readonly class OpenRouterDocumentExtractionMapper
     private function stripMarkdownFence(string $content): string
     {
         $trimmed = trim($content);
-
-        if (str_starts_with($trimmed, '```json')) {
-            $trimmed = substr($trimmed, 7);
-        } elseif (str_starts_with($trimmed, '```')) {
-            $trimmed = substr($trimmed, 3);
-        }
+        $trimmed = preg_replace('/^```(?:[A-Za-z0-9_-]+)?\R?/i', '', $trimmed) ?? $trimmed;
 
         if (str_ends_with($trimmed, '```')) {
             $trimmed = substr($trimmed, 0, -3);
@@ -92,7 +88,7 @@ final readonly class OpenRouterDocumentExtractionMapper
 
     private function stringOrNull(mixed $value): ?string
     {
-        return is_string($value) && trim($value) !== '' ? trim($value) : null;
+        return DocumentExtractionValueCoercer::stringOrNull($value);
     }
 
     private function normalizeCurrencyCode(mixed $value): ?string
@@ -109,19 +105,7 @@ final readonly class OpenRouterDocumentExtractionMapper
 
     private function floatOrNull(mixed $value): ?float
     {
-        if (is_int($value) || is_float($value)) {
-            return (float) $value;
-        }
-
-        if (is_string($value)) {
-            $normalized = preg_replace('/[^0-9.\-]/', '', $value);
-
-            return is_string($normalized) && $normalized !== '' && is_numeric($normalized)
-                ? (float) $normalized
-                : null;
-        }
-
-        return null;
+        return DocumentExtractionValueCoercer::floatOrNull($value);
     }
 
     /**

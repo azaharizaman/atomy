@@ -6,18 +6,18 @@ namespace App\Adapters\Ai;
 
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 
+use App\Adapters\Ai\Contracts\DocumentExtractionMapperInterface;
+use App\Adapters\Ai\Contracts\DocumentPayloadFactoryInterface;
 use App\Adapters\Ai\Contracts\ProviderAiTransportInterface;
 use App\Adapters\Ai\Contracts\ProviderDocumentIntelligenceClientInterface;
 use App\Adapters\Ai\DTOs\DocumentExtractionRequest;
-use App\Adapters\Ai\Support\OpenRouterDocumentExtractionMapper;
-use App\Adapters\Ai\Support\OpenRouterDocumentPayloadFactory;
 
 final readonly class ProviderDocumentIntelligenceClient implements ProviderDocumentIntelligenceClientInterface
 {
     public function __construct(
         private ProviderAiTransportInterface $transport,
-        private OpenRouterDocumentPayloadFactory $payloadFactory,
-        private OpenRouterDocumentExtractionMapper $mapper,
+        private DocumentPayloadFactoryInterface $payloadFactory,
+        private DocumentExtractionMapperInterface $mapper,
     ) {
     }
 

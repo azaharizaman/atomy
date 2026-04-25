@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Adapters\Ai\DTOs;
 
 use InvalidArgumentException;
+use App\Adapters\Ai\Support\SamplePath;
 
 /**
  * Immutable request envelope for provider-backed quotation document extraction.
@@ -78,13 +79,21 @@ final readonly class DocumentExtractionRequest
     private function isAbsolutePath(string $path): bool
     {
         return str_starts_with($path, DIRECTORY_SEPARATOR)
-            || preg_match('/^[A-Za-z]:\\\\/', $path) === 1;
+            || preg_match('/^[A-Za-z]:[\\\\\\/]/', $path) === 1;
     }
 
     private function pathWithinAllowedBases(string $resolvedPath): bool
     {
         foreach ($this->allowedBasePaths() as $basePath) {
-            if ($basePath !== '' && str_starts_with($resolvedPath, $basePath)) {
+            $normalizedBasePath = rtrim($basePath, DIRECTORY_SEPARATOR);
+            $normalizedResolvedPath = rtrim($resolvedPath, DIRECTORY_SEPARATOR);
+            if (
+                $normalizedBasePath !== ''
+                && (
+                    $normalizedResolvedPath === $normalizedBasePath
+                    || str_starts_with($normalizedResolvedPath, $normalizedBasePath . DIRECTORY_SEPARATOR)
+                )
+            ) {
                 return true;
             }
         }
@@ -135,20 +144,6 @@ final readonly class DocumentExtractionRequest
 
     private function resolveSamplePath(): string
     {
-        if (!function_exists('base_path') || !function_exists('app')) {
-            return '';
-        }
-
-        try {
-            $app = app();
-        } catch (\Throwable) {
-            return '';
-        }
-
-        if (!is_object($app) || !method_exists($app, 'basePath')) {
-            return '';
-        }
-
-        return realpath(dirname(base_path(), 3) . '/sample') ?: '';
+        return SamplePath::root();
     }
 }

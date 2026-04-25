@@ -87,3 +87,9 @@ Use compact pattern entries:
 - Guardrail: sweep unresolved threads; resolve fixed items; leave intentional deferrals open with rationale and follow-up.
 - Source: #340, #349.
 
+### Pattern: Review-cycle lesson capture
+
+- Trigger: Finishing an implementation slice after inline PR comments, CodeRabbit findings, or follow-up review fixes.
+- Risk: the same review nuance repeats in later turns because the reusable rule never gets written down.
+- Guardrail: after every review cycle, update `docs/agentic/AGENT_LEARNINGS.md` and/or `docs/agentic/AGENTIC_CODING_GUIDELINES.md` with the reusable pattern before closing the branch.
+- Source: #388 follow-up review hardening.
