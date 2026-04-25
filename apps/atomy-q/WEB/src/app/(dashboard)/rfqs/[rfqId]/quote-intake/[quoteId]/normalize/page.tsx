@@ -63,7 +63,7 @@ function formFromSourceLine(line: NormalizationSourceLineRow): ManualSourceLineF
   };
 }
 
-export function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: string }) {
+function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: string }) {
   const rfqQuery = useRfq(rfqId);
   const rfq = rfqQuery.data;
   const aiStatus = useAiStatus();

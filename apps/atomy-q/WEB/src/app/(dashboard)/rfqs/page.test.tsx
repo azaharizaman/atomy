@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getRfqBulkActionLabels } from './page';
+import { getRfqBulkActionLabels } from './rfq-bulk-actions';
 
 describe('rfq list bulk action labels', () => {
   it('hides unsupported actions in live mode', () => {

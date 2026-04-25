@@ -51,7 +51,7 @@ const STATUS_FILTER_OPTIONS = [
   { value: 'error', label: 'Failed' },
 ] as const;
 
-export function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
+function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
   const router = useRouter();
   const rfqQuery = useRfq(rfqId);
   const rfq = rfqQuery.data;

@@ -1,5 +1,11 @@
 # IntelligenceOperations Implementation Summary
 
+## 2026-04-24 AI Launch Readiness Documentation Alignment
+
+- The launch-readiness plan now cross-links the existing `AiStatusCoordinator` / `AiStatusSnapshot` runtime contract into the operator handoff docs, making the orchestrator's status aggregation role discoverable from the docs-led release path.
+- The new runbook text records the expected AI-off, degraded, auth-failure, quota, and timeout drill outcomes without changing orchestrator code.
+- No orchestrator runtime code changed in this pass; this is documentation alignment only.
+
 ## Contracts
 - Contracts are in `src/Contracts`, including `ModelLifecycleCoordinatorInterface`, `ModelRegistryPortInterface`, `ModelTrainingPortInterface`, `ModelTelemetryPortInterface`, `DataDriftPortInterface`, and the AI runtime-facing `AiStatusCoordinatorInterface`.
 - `AiStatusCoordinatorInterface` accepts local endpoint-health snapshots and a scalar AI mode string, keeping Layer 2 independent from `Nexus\MachineLearning`.

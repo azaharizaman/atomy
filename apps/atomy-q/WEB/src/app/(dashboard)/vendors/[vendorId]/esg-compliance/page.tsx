@@ -29,7 +29,7 @@ function formatDisplayDate(value: string | null): string {
   return date.toLocaleDateString(undefined, { dateStyle: 'medium' });
 }
 
-export function VendorEsgCompliancePageContent({ vendorId }: { vendorId: string }) {
+function VendorEsgCompliancePageContent({ vendorId }: { vendorId: string }) {
   const governanceQuery = useVendorGovernance(vendorId);
 
   if (governanceQuery.isLoading) {

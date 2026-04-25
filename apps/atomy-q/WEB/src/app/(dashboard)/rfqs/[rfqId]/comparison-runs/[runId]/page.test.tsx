@@ -148,7 +148,7 @@ vi.mock('@/hooks/use-comparison-run-readiness', () => ({
   }),
 }));
 
-import { ComparisonRunDetailPageContent } from './page';
+import ComparisonRunDetailPage from './page';
 
 describe('ComparisonRunDetailPage', () => {
   beforeEach(() => {
@@ -165,7 +165,7 @@ describe('ComparisonRunDetailPage', () => {
   });
 
   it('renders live run metadata, matrix content, and readiness details', async () => {
-    renderWithProviders(<ComparisonRunDetailPageContent rfqId="rfq-1" runId="run-42" />);
+    renderWithProviders(<ComparisonRunDetailPage params={Promise.resolve({ rfqId: 'rfq-1', runId: 'run-42' })} />);
 
     expect(await screen.findByRole('heading', { name: 'Final comparison' })).toBeInTheDocument();
     expect(screen.getByTestId('run-label')).toHaveTextContent('run-42');
@@ -181,7 +181,7 @@ describe('ComparisonRunDetailPage', () => {
   });
 
   it('does not render the retired fake controls or sample copy', async () => {
-    renderWithProviders(<ComparisonRunDetailPageContent rfqId="rfq-1" runId="run-42" />);
+    renderWithProviders(<ComparisonRunDetailPage params={Promise.resolve({ rfqId: 'rfq-1', runId: 'run-42' })} />);
 
     await screen.findByRole('heading', { name: 'Final comparison' });
 
@@ -214,7 +214,7 @@ describe('ComparisonRunDetailPage', () => {
       ],
     };
 
-    renderWithProviders(<ComparisonRunDetailPageContent rfqId="rfq-1" runId="run-42" />);
+    renderWithProviders(<ComparisonRunDetailPage params={Promise.resolve({ rfqId: 'rfq-1', runId: 'run-42' })} />);
 
     expect(await screen.findByRole('heading', { name: 'Final comparison' })).toBeInTheDocument();
     expect(screen.getAllByText('—').length).toBeGreaterThan(2);
@@ -277,7 +277,7 @@ describe('ComparisonRunDetailPage', () => {
       },
     };
 
-    renderWithProviders(<ComparisonRunDetailPageContent rfqId="rfq-1" runId="run-42" />);
+    renderWithProviders(<ComparisonRunDetailPage params={Promise.resolve({ rfqId: 'rfq-1', runId: 'run-42' })} />);
 
     expect(await screen.findByRole('heading', { name: 'Final comparison' })).toBeInTheDocument();
     expect(screen.getByText('Comparison AI overlay unavailable')).toBeInTheDocument();

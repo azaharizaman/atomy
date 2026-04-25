@@ -14,7 +14,7 @@ vi.mock('@/hooks/use-vendor-governance', async () => {
   };
 });
 
-import { VendorEsgCompliancePageContent } from './page';
+import VendorEsgCompliancePage from './page';
 
 describe('VendorEsgCompliancePage', () => {
   beforeEach(() => {
@@ -68,7 +68,7 @@ describe('VendorEsgCompliancePage', () => {
       error: null,
     });
 
-    renderWithProviders(<VendorEsgCompliancePageContent vendorId="vendor-1" />);
+    renderWithProviders(<VendorEsgCompliancePage params={Promise.resolve({ vendorId: 'vendor-1' })} />);
 
     expect(screen.getByText('ESG / Compliance')).toBeInTheDocument();
     expect(screen.getByText('Compliance Document Expired')).toBeInTheDocument();
@@ -89,7 +89,7 @@ describe('VendorEsgCompliancePage', () => {
       error: new Error('Invalid vendor governance payload'),
     });
 
-    renderWithProviders(<VendorEsgCompliancePageContent vendorId="vendor-1" />);
+    renderWithProviders(<VendorEsgCompliancePage params={Promise.resolve({ vendorId: 'vendor-1' })} />);
 
     expect(screen.getByText(/could not load governance data/i)).toBeInTheDocument();
     expect(screen.getByText(/invalid vendor governance payload/i)).toBeInTheDocument();

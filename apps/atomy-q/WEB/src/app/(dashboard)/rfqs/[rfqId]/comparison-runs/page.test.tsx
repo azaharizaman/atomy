@@ -21,7 +21,7 @@ vi.mock('@/hooks/use-comparison-runs', () => ({
   useComparisonRuns: (...args: unknown[]) => mockUseComparisonRuns(...args),
 }));
 
-import { ComparisonRunsListContent } from './page';
+import ComparisonRunsPage from './page';
 
 describe('ComparisonRunsPage', () => {
   beforeEach(() => {
@@ -43,7 +43,7 @@ describe('ComparisonRunsPage', () => {
       ],
     });
 
-    renderWithProviders(<ComparisonRunsListContent rfqId="RFQ-2026-0001" />);
+    renderWithProviders(<ComparisonRunsPage params={Promise.resolve({ rfqId: 'RFQ-2026-0001' })} />);
 
     expect(await screen.findByText(/snapshot frozen/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /decision trail/i })).toBeInTheDocument();
@@ -66,7 +66,7 @@ describe('ComparisonRunsPage', () => {
       ],
     });
 
-    renderWithProviders(<ComparisonRunsListContent rfqId="RFQ-2026-0001" />);
+    renderWithProviders(<ComparisonRunsPage params={Promise.resolve({ rfqId: 'RFQ-2026-0001' })} />);
 
     expect(await screen.findByText('Preview comparison')).toBeInTheDocument();
     expect(screen.getByText('run-preview-1')).toBeInTheDocument();
@@ -82,7 +82,7 @@ describe('ComparisonRunsPage', () => {
       error: new Error('Comparison runs unavailable'),
     });
 
-    renderWithProviders(<ComparisonRunsListContent rfqId="RFQ-2026-0001" />);
+    renderWithProviders(<ComparisonRunsPage params={Promise.resolve({ rfqId: 'RFQ-2026-0001' })} />);
 
     expect(await screen.findByText(/could not load comparison runs/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Comparison runs unavailable' })).toBeInTheDocument();

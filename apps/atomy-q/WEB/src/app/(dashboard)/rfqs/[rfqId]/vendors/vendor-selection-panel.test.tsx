@@ -1,17 +1,32 @@
+import { Suspense } from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 
 import { renderWithProviders } from '@/test/utils';
 
 const mockUseVendors = vi.fn();
+const mockUseRfqVendors = vi.fn();
 const mockUseRequisitionVendorSelection = vi.fn();
 const mockUseUpdateRequisitionVendorSelection = vi.fn();
 const mockUseVendorGovernanceMap = vi.fn();
 const mockUseVendorRecommendations = vi.fn();
 const mockUseAiStatus = vi.fn();
 
+vi.mock('@/hooks/use-rfq', () => ({
+  useRfq: () => ({
+    data: { title: 'RFQ' },
+    isLoading: false,
+    isError: false,
+    error: null,
+  }),
+}));
+
 vi.mock('@/hooks/use-vendors', () => ({
   useVendors: (...args: unknown[]) => mockUseVendors(...args),
+}));
+
+vi.mock('@/hooks/use-rfq-vendors', () => ({
+  useRfqVendors: (...args: unknown[]) => mockUseRfqVendors(...args),
 }));
 
 vi.mock('@/hooks/use-requisition-vendor-selection', () => ({
@@ -38,7 +53,17 @@ vi.mock('@/hooks/use-ai-status', () => ({
   useAiStatus: () => mockUseAiStatus(),
 }));
 
-import { RfqVendorSelectionPanel } from './page';
+import RfqVendorsPage from './page';
+
+async function renderRfqVendorsPage() {
+  await act(async () => {
+    renderWithProviders(
+      <Suspense fallback={null}>
+        <RfqVendorsPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
+      </Suspense>,
+    );
+  });
+}
 
 const approvedVendor = {
   id: 'vendor-1',
@@ -149,6 +174,12 @@ describe('RfqVendorSelectionPanel', () => {
       isError: false,
       error: null,
     });
+    mockUseRfqVendors.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
   });
 
   it('lists approved vendors only, keeps selected state, and saves selected ids', async () => {
@@ -180,9 +211,9 @@ describe('RfqVendorSelectionPanel', () => {
       };
     });
 
-    renderWithProviders(<RfqVendorSelectionPanel rfqId="rfq-1" />);
+    await renderRfqVendorsPage();
 
-    expect(screen.getByText('Alpha Procurement')).toBeInTheDocument();
+    expect(screen.getAllByText('Alpha Procurement').length).toBeGreaterThan(0);
     expect(screen.getByText('Beta Supply')).toBeInTheDocument();
     expect(screen.queryByText('Gamma Restricted')).not.toBeInTheDocument();
     expect(screen.getByRole('checkbox', { name: /alpha procurement/i })).toBeChecked();
@@ -191,7 +222,7 @@ describe('RfqVendorSelectionPanel', () => {
     fireEvent.change(screen.getByLabelText(/search approved vendors/i), { target: { value: 'beta' } });
 
     await waitFor(() => expect(mockUseVendors).toHaveBeenCalledWith(expect.objectContaining({ q: 'beta' })));
-    expect(screen.queryByText('Alpha Procurement')).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: /alpha procurement/i })).not.toBeInTheDocument();
     expect(screen.getByText('Beta Supply')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('checkbox', { name: /beta supply/i }));
@@ -204,7 +235,7 @@ describe('RfqVendorSelectionPanel', () => {
     );
   });
 
-  it('shows an empty state that points to the vendor master when no approved vendors exist', () => {
+  it('shows an empty state that points to the vendor master when no approved vendors exist', async () => {
     mockUseVendors.mockReturnValue({
       data: { items: [], meta: { currentPage: 1, perPage: 25, total: 0, totalPages: 1 } },
       isLoading: false,
@@ -212,7 +243,7 @@ describe('RfqVendorSelectionPanel', () => {
       error: null,
     });
 
-    renderWithProviders(<RfqVendorSelectionPanel rfqId="rfq-1" />);
+    await renderRfqVendorsPage();
 
     expect(screen.getByText(/no approved vendors available/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /browse vendors/i })).toHaveAttribute('href', '/vendors');
@@ -258,7 +289,7 @@ describe('RfqVendorSelectionPanel', () => {
       error: null,
     });
 
-    renderWithProviders(<RfqVendorSelectionPanel rfqId="rfq-1" />);
+    await renderRfqVendorsPage();
 
     expect(screen.getByText('Stale Evidence')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /save selection/i }));
@@ -307,7 +338,7 @@ describe('RfqVendorSelectionPanel', () => {
       error: null,
     });
 
-    renderWithProviders(<RfqVendorSelectionPanel rfqId="rfq-1" />);
+    await renderRfqVendorsPage();
 
     expect(screen.getByText(/ai recommendation is unavailable/i)).toBeInTheDocument();
     expect(screen.getByText(/you can still manually select vendors/i)).toBeInTheDocument();

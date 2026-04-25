@@ -106,7 +106,7 @@ function ApprovalProvenanceSummary({ provenance }: { provenance: Record<string, 
   );
 }
 
-export function ApprovalsListPageContent({ rfqId }: { rfqId: string }) {
+function ApprovalsListPageContent({ rfqId }: { rfqId: string }) {
   const router = useRouter();
   const { data: rfq } = useRfq(rfqId);
   const aiStatus = useAiStatus();

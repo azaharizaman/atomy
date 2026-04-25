@@ -26,7 +26,7 @@ function vendorEmail(vendor: VendorRow): string {
   return vendor.primaryContactEmail || vendor.email || 'No contact email';
 }
 
-export function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
+function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
   const [search, setSearch] = React.useState('');
   const [expandedRecommendationId, setExpandedRecommendationId] = React.useState<string | null>(null);
   const aiStatus = useAiStatus();
@@ -217,7 +217,7 @@ export function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
                       {checked ? <CheckCircle2 size={16} className="text-emerald-600" /> : null}
                     </span>
                   </label>
-                  {showRecommendationDetails && expanded ? (
+                  {showRecommendationDetails && expanded && recommendation ? (
                     <div className="border-t border-slate-100 px-4 py-3 text-sm">
                       <p className="font-medium text-slate-800">{recommendation.recommendedReasonSummary}</p>
                       <div className="mt-2 grid gap-3 md:grid-cols-2">
@@ -280,7 +280,7 @@ export function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
   );
 }
 
-export function RfqVendorsPageContent({ rfqId }: { rfqId: string }) {
+function RfqVendorsPageContent({ rfqId }: { rfqId: string }) {
   const rfqQuery = useRfq(rfqId);
   const vendorsQuery = useRfqVendors(rfqId);
   const selectedQuery = useRequisitionVendorSelection(rfqId);
@@ -460,7 +460,13 @@ export function RfqVendorsPageContent({ rfqId }: { rfqId: string }) {
   );
 }
 
-export default function RfqVendorsPage({ params }: { params: Promise<{ rfqId: string }> }) {
+type RfqVendorsPageParams = { rfqId: string };
+
+export default function RfqVendorsPage({
+  params,
+}: {
+  params: Promise<RfqVendorsPageParams>;
+}) {
   const { rfqId } = React.use(params);
   return <RfqVendorsPageContent rfqId={rfqId} />;
 }

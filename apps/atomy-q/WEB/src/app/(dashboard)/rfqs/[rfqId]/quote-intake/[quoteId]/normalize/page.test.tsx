@@ -76,7 +76,7 @@ vi.mock('@/hooks/use-ai-status', () => ({
   useAiStatus: () => mockUseAiStatus(),
 }));
 
-import { NormalizePageContent } from './page';
+import NormalizePage from './page';
 
 describe('NormalizeQuotePage', () => {
   beforeEach(() => {
@@ -156,14 +156,14 @@ describe('NormalizeQuotePage', () => {
   });
 
   it('shows blocking issues before allowing freeze', async () => {
-    renderWithProviders(<NormalizePageContent rfqId="r1" quoteId="q1" />);
+    renderWithProviders(<NormalizePage params={Promise.resolve({ rfqId: 'r1', quoteId: 'q1' })} />);
 
     expect(await screen.findByText(/blocking issues/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /freeze comparison/i })).toBeDisabled();
   });
 
   it('does not coerce empty unit prices to zero', async () => {
-    renderWithProviders(<NormalizePageContent rfqId="r1" quoteId="q1" />);
+    renderWithProviders(<NormalizePage params={Promise.resolve({ rfqId: 'r1', quoteId: 'q1' })} />);
 
     expect(await screen.findByText('Widget A')).toBeInTheDocument();
     expect(screen.getAllByText('$42').length).toBeGreaterThan(0);
@@ -178,7 +178,7 @@ describe('NormalizeQuotePage', () => {
       error: new Error('Normalization source lines unavailable'),
     });
 
-    renderWithProviders(<NormalizePageContent rfqId="r1" quoteId="q1" />);
+    renderWithProviders(<NormalizePage params={Promise.resolve({ rfqId: 'r1', quoteId: 'q1' })} />);
 
     expect(await screen.findByText(/source lines unavailable/i)).toBeInTheDocument();
     expect(screen.getByText(/normalization source lines unavailable/i)).toBeInTheDocument();
@@ -200,7 +200,7 @@ describe('NormalizeQuotePage', () => {
       resolveConflict: { mutate: vi.fn(), isPending: false, isError: false },
     });
 
-    renderWithProviders(<NormalizePageContent rfqId="r1" quoteId="q1" />);
+    renderWithProviders(<NormalizePage params={Promise.resolve({ rfqId: 'r1', quoteId: 'q1' })} />);
 
     expect(await screen.findByText(/normalization review unavailable/i)).toBeInTheDocument();
     expect(screen.getByText(/normalization review unavailable/i)).toBeInTheDocument();
@@ -217,7 +217,7 @@ describe('NormalizeQuotePage', () => {
       status: { mode: 'provider', globalHealth: 'degraded', providerName: null },
     });
 
-    renderWithProviders(<NormalizePageContent rfqId="r1" quoteId="q1" />);
+    renderWithProviders(<NormalizePage params={Promise.resolve({ rfqId: 'r1', quoteId: 'q1' })} />);
 
     expect(await screen.findByText(/ai extraction is unavailable/i)).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: /description/i })).toBeInTheDocument();
@@ -226,7 +226,7 @@ describe('NormalizeQuotePage', () => {
   });
 
   it('submits manual source-line create, update, and delete actions', async () => {
-    renderWithProviders(<NormalizePageContent rfqId="r1" quoteId="q1" />);
+    renderWithProviders(<NormalizePage params={Promise.resolve({ rfqId: 'r1', quoteId: 'q1' })} />);
 
     fireEvent.change(await screen.findByRole('textbox', { name: /description/i }), {
       target: { value: 'Manual freight line' },

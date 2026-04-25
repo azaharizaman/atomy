@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Adapters\Ai;
 
+use App\Adapters\Ai\Contracts\ProviderAiTransportInterface;
+use App\Adapters\Ai\Contracts\ProviderSourcingRecommendationClientInterface;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 use Nexus\ProcurementOperations\Contracts\VendorRecommendationLlmInterface;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationRequest;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationScoredCandidate;
-use App\Adapters\Ai\Contracts\ProviderAiTransportInterface;
 
-final readonly class ProviderSourcingRecommendationClient implements VendorRecommendationLlmInterface
+final readonly class ProviderSourcingRecommendationClient implements ProviderSourcingRecommendationClientInterface, VendorRecommendationLlmInterface
 {
     public function __construct(
         private ProviderAiTransportInterface $transport,

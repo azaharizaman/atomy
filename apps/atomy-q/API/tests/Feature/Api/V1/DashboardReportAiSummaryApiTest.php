@@ -86,6 +86,36 @@ final class DashboardReportAiSummaryApiTest extends ApiTestCase
         $response->assertJsonPath('data.ai_summary.feature_key', 'dashboard_ai_summary');
     }
 
+    public function testDashboardKpisGetDoesNotInvokeProviderWhenCacheIsMissing(): void
+    {
+        $this->bindAiRuntimeStatus([
+            'dashboard_ai_summary' => new AiCapabilityStatus(
+                featureKey: 'dashboard_ai_summary',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_INSIGHT_INTELLIGENCE,
+                endpointGroup: AiStatusSchema::ENDPOINT_GROUP_INSIGHT,
+                fallbackUiMode: AiStatusSchema::FALLBACK_UI_MODE_SHOW_MANUAL_CONTINUITY_BANNER,
+                messageKey: 'ai.dashboard_ai_summary.available',
+                status: AiStatusSchema::CAPABILITY_STATUS_AVAILABLE,
+                available: true,
+                reasonCodes: ['provider_available'],
+                operatorCritical: false,
+                diagnostics: ['mode' => AiStatusSchema::MODE_PROVIDER],
+            ),
+        ]);
+
+        $spy = new ProviderInsightClientSpy([
+            'headline' => 'Dashboard should not generate on GET.',
+        ]);
+        $this->app->instance(ProviderInsightClientInterface::class, $spy);
+
+        $response = $this->getJson('/api/v1/dashboard/kpis', $this->authHeaders());
+
+        $response->assertOk();
+        $response->assertJsonPath('data.ai_summary.available', false);
+        $response->assertJsonPath('data.ai_summary.payload', null);
+        self::assertSame(0, $spy->getCallCount());
+    }
+
     public function testReportSpendTrendReturnsProviderSummaryWhenAiIsAvailable(): void
     {
         $this->bindAiRuntimeStatus([
@@ -158,5 +188,59 @@ final class DashboardReportAiSummaryApiTest extends ApiTestCase
         $response->assertJsonPath('data.series', []);
         $response->assertJsonPath('data.ai_summary.available', false);
         $response->assertJsonPath('data.ai_summary.payload', null);
+    }
+
+    public function testReportSpendTrendGetDoesNotInvokeProviderWhenCacheIsMissing(): void
+    {
+        $this->bindAiRuntimeStatus([
+            'reporting_ai_summary' => new AiCapabilityStatus(
+                featureKey: 'reporting_ai_summary',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_INSIGHT_INTELLIGENCE,
+                endpointGroup: AiStatusSchema::ENDPOINT_GROUP_INSIGHT,
+                fallbackUiMode: AiStatusSchema::FALLBACK_UI_MODE_SHOW_MANUAL_CONTINUITY_BANNER,
+                messageKey: 'ai.reporting_ai_summary.available',
+                status: AiStatusSchema::CAPABILITY_STATUS_AVAILABLE,
+                available: true,
+                reasonCodes: ['provider_available'],
+                operatorCritical: false,
+                diagnostics: ['mode' => AiStatusSchema::MODE_PROVIDER],
+            ),
+        ]);
+
+        $spy = new ProviderInsightClientSpy([
+            'headline' => 'Report should not generate on GET.',
+        ]);
+        $this->app->instance(ProviderInsightClientInterface::class, $spy);
+
+        $response = $this->getJson('/api/v1/reports/spend-trend', $this->authHeaders());
+
+        $response->assertOk();
+        $response->assertJsonPath('data.ai_summary.available', false);
+        $response->assertJsonPath('data.ai_summary.payload', null);
+        self::assertSame(0, $spy->getCallCount());
+    }
+}
+
+final class ProviderInsightClientSpy implements ProviderInsightClientInterface
+{
+    private int $callCount = 0;
+
+    /**
+     * @param array<string, mixed> $response
+     */
+    public function __construct(private readonly array $response)
+    {
+    }
+
+    public function summarize(\App\Adapters\Ai\DTOs\InsightSummaryRequest $request): array
+    {
+        $this->callCount++;
+
+        return $this->response;
+    }
+
+    public function getCallCount(): int
+    {
+        return $this->callCount;
     }
 }

@@ -597,6 +597,17 @@ This section is the operator-owned input contract. Without these inputs, provide
 | Incident contacts | who receives alerts for provider degradation or quota exhaustion | required for operational response | Notifier and ops |
 | Data handling approval | confirmation that provider usage, retention, and contractual terms are acceptable for tenant data | required for compliant production operation | management, security, compliance |
 
+### Launch-Readiness Runbook
+
+The launch-readiness plan must turn the operator inputs above into a runnable handoff artifact. That handoff must include:
+
+- a concrete operator checklist with named owners for provider, network, quota, and incident-response responsibilities,
+- a rollback posture that switches the environment to `AI_MODE=off` and preserves manual RFQ continuity,
+- a failure-drill matrix that records expected API and WEB behavior for AI-off, degraded, auth-failure, quota-exhaustion, and timeout-storm scenarios,
+- a repeatable verification matrix with the exact commands used to prove the docs and runtime posture are aligned.
+
+The runbook is the alpha release handoff. If the launch-readiness plan is missing any of those four artifacts, the AI-first release posture is not complete.
+
 ### Required Deployment Variables
 
 Current API code reads the following variables from `apps/atomy-q/API/config/atomy.php`:
@@ -706,6 +717,7 @@ Alpha is not AI-excluded. Alpha includes real provider-backed AI across the full
 - per-tenant AI enablement policy
 - autonomous approvals or awards
 - manual vendor ranking as a first-class replacement for AI recommendation
+- a broad interactive operator console for AI status; if the WEB shell exposes status placement, it must stay view-only by default, be confined to operator/admin routes, render as a collapsible panel no larger than 320px wide or 25% of the viewport height, must not steal focus during workflow navigation, and must not change workflow authority or permissions without an explicit admin-only control surface
 
 ## Launch Gates
 

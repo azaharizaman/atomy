@@ -292,6 +292,8 @@ final class ReportController extends Controller
             if (is_array($cached)) {
                 return $cached;
             }
+
+            return $this->unavailableArtifactEnvelope($featureKey);
         }
 
         if (! $this->aiCapabilityAvailable($featureKey)) {

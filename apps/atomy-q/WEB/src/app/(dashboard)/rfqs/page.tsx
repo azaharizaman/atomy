@@ -10,12 +10,7 @@ import { InlineDetailPanel } from '@/components/ds/Card';
 import { useRfqs, type RfqListItem } from '@/hooks/use-rfqs';
 import { useProjects } from '@/hooks/use-projects';
 import { useFeatureFlags } from '@/hooks/use-feature-flags';
-
-export function getRfqBulkActionLabels(useMocks: boolean): string[] {
-  return useMocks
-    ? ['Close Selected', 'Archive Selected', 'Assign Owner', 'Export Selected']
-    : ['Close Selected', 'Cancel Selected'];
-}
+import { getRfqBulkActionLabels } from './rfq-bulk-actions';
 
 function OwnerCell({ name }: { name: string }) {
   const initials = name

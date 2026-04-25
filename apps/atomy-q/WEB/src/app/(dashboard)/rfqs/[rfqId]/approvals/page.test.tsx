@@ -98,7 +98,7 @@ vi.mock('@/hooks/use-approvals', () => ({
   }),
 }));
 
-import { ApprovalsListPageContent } from './page';
+import ApprovalsListPage from './page';
 
 describe('ApprovalsListPage', () => {
   beforeEach(() => {
@@ -128,7 +128,7 @@ describe('ApprovalsListPage', () => {
   });
 
   it('renders the AI summary aid panel and the selected approval summary payload', async () => {
-    renderWithProviders(<ApprovalsListPageContent rfqId="rfq-1" />);
+    renderWithProviders(<ApprovalsListPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
 
     expect(await screen.findByRole('heading', { name: 'AI summary aid' })).toBeInTheDocument();
     expect(screen.getAllByText('approval-1').length).toBeGreaterThan(0);
@@ -140,7 +140,7 @@ describe('ApprovalsListPage', () => {
   });
 
   it('reveals raw payload and provenance only after toggling view raw', async () => {
-    renderWithProviders(<ApprovalsListPageContent rfqId="rfq-1" />);
+    renderWithProviders(<ApprovalsListPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
 
     fireEvent.click(await screen.findByRole('button', { name: /view raw provider payload/i }));
     fireEvent.click(screen.getByRole('button', { name: /view raw provenance/i }));
@@ -150,7 +150,7 @@ describe('ApprovalsListPage', () => {
   });
 
   it('updates the summary when a different approval row is selected', async () => {
-    renderWithProviders(<ApprovalsListPageContent rfqId="rfq-1" />);
+    renderWithProviders(<ApprovalsListPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
 
     expect((await screen.findAllByText(/approval can proceed with the frozen comparison evidence/i)).length).toBeGreaterThan(0);
 
@@ -178,7 +178,7 @@ describe('ApprovalsListPage', () => {
       error: null,
     });
 
-    renderWithProviders(<ApprovalsListPageContent rfqId="rfq-1" />);
+    renderWithProviders(<ApprovalsListPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
 
     expect(await screen.findByRole('heading', { name: 'AI summary aid' })).toBeInTheDocument();
     expect(screen.getByText('Approval AI summary unavailable')).toBeInTheDocument();

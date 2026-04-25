@@ -3,6 +3,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --font-geist-sans: "Avenir Next", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-geist-mono: "SFMono-Regular", "JetBrains Mono", "IBM Plex Mono", "Fira Code", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 }
 
 /* stylelint-disable at-rule-no-unknown */
