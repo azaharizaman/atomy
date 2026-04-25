@@ -130,18 +130,19 @@ final readonly class DecisionTrailRecorder
         string $quoteSubmissionId,
         string $sourceLineId,
         string $eventType,
+        array $summary = [],
     ): void {
         $this->record(
             tenantId: $tenantId,
             rfqId: $rfqId,
             comparisonRunId: $quoteSubmissionId,
             eventType: $eventType,
-            summary: [
+            summary: array_replace([
                 'origin' => 'manual',
                 'quote_submission_id' => $quoteSubmissionId,
                 'source_line_id' => $sourceLineId,
                 'event_type' => $eventType,
-            ],
+            ], $summary),
         );
     }
 

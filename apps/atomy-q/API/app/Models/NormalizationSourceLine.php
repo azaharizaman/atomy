@@ -99,4 +99,48 @@ class NormalizationSourceLine extends Model implements NormalizationSourceLineRe
     {
         return is_array($this->raw_data) ? $this->raw_data : [];
     }
+
+    /**
+     * @return array{rfq_line_item_id: string|null, quantity: string|null, uom: string|null, unit_price: string|null}
+     */
+    public function effectiveValues(): array
+    {
+        return [
+            'rfq_line_item_id' => $this->rfq_line_item_id !== null ? (string) $this->rfq_line_item_id : null,
+            'quantity' => $this->source_quantity !== null ? number_format((float) $this->source_quantity, 4, '.', '') : null,
+            'uom' => $this->source_uom !== null ? (string) $this->source_uom : null,
+            'unit_price' => $this->source_unit_price !== null ? number_format((float) $this->source_unit_price, 4, '.', '') : null,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function providerProvenance(): ?array
+    {
+        $providerProvenance = $this->getRawData()['provider_provenance'] ?? null;
+
+        return is_array($providerProvenance) ? $providerProvenance : null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function latestOverrideAudit(): ?array
+    {
+        $overrideAudit = $this->getRawData()['override_audit'] ?? null;
+
+        return is_array($overrideAudit) ? $overrideAudit : null;
+    }
+
+    public function hasBuyerOverride(): bool
+    {
+        $override = $this->getRawData()['override'] ?? null;
+
+        return match (true) {
+            $override === null, $override === '', $override === [] => false,
+            is_string($override) => trim($override) !== '',
+            default => true,
+        };
+    }
 }
