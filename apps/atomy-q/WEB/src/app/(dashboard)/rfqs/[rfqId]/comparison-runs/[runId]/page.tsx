@@ -225,7 +225,7 @@ function MatrixClusterCard({
   );
 }
 
-export function ComparisonRunDetailPageContent({ rfqId, runId }: { rfqId: string; runId: string }) {
+function ComparisonRunDetailPageContent({ rfqId, runId }: { rfqId: string; runId: string }) {
   const { data: rfq } = useRfq(rfqId);
   const aiStatus = useAiStatus();
   const runQuery = useComparisonRun(runId, { rfqId });

@@ -5,21 +5,25 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Adapters\Ai\AiRuntimeStatusAdapter;
+use App\Adapters\Ai\AtomyAiCapabilityCatalog;
 use App\Adapters\Ai\ConfiguredAiEndpointRegistry;
 use App\Adapters\Ai\ConfiguredAiHealthProbe;
-use App\Adapters\Ai\AtomyAiCapabilityCatalog;
-use App\Services\Ai\AiOperationalAlertPublisher;
-use App\Adapters\Ai\Contracts\ProviderGovernanceClientInterface;
 use App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface;
-use App\Adapters\Ai\Contracts\ProviderInsightClientInterface;
-use App\Adapters\Ai\ProviderSourcingRecommendationClient;
 use App\Adapters\Ai\Contracts\AiEndpointRegistryInterface;
-use App\Adapters\Ai\Contracts\ProviderAiTransportInterface;
 use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
-use App\Adapters\Ai\ProviderGovernanceClient;
-use App\Adapters\Ai\ProviderComparisonAwardClient;
-use App\Adapters\Ai\ProviderInsightClient;
+use App\Adapters\Ai\Contracts\ProviderAiTransportInterface;
+use App\Adapters\Ai\Contracts\ProviderDocumentIntelligenceClientInterface;
+use App\Adapters\Ai\Contracts\ProviderGovernanceClientInterface;
+use App\Adapters\Ai\Contracts\ProviderInsightClientInterface;
+use App\Adapters\Ai\Contracts\ProviderNormalizationClientInterface;
+use App\Adapters\Ai\Contracts\ProviderSourcingRecommendationClientInterface;
 use App\Adapters\Ai\ProviderAiTransport;
+use App\Adapters\Ai\ProviderComparisonAwardClient;
+use App\Adapters\Ai\ProviderDocumentIntelligenceClient;
+use App\Adapters\Ai\ProviderGovernanceClient;
+use App\Adapters\Ai\ProviderInsightClient;
+use App\Adapters\Ai\ProviderNormalizationClient;
+use App\Adapters\Ai\ProviderSourcingRecommendationClient;
 use App\Http\Idempotency\IdempotencyReplayResponseFactory;
 use App\Contracts\JwtServiceInterface;
 use App\Contracts\MfaChallengeStoreInterface;
@@ -38,6 +42,8 @@ use App\Services\Identity\AtomyUserAuthenticator;
 use App\Services\Identity\AtomyUserPersist;
 use App\Services\Identity\AtomyUserQuery;
 use App\Services\Auth\PasswordResetService;
+use App\Services\Ai\AiOperationalAlertPublisher;
+use App\Services\Ai\Contracts\AiOperationalAlertPublisherInterface;
 use App\Services\JwtService;
 use App\Services\Project\AtomyIncompleteTaskCount;
 use App\Services\Project\AtomyProjectPersist;
@@ -198,9 +204,16 @@ use Nexus\IntelligenceOperations\Contracts\AiCapabilityCatalogInterface;
 use Nexus\IntelligenceOperations\Contracts\AiStatusCoordinatorInterface;
 use Nexus\IntelligenceOperations\Coordinators\AiStatusCoordinator;
 use Nexus\Notifier\Contracts\NotificationManagerInterface;
+use Nexus\Outbox\Contracts\OutboxClockInterface;
+use Nexus\Outbox\Contracts\OutboxPersistInterface;
+use Nexus\Outbox\Contracts\OutboxQueryInterface;
 use Nexus\Outbox\Contracts\OutboxServiceInterface;
-use Psr\Log\LoggerInterface;
+use Nexus\Outbox\Contracts\OutboxStoreInterface;
+use Nexus\Outbox\Services\InMemoryOutboxStore;
+use Nexus\Outbox\Services\OutboxService;
+use Nexus\Outbox\Services\SystemClock as OutboxSystemClock;
 use Nexus\MachineLearning\Contracts\AiHealthProbeInterface;
+use Psr\Log\LoggerInterface;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -220,6 +233,21 @@ class AppServiceProvider extends ServiceProvider
             VendorScorerInterface::class,
             static fn ($app): VendorScorerInterface => new DeterministicVendorScorer($app->make(ClockInterface::class)),
         );
+        $this->app->singleton(ProviderDocumentIntelligenceClient::class);
+        $this->app->singleton(
+            ProviderDocumentIntelligenceClientInterface::class,
+            static fn ($app): ProviderDocumentIntelligenceClientInterface => $app->make(ProviderDocumentIntelligenceClient::class),
+        );
+        $this->app->singleton(ProviderNormalizationClient::class);
+        $this->app->singleton(
+            ProviderNormalizationClientInterface::class,
+            static fn ($app): ProviderNormalizationClientInterface => $app->make(ProviderNormalizationClient::class),
+        );
+        $this->app->singleton(ProviderSourcingRecommendationClient::class);
+        $this->app->singleton(
+            ProviderSourcingRecommendationClientInterface::class,
+            static fn ($app): ProviderSourcingRecommendationClientInterface => $app->make(ProviderSourcingRecommendationClient::class),
+        );
         $this->app->singleton(VendorRecommendationLlmInterface::class, ProviderSourcingRecommendationClient::class);
         $this->app->singleton(ComparisonAwardAiClientInterface::class, ProviderComparisonAwardClient::class);
         $this->app->singleton(ProviderInsightClientInterface::class, ProviderInsightClient::class);
@@ -236,11 +264,22 @@ class AppServiceProvider extends ServiceProvider
             return new ConfiguredAiHealthProbe($app->make(HttpFactory::class));
         });
         $this->app->singleton(AiRuntimeStatusInterface::class, AiRuntimeStatusAdapter::class);
+        $this->app->singleton(OutboxStoreInterface::class, InMemoryOutboxStore::class);
+        $this->app->singleton(OutboxQueryInterface::class, static fn ($app): OutboxQueryInterface => $app->make(OutboxStoreInterface::class));
+        $this->app->singleton(OutboxPersistInterface::class, static fn ($app): OutboxPersistInterface => $app->make(OutboxStoreInterface::class));
+        $this->app->singleton(OutboxClockInterface::class, OutboxSystemClock::class);
+        $this->app->singleton(OutboxServiceInterface::class, static function ($app): OutboxServiceInterface {
+            return new OutboxService(
+                $app->make(OutboxQueryInterface::class),
+                $app->make(OutboxPersistInterface::class),
+                $app->make(OutboxClockInterface::class),
+            );
+        });
         $this->app->singleton(AiOperationalAlertPublisher::class, static function ($app): AiOperationalAlertPublisher {
             return new AiOperationalAlertPublisher(
                 clock: $app->make(ClockInterface::class),
                 cache: $app->make(CacheFactory::class)->store(),
-                logs: $app->make(LogManager::class),
+                logger: $app->make(LogManager::class)->channel((string) config('atomy.ai.operations.log_channel', 'stack')),
                 notificationManager: $app->bound(NotificationManagerInterface::class)
                     ? $app->make(NotificationManagerInterface::class)
                     : null,
@@ -249,6 +288,10 @@ class AppServiceProvider extends ServiceProvider
                     : null,
             );
         });
+        $this->app->singleton(
+            AiOperationalAlertPublisherInterface::class,
+            static fn ($app): AiOperationalAlertPublisherInterface => $app->make(AiOperationalAlertPublisher::class),
+        );
 
         // Nexus ApprovalOperations (operational approvals — distinct from RFQ quote flows).
         $this->app->singleton(AtomyApprovalPolicyRegistry::class);

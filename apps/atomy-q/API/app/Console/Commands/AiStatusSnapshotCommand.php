@@ -7,7 +7,7 @@ namespace App\Console\Commands;
 use JsonException;
 
 use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
-use App\Services\Ai\AiOperationalAlertPublisher;
+use App\Services\Ai\Contracts\AiOperationalAlertPublisherInterface;
 use Illuminate\Console\Command;
 
 final class AiStatusSnapshotCommand extends Command
@@ -19,8 +19,8 @@ final class AiStatusSnapshotCommand extends Command
     protected $description = 'Capture the current AI runtime snapshot and optionally publish operational alerts.';
 
     public function __construct(
-        private readonly AiRuntimeStatusInterface $runtimeStatus,
-        private readonly AiOperationalAlertPublisher $alertPublisher,
+        readonly AiRuntimeStatusInterface $runtimeStatus,
+        readonly AiOperationalAlertPublisherInterface $alertPublisher,
     ) {
         parent::__construct();
     }

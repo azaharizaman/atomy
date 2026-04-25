@@ -15,14 +15,14 @@ vi.mock('@/hooks/use-create-vendor', () => ({
   useCreateVendor: (...args: unknown[]) => mockUseCreateVendor(...args),
 }));
 
-import { VendorsPageContent } from './page';
+import VendorsPage from './page';
 
 describe('VendorsPage', () => {
   it('renders loading state while vendors are being fetched', () => {
     mockUseVendors.mockReturnValue({ data: undefined, isLoading: true, isError: false, error: null });
     mockUseCreateVendor.mockReturnValue({ mutate: vi.fn(), isPending: false, isError: false, error: null });
 
-    renderWithProviders(<VendorsPageContent />);
+    renderWithProviders(<VendorsPage />);
 
     expect(screen.getAllByText(/loading vendors/i).length).toBeGreaterThan(0);
     expect(screen.queryByText(/no vendors found/i)).not.toBeInTheDocument();
@@ -37,7 +37,7 @@ describe('VendorsPage', () => {
     });
     mockUseCreateVendor.mockReturnValue({ mutate: vi.fn(), isPending: false, isError: false, error: null });
 
-    renderWithProviders(<VendorsPageContent />);
+    renderWithProviders(<VendorsPage />);
 
     expect(screen.getByText(/could not load vendors/i)).toBeInTheDocument();
     expect(screen.getByText(/live vendors unavailable/i)).toBeInTheDocument();
@@ -52,7 +52,7 @@ describe('VendorsPage', () => {
     });
     mockUseCreateVendor.mockReturnValue({ mutate: vi.fn(), isPending: false, isError: false, error: null });
 
-    renderWithProviders(<VendorsPageContent />);
+    renderWithProviders(<VendorsPage />);
 
     expect(screen.getByText(/no vendors found/i)).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /create vendor/i }).length).toBeGreaterThan(0);
@@ -95,7 +95,7 @@ describe('VendorsPage', () => {
     });
     mockUseCreateVendor.mockReturnValue({ mutate: createVendor, isPending: false, isError: false, error: null });
 
-    renderWithProviders(<VendorsPageContent />);
+    renderWithProviders(<VendorsPage />);
 
     expect(screen.getByText('Northwind')).toBeInTheDocument();
     expect(screen.getByRole('status', { name: 'Approved' })).toBeInTheDocument();
@@ -135,7 +135,7 @@ describe('VendorsPage', () => {
     });
     mockUseCreateVendor.mockReturnValue({ mutate: createVendor, isPending: false, isError: false, error: null });
 
-    renderWithProviders(<VendorsPageContent />);
+    renderWithProviders(<VendorsPage />);
 
     fireEvent.click(screen.getAllByRole('button', { name: /create vendor/i })[0]);
     fireEvent.change(screen.getByLabelText(/legal name/i), { target: { value: 'Acme Manufacturing' } });

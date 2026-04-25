@@ -1,6 +1,6 @@
 # IntelligenceOperations Implementation Summary
 
-# 2026-04-24 AI Launch Readiness Documentation Alignment
+## 2026-04-24 AI Launch Readiness Documentation Alignment
 
 - The launch-readiness plan now cross-links the existing `AiStatusCoordinator` / `AiStatusSnapshot` runtime contract into the operator handoff docs, making the orchestrator's status aggregation role discoverable from the docs-led release path.
 - The new runbook text records the expected AI-off, degraded, auth-failure, quota, and timeout drill outcomes without changing orchestrator code.

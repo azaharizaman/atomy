@@ -81,8 +81,8 @@ export function MainSidebarNav({
   rfqCounts,
 }: MainSidebarNavProps) {
   const visibleItems = React.useMemo(
-    () => getVisibleMainNavItems(alphaMode, featureFlagsLoading, featureFlags),
-    [alphaMode, featureFlagsLoading, featureFlags],
+    () => getVisibleMainNavItems(),
+    [],
   );
   const visibleItemById = React.useMemo(
     () => new Map(visibleItems.map((item) => [item.id, item])),

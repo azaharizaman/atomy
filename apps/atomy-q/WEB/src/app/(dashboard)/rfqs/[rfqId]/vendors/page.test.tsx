@@ -1,5 +1,6 @@
+import { Suspense } from 'react';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
 
 const mockUseRfqVendors = vi.fn();
@@ -60,7 +61,17 @@ vi.mock('@/hooks/use-ai-status', () => ({
   useAiStatus: () => mockUseAiStatus(),
 }));
 
-import { RfqVendorsPageContent } from './page';
+import RfqVendorsPage from './page';
+
+async function renderRfqVendorsPage() {
+  await act(async () => {
+    renderWithProviders(
+      <Suspense fallback={null}>
+        <RfqVendorsPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
+      </Suspense>,
+    );
+  });
+}
 
 describe('RfqVendorsPage', () => {
   beforeEach(() => {
@@ -132,7 +143,7 @@ describe('RfqVendorsPage', () => {
       isError: true,
       error: new Error('Live vendor roster unavailable'),
     });
-    renderWithProviders(<RfqVendorsPageContent rfqId="rfq-1" />);
+    await renderRfqVendorsPage();
 
     expect(await screen.findByText(/could not load invited vendors/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Vendor roster unavailable' })).toBeInTheDocument();
@@ -150,7 +161,7 @@ describe('RfqVendorsPage', () => {
       error: null,
     });
 
-    renderWithProviders(<RfqVendorsPageContent rfqId="rfq-1" />);
+    await renderRfqVendorsPage();
 
     expect(await screen.findByRole('heading', { name: /approved vendor selection/i })).toBeInTheDocument();
     expect(await screen.findByRole('heading', { level: 1, name: /invited vendors/i })).toBeInTheDocument();
@@ -205,7 +216,7 @@ describe('RfqVendorsPage', () => {
       error: null,
     });
 
-    renderWithProviders(<RfqVendorsPageContent rfqId="rfq-1" />);
+    await renderRfqVendorsPage();
 
     fireEvent.click(await screen.findByRole('button', { name: /invite vendors/i }));
 
@@ -265,7 +276,7 @@ describe('RfqVendorsPage', () => {
       error: null,
     });
 
-    renderWithProviders(<RfqVendorsPageContent rfqId="rfq-1" />);
+    await renderRfqVendorsPage();
 
     expect(await screen.findByText(/ai recommendation is unavailable/i)).toBeInTheDocument();
     expect(screen.getByText(/you can still manually select vendors/i)).toBeInTheDocument();

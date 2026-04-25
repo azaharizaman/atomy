@@ -41,16 +41,16 @@ final readonly class AiOperationalAlertRecipient implements NotifiableInterface
 
     public function getNotificationLocale(): string
     {
-        return 'en';
+        return (string) (config('operational_alert.locale') ?? config('app.locale', 'en'));
     }
 
     public function getNotificationTimezone(): string
     {
-        return 'UTC';
+        return (string) (config('operational_alert.timezone') ?? config('app.timezone', 'UTC'));
     }
 
     public function getNotificationIdentifier(): string
     {
-        return 'ai-ops:' . $this->email;
+        return 'ai-ops:' . substr(sha1($this->email), 0, 16);
     }
 }

@@ -1,6 +1,6 @@
 # Implementation Summary - Atomy-Q Backend API
 
-# 2026-04-24 AI Launch Readiness Runbook And Operator Handoff
+## 2026-04-24 AI Launch Readiness Runbook And Operator Handoff
 
 - Updated the AI-first launch docs to make the operator handoff concrete in:
   - `docs/superpowers/specs/2026-04-23-atomy-q-global-ai-fallback-design.md`

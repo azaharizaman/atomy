@@ -55,7 +55,7 @@ function getBadgeVariant(status: VendorStatusValue) {
   return { status: 'pending' as const, label: formatVendorStatus(status) };
 }
 
-export function VendorDetailPageContent({ vendorId }: { vendorId: string }) {
+function VendorDetailPageContent({ vendorId }: { vendorId: string }) {
   const aiStatus = useAiStatus();
   const vendorQuery = useVendor(vendorId);
   const governanceQuery = useVendorGovernance(vendorId);

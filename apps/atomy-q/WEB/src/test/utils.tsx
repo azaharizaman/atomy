@@ -1,4 +1,5 @@
 import React from 'react';
+import { act } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, type RenderOptions } from '@testing-library/react';
 
@@ -31,3 +32,15 @@ export function renderWithProviders(ui: React.ReactElement, options?: Omit<Rende
   return { queryClient, ...render(ui, { wrapper: Wrapper, ...options }) };
 }
 
+export async function renderPageWithProviders(
+  ui: React.ReactElement,
+  options?: Omit<RenderOptions, 'wrapper'>,
+) {
+  const result = renderWithProviders(<React.Suspense fallback={null}>{ui}</React.Suspense>, options);
+
+  await act(async () => {
+    await Promise.resolve();
+  });
+
+  return result;
+}

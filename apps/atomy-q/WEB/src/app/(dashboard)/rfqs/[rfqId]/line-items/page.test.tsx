@@ -37,7 +37,7 @@ vi.mock('@tanstack/react-query', async () => {
   };
 });
 
-import { RfqLineItemsPageContent } from './page';
+import RfqLineItemsPage from './page';
 
 describe('RfqLineItemsPage', () => {
   beforeEach(() => {
@@ -45,7 +45,7 @@ describe('RfqLineItemsPage', () => {
   });
 
   it('shows add line item action for draft RFQs in header and opens the drawer', async () => {
-    renderWithProviders(<RfqLineItemsPageContent rfqId="rfq-new-1" />);
+    renderWithProviders(<RfqLineItemsPage params={Promise.resolve({ rfqId: 'rfq-new-1' })} />);
 
     const headerButton = screen.getAllByRole('button', { name: /add line item/i })[0];
     expect(headerButton).toBeInTheDocument();
@@ -58,7 +58,7 @@ describe('RfqLineItemsPage', () => {
   });
 
   it('shows add line item in empty state for draft RFQs and opens the drawer', async () => {
-    renderWithProviders(<RfqLineItemsPageContent rfqId="rfq-new-1" />);
+    renderWithProviders(<RfqLineItemsPage params={Promise.resolve({ rfqId: 'rfq-new-1' })} />);
 
     const emptyStateButton = screen.getAllByRole('button', { name: /add line item/i })[1];
     expect(emptyStateButton).toBeInTheDocument();

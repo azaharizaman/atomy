@@ -6,6 +6,7 @@ namespace App\Services\Ai;
 
 use InvalidArgumentException;
 
+use App\Services\Ai\Exceptions\UnsupportedNotificationChannelException;
 use Nexus\Notifier\Services\AbstractNotification;
 
 final readonly class AiOperationalAlertNotification extends AbstractNotification
@@ -76,10 +77,7 @@ final readonly class AiOperationalAlertNotification extends AbstractNotification
      */
     public function toPush(): array
     {
-        return [
-            'title' => '',
-            'body' => '',
-        ];
+        throw new UnsupportedNotificationChannelException('AI operational alerts do not support push delivery.');
     }
 
     /**
@@ -87,10 +85,7 @@ final readonly class AiOperationalAlertNotification extends AbstractNotification
      */
     public function toInApp(): array
     {
-        return [
-            'title' => '',
-            'message' => '',
-        ];
+        throw new UnsupportedNotificationChannelException('AI operational alerts do not support in-app delivery.');
     }
 
     private function requireNonEmpty(string $value, string $field): string

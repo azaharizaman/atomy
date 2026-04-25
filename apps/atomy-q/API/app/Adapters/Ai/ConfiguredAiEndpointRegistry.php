@@ -55,8 +55,8 @@ final readonly class ConfiguredAiEndpointRegistry implements AiEndpointRegistryI
         $provider = $this->providerSection();
         $defaultAuthToken = trim((string) ($provider['default_auth_token'] ?? ''));
         $defaultTimeout = (int) ($provider['default_timeout_seconds'] ?? 10);
-        $defaultRetryAttempts = (int) ($provider['default_retry_attempts'] ?? 1);
-        $defaultRetryBackoffMs = (int) ($provider['default_retry_backoff_ms'] ?? 0);
+        $defaultRetryAttempts = (int) (($provider['default_retry_attempts'] ?? 0) ?: 1);
+        $defaultRetryBackoffMs = (int) (($provider['default_retry_backoff_ms'] ?? 0) ?: 0);
         $timeoutSeconds = (int) ($endpoint['timeout_seconds'] ?? $defaultTimeout);
         $authToken = trim((string) ($endpoint['auth_token'] ?? ''));
 

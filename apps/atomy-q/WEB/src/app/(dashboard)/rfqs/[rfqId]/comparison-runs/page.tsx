@@ -13,7 +13,7 @@ import { useComparisonRuns, type ComparisonRunRow } from '@/hooks/use-comparison
 import { Button } from '@/components/ds/Button';
 import { AlertTriangle, Layers3, Plus } from 'lucide-react';
 
-export function ComparisonRunsListContent({ rfqId }: { rfqId: string }) {
+function ComparisonRunsListContent({ rfqId }: { rfqId: string }) {
   const router = useRouter();
   const rfqQuery = useRfq(rfqId);
   const runsQuery = useComparisonRuns(rfqId);

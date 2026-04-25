@@ -1,6 +1,6 @@
 # Implementation Summary
 
-# 2026-04-24 AI Launch Readiness Runbook And Operator Handoff
+## 2026-04-24 AI Launch Readiness Runbook And Operator Handoff
 
 - Updated the WEB README to point operators at the AI launch-readiness design and plan docs, the shared AI status contract, and the documentation-led verification entry point.
 - Clarified in the docs that WEB must keep the manual RFQ path visible when AI is off or degraded and should scope unavailable messaging to the affected AI-powered surfaces.

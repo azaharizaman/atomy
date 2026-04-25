@@ -62,6 +62,7 @@ return [
                 'AI_DEFAULT_TIMEOUT_SECONDS',
                 (int) env('AI_TIMEOUT_SECONDS', 10),
             ),
+            // Total attempts, not retries: 1 = no retries, 2 = 1 retry, capped by ProviderAiTransport::MAX_RETRY_ATTEMPTS.
             'default_retry_attempts' => (int) env('AI_DEFAULT_RETRY_ATTEMPTS', 1),
             'default_retry_backoff_ms' => (int) env('AI_DEFAULT_RETRY_BACKOFF_MS', 0),
         ],

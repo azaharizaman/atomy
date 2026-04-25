@@ -12,8 +12,11 @@ use Nexus\IntelligenceOperations\DTOs\AiStatusSnapshot;
 use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
 use App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface;
 use App\Adapters\Ai\Contracts\ProviderAiTransportInterface;
+use App\Adapters\Ai\Contracts\ProviderDocumentIntelligenceClientInterface;
 use App\Adapters\Ai\Contracts\ProviderGovernanceClientInterface;
 use App\Adapters\Ai\Contracts\ProviderInsightClientInterface;
+use App\Adapters\Ai\Contracts\ProviderNormalizationClientInterface;
+use App\Adapters\Ai\Contracts\ProviderSourcingRecommendationClientInterface;
 use App\Adapters\Ai\DTOs\ApprovalSummaryRequest;
 use App\Adapters\Ai\DTOs\ApprovalSummaryResponse;
 use App\Adapters\Ai\DTOs\AwardDebriefDraftRequest;
@@ -27,9 +30,10 @@ use App\Adapters\Ai\DTOs\InsightSummaryRequest;
 use App\Adapters\Ai\ProviderDocumentIntelligenceClient;
 use App\Adapters\Ai\ProviderNormalizationClient;
 use App\Adapters\Ai\ProviderSourcingRecommendationClient;
-use App\Services\Ai\AiOperationalAlertPublisher;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Log\LogManager;
+use App\Services\Ai\AiOperationalAlertPublisher;
+use App\Services\Ai\Contracts\AiOperationalAlertPublisherInterface;
 use Tests\TestCase;
 
 final class AiConsoleCommandsTest extends TestCase
@@ -85,8 +89,12 @@ final class AiConsoleCommandsTest extends TestCase
         $this->app->instance(AiOperationalAlertPublisher::class, new AiOperationalAlertPublisher(
             clock: $clock,
             cache: $this->app->make(CacheFactory::class)->store(),
-            logs: $this->app->make(LogManager::class),
+            logger: $this->app->make(LogManager::class)->channel('stack'),
         ));
+        $this->app->instance(
+            AiOperationalAlertPublisherInterface::class,
+            $this->app->make(AiOperationalAlertPublisher::class),
+        );
 
         $this->artisan('atomy:ai-status --json')
             ->assertExitCode(0);
@@ -109,8 +117,14 @@ final class AiConsoleCommandsTest extends TestCase
             ->willReturn(['ok' => true]);
 
         $this->app->instance(ProviderDocumentIntelligenceClient::class, new ProviderDocumentIntelligenceClient($transport));
+        $this->app->instance(ProviderDocumentIntelligenceClientInterface::class, $this->app->make(ProviderDocumentIntelligenceClient::class));
         $this->app->instance(ProviderNormalizationClient::class, new ProviderNormalizationClient($transport));
+        $this->app->instance(ProviderNormalizationClientInterface::class, $this->app->make(ProviderNormalizationClient::class));
         $this->app->instance(ProviderSourcingRecommendationClient::class, new ProviderSourcingRecommendationClient($transport));
+        $this->app->instance(
+            ProviderSourcingRecommendationClientInterface::class,
+            $this->app->make(ProviderSourcingRecommendationClient::class),
+        );
         $this->app->instance(ProviderInsightClientInterface::class, new readonly class implements ProviderInsightClientInterface {
             public function summarize(InsightSummaryRequest $request): array
             {
@@ -147,6 +161,10 @@ final class AiConsoleCommandsTest extends TestCase
 
         $this->artisan('atomy:ai-verify-contracts')
             ->expectsOutputToContain('Verified provider contract for document')
+            ->expectsOutputToContain('Verified provider contract for normalization')
+            ->expectsOutputToContain('Verified provider contract for sourcing_recommendation')
+            ->expectsOutputToContain('Verified provider contract for comparison_award')
+            ->expectsOutputToContain('Verified provider contract for insight')
             ->expectsOutputToContain('Verified provider contract for governance')
             ->assertExitCode(0);
     }

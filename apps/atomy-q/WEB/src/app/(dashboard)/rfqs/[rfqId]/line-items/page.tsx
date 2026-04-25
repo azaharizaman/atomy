@@ -28,7 +28,7 @@ function formatMoney(amount: number, currency: string): string {
   }
 }
 
-export function RfqLineItemsPageContent({ rfqId }: { rfqId: string }) {
+function RfqLineItemsPageContent({ rfqId }: { rfqId: string }) {
   const queryClient = useQueryClient();
   const { data: rfq, isError: rfqIsError, error: rfqError } = useRfq(rfqId);
   const { data: lineItems = [], isLoading: lineItemsIsLoading, isError: lineItemsIsError, error: lineItemsError } = useRfqLineItems(rfqId);

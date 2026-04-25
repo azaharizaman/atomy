@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace App\Adapters\Ai;
 
 use App\Adapters\Ai\Contracts\ProviderAiTransportInterface;
+use App\Adapters\Ai\Contracts\ProviderNormalizationClientInterface;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 
-final readonly class ProviderNormalizationClient
+final readonly class ProviderNormalizationClient implements ProviderNormalizationClientInterface
 {
     public function __construct(
         private ProviderAiTransportInterface $transport,

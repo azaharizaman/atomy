@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Adapters\Ai;
 
+use DomainException;
 use App\Adapters\Ai\Contracts\AiEndpointRegistryInterface;
 use App\Adapters\Ai\Contracts\ProviderAiTransportInterface;
 use App\Adapters\Ai\Exceptions\AiTransportFailedException;
@@ -55,14 +56,17 @@ final readonly class ProviderAiTransport implements ProviderAiTransportInterface
         $startedAt = hrtime(true);
         $response = null;
         $lastReasonCode = 'provider_unavailable';
+        $attemptsUsed = 0;
 
+        // retry_attempts is total attempts, not retries: 1 = no retries, 2 = 1 retry, etc.
         for ($attempt = 1; $attempt <= $retryAttempts; $attempt++) {
+            $attemptsUsed = $attempt;
             try {
                 $response = $request->post($endpointConfig->endpointUri, $payload);
             } catch (ConnectionException $exception) {
                 $lastReasonCode = 'provider_timeout';
                 if ($attempt < $retryAttempts) {
-                    usleep($retryBackoffMs * 1000);
+                    usleep($this->retryDelayMs(attempt: $attempt, retryBackoffMs: $retryBackoffMs) * 1000);
                     continue;
                 }
 
@@ -93,7 +97,7 @@ final readonly class ProviderAiTransport implements ProviderAiTransportInterface
 
             $lastReasonCode = $this->reasonCodeForResponse($response);
             if ($attempt < $retryAttempts && $this->shouldRetry($response)) {
-                usleep($retryBackoffMs * 1000);
+                usleep($this->retryDelayMs(attempt: $attempt, retryBackoffMs: $retryBackoffMs, response: $response) * 1000);
                 continue;
             }
 
@@ -109,7 +113,7 @@ final readonly class ProviderAiTransport implements ProviderAiTransportInterface
                 $lastReasonCode,
                 $this->latencyMs($startedAt),
                 [
-                    'attempts' => $retryAttempts,
+                    'attempts' => $attemptsUsed,
                     'http_status' => $response?->status(),
                 ],
             );
@@ -144,6 +148,7 @@ final readonly class ProviderAiTransport implements ProviderAiTransportInterface
             [
                 'http_status' => $response->status(),
                 'retry_attempts' => $retryAttempts,
+                'attempts' => $attemptsUsed,
             ],
         );
 
@@ -154,6 +159,49 @@ final readonly class ProviderAiTransport implements ProviderAiTransportInterface
     private function shouldRetry(Response $response): bool
     {
         return in_array($response->status(), [408, 425, 429, 500, 502, 503, 504], true);
+    }
+
+    private function retryDelayMs(int $attempt, int $retryBackoffMs, ?Response $response = null): int
+    {
+        $retryAfterMs = $this->retryAfterMs($response);
+        if ($retryAfterMs !== null) {
+            return $retryAfterMs;
+        }
+
+        if ($retryBackoffMs <= 0) {
+            return 0;
+        }
+
+        $exponentialDelay = $retryBackoffMs * (2 ** max(0, $attempt - 1));
+        $jitter = min(250, (int) floor($retryBackoffMs / 2));
+
+        return min(self::MAX_RETRY_BACKOFF_MS, $exponentialDelay + $jitter);
+    }
+
+    private function retryAfterMs(?Response $response): ?int
+    {
+        if (! $response instanceof Response || $response->status() !== 429) {
+            return null;
+        }
+
+        $retryAfter = trim((string) $response->header('Retry-After', ''));
+        if ($retryAfter === '') {
+            return null;
+        }
+
+        if (ctype_digit($retryAfter)) {
+            return min(self::MAX_RETRY_BACKOFF_MS, max(0, (int) $retryAfter * 1000));
+        }
+
+        $retryAt = strtotime($retryAfter);
+        if ($retryAt === false) {
+            return null;
+        }
+
+        return min(
+            self::MAX_RETRY_BACKOFF_MS,
+            max(0, ($retryAt - time()) * 1000),
+        );
     }
 
     private function reasonCodeForResponse(Response $response): string
@@ -202,6 +250,18 @@ final readonly class ProviderAiTransport implements ProviderAiTransportInterface
             return;
         }
 
+        $isOperatorActionable = in_array($reasonCode, [
+            'provider_auth_failed',
+            'provider_retry_exhausted',
+            'provider_invalid_payload',
+        ], true) || ($reasonCode === 'provider_timeout' && (int) ($context['attempts'] ?? 0) > 1);
+
+        if ($isOperatorActionable) {
+            $logger->error('AI provider invocation failed.', $context);
+
+            return;
+        }
+
         $logger->warning('AI provider invocation failed.', $context);
     }
 
@@ -222,7 +282,8 @@ final readonly class ProviderAiTransport implements ProviderAiTransportInterface
                 AiStatusSchema::ENDPOINT_GROUP_SOURCING_RECOMMENDATION => AiStatusSchema::CAPABILITY_GROUP_SOURCING_RECOMMENDATION_INTELLIGENCE,
                 AiStatusSchema::ENDPOINT_GROUP_INSIGHT => AiStatusSchema::CAPABILITY_GROUP_INSIGHT_INTELLIGENCE,
                 AiStatusSchema::ENDPOINT_GROUP_GOVERNANCE => AiStatusSchema::CAPABILITY_GROUP_GOVERNANCE_INTELLIGENCE,
-                default => AiStatusSchema::CAPABILITY_GROUP_COMPARISON_INTELLIGENCE,
+                AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD => AiStatusSchema::CAPABILITY_GROUP_COMPARISON_INTELLIGENCE,
+                default => throw new DomainException(sprintf('Unsupported AI endpoint group [%s].', $endpointGroup)),
             },
         };
     }
@@ -249,7 +310,8 @@ final readonly class ProviderAiTransport implements ProviderAiTransportInterface
                 AiStatusSchema::ENDPOINT_GROUP_SOURCING_RECOMMENDATION => 'vendor_ai_ranking',
                 AiStatusSchema::ENDPOINT_GROUP_INSIGHT => 'dashboard_ai_summary',
                 AiStatusSchema::ENDPOINT_GROUP_GOVERNANCE => 'governance_ai_narrative',
-                default => 'comparison_ai_overlay',
+                AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD => 'comparison_ai_overlay',
+                default => throw new DomainException(sprintf('Unsupported AI endpoint group [%s].', $endpointGroup)),
             },
         };
     }

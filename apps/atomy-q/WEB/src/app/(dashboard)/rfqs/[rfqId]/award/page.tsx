@@ -52,7 +52,7 @@ function awardBadge(status: string | null | undefined): { status: 'pending' | 'a
   return { status: 'pending', label: 'Pending' };
 }
 
-export function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
+function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
   const router = useRouter();
   const rfqQuery = useRfq(rfqId);
   const rfq = rfqQuery.data;

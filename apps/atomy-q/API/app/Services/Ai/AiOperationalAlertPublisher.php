@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Ai;
 
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
-use Illuminate\Log\LogManager;
+use App\Services\Ai\Contracts\AiOperationalAlertPublisherInterface;
 use Nexus\Common\Contracts\ClockInterface;
 use Nexus\IntelligenceOperations\DTOs\AiCapabilityStatus;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
@@ -16,14 +16,15 @@ use Nexus\Outbox\Domain\OutboxEnqueueCommand;
 use Nexus\Outbox\ValueObjects\DedupKey;
 use Nexus\Outbox\ValueObjects\EventTypeRef;
 use Nexus\Outbox\ValueObjects\TenantId;
+use Psr\Log\LoggerInterface;
 use Throwable;
 
-final readonly class AiOperationalAlertPublisher
+final readonly class AiOperationalAlertPublisher implements AiOperationalAlertPublisherInterface
 {
     public function __construct(
         private ClockInterface $clock,
         private CacheRepository $cache,
-        private LogManager $logs,
+        private LoggerInterface $logger,
         private ?NotificationManagerInterface $notificationManager = null,
         private ?OutboxServiceInterface $outbox = null,
     ) {
@@ -38,6 +39,15 @@ final readonly class AiOperationalAlertPublisher
 
         foreach ($snapshot->capabilityStatuses as $capabilityStatus) {
             if (! $capabilityStatus instanceof AiCapabilityStatus) {
+                continue;
+            }
+
+            if ($capabilityStatus->status === AiStatusSchema::CAPABILITY_STATUS_AVAILABLE) {
+                $clearedContext = $this->publishClearedAlert($snapshot, $capabilityStatus);
+                if ($clearedContext !== null) {
+                    $published[] = $clearedContext;
+                }
+
                 continue;
             }
 
@@ -76,7 +86,7 @@ final readonly class AiOperationalAlertPublisher
             }
 
             $context = $this->alertLogContext($snapshot, $capabilityStatus, $channels);
-            $this->logger()->warning('AI capability alert published.', $context);
+            $this->logger->warning('AI capability alert published.', $context);
 
             $published[] = $context;
         }
@@ -87,10 +97,12 @@ final readonly class AiOperationalAlertPublisher
     private function shouldPublish(AiCapabilityStatus $status): bool
     {
         $cooldownSeconds = max(60, (int) config('atomy.ai.operations.alert_cooldown_seconds', 300));
+        $reasonCodes = $status->reasonCodes;
+        sort($reasonCodes);
         $cacheKey = 'ai:alert:' . sha1(json_encode([
             'feature_key' => $status->featureKey,
             'status' => $status->status,
-            'reason_codes' => $status->reasonCodes,
+            'reason_codes' => array_values($reasonCodes),
         ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: $status->featureKey . ':' . $status->status);
 
         if ($this->cache->has($cacheKey)) {
@@ -98,8 +110,50 @@ final readonly class AiOperationalAlertPublisher
         }
 
         $this->cache->put($cacheKey, $this->clock->now()->format(DATE_ATOM), $cooldownSeconds);
+        $this->cache->forever($this->activeCacheKey($status->featureKey), true);
 
         return true;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function publishClearedAlert(AiStatusSnapshot $snapshot, AiCapabilityStatus $status): ?array
+    {
+        $activeCacheKey = $this->activeCacheKey($status->featureKey);
+        if (! $this->cache->has($activeCacheKey)) {
+            return null;
+        }
+
+        $this->cache->forget($activeCacheKey);
+
+        $notification = new AiOperationalAlertNotification(
+            featureKey: $status->featureKey,
+            capabilityGroup: $status->capabilityGroup,
+            status: $status->status,
+            reasonCodes: $status->reasonCodes,
+            diagnostics: $status->diagnostics,
+        );
+
+        $channels = [];
+
+        if ($this->outbox instanceof OutboxServiceInterface) {
+            $this->publishOutboxAlert($snapshot, $status, 'alert_cleared');
+            $channels[] = 'outbox';
+        }
+
+        if ($this->notificationManager instanceof NotificationManagerInterface) {
+            $recipients = $this->configuredRecipients();
+            if ($recipients !== []) {
+                $this->notificationManager->sendBatch($recipients, $notification, ['email']);
+                $channels[] = 'notifier';
+            }
+        }
+
+        $context = $this->alertLogContext($snapshot, $status, $channels, 'alert_cleared');
+        $this->logger->info('AI capability alert cleared.', $context);
+
+        return $context;
     }
 
     /**
@@ -128,13 +182,17 @@ final readonly class AiOperationalAlertPublisher
         );
     }
 
-    private function publishOutboxAlert(AiStatusSnapshot $snapshot, AiCapabilityStatus $status): void
+    private function publishOutboxAlert(
+        AiStatusSnapshot $snapshot,
+        AiCapabilityStatus $status,
+        string $outcome = 'alert_published',
+    ): void
     {
         try {
             $this->outbox?->enqueue(new OutboxEnqueueCommand(
                 tenantId: new TenantId('atomy-ai-ops'),
                 dedupKey: new DedupKey(
-                    'ai-alert:' . $status->featureKey . ':' . $status->status . ':' . implode(',', $status->reasonCodes),
+                    'ai-alert:' . $outcome . ':' . $status->featureKey . ':' . $status->status . ':' . implode(',', $status->reasonCodes),
                 ),
                 eventType: new EventTypeRef('atomy_q.ai.capability_alert'),
                 payload: [
@@ -147,6 +205,7 @@ final readonly class AiOperationalAlertPublisher
                     'mode' => $snapshot->mode,
                     'global_health' => $snapshot->globalHealth,
                     'generated_at' => $snapshot->generatedAt->format(DATE_ATOM),
+                    'outcome' => $outcome,
                 ],
                 metadata: [
                     'source' => 'atomy-q-api',
@@ -157,15 +216,18 @@ final readonly class AiOperationalAlertPublisher
                 createdAt: $this->clock->now(),
             ));
         } catch (Throwable $exception) {
-            $this->logger()->warning('AI capability alert outbox publish failed.', [
+            $this->logger->warning('AI capability alert outbox publish failed.', [
                 'feature_key' => $status->featureKey,
                 'capability_group' => $status->capabilityGroup,
                 'status' => $status->status,
                 'reason_codes' => $status->reasonCodes,
                 'outcome' => 'outbox_failed',
                 'reason_code' => 'alert_publish_failed',
-                'error' => $exception->getMessage(),
+                'error' => 'internal_error',
+                'exception_class' => $exception::class,
+                'error_fingerprint' => substr(sha1($exception->getMessage()), 0, 8),
             ]);
+            $this->logger->error('AI capability alert outbox publish exception.', ['exception' => $exception]);
         }
     }
 
@@ -173,7 +235,12 @@ final readonly class AiOperationalAlertPublisher
      * @param list<string> $channels
      * @return array<string, mixed>
      */
-    private function alertLogContext(AiStatusSnapshot $snapshot, AiCapabilityStatus $status, array $channels): array
+    private function alertLogContext(
+        AiStatusSnapshot $snapshot,
+        AiCapabilityStatus $status,
+        array $channels,
+        string $outcome = 'alert_published',
+    ): array
     {
         return [
             'ai_mode' => $snapshot->mode,
@@ -183,15 +250,15 @@ final readonly class AiOperationalAlertPublisher
             'endpoint_group' => $status->endpointGroup,
             'tenant_id' => null,
             'rfq_id' => null,
-            'outcome' => 'alert_published',
-            'reason_code' => $status->reasonCodes[0] ?? 'provider_unavailable',
+            'outcome' => $outcome,
+            'reason_code' => $status->reasonCodes[0] ?? 'provider_available',
             'status' => $status->status,
             'channels' => $channels,
         ];
     }
 
-    private function logger(): \Psr\Log\LoggerInterface
+    private function activeCacheKey(string $featureKey): string
     {
-        return $this->logs->channel((string) config('atomy.ai.operations.log_channel', 'stack'));
+        return 'ai:alert:active:' . $featureKey;
     }
 }

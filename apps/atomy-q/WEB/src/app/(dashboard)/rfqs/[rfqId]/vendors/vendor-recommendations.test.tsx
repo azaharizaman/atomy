@@ -1,16 +1,31 @@
+import { Suspense } from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 
 import { renderWithProviders } from '@/test/utils';
 
 const mockUseVendors = vi.fn();
+const mockUseRfqVendors = vi.fn();
 const mockUseRequisitionVendorSelection = vi.fn();
 const mockUseUpdateRequisitionVendorSelection = vi.fn();
 const mockUseVendorRecommendations = vi.fn();
 const mockUseAiStatus = vi.fn();
 
+vi.mock('@/hooks/use-rfq', () => ({
+  useRfq: () => ({
+    data: { title: 'RFQ' },
+    isLoading: false,
+    isError: false,
+    error: null,
+  }),
+}));
+
 vi.mock('@/hooks/use-vendors', () => ({
   useVendors: (...args: unknown[]) => mockUseVendors(...args),
+}));
+
+vi.mock('@/hooks/use-rfq-vendors', () => ({
+  useRfqVendors: (...args: unknown[]) => mockUseRfqVendors(...args),
 }));
 
 vi.mock('@/hooks/use-requisition-vendor-selection', () => ({
@@ -29,7 +44,17 @@ vi.mock('@/hooks/use-ai-status', () => ({
   useAiStatus: () => mockUseAiStatus(),
 }));
 
-import { RfqVendorSelectionPanel } from './page';
+import RfqVendorsPage from './page';
+
+async function renderRfqVendorsPage() {
+  await act(async () => {
+    renderWithProviders(
+      <Suspense fallback={null}>
+        <RfqVendorsPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
+      </Suspense>,
+    );
+  });
+}
 
 const alphaVendor = {
   id: 'vendor-1',
@@ -120,6 +145,12 @@ describe('vendor recommendations in RFQ vendor selection', () => {
       isError: false,
       error: null,
     });
+    mockUseRfqVendors.mockReturnValue({
+      data: [],
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
   });
 
   it('shows recommendation details without auto-selecting them and still allows manual override', async () => {
@@ -131,7 +162,7 @@ describe('vendor recommendations in RFQ vendor selection', () => {
       error: null,
     });
 
-    renderWithProviders(<RfqVendorSelectionPanel rfqId="rfq-1" />);
+    await renderRfqVendorsPage();
 
     expect(screen.getByRole('checkbox', { name: /alpha procurement/i })).not.toBeChecked();
     expect(screen.getByText('Recommended')).toBeInTheDocument();
@@ -183,7 +214,7 @@ describe('vendor recommendations in RFQ vendor selection', () => {
       error: null,
     });
 
-    renderWithProviders(<RfqVendorSelectionPanel rfqId="rfq-1" />);
+    await renderRfqVendorsPage();
 
     expect(screen.getByText(/ai recommendation is unavailable/i)).toBeInTheDocument();
     expect(screen.getByText(/you can still manually select vendors/i)).toBeInTheDocument();

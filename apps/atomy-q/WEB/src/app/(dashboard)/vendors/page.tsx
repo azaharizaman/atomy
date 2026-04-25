@@ -115,7 +115,7 @@ function VendorRowCard({ vendor }: { vendor: VendorRow }) {
   );
 }
 
-export function VendorsPageContent() {
+function VendorsPageContent() {
   const [search, setSearch] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState('');
   const [showCreateForm, setShowCreateForm] = React.useState(false);

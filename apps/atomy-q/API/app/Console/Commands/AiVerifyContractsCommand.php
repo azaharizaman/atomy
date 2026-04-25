@@ -4,21 +4,31 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use InvalidArgumentException;
 use App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface;
+use App\Adapters\Ai\Contracts\ProviderDocumentIntelligenceClientInterface;
 use App\Adapters\Ai\Contracts\ProviderGovernanceClientInterface;
 use App\Adapters\Ai\Contracts\ProviderInsightClientInterface;
+use App\Adapters\Ai\Contracts\ProviderNormalizationClientInterface;
+use App\Adapters\Ai\Contracts\ProviderSourcingRecommendationClientInterface;
 use App\Adapters\Ai\DTOs\ComparisonOverlayRequest;
 use App\Adapters\Ai\DTOs\GovernanceNarrativeRequest;
 use App\Adapters\Ai\DTOs\InsightSummaryRequest;
-use App\Adapters\Ai\ProviderDocumentIntelligenceClient;
-use App\Adapters\Ai\ProviderNormalizationClient;
-use App\Adapters\Ai\ProviderSourcingRecommendationClient;
 use Illuminate\Console\Command;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationRequest;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationScoredCandidate;
 
 final class AiVerifyContractsCommand extends Command
 {
+    private const ENDPOINT_GROUPS = [
+        'document',
+        'normalization',
+        'sourcing_recommendation',
+        'comparison_award',
+        'insight',
+        'governance',
+    ];
+
     protected $signature = 'atomy:ai-verify-contracts
         {--endpoint-group=* : Restrict verification to one or more endpoint groups}
         {--tenant-id=plan6-tenant : Tenant identifier used in sample payloads}
@@ -27,9 +37,9 @@ final class AiVerifyContractsCommand extends Command
     protected $description = 'Run provider contract verification requests for every configured Atomy-Q AI endpoint group.';
 
     public function __construct(
-        private readonly ProviderDocumentIntelligenceClient $documentClient,
-        private readonly ProviderNormalizationClient $normalizationClient,
-        private readonly ProviderSourcingRecommendationClient $recommendationClient,
+        private readonly ProviderDocumentIntelligenceClientInterface $documentClient,
+        private readonly ProviderNormalizationClientInterface $normalizationClient,
+        private readonly ProviderSourcingRecommendationClientInterface $recommendationClient,
         private readonly ComparisonAwardAiClientInterface $comparisonAwardClient,
         private readonly ProviderInsightClientInterface $insightClient,
         private readonly ProviderGovernanceClientInterface $governanceClient,
@@ -49,6 +59,14 @@ final class AiVerifyContractsCommand extends Command
 
         if ($rfqId === '') {
             $this->error('The --rfq-id option must be non-empty.');
+
+            return self::FAILURE;
+        }
+
+        try {
+            $endpointGroups = $this->requestedEndpointGroups();
+        } catch (InvalidArgumentException $exception) {
+            $this->error($exception->getMessage());
 
             return self::FAILURE;
         }
@@ -109,7 +127,7 @@ final class AiVerifyContractsCommand extends Command
             )),
         ];
 
-        foreach ($this->requestedEndpointGroups() as $endpointGroup) {
+        foreach ($endpointGroups as $endpointGroup) {
             $verifier = $verifiers[$endpointGroup] ?? null;
             if (! is_callable($verifier)) {
                 $this->error('Unsupported endpoint group: ' . $endpointGroup);
@@ -137,16 +155,33 @@ final class AiVerifyContractsCommand extends Command
     {
         $requested = $this->option('endpoint-group');
         if (! is_array($requested) || $requested === []) {
-            return ['document', 'normalization', 'sourcing_recommendation', 'comparison_award', 'insight', 'governance'];
+            return self::ENDPOINT_GROUPS;
         }
 
         $filtered = array_values(array_filter(array_map(
-            static fn (mixed $value): ?string => is_string($value) && trim($value) !== '' ? trim($value) : null,
+            static function (mixed $value): ?string {
+                if (! is_string($value)) {
+                    return null;
+                }
+
+                $normalized = trim($value);
+
+                return $normalized !== '' ? $normalized : null;
+            },
             $requested,
         )));
 
-        return $filtered === []
-            ? ['document', 'normalization', 'sourcing_recommendation', 'comparison_award', 'insight', 'governance']
-            : $filtered;
+        if ($filtered === []) {
+            return self::ENDPOINT_GROUPS;
+        }
+
+        $unsupported = array_values(array_diff($filtered, self::ENDPOINT_GROUPS));
+        if ($unsupported !== []) {
+            throw new InvalidArgumentException(
+                'Unsupported endpoint group(s): ' . implode(', ', $unsupported),
+            );
+        }
+
+        return $filtered;
     }
 }
