@@ -25,6 +25,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->command('idempotency:cleanup')->daily();
+        $schedule->command('atomy:ai-status --publish-alerts')
+            ->everyFiveMinutes()
+            ->withoutOverlapping()
+            ->onOneServer();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([

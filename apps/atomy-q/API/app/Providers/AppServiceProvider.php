@@ -8,6 +8,7 @@ use App\Adapters\Ai\AiRuntimeStatusAdapter;
 use App\Adapters\Ai\ConfiguredAiEndpointRegistry;
 use App\Adapters\Ai\ConfiguredAiHealthProbe;
 use App\Adapters\Ai\AtomyAiCapabilityCatalog;
+use App\Services\Ai\AiOperationalAlertPublisher;
 use App\Adapters\Ai\Contracts\ProviderGovernanceClientInterface;
 use App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface;
 use App\Adapters\Ai\Contracts\ProviderInsightClientInterface;
@@ -61,8 +62,10 @@ use Nexus\Adapter\Laravel\Vendor\Repositories\EloquentVendorRepository;
 use App\Services\Tenant\RequestTenantContext;
 use App\OpenApi\IdempotencyErrorCodesDocumentTransformer;
 use Dedoc\Scramble\Scramble;
+use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Http\Client\Factory as HttpFactory;
+use Illuminate\Log\LogManager;
 use Nexus\Common\Contracts\ClockInterface;
 use Nexus\AuditLogger\Contracts\AuditLogRepositoryInterface;
 use Nexus\Identity\Contracts\MfaEnrollmentServiceInterface;
@@ -194,6 +197,8 @@ use Nexus\QuotationIntelligence\Exceptions\QuotationIntelligenceException;
 use Nexus\IntelligenceOperations\Contracts\AiCapabilityCatalogInterface;
 use Nexus\IntelligenceOperations\Contracts\AiStatusCoordinatorInterface;
 use Nexus\IntelligenceOperations\Coordinators\AiStatusCoordinator;
+use Nexus\Notifier\Contracts\NotificationManagerInterface;
+use Nexus\Outbox\Contracts\OutboxServiceInterface;
 use Psr\Log\LoggerInterface;
 use Nexus\MachineLearning\Contracts\AiHealthProbeInterface;
 
@@ -231,6 +236,19 @@ class AppServiceProvider extends ServiceProvider
             return new ConfiguredAiHealthProbe($app->make(HttpFactory::class));
         });
         $this->app->singleton(AiRuntimeStatusInterface::class, AiRuntimeStatusAdapter::class);
+        $this->app->singleton(AiOperationalAlertPublisher::class, static function ($app): AiOperationalAlertPublisher {
+            return new AiOperationalAlertPublisher(
+                clock: $app->make(ClockInterface::class),
+                cache: $app->make(CacheFactory::class)->store(),
+                logs: $app->make(LogManager::class),
+                notificationManager: $app->bound(NotificationManagerInterface::class)
+                    ? $app->make(NotificationManagerInterface::class)
+                    : null,
+                outbox: $app->bound(OutboxServiceInterface::class)
+                    ? $app->make(OutboxServiceInterface::class)
+                    : null,
+            );
+        });
 
         // Nexus ApprovalOperations (operational approvals — distinct from RFQ quote flows).
         $this->app->singleton(AtomyApprovalPolicyRegistry::class);

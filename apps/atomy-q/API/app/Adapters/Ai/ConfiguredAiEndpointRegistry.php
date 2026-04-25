@@ -55,6 +55,8 @@ final readonly class ConfiguredAiEndpointRegistry implements AiEndpointRegistryI
         $provider = $this->providerSection();
         $defaultAuthToken = trim((string) ($provider['default_auth_token'] ?? ''));
         $defaultTimeout = (int) ($provider['default_timeout_seconds'] ?? 10);
+        $defaultRetryAttempts = (int) ($provider['default_retry_attempts'] ?? 1);
+        $defaultRetryBackoffMs = (int) ($provider['default_retry_backoff_ms'] ?? 0);
         $timeoutSeconds = (int) ($endpoint['timeout_seconds'] ?? $defaultTimeout);
         $authToken = trim((string) ($endpoint['auth_token'] ?? ''));
 
@@ -68,6 +70,10 @@ final readonly class ConfiguredAiEndpointRegistry implements AiEndpointRegistryI
                 'auth_token' => $authToken !== '' ? $authToken : ($defaultAuthToken !== '' ? $defaultAuthToken : null),
                 'probe_url' => $this->resolveProbeUrl($uri, $endpoint),
                 'probe_method' => $this->resolveProbeMethod($endpoint),
+                'retry_attempts' => max(1, (int) ($endpoint['retry_attempts'] ?? $defaultRetryAttempts)),
+                'retry_backoff_ms' => max(0, (int) ($endpoint['retry_backoff_ms'] ?? $defaultRetryBackoffMs)),
+                'model_id' => $this->nullableString($endpoint['model_id'] ?? null),
+                'model_revision' => $this->nullableString($endpoint['model_revision'] ?? null),
             ],
         );
     }
@@ -135,5 +141,16 @@ final readonly class ConfiguredAiEndpointRegistry implements AiEndpointRegistryI
         $method = strtoupper(trim((string) ($endpoint['health_method'] ?? 'GET')));
 
         return $method === '' ? 'GET' : $method;
+    }
+
+    private function nullableString(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $normalized = trim($value);
+
+        return $normalized === '' ? null : $normalized;
     }
 }

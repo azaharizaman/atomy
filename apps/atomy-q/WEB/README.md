@@ -39,6 +39,14 @@ Staging validation should use the deployed WEB hostname and the deployed API.
 
 The full staging bring-up and smoke sequence is in [`../docs/02-release-management/current-release/staging-runbook.md`](../docs/02-release-management/current-release/staging-runbook.md).
 
+## AI launch readiness
+
+- The WEB-side AI posture is driven by the shared status contract at `GET /api/v1/ai/status` and the docs-led handoff in:
+  - [`../../../docs/superpowers/specs/2026-04-23-atomy-q-global-ai-fallback-design.md`](../../../docs/superpowers/specs/2026-04-23-atomy-q-global-ai-fallback-design.md)
+  - [`../../../docs/superpowers/plans/2026-04-23-atomy-q-ai-launch-readiness-and-operational-hardening.md`](../../../docs/superpowers/plans/2026-04-23-atomy-q-ai-launch-readiness-and-operational-hardening.md)
+- When AI is off or degraded, WEB should keep the manual RFQ path visible and show only scoped unavailable messaging for the AI-powered surfaces.
+- The documentation-led verification entry point is `composer verify:atomy-q-ai-insights-governance-reporting` from the monorepo root, plus the WEB unit and E2E commands listed in `docs/superpowers/plans/2026-04-23-atomy-q-ai-launch-readiness-and-operational-hardening.md` under `Runbook Output` -> `Verification Matrix`.
+
 ## Tests
 
 Essential local entry points:

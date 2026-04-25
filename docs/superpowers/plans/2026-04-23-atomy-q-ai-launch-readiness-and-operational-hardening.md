@@ -20,6 +20,54 @@
 - Alpha release checklist and rollback posture
 - Final documentation alignment across spec, plans, env docs, and implementation summaries
 
+## Runbook Output
+
+Plan 6 is the operator handoff slice. The written handoff must be concrete enough that a release coordinator can execute it without guessing:
+
+### Operator Checklist
+
+| Domain | Required Evidence |
+|---|---|
+| Provider ownership | Named provider account or organization, billing owner, and route/endpoint owner |
+| Active provider | The selected global provider for the environment and the exact `AI_MODE` value |
+| Endpoint topology | One live endpoint URL or route per capability group, with the owning capability group named |
+| Credentials | Auth token or service credential for each provider route plus the rotation owner |
+| Model binding | Model id and revision per endpoint group, even when the runtime reads them indirectly through config |
+| Capacity policy | Scaling policy, timeout budget, retry budget, and circuit-breaker expectations |
+| Budget ownership | Quota limit, cost alert threshold, and the human owner for each threshold |
+| Network policy | Allowlisted egress, private networking, and firewall/proxy constraints |
+| Staging readiness | Non-production endpoints, smoke credentials, and the owner of the staging environment |
+| Incident response | Pager / contact list for provider degradation, quota exhaustion, and token failure |
+| Data posture | Approved data-handling, retention, and compliance posture for tenant data |
+| Secret rotation | Rotation schedule, emergency revoke path, and backup contact |
+
+### Rollback Posture
+
+- Roll back by switching `AI_MODE=off` at the environment level. Do not rely on ad hoc per-endpoint toggles as a substitute for a real rollback.
+- When rollback is active, the main RFQ chain must remain manually operable and AI-only surfaces must show truthful unavailable states.
+- No AI-only endpoint may return synthetic success payloads during rollback. The response must say unavailable, not pretend the provider is still healthy.
+- Manual continuity paths remain authoritative during rollback: upload, manual source-line work, normalization overrides, deterministic comparison, vendor selection, award signoff, and approvals.
+- Restore `AI_MODE=provider` only after the selected provider endpoints, health checks, and contract tests are green again.
+
+### Failure Drill Matrix
+
+| Drill | Trigger | Expected API Outcome | Expected WEB Outcome | Success Signal |
+|---|---|---|---|---|
+| AI-off continuity | `AI_MODE=off` | Manual RFQ chain continues; AI-only endpoints return `ai_disabled` / unavailable | AI controls hide or show unavailable copy; manual paths stay visible | RFQ work can finish without synthetic AI output |
+| Single-group degradation | One capability-group endpoint degrades or times out | Only the affected capability becomes unavailable or degraded | Only the affected AI panel calls out the issue | Other capability groups remain usable |
+| Provider auth failure | Token or route credential is invalid | Provider calls fail loudly and do not produce fake success | The relevant AI surface shows unavailable, not empty success | Failure is visible in logs and status |
+| Quota exhaustion | Provider quota budget is exceeded | Status becomes degraded or unavailable per policy and alerting fires | AI assist surfaces collapse to manual continuity | Operator sees the budget breach immediately |
+| Timeout storm | Provider latency exceeds retry budget | Retry budget is honored and the capability falls back truthfully | No page-wide failure, only scoped unavailable AI affordances | Manual workflow remains usable under load |
+
+### Verification Matrix
+
+| Verification Target | Command | Pass Criteria |
+|---|---|---|
+| Insight/governance plan verification | `composer verify:atomy-q-ai-insights-governance-reporting` | InsightOperations tests and the API feature-flag context both pass in their own execution contexts |
+| WEB AI primitives | `cd apps/atomy-q/WEB && npm run test:unit -- src/hooks/use-ai-status.test.ts src/components/ai/ai-unavailable-callout.test.tsx src/components/ai/ai-narrative-panel.test.tsx` | Shared AI status, unavailable callout, and narrative rendering stay stable |
+| RFQ browser continuity | `cd apps/atomy-q/WEB && npm run test:e2e -- tests/rfq-alpha-journeys.spec.ts tests/rfq-lifecycle-e2e.spec.ts tests/screen-smoke.spec.ts` | AI-assisted and AI-off browser journeys remain usable |
+| Staging drill evidence | Deployment-time `AI_MODE=off` and degraded-endpoint runs captured in the release log | The operator log records expected API and WEB outcomes for each drill |
+
 ## Layer Ownership
 
 - **Layer 1**
@@ -43,7 +91,7 @@
 - Modify: `apps/atomy-q/API/config/atomy.php`
 - Modify: `apps/atomy-q/API/routes/api.php` only if readiness/diagnostic endpoints are needed
 - Add: API tests for health checks, degraded alerts, and runbook-critical paths
-- Modify: `apps/atomy-q/WEB/src/components/layout/...` if operator-facing status chips need final placement
+- Modify: `apps/atomy-q/WEB/src/components/layout/...` only if a separate approval adds a minimal operator-facing status placement later
 - Modify: `apps/atomy-q/API/.env.example`
 - Modify: `apps/atomy-q/WEB/.env.example`
 - Modify documentation:
@@ -125,6 +173,7 @@
   - RFQ E2E tests,
   - explicit AI-off and degraded drills.
 - [ ] Record exact commands and outcomes in the final implementation summaries or release handoff doc.
+- [ ] Make sure the handoff doc names the `AI_MODE=off` rollback, the failure-drill matrix, and the checklist owners so release execution does not require hunting across multiple docs.
 
 ## Exit Criteria
 

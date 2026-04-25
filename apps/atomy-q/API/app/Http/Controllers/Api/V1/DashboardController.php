@@ -135,6 +135,7 @@ final class DashboardController extends Controller
      */
     private function buildDashboardSummaryEnvelope(string $tenantId, array $facts, bool $generate): array
     {
+        $featureKey = 'dashboard_ai_summary';
         $cacheKey = $this->dashboardSummaryCacheKey($tenantId, $facts);
         if (! $generate) {
             /** @var array<string, mixed>|null $cached */
@@ -142,15 +143,17 @@ final class DashboardController extends Controller
             if (is_array($cached)) {
                 return $cached;
             }
+
+            return $this->unavailableArtifactEnvelope($featureKey);
         }
 
-        if (! $this->aiCapabilityAvailable('dashboard_ai_summary')) {
-            return $this->unavailableArtifactEnvelope('dashboard_ai_summary');
+        if (! $this->aiCapabilityAvailable($featureKey)) {
+            return $this->unavailableArtifactEnvelope($featureKey);
         }
 
         try {
             $summary = $this->insightClient->summarize(new InsightSummaryRequest(
-                featureKey: 'dashboard_ai_summary',
+                featureKey: $featureKey,
                 tenantId: $tenantId,
                 subjectType: 'dashboard_kpis',
                 facts: $facts,
@@ -158,11 +161,11 @@ final class DashboardController extends Controller
         } catch (Throwable $exception) {
             report($exception);
 
-            return $this->unavailableArtifactEnvelope('dashboard_ai_summary');
+            return $this->unavailableArtifactEnvelope($featureKey);
         }
 
         $artifact = $this->artifactEnvelope(
-            featureKey: 'dashboard_ai_summary',
+            featureKey: $featureKey,
             payload: $this->providerSummaryPayload($summary, $facts),
             provenance: $this->providerArtifactProvenance($summary, AiStatusSchema::ENDPOINT_GROUP_INSIGHT),
         );

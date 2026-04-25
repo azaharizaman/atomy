@@ -58,6 +58,7 @@
         "nexus/machine-learning": "*@dev",
         "nexus/messaging": "*@dev",
         "nexus/notifier": "*@dev",
+        "nexus/outbox": "*@dev",
         "nexus/party": "*@dev",
         "nexus/policy-engine": "*@dev",
         "nexus/procurement": "*@dev",

@@ -1,5 +1,35 @@
 # Implementation Summary - Atomy-Q Backend API
 
+# 2026-04-24 AI Launch Readiness Runbook And Operator Handoff
+
+- Updated the AI-first launch docs to make the operator handoff concrete in:
+  - `docs/superpowers/specs/2026-04-23-atomy-q-global-ai-fallback-design.md`
+  - `docs/superpowers/plans/2026-04-23-atomy-q-ai-launch-readiness-and-operational-hardening.md`
+- Added an explicit rollback posture to those same docs: use `AI_MODE=off` at the environment level, keep the main RFQ chain manually operable, and do not treat synthetic AI success as acceptable during rollback.
+- Added the failure-drill matrix and verification matrix to `docs/superpowers/plans/2026-04-23-atomy-q-ai-launch-readiness-and-operational-hardening.md` so operators can record expected API and WEB outcomes for AI-off, degraded, auth-failure, quota-exhaustion, and timeout-storm scenarios.
+- Linked `apps/atomy-q/API/README.md` to the launch-readiness docs and the exact monorepo verification entry point `composer verify:atomy-q-ai-insights-governance-reporting`.
+- Added AI operational hardening in the API runtime:
+  - `ProviderAiTransport` now emits structured provider-invocation logs, honors endpoint-scoped retry/backoff metadata, and records reason-coded success/failure outcomes.
+  - `ConfiguredAiEndpointRegistry` now exposes retry/model metadata per endpoint group, and `config/atomy.php` / `.env.example` now carry operator-owned retry, model, alerting, and log-channel settings.
+  - Added `AiOperationalAlertPublisher` plus notifier/outbox wiring so degraded and unavailable capability states can publish operator-visible alerts with cooldown-based deduplication.
+  - Added console commands for operator handoff and drills: `atomy:ai-status`, `atomy:ai-drill`, and `atomy:ai-verify-contracts`.
+  - Scheduled `atomy:ai-status --publish-alerts` from `apps/atomy-q/API/bootstrap/app.php` so capability-state alerting stays active during runtime; operators can verify or adjust the cadence in that scheduler definition.
+- Closed a cross-plan design gap by keeping dashboard and reporting `GET` endpoints read-only: both surfaces now return cached AI artifacts on reads and require explicit `POST .../generate` calls to invoke the provider on cache miss.
+- Added launch-readiness coverage:
+  - `tests/Feature/Console/AiConsoleCommandsTest.php`
+  - `tests/Unit/Services/AiOperationalAlertPublisherTest.php`
+- Verification:
+```bash
+cd apps/atomy-q/API && ./vendor/bin/phpunit \
+  tests/Feature/Api/V1/DashboardReportAiSummaryApiTest.php \
+  tests/Feature/Api/V1/RiskComplianceAiInsightsApiTest.php \
+  tests/Feature/Api/V1/VendorGovernanceApiTest.php \
+  tests/Feature/Console/AiConsoleCommandsTest.php \
+  tests/Unit/Services/AiOperationalAlertPublisherTest.php
+```
+
+PASS (19 tests, 98 assertions).
+
 ## 2026-04-24 AI Insights, Governance, And Reporting Surfaces (Plan 5)
 
 - Added `ProviderInsightClientInterface` / `ProviderInsightClient` and `ProviderGovernanceClientInterface` / `ProviderGovernanceClient` on top of the shared `ProviderAiTransport`, plus request DTOs for insight summaries and governance narratives.

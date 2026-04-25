@@ -13,6 +13,15 @@ This is the backend API for the Atomy‑Q Quote Comparison & Procurement platfor
 - Verify storage wiring with `php artisan atomy:verify-storage-disk`.
 - Keep `../docs/02-release-management/current-release/staging-runbook.md` open when bringing the environment up.
 
+## AI launch readiness
+
+- The AI-first alpha handoff is documented in:
+  - [`../../../docs/superpowers/specs/2026-04-23-atomy-q-global-ai-fallback-design.md`](../../../docs/superpowers/specs/2026-04-23-atomy-q-global-ai-fallback-design.md)
+  - [`../../../docs/superpowers/plans/2026-04-23-atomy-q-ai-launch-readiness-and-operational-hardening.md`](../../../docs/superpowers/plans/2026-04-23-atomy-q-ai-launch-readiness-and-operational-hardening.md)
+- The verification entry point for the documentation-led AI handoff is `composer verify:atomy-q-ai-insights-governance-reporting` from the monorepo root.
+- Rollback posture is environment-level `AI_MODE=off`; the core RFQ chain must remain manually operable and AI-only surfaces must report truthful unavailability.
+- The launch-readiness runbook should stay aligned with the API env contract in `.env.example` and the status contract exposed at `GET /api/v1/ai/status`.
+
 ## Quote intelligence modes
 
 - `deterministic` is the supported alpha staging default and is the mode used when `QUOTE_INTELLIGENCE_MODE` is unset.
