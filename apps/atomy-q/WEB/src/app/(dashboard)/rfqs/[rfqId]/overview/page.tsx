@@ -11,7 +11,6 @@ import { StatusBadge } from '@/components/ds/Badge';
 import { SectionCard } from '@/components/ds/Card';
 import { Timeline, type TimelineEvent } from '@/components/ds/Timeline';
 import { AiNarrativePanel } from '@/components/ai/ai-narrative-panel';
-import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { OverviewNextStep } from '@/components/workspace/overview-next-step';
 import { useRfqAiSummary } from '@/hooks/use-rfq-ai-summary';
 import { useRfqOverview, type RfqOverviewActivityItem } from '@/hooks/use-rfq-overview';
@@ -92,16 +91,9 @@ export default function RfqOverviewPage({ params }: { params: Promise<{ rfqId: s
     ],
   );
 
-  const breadcrumbItems = [
-    { label: 'RFQs', href: '/rfqs' },
-    { label: rfq?.title ?? 'Requisition', href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
-    { label: 'Overview' },
-  ];
-
   if (isLoading) {
     return (
       <div className="space-y-5">
-        <WorkspaceBreadcrumbs items={breadcrumbItems} />
         <div className="grid gap-4 xl:grid-cols-4 md:grid-cols-2">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="h-28 rounded-lg border border-slate-200 bg-slate-50 animate-pulse" />
@@ -117,7 +109,6 @@ export default function RfqOverviewPage({ params }: { params: Promise<{ rfqId: s
 
     return (
       <div className="space-y-5">
-        <WorkspaceBreadcrumbs items={breadcrumbItems} />
         <PageHeader title="Overview" subtitle="RFQ overview unavailable" />
         <SectionCard title="Overview unavailable" subtitle="The overview screen could not load the live RFQ payload.">
           <EmptyState
@@ -149,8 +140,6 @@ export default function RfqOverviewPage({ params }: { params: Promise<{ rfqId: s
 
   return (
     <div className="space-y-5">
-      <WorkspaceBreadcrumbs items={breadcrumbItems} />
-
       {/* Next step + deadline */}
       <OverviewNextStep
         rfqId={rfqId}

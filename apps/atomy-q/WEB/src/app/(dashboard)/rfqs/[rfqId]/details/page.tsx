@@ -9,8 +9,8 @@ import { toast } from 'sonner';
 import { PageHeader } from '@/components/ds/FilterBar';
 import { SectionCard, InfoGrid } from '@/components/ds/Card';
 import { Button } from '@/components/ds/Button';
+import { StickyPageActions } from '@/components/ds/sticky-page-actions';
 import { TextAreaInput, TextInput } from '@/components/ds/Input';
-import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useRfq, useUpdateRfq, type RfqDetail } from '@/hooks/use-rfq';
 import { datetimeLocalToIsoOrNull, formatScheduleInstant, isoOrNullToDatetimeLocal } from '@/lib/datetime-local';
 import { parseApiError } from '@/lib/api-error';
@@ -44,11 +44,11 @@ function defaultsFromRfq(rfq: RfqDetail): ScheduleFormValues {
 
 const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
-export default function RfqDetailsPage({ params }: { params: Promise<{ rfqId: string }> }) {
-  const { rfqId } = React.use(params);
+export function RfqDetailsPageContent({ rfqId }: { rfqId: string }) {
   const { data: rfq, isLoading, isError, error } = useRfq(rfqId);
   const updateRfq = useUpdateRfq(rfqId);
   const [isEditing, setIsEditing] = React.useState(false);
+  const headerActionsRef = React.useRef<HTMLDivElement | null>(null);
 
   const form = useForm<ScheduleFormValues>({
     resolver: zodResolver(scheduleFormSchema),
@@ -108,16 +108,9 @@ export default function RfqDetailsPage({ params }: { params: Promise<{ rfqId: st
     }
   });
 
-  const breadcrumbItems = [
-    { label: 'RFQs', href: '/rfqs' },
-    { label: rfq?.title ?? 'Requisition', href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
-    { label: 'Details' },
-  ];
-
   if (isLoading) {
     return (
       <div className="space-y-5">
-        <WorkspaceBreadcrumbs items={breadcrumbItems} />
         <div className="h-10 w-64 rounded-md bg-slate-100 animate-pulse" />
         <div className="grid gap-5 xl:grid-cols-2">
           <div className="h-56 rounded-lg border border-slate-200 bg-slate-50 animate-pulse" />
@@ -130,7 +123,6 @@ export default function RfqDetailsPage({ params }: { params: Promise<{ rfqId: st
   if (isError || !rfq) {
     return (
       <div className="space-y-5">
-        <WorkspaceBreadcrumbs items={breadcrumbItems} />
         <PageHeader title="RFQ details" subtitle="Could not load this RFQ" />
         <p className="text-sm text-slate-600">
           {error instanceof Error ? error.message : 'Try again from the RFQ list.'}
@@ -155,31 +147,46 @@ export default function RfqDetailsPage({ params }: { params: Promise<{ rfqId: st
     { label: 'Expected award', value: formatScheduleInstant(rfq.expected_award_at) },
   ];
 
+  function renderHeaderActions(): React.ReactNode {
+    if (!isEditing) {
+      return (
+        <Button variant="outline" size="sm" type="button" onClick={openEdit}>
+          <SquarePen size={14} className="mr-1.5" />
+          Edit
+        </Button>
+      );
+    }
+
+    return (
+      <>
+        <Button variant="ghost" size="sm" type="button" onClick={cancelEdit} disabled={updateRfq.isPending}>
+          <X size={14} className="mr-1.5" />
+          Cancel
+        </Button>
+        <Button
+          variant="primary"
+          size="sm"
+          type="submit"
+          form="rfq-details-form"
+          loading={updateRfq.isPending}
+          className="min-w-[8.5rem]"
+        >
+          Save changes
+        </Button>
+      </>
+    );
+  }
+
   return (
     <div className="space-y-5">
-      <WorkspaceBreadcrumbs items={breadcrumbItems} />
       <PageHeader
         title="RFQ details"
         subtitle="Metadata, commercial fields, and schedule milestones"
-        actions={
-          !isEditing ? (
-            <Button variant="outline" size="sm" type="button" onClick={openEdit}>
-              <SquarePen size={14} className="mr-1.5" />
-              Edit
-            </Button>
-          ) : (
-            <div className="flex flex-wrap items-center gap-2">
-              <Button variant="ghost" size="sm" type="button" onClick={cancelEdit} disabled={updateRfq.isPending}>
-                <X size={14} className="mr-1.5" />
-                Cancel
-              </Button>
-              <Button variant="primary" size="sm" type="submit" form="rfq-details-form" loading={updateRfq.isPending}>
-                Save changes
-              </Button>
-            </div>
-          )
-        }
+        actions={<div ref={headerActionsRef} className="flex items-center gap-2 flex-nowrap">{renderHeaderActions()}</div>}
       />
+      <StickyPageActions active={isEditing} targetRef={headerActionsRef}>
+        {renderHeaderActions()}
+      </StickyPageActions>
 
       {useMocks && (
         <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
@@ -208,7 +215,7 @@ export default function RfqDetailsPage({ params }: { params: Promise<{ rfqId: st
           </SectionCard>
         </>
       ) : (
-        <form id="rfq-details-form" onSubmit={onSubmit} className="space-y-5">
+        <form id="rfq-details-form" onSubmit={onSubmit} className="space-y-5 pb-24">
           <div className="grid gap-5 xl:grid-cols-[1fr,360px]">
             <SectionCard title="Commercial metadata">
               <div className="p-4 pt-0 space-y-4">
@@ -289,18 +296,16 @@ export default function RfqDetailsPage({ params }: { params: Promise<{ rfqId: st
               <p className="text-xs text-slate-500">
                 Dates are sent to the API as UTC instants. Empty field removes the stored value.
               </p>
-              <div className="flex gap-2 sm:hidden">
-                <Button variant="primary" size="sm" type="submit" loading={updateRfq.isPending}>
-                  Save changes
-                </Button>
-                <Button variant="ghost" size="sm" type="button" onClick={cancelEdit} disabled={updateRfq.isPending}>
-                  Cancel
-                </Button>
-              </div>
             </div>
           </SectionCard>
         </form>
       )}
     </div>
   );
+}
+
+export default function RfqDetailsPage({ params }: { params: Promise<{ rfqId: string }> }) {
+  const { rfqId } = React.use(params);
+
+  return <RfqDetailsPageContent rfqId={rfqId} />;
 }

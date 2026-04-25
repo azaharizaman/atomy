@@ -7,7 +7,6 @@ import { PageHeader } from '@/components/ds/FilterBar';
 import { EmptyState, SectionCard } from '@/components/ds/Card';
 import { StatusBadge } from '@/components/ds/Badge';
 import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
-import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useRfq } from '@/hooks/use-rfq';
 import { useComparisonRuns, type ComparisonRunRow } from '@/hooks/use-comparison-runs';
 import { Button } from '@/components/ds/Button';
@@ -20,18 +19,11 @@ function ComparisonRunsListContent({ rfqId }: { rfqId: string }) {
   const rfq = rfqQuery.data;
   const runs = runsQuery.data ?? [];
 
-  const breadcrumbItems = [
-    { label: 'RFQs', href: '/rfqs' },
-    { label: rfq?.title ?? 'Requisition', href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
-    { label: 'Comparison Runs' },
-  ];
-
   if (rfqQuery.isError || runsQuery.isError) {
     const pageError = rfqQuery.error ?? runsQuery.error;
     const errorMessage = pageError instanceof Error ? pageError.message : 'The live comparison-run list could not be loaded.';
     return (
       <div className="space-y-5">
-        <WorkspaceBreadcrumbs items={breadcrumbItems} />
         <PageHeader title="Comparison Runs" subtitle="Comparison runs unavailable" />
         <SectionCard title="Comparison runs unavailable">
           <EmptyState
@@ -79,7 +71,6 @@ function ComparisonRunsListContent({ rfqId }: { rfqId: string }) {
 
   return (
     <div className="space-y-5">
-      <WorkspaceBreadcrumbs items={breadcrumbItems} />
       {hasFinalRun && (
         <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-slate-800">

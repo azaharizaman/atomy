@@ -109,7 +109,7 @@ export function PageHeader({ title, subtitle, subtitleTestId, actions, breadcrum
         <h1 className="text-lg font-semibold text-slate-900">{title}</h1>
         {subtitle && <p data-testid={subtitleTestId} className="text-sm text-slate-500 mt-0.5">{subtitle}</p>}
       </div>
-      {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+      {actions && <div className="flex shrink-0 items-center gap-2 flex-nowrap">{actions}</div>}
     </div>
   );
 }

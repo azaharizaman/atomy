@@ -7,7 +7,6 @@ import { Card, EmptyState, SectionCard, InfoGrid } from '@/components/ds/Card';
 import { StatusBadge } from '@/components/ds/Badge';
 import { AiStatusChip } from '@/components/ai/ai-status-chip';
 import { AiUnavailableCallout } from '@/components/ai/ai-unavailable-callout';
-import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useAiStatus } from '@/hooks/use-ai-status';
 import { useRfq } from '@/hooks/use-rfq';
 import { useComparisonRun } from '@/hooks/use-comparison-run';
@@ -236,13 +235,6 @@ function ComparisonRunDetailPageContent({ rfqId, runId }: { rfqId: string; runId
   const matrix = matrixQuery.data;
   const readiness = readinessQuery.data;
 
-  const breadcrumbItems = [
-    { label: 'RFQs', href: '/rfqs' },
-    { label: rfq?.title ?? 'Requisition', href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
-    { label: 'Comparison Runs', href: `/rfqs/${encodeURIComponent(rfqId)}/comparison-runs` },
-    { label: run?.name ?? runId },
-  ];
-
   const isReady = Boolean(readiness?.isReady);
   const isPreviewOnly = Boolean(readiness?.isPreviewOnly);
   const showComparisonOverlayUnavailable =
@@ -254,7 +246,6 @@ function ComparisonRunDetailPageContent({ rfqId, runId }: { rfqId: string; runId
   if (runQuery.isLoading || matrixQuery.isLoading || readinessQuery.isLoading) {
     return (
       <div className="space-y-5">
-        <WorkspaceBreadcrumbs items={breadcrumbItems} />
         <SectionCard title="Loading comparison run" subtitle="Fetching the live run, readiness, and matrix payloads.">
           <p className="text-sm text-slate-600">Loading comparison data…</p>
         </SectionCard>
@@ -266,7 +257,6 @@ function ComparisonRunDetailPageContent({ rfqId, runId }: { rfqId: string; runId
     const error = runQuery.error ?? matrixQuery.error ?? readinessQuery.error;
     return (
       <div className="space-y-5">
-        <WorkspaceBreadcrumbs items={breadcrumbItems} />
         <SectionCard title="Comparison run unavailable" subtitle="Unable to load the live comparison payloads.">
           <EmptyState
             icon={<AlertTriangle size={20} />}
@@ -280,7 +270,6 @@ function ComparisonRunDetailPageContent({ rfqId, runId }: { rfqId: string; runId
 
   return (
     <div className="space-y-5">
-      <WorkspaceBreadcrumbs items={breadcrumbItems} />
       <PageHeader
         title={run?.name ?? 'Comparison Run'}
         subtitle={run?.id ?? runId}

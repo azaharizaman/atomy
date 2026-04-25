@@ -6,7 +6,6 @@ import { AiNarrativePanel } from '@/components/ai/ai-narrative-panel';
 import { PageHeader } from '@/components/ds/FilterBar';
 import { EmptyState, SectionCard } from '@/components/ds/Card';
 import { StatusBadge } from '@/components/ds/Badge';
-import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useRfq } from '@/hooks/use-rfq';
 import { useRfqAiSummary } from '@/hooks/use-rfq-ai-summary';
 
@@ -15,15 +14,8 @@ function RiskPageContent({ params }: { params: Promise<{ rfqId: string }> }) {
   const { data: rfq } = useRfq(rfqId, { enabled: true });
   const rfqAiSummary = useRfqAiSummary(rfqId);
 
-  const breadcrumbItems = [
-    { label: 'RFQs', href: '/rfqs' },
-    { label: rfq?.title ?? 'Requisition', href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
-    { label: 'Risk & Compliance' },
-  ];
-
   return (
     <div className="space-y-5">
-      <WorkspaceBreadcrumbs items={breadcrumbItems} />
       <PageHeader title="Risk & Compliance" subtitle="Flags and screening results for this RFQ" />
       <AiNarrativePanel
         featureKey="rfq_ai_insights"

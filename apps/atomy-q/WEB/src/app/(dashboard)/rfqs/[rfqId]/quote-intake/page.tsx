@@ -10,7 +10,6 @@ import { ConfidenceBadge } from '@/components/ds/Badge';
 import type { StatusVariant } from '@/components/ds/tokens';
 import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
 import { FilterBar } from '@/components/ds/FilterBar';
-import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useAiStatus } from '@/hooks/use-ai-status';
 import { useRfq } from '@/hooks/use-rfq';
 import { useNormalizationReview } from '@/hooks/use-normalization-review';
@@ -62,18 +61,11 @@ function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
   const [statusFilter, setStatusFilter] = React.useState('');
   const [vendorFilter, setVendorFilter] = React.useState('');
 
-  const breadcrumbItems = [
-    { label: 'RFQs', href: '/rfqs' },
-    { label: rfq?.title ?? 'Requisition', href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
-    { label: 'Quote Intake' },
-  ];
-
   if (rfqQuery.isError || submissionsQuery.isError) {
     const pageError = rfqQuery.error ?? submissionsQuery.error;
     const errorMessage = pageError instanceof Error ? pageError.message : 'Live quote intake data is unavailable.';
     return (
       <div className="space-y-5">
-        <WorkspaceBreadcrumbs items={breadcrumbItems} />
         <PageHeader title="Quote Intake" subtitle="Quote intake unavailable" />
         <Card className="p-4 space-y-2">
           <p className="text-sm text-slate-700">The live quote-intake workspace could not be loaded.</p>
@@ -129,7 +121,6 @@ function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
 
   return (
     <div className="space-y-5">
-      <WorkspaceBreadcrumbs items={breadcrumbItems} />
       {!useMocks && extractionAvailable && (
         <Card className="border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-950">
           <span className="font-semibold">AI-assisted quote extraction</span> — provider extraction active

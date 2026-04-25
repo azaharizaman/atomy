@@ -16,7 +16,6 @@ import { useAiStatus } from '@/hooks/use-ai-status';
 import { formatVendorGovernanceWarning, useVendorGovernanceMap } from '@/hooks/use-vendor-governance';
 import { useVendorRecommendations, type VendorRecommendationCandidate } from '@/hooks/use-vendor-recommendations';
 import { useVendors, type VendorRow } from '@/hooks/use-vendors';
-import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 
 function vendorLabel(vendor: VendorRow): string {
   return vendor.displayName || vendor.legalName || vendor.name || 'Unknown vendor';
@@ -311,17 +310,10 @@ function RfqVendorsPageContent({ rfqId }: { rfqId: string }) {
     }
   };
 
-  const breadcrumbItems = [
-    { label: 'RFQs', href: '/rfqs' },
-    { label: rfq?.title ?? 'Requisition', href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
-    { label: 'Vendors' },
-  ];
-
   if (rfqQuery.isError) {
     const errorMessage = rfqQuery.error instanceof Error ? rfqQuery.error.message : 'RFQ data is unavailable.';
     return (
       <div className="space-y-5">
-        <WorkspaceBreadcrumbs items={breadcrumbItems} />
         <PageHeader title="Invited vendors" subtitle="RFQ unavailable" />
         <SectionCard title="RFQ unavailable">
           <EmptyState icon={<AlertTriangle size={20} />} title="Could not load RFQ context" description={errorMessage} />
@@ -335,7 +327,6 @@ function RfqVendorsPageContent({ rfqId }: { rfqId: string }) {
       vendorsQuery.error instanceof Error ? vendorsQuery.error.message : 'The live vendor roster could not be loaded.';
     return (
       <div className="space-y-5">
-        <WorkspaceBreadcrumbs items={breadcrumbItems} />
         <PageHeader
           title="Invited vendors"
           subtitle="Vendor roster unavailable"
@@ -355,7 +346,6 @@ function RfqVendorsPageContent({ rfqId }: { rfqId: string }) {
 
   return (
     <div className="space-y-5">
-      <WorkspaceBreadcrumbs items={breadcrumbItems} />
       <PageHeader
         title="Invited vendors"
         subtitle="Selected approved vendors, invitation state, and quick outreach actions"

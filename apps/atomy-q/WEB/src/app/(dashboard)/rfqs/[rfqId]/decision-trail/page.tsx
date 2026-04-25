@@ -4,7 +4,6 @@ import React from 'react';
 import { PageHeader } from '@/components/ds/FilterBar';
 import { SectionCard } from '@/components/ds/Card';
 import { Timeline, type TimelineEvent } from '@/components/ds/Timeline';
-import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useRfq } from '@/hooks/use-rfq';
 import { CheckCircle2 } from 'lucide-react';
 
@@ -18,15 +17,8 @@ export default function DecisionTrailPage({ params }: { params: Promise<{ rfqId:
   const { rfqId } = React.use(params);
   const { data: rfq } = useRfq(rfqId);
 
-  const breadcrumbItems = [
-    { label: 'RFQs', href: '/rfqs' },
-    { label: rfq?.title ?? 'Requisition', href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
-    { label: 'Decision Trail' },
-  ];
-
   return (
     <div className="space-y-5">
-      <WorkspaceBreadcrumbs items={breadcrumbItems} />
       <PageHeader title="Decision Trail" subtitle="Audit log of key decisions for this RFQ" />
       <SectionCard title="Chronological trail">
         <Timeline events={MOCK_TRAIL} compact />

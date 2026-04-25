@@ -3,7 +3,6 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ds/Card';
-import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { SelectInput, TextInput } from '@/components/ds/Input';
 import { useProjects } from '@/hooks/use-projects';
 import { useFeatureFlags } from '@/hooks/use-feature-flags';
@@ -57,13 +56,6 @@ export default function NewRfqPage() {
 
   return (
     <div className="space-y-4">
-      <WorkspaceBreadcrumbs
-        items={[
-          { label: 'RFQs', href: '/rfqs' },
-          { label: 'New RFQ' },
-        ]}
-      />
-
       <Card padding="md">
         <h1 className="text-lg font-semibold text-slate-900">Create New RFQ</h1>
         <p className="text-sm text-slate-500 mt-1">

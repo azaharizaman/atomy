@@ -8,7 +8,6 @@ import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
 import { EmptyState, InfoGrid, SectionCard } from '@/components/ds/Card';
 import { AiStatusChip } from '@/components/ai/ai-status-chip';
 import { AiUnavailableCallout } from '@/components/ai/ai-unavailable-callout';
-import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useAiStatus } from '@/hooks/use-ai-status';
 import { useRfq } from '@/hooks/use-rfq';
 import { useApprovalsList } from '@/hooks/use-approvals';
@@ -127,11 +126,6 @@ function ApprovalsListPageContent({ rfqId }: { rfqId: string }) {
     [scopedItems],
   );
 
-  const breadcrumbItems = [
-    { label: 'RFQs', href: '/rfqs' },
-    { label: rfq?.title ?? 'Requisition', href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
-    { label: 'Approvals' },
-  ];
   const showApprovalSummaryUnavailable = aiStatus.shouldShowUnavailableMessage('approval_ai_summary');
   const hideApprovalSummary = aiStatus.shouldHideAiControls('approval_ai_summary');
   const [selectedApprovalId, setSelectedApprovalId] = React.useState('');
@@ -183,7 +177,6 @@ function ApprovalsListPageContent({ rfqId }: { rfqId: string }) {
 
   return (
     <div className="space-y-5">
-      <WorkspaceBreadcrumbs items={breadcrumbItems} />
       <PageHeader title="Approvals" subtitle={`${approvals.length} approval(s) for this RFQ`} />
       {!hideApprovalSummary || showApprovalSummaryUnavailable ? (
         <SectionCard
