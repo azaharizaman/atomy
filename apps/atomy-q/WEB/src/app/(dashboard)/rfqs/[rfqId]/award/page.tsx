@@ -9,7 +9,6 @@ import { StatusBadge } from '@/components/ds/Badge';
 import { AiStatusChip } from '@/components/ai/ai-status-chip';
 import { AiUnavailableCallout } from '@/components/ai/ai-unavailable-callout';
 import { PageHeader } from '@/components/ds/FilterBar';
-import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useAwardDebriefDraft } from '@/hooks/use-award-debrief-draft';
 import { useAiStatus } from '@/hooks/use-ai-status';
 import { useAwardGuidance } from '@/hooks/use-award-guidance';
@@ -145,12 +144,6 @@ function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
     }
   }, [nonWinners, selectedDraftVendorId]);
 
-  const breadcrumbItems = [
-    { label: 'RFQs', href: '/rfqs' },
-    { label: rfq?.title ?? 'Requisition', href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
-    { label: 'Award' },
-  ];
-
   const comparisonRunsError = !displayAward ? comparisonRunsQuery.error : null;
   const loadError =
     rfqQuery.error ??
@@ -169,7 +162,6 @@ function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
 
     return (
       <div className="space-y-5">
-        <WorkspaceBreadcrumbs items={breadcrumbItems} />
         <PageHeader
           title="Award"
           subtitle="Award data unavailable"
@@ -191,7 +183,6 @@ function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
 
   return (
     <div className="space-y-5">
-      <WorkspaceBreadcrumbs items={breadcrumbItems} />
       <PageHeader
         title="Award"
         subtitle={

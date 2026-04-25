@@ -47,7 +47,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   const base =
-    'inline-flex items-center justify-center font-medium transition-colors duration-150 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-1 whitespace-nowrap';
+    'inline-flex min-w-fit items-center justify-center font-medium transition-colors duration-150 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-1 whitespace-nowrap';
 
   return (
     <button
@@ -97,4 +97,3 @@ export function IconButton({ variant = 'ghost', size = 'md', label, children, cl
     </button>
   );
 }
-

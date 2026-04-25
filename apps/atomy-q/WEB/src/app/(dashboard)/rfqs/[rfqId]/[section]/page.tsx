@@ -3,7 +3,6 @@
 import React from 'react';
 
 import { Card } from '@/components/ds/Card';
-import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 
 const SECTION_TITLES: Record<string, string> = {
   details: 'Details',
@@ -25,14 +24,6 @@ export default function RfqSectionStubPage({ params }: { params: Promise<{ rfqId
 
   return (
     <div className="space-y-4">
-      <WorkspaceBreadcrumbs
-        items={[
-          { label: 'RFQs', href: '/rfqs' },
-          { label: rfqId, href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
-          { label: title },
-        ]}
-      />
-
       <Card padding="md">
         <h1 className="text-lg font-semibold text-slate-900">{title}</h1>
         <p className="text-sm text-slate-500 mt-1">
@@ -42,4 +33,3 @@ export default function RfqSectionStubPage({ params }: { params: Promise<{ rfqId
     </div>
   );
 }
-

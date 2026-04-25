@@ -7,7 +7,6 @@ import { Button } from '@/components/ds/Button';
 import { RecordHeader } from '@/components/ds/RecordHeader';
 import { ConfidenceBadge } from '@/components/ds/Badge';
 import { SecondaryTabs } from '@/components/ds/Tabs';
-import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useAiStatus } from '@/hooks/use-ai-status';
 import { useRfq } from '@/hooks/use-rfq';
 import { useQuoteSubmission } from '@/hooks/use-quote-submission';
@@ -45,13 +44,6 @@ export default function QuoteIntakeDetailPage({
     !useMocks && aiStatus.shouldShowUnavailableMessage('quote_document_extraction');
   const hideExtractionControls = !useMocks && aiStatus.shouldHideAiControls('quote_document_extraction');
 
-  const breadcrumbItems = [
-    { label: 'RFQs', href: '/rfqs' },
-    { label: rfq?.title ?? 'Requisition', href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
-    { label: 'Quote Intake', href: `/rfqs/${encodeURIComponent(rfqId)}/quote-intake` },
-    { label: vendorName },
-  ];
-
   const validationItems = [
     { label: 'Line count match', pass: true },
     { label: 'Currency detected', pass: true },
@@ -61,7 +53,6 @@ export default function QuoteIntakeDetailPage({
 
   return (
     <div className="space-y-5">
-      <WorkspaceBreadcrumbs items={breadcrumbItems} />
       {!useMocks && blockingCount > 0 && (
         <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
           <span className="font-semibold">Blocking issues:</span> {blockingCount} — resolve in normalize before comparison freeze.

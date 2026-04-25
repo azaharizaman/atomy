@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { SectionCard, Card, EmptyState } from '@/components/ds/Card';
 import { Button } from '@/components/ds/Button';
 import { StatusBadge } from '@/components/ds/Badge';
-import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useAiStatus } from '@/hooks/use-ai-status';
 import { useRfq } from '@/hooks/use-rfq';
 import {
@@ -80,20 +79,11 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
   const [editingLineId, setEditingLineId] = React.useState<string | null>(null);
   const [editForm, setEditForm] = React.useState<ManualSourceLineFormState>(EMPTY_MANUAL_LINE);
 
-  const breadcrumbItems = [
-    { label: 'RFQs', href: '/rfqs' },
-    { label: rfq?.title ?? 'Requisition', href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
-    { label: 'Quote Intake', href: `/rfqs/${encodeURIComponent(rfqId)}/quote-intake` },
-    { label: 'Quote', href: `/rfqs/${encodeURIComponent(rfqId)}/quote-intake/${encodeURIComponent(quoteId)}` },
-    { label: 'Normalize' },
-  ];
-
   if (rfqQuery.isError) {
     const pageError = rfqQuery.error;
     const errorMessage = pageError instanceof Error ? pageError.message : 'The live normalization workspace could not be loaded.';
     return (
       <div className="space-y-5">
-        <WorkspaceBreadcrumbs items={breadcrumbItems} />
         <SectionCard title="Normalize workspace unavailable" subtitle="Unable to load live normalization payloads.">
           <EmptyState
             icon={<AlertTriangle size={20} />}
@@ -210,7 +200,6 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
 
   return (
     <div className="space-y-5">
-      <WorkspaceBreadcrumbs items={breadcrumbItems} />
       {showExtractionUnavailable && (
         <Card className="border-amber-200 bg-amber-50 p-4 space-y-1">
           <p className="text-sm font-semibold text-amber-950">AI extraction is unavailable.</p>

@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "requisition_id": "sika-grout-fastplug-rfq-kuching-2020",
+  "title": "SIKA grout and fastplug quotation comparison",
+  "buyer": {
+    "name": "One Medicare Sdn Bhd",
+    "tenant_reference": "default-alpha-buyer"
+  },
+  "currency": "MYR",
+  "submission_deadline_days_from_now": 14,
+  "rfq_line_items": [
+    {
+      "line_reference": "LINE-001",
+      "description": "SIKA Grout 215 - 25KG",
+      "quantity": 2,
+      "uom": "BAG",
+      "expected_keywords": [
+        "SIKA",
+        "GROUT 215",
+        "25KG"
+      ]
+    },
+    {
+      "line_reference": "LINE-002",
+      "description": "SIKA Fastplug 102 - 5KG",
+      "quantity": 2,
+      "uom": "TIN",
+      "expected_keywords": [
+        "SIKA",
+        "FASTPLUG 102",
+        "5KG"
+      ]
+    }
+  ],
+  "quotes": [
+    {
+      "vendor_reference": "max-hardware",
+      "vendor_name": "Max Hardware Enterprise",
+      "file": "1F-1.pdf",
+      "mime_type": "application/pdf",
+      "expected": {
+        "quote_number": "00000419",
+        "quote_date": "2020-02-05",
+        "currency": "RM",
+        "total_amount": 250.00,
+        "line_count_min": 2,
+        "line_keywords": [
+          "SIKA GROUT 215 - 25KG",
+          "SIKA FASTPLUG 102 - 5KG"
+        ],
+        "payment_terms_keywords": [
+          "30 DAYS"
+        ],
+        "validity_keywords": [
+          "30 DAYS"
+        ]
+      }
+    },
+    {
+      "vendor_reference": "wee-yang-hardware",
+      "vendor_name": "Wee Yang Hardware Sdn. Bhd.",
+      "file": "1F-2.pdf",
+      "mime_type": "application/pdf",
+      "expected": {
+        "quote_number": "Q2020/PJ/02/001",
+        "quote_date": "2020-02-04",
+        "currency": "RM",
+        "total_amount": 260.00,
+        "line_count_min": 2,
+        "line_keywords": [
+          "sika fastplug(5kg)",
+          "sika grout 215 (25kg)"
+        ],
+        "payment_terms_keywords": [
+          "30 Days"
+        ],
+        "validity_keywords": [
+          "30 Days"
+        ]
+      }
+    }
+  ],
+  "e2e": {
+    "requires_live_provider": true,
+    "provider": "openrouter",
+    "document_parser": {
+      "plugin": "file-parser",
+      "pdf_engine": "mistral-ocr"
+    },
+    "assertions": {
+      "upload_status": [
+        "ready",
+        "needs_review"
+      ],
+      "source_lines_min": 1,
+      "allow_manual_mapping_completion": true
+    }
+  }
+}

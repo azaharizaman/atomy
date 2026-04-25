@@ -5,7 +5,6 @@ import { AlphaDeferredScreen } from '@/components/alpha/alpha-deferred-screen';
 import { PageHeader } from '@/components/ds/FilterBar';
 import { EmptyState } from '@/components/ds/Card';
 import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
-import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useRfq } from '@/hooks/use-rfq';
 import { HandCoins } from 'lucide-react';
 import { isAlphaMode } from '@/lib/alpha-mode';
@@ -17,12 +16,6 @@ function NegotiationsListPageContent({ params }: { params: Promise<{ rfqId: stri
   const { rfqId } = React.use(params);
   const { data: rfq } = useRfq(rfqId, { enabled: true });
 
-  const breadcrumbItems = [
-    { label: 'RFQs', href: '/rfqs' },
-    { label: rfq?.title ?? 'Requisition', href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
-    { label: 'Negotiations' },
-  ];
-
   const columns: ColumnDef<NegotiationRow>[] = [
     { key: 'id', label: 'ID', render: (row) => <span className="font-mono text-sm">{row.id}</span> },
     { key: 'vendor', label: 'Vendor', render: (row) => <span className="text-sm font-medium text-slate-800">{row.vendor}</span> },
@@ -32,7 +25,6 @@ function NegotiationsListPageContent({ params }: { params: Promise<{ rfqId: stri
 
   return (
     <div className="space-y-5">
-      <WorkspaceBreadcrumbs items={breadcrumbItems} />
       <PageHeader title="Negotiations" subtitle="Vendor negotiation threads for this RFQ" />
       <DataTable
         columns={columns}

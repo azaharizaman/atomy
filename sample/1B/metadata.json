@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "requisition_id": "simunjan-air-duct-cleaning-rfq-2018",
+  "title": "Simunjan Hospital air duct cleaning works quotation",
+  "buyer": {
+    "name": "One Medicare Sdn Bhd",
+    "tenant_reference": "default-alpha-buyer"
+  },
+  "currency": "MYR",
+  "submission_deadline_days_from_now": 14,
+  "rfq_line_items": [
+    {
+      "line_reference": "LINE-001",
+      "description": "Annual AHU ducting cleaning works for one unit of AHU and ducting system",
+      "quantity": 1,
+      "uom": "JOB",
+      "expected_keywords": [
+        "air duct cleaning",
+        "AHU",
+        "ducting",
+        "cleaning report",
+        "disinfection"
+      ]
+    }
+  ],
+  "quotes": [
+    {
+      "vendor_reference": "wajaazalli-sdn-bhd",
+      "vendor_name": "Wajaazalli Sdn Bhd",
+      "file": "1B-1.pdf",
+      "mime_type": "application/pdf",
+      "expected": {
+        "quote_number": null,
+        "quote_date": "2018-11-22",
+        "currency": "RM",
+        "total_amount": 2500.00,
+        "line_count_min": 1,
+        "line_keywords": [
+          "SIMUNJAN HOSPITAL - AIR DUCT CLEANING WORKS 2018",
+          "AHU",
+          "ducting system",
+          "HEPA Vacuum Extractors",
+          "disinfectant"
+        ],
+        "payment_terms_keywords": [
+          "Full Mobilization Deposit",
+          "Purchase Order",
+          "Payment of Mobilization Fee"
+        ],
+        "validity_keywords": [
+          "30 Days before Date of Implementation"
+        ]
+      }
+    }
+  ],
+  "e2e": {
+    "requires_live_provider": true,
+    "provider": "openrouter",
+    "document_parser": {
+      "plugin": "file-parser",
+      "pdf_engine": "mistral-ocr"
+    },
+    "assertions": {
+      "upload_status": [
+        "ready",
+        "needs_review"
+      ],
+      "source_lines_min": 1,
+      "allow_manual_mapping_completion": true
+    }
+  }
+}

@@ -1,16 +1,27 @@
 import React from 'react';
-import { Bell, Bot, Plus } from 'lucide-react';
+import Link from 'next/link';
+import { Bell, Bot, ChevronRight, Plus } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/use-auth-store';
 import { Button } from '@/components/ds/Button';
 import { CountBadge } from '@/components/ds/Badge';
 import { SearchInput } from '@/components/ds/Input';
+import { useRfq } from '@/hooks/use-rfq';
+import { buildHeaderBreadcrumbs } from '@/lib/header-breadcrumbs';
+
+function getWorkspaceRfqId(pathname: string): string | null {
+  if (!pathname.startsWith('/rfqs/')) return null;
+  const segments = pathname.split('/').filter(Boolean);
+  return segments[0] === 'rfqs' && segments[1] && segments[1] !== 'new' ? segments[1] : null;
+}
 
 export function Header() {
   const pathname = usePathname();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+  const rfqId = getWorkspaceRfqId(pathname);
+  const { data: rfq } = useRfq(rfqId ?? '', { enabled: rfqId !== null });
 
   const displayName = user?.name || user?.email || 'User';
   const initials = displayName
@@ -20,16 +31,41 @@ export function Header() {
     .join('')
     .slice(0, 2)
     .toUpperCase();
-
-  const breadcrumb =
-    pathname === '/' || pathname === ''
-      ? 'Dashboard'
-      : pathname.replace(/^\/+|\/+$/g, '').replace(/\//g, ' / ') || 'Dashboard';
+  const breadcrumbItems = buildHeaderBreadcrumbs({
+    pathname,
+    rfqTitle: rfq?.title,
+  });
 
   return (
     <header className="h-14 border-b border-slate-200 bg-white flex items-center justify-between px-4 sticky top-0 z-10">
       <div className="flex items-center gap-4 min-w-0">
-        <span className="text-sm text-slate-500 font-medium truncate">Atomy-Q / {breadcrumb}</span>
+        <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1 text-sm">
+          {breadcrumbItems.map((item, index) => {
+            const isLast = index === breadcrumbItems.length - 1;
+            const isClickable = !isLast && item.href;
+
+            return (
+              <React.Fragment key={`${item.label}-${index}`}>
+                {isClickable ? (
+                  <Link href={item.href!} className="max-w-[180px] truncate text-slate-500 hover:text-indigo-600">
+                    {item.label}
+                  </Link>
+                ) : (
+                  <span
+                    className={[
+                      'truncate',
+                      isLast ? 'max-w-[220px] font-medium text-slate-900' : 'max-w-[180px] text-slate-500',
+                    ].join(' ')}
+                    aria-current={isLast ? 'page' : undefined}
+                  >
+                    {item.label}
+                  </span>
+                )}
+                {!isLast && <ChevronRight size={12} className="shrink-0 text-slate-300" />}
+              </React.Fragment>
+            );
+          })}
+        </nav>
       </div>
 
       <div className="flex items-center gap-3">

@@ -8,7 +8,6 @@ import { PageHeader } from '@/components/ds/FilterBar';
 import { Button } from '@/components/ds/Button';
 import { Card, EmptyState, SectionCard } from '@/components/ds/Card';
 import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
-import { WorkspaceBreadcrumbs } from '@/components/workspace/workspace-breadcrumbs';
 import { useRfq } from '@/hooks/use-rfq';
 import { useRfqLineItems, type RfqLineItemRow } from '@/hooks/use-rfq-line-items';
 
@@ -41,12 +40,6 @@ function RfqLineItemsPageContent({ rfqId }: { rfqId: string }) {
   const handleCreated = React.useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ['rfqs', rfqId, 'line-items'] });
   }, [queryClient, rfqId]);
-
-  const breadcrumbItems = [
-    { label: 'RFQs', href: '/rfqs' },
-    { label: rfq?.title ?? 'Requisition', href: `/rfqs/${encodeURIComponent(rfqId)}/overview` },
-    { label: 'Line Items' },
-  ];
 
   const columns: ColumnDef<RfqLineItemRow>[] = [
     {
@@ -124,7 +117,6 @@ function RfqLineItemsPageContent({ rfqId }: { rfqId: string }) {
     const errorMessage = rfqError instanceof Error ? rfqError.message : 'RFQ data is unavailable.';
     return (
       <div className="space-y-5">
-        <WorkspaceBreadcrumbs items={breadcrumbItems} />
         <PageHeader title="Line items" subtitle="RFQ unavailable" />
         <SectionCard title="RFQ unavailable">
           <EmptyState
@@ -142,7 +134,6 @@ function RfqLineItemsPageContent({ rfqId }: { rfqId: string }) {
       lineItemsError instanceof Error ? lineItemsError.message : 'The live line-item list could not be loaded.';
     return (
       <div className="space-y-5">
-        <WorkspaceBreadcrumbs items={breadcrumbItems} />
         <PageHeader title="Line items" subtitle="Line-item data unavailable" />
         <SectionCard title="Line-item data unavailable">
           <EmptyState
@@ -157,7 +148,6 @@ function RfqLineItemsPageContent({ rfqId }: { rfqId: string }) {
 
   return (
     <div className="space-y-5">
-      <WorkspaceBreadcrumbs items={breadcrumbItems} />
       <PageHeader
         title="Line items"
         subtitle={

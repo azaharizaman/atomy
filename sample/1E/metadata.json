@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "requisition_id": "aircond-compressor-repair-rfq-sibu-2019",
+  "title": "Air conditioner compressor repair quotation comparison",
+  "buyer": {
+    "name": "One Medicare Sdn Bhd",
+    "tenant_reference": "default-alpha-buyer"
+  },
+  "currency": "MYR",
+  "submission_deadline_days_from_now": 14,
+  "rfq_line_items": [
+    {
+      "line_reference": "LINE-001",
+      "description": "Supply, install and repair air conditioner compressor including related components",
+      "quantity": 1,
+      "uom": "JOB",
+      "expected_keywords": [
+        "air cond",
+        "compressor",
+        "repair",
+        "supply",
+        "install"
+      ]
+    }
+  ],
+  "quotes": [
+    {
+      "vendor_reference": "maju-indah-aircond",
+      "vendor_name": "Maju Indah Air-Cond & Works",
+      "file": "1E-1.pdf",
+      "mime_type": "application/pdf",
+      "expected": {
+        "quote_number": "MI-008/0919",
+        "quote_date": "2019-09-20",
+        "currency": "RM",
+        "total_amount": 1433.00,
+        "line_count_min": 4,
+        "line_keywords": [
+          "SUPPLY&INSTALL 25000BTU COMPRESSOR",
+          "EXTENSION BAR",
+          "AIR COND FILTER",
+          "45UF CAPACITOR"
+        ],
+        "payment_terms_keywords": [],
+        "validity_keywords": []
+      }
+    },
+    {
+      "vendor_reference": "deluxe-resources",
+      "vendor_name": "Deluxe Resources Sdn. Bhd.",
+      "file": "1E-2.pdf",
+      "mime_type": "application/pdf",
+      "expected": {
+        "quote_number": null,
+        "quote_date": "2019-09-25",
+        "currency": "RM",
+        "total_amount": 1500.00,
+        "line_count_min": 1,
+        "line_keywords": [
+          "Air Cond not cold",
+          "No refrigerant",
+          "Compressor jammed",
+          "replace compressor",
+          "General checking and repair compressor"
+        ],
+        "payment_terms_keywords": [
+          "30 days"
+        ],
+        "validity_keywords": [
+          "30 days"
+        ]
+      }
+    }
+  ],
+  "e2e": {
+    "requires_live_provider": true,
+    "provider": "openrouter",
+    "document_parser": {
+      "plugin": "file-parser",
+      "pdf_engine": "mistral-ocr"
+    },
+    "assertions": {
+      "upload_status": [
+        "ready",
+        "needs_review"
+      ],
+      "source_lines_min": 1,
+      "allow_manual_mapping_completion": true
+    }
+  }
+}
