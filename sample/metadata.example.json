@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "requisition_id": "vehicle-service-rfq",
+  "title": "Vehicle service quotation",
+  "buyer": {
+    "name": "Atomy-Q Alpha Buyer",
+    "tenant_reference": "alpha-provider-e2e"
+  },
+  "currency": "MYR",
+  "submission_deadline_days_from_now": 14,
+  "rfq_line_items": [
+    {
+      "line_reference": "LINE-001",
+      "description": "Breakdown assist jump start vehicle",
+      "quantity": 1,
+      "uom": "EA",
+      "expected_keywords": [
+        "jump start",
+        "vehicle"
+      ]
+    }
+  ],
+  "quotes": [
+    {
+      "vendor_reference": "kuching-utama",
+      "vendor_name": "Kuching Utama Sdn Bhd",
+      "file": "5b99b82bd0fda101329131.pdf",
+      "mime_type": "application/pdf",
+      "expected": {
+        "quote_number": "1809/2975",
+        "currency": "RM",
+        "total_amount": 84.8,
+        "line_count_min": 1,
+        "line_keywords": [
+          "BREAKDOWN ASSIST",
+          "JUMP START VEHICLE"
+        ],
+        "payment_terms_keywords": [
+          "50% deposit"
+        ],
+        "validity_keywords": [
+          "30 days"
+        ]
+      }
+    }
+  ],
+  "e2e": {
+    "requires_live_provider": true,
+    "provider": "openrouter",
+    "document_parser": {
+      "plugin": "file-parser",
+      "pdf_engine": "mistral-ocr"
+    },
+    "assertions": {
+      "upload_status": [
+        "ready",
+        "needs_review"
+      ],
+      "source_lines_min": 1,
+      "allow_manual_mapping_completion": true
+    }
+  }
+}
