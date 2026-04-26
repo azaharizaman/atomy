@@ -759,6 +759,33 @@ final class PetrochemicalTenantSeeder extends Seeder
                 default => (int) ($vend['risky'] ? 1 : 0),
             };
             $errors = $st === 'failed' ? 2 : 0;
+
+            $submittedAt = $this->now->copy()->subDays($qIdx % 6);
+            $processingStartedAt = null;
+            $processingCompletedAt = null;
+            $parsedAt = null;
+            $errorCode = null;
+            $errorMessage = null;
+            $retryCount = 0;
+
+            if ($st !== 'uploaded') {
+                $processingStartedAt = $submittedAt->copy()->addMinutes(2);
+            }
+
+            if (in_array($st, ['extracted', 'normalizing', 'ready', 'needs_review', 'failed'], true)) {
+                $parsedAt = $processingStartedAt?->copy()->addMinutes(5);
+            }
+
+            if (in_array($st, ['ready', 'needs_review', 'failed'], true)) {
+                $processingCompletedAt = $parsedAt?->copy()->addMinutes(1);
+            }
+
+            if ($st === 'failed') {
+                $errorCode = 'EXTRACTION_FAILED';
+                $errorMessage = 'Unable to parse document structure. Retry exhaustion.';
+                $retryCount = 3;
+            }
+
             DB::table('quote_submissions')->insert([
                 'id' => $quoteId,
                 'tenant_id' => $this->tenantId,
@@ -770,16 +797,22 @@ final class PetrochemicalTenantSeeder extends Seeder
                 'file_path' => '/uploads/quotes/' . $rfqId . '-' . $qIdx . '.pdf',
                 'file_type' => 'application/pdf',
                 'original_filename' => 'Quote_' . preg_replace('/\W+/', '_', $vend['name']) . '.pdf',
-                'submitted_at' => $this->now->copy()->subDays($qIdx % 6),
+                'submitted_at' => $submittedAt,
                 'confidence' => round(72.0 + self::hash($i + $qIdx) * 27.0, 2),
                 'line_items_count' => count($lines),
                 'warnings_count' => $warnings,
                 'errors_count' => $errors,
+                'error_code' => $errorCode,
+                'error_message' => $errorMessage,
+                'processing_started_at' => $processingStartedAt,
+                'processing_completed_at' => $processingCompletedAt,
+                'parsed_at' => $parsedAt,
+                'retry_count' => $retryCount,
                 'created_at' => $this->now,
                 'updated_at' => $this->now,
             ]);
 
-            if ($st === 'ready' || ($kind === 'published_stuck' && $st === 'needs_review')) {
+            if (in_array($st, ['normalizing', 'ready', 'needs_review'], true)) {
                 $this->seedNormalizationForQuote($quoteId, $lines, $kind, $qIdx, $st === 'needs_review');
             }
 
@@ -847,6 +880,9 @@ final class PetrochemicalTenantSeeder extends Seeder
                 'source_unit_price' => round($line['unit_price'] * $priceDelta, 4),
                 'raw_data' => json_encode(['page' => 1 + ($k % 4)], JSON_THROW_ON_ERROR),
                 'sort_order' => $k + 1,
+                'ai_confidence' => round(85.0 + self::hash((int) crc32($quoteId) + $k) * 14.0, 2),
+                'taxonomy_code' => 'PETRO-CHEM-' . (1000 + ($k % 50)),
+                'mapping_version' => 'v2.1-stable',
                 'created_at' => $this->now,
                 'updated_at' => $this->now,
             ]);
