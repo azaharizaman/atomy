@@ -491,6 +491,7 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 ## 2026-04-24 AI Quote Intake Manual Continuity
 
 - `QuoteSubmissionController::upload` now honors the Plan 1 AI runtime state for document extraction when `AI_MODE` is `provider` or `off`; unavailable/disabled extraction leaves the uploaded quote in `needs_review` with truthful `EXTRACTION_UNAVAILABLE`/`EXTRACTION_DISABLED` status instead of letting legacy `QUOTE_INTELLIGENCE_MODE` fabricate deterministic success.
+- Provider document extraction dispatch is now gated by endpoint configuration/enabled state rather than transient health-probe availability, so degraded `/ai/status` snapshots do not suppress real provider extraction when the document endpoint is configured.
 - Added tenant-scoped manual source-line CRUD under `/api/v1/quote-submissions/{id}/source-lines`, including readiness recalculation, line-count updates, manual decision-trail events, and tenant-safe `404` behavior for cross-tenant quote/source-line access.
 - Manual source-line provenance is serialized through `raw_data.provenance` and response fields with `origin=manual`, acting user id, timestamp, and optional `note`/`reason`; manual rows explicitly return `ai_confidence`, `taxonomy_code`, `mapping_version`, and provider provenance as `null`.
 - Normalization source-line list responses now expose origin/provenance/provider provenance plus normalization AI availability metadata so WEB can distinguish manual continuity from unavailable AI suggestions.

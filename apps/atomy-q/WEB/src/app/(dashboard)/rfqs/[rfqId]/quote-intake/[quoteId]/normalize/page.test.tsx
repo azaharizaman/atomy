@@ -5,8 +5,9 @@ import { renderWithProviders } from '@/test/utils';
 
 const mockUseNormalizationReview = vi.fn();
 const mockUseNormalizationSourceLines = vi.fn();
+const mockUseComparisonReadiness = vi.fn();
 const mockCreateSourceLine = vi.fn();
-const mockUpdateSourceLine = vi.fn();
+const mockOverrideSourceLine = vi.fn();
 const mockDeleteSourceLine = vi.fn();
 const mockUseAiStatus = vi.fn();
 
@@ -26,9 +27,13 @@ vi.mock('@/hooks/use-normalization-source-lines', () => ({
   useNormalizationSourceLines: (...args: unknown[]) => mockUseNormalizationSourceLines(...args),
   useManualNormalizationSourceLineMutations: () => ({
     createSourceLine: { mutate: mockCreateSourceLine, isPending: false, isError: false, error: null },
-    updateSourceLine: { mutate: mockUpdateSourceLine, isPending: false, isError: false, error: null },
+    overrideSourceLine: { mutate: mockOverrideSourceLine, isPending: false, isError: false, error: null },
     deleteSourceLine: { mutate: mockDeleteSourceLine, isPending: false, isError: false, error: null },
   }),
+}));
+
+vi.mock('@/hooks/use-comparison-readiness', () => ({
+  useComparisonReadiness: (...args: unknown[]) => mockUseComparisonReadiness(...args),
 }));
 
 vi.mock('@/hooks/use-freeze-comparison', () => ({
@@ -40,7 +45,7 @@ vi.mock('@/hooks/use-freeze-comparison', () => ({
 }));
 
 vi.mock('@/hooks/use-rfq', () => ({
-  useRfq: () => ({ data: { title: 'RFQ' } }),
+  useRfq: vi.fn(() => ({ data: { title: 'RFQ', submission_deadline: '2026-04-01T00:00:00.000Z' } })),
 }));
 
 vi.mock('@/hooks/use-rfq-line-items', () => ({
@@ -77,6 +82,7 @@ vi.mock('@/hooks/use-ai-status', () => ({
 }));
 
 import NormalizePage from './page';
+import { useRfq } from '@/hooks/use-rfq';
 
 async function renderPage() {
   await act(async () => {
@@ -103,6 +109,15 @@ describe('NormalizeQuotePage', () => {
       status: 'success',
       fetchStatus: 'idle',
       resolveConflict: { mutate: vi.fn(), isPending: false, isError: false },
+    });
+
+    mockUseComparisonReadiness.mockReturnValue({
+      allQuotesReady: true,
+      canFreezeComparison: true,
+      hasBlockingIssues: false,
+      blockingIssueCount: 0,
+      overview: { data: { normalization: { total_quotes: 2, ready_count: 2, accepted_count: 2 } } },
+      normalization: {},
     });
 
     mockUseNormalizationSourceLines.mockReturnValue({
@@ -204,6 +219,30 @@ describe('NormalizeQuotePage', () => {
     await renderPage();
 
     expect(await screen.findByText(/blocking issues/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /freeze comparison/i })).toBeDisabled();
+  });
+
+  it('keeps freeze disabled while the RFQ submission deadline is still open', async () => {
+    vi.mocked(useRfq).mockReturnValueOnce({
+      data: { title: 'RFQ', submission_deadline: '2099-04-01T00:00:00.000Z' },
+    } as ReturnType<typeof useRfq>);
+
+    mockUseNormalizationReview.mockReturnValue({
+      conflicts: [],
+      hasBlockingIssues: false,
+      blockingIssueCount: 0,
+      isLoading: false,
+      isError: false,
+      error: null,
+      data: undefined,
+      status: 'success',
+      fetchStatus: 'idle',
+      resolveConflict: { mutate: vi.fn(), isPending: false, isError: false },
+    });
+
+    await renderPage();
+
+    expect(await screen.findByText(/comparison freeze unavailable/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /freeze comparison/i })).toBeDisabled();
   });
 
@@ -326,16 +365,16 @@ describe('NormalizeQuotePage', () => {
     fireEvent.click(screen.getByRole('button', { name: /edit source line 1/i }));
     fireEvent.change(screen.getByLabelText(/reason code source line 1/i), { target: { value: 'price_correction' } });
     fireEvent.click(screen.getByRole('button', { name: /save source line 1/i }));
-    expect(mockUpdateSourceLine).toHaveBeenCalledWith({
-      quoteSubmissionId: 'q1',
+    expect(mockOverrideSourceLine).toHaveBeenCalledWith({
       id: 'line-1',
-      source_description: 'Widget A',
-      source_quantity: '2',
-      source_uom: 'ea',
-      source_unit_price: null,
-      rfq_line_item_id: 'rfq-line-1',
+      override_data: {
+        rfq_line_item_id: 'rfq-line-1',
+        quantity: '2',
+        uom: 'ea',
+        unit_price: null,
+      },
       note: 'Typed from signed quote',
-      reason: 'price_correction',
+      reason_code: 'price_correction',
     });
 
     vi.spyOn(window, 'confirm').mockReturnValueOnce(true);

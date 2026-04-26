@@ -68,9 +68,56 @@ test.describe('provider normalization degraded manual continuity', () => {
               status: 'draft',
               quotes_count: 1,
               vendors_count: 1,
-              submission_deadline: new Date(Date.now() + 14 * 86400000).toISOString(),
+              submission_deadline: new Date(Date.now() - 86400000).toISOString(),
             },
           }),
+        });
+        return;
+      }
+
+      if (pathname.endsWith(`/rfqs/${rfqId}/overview`)) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            data: {
+              rfq: {
+                id: rfqId,
+                rfq_number: rfqId,
+                title: 'Degraded provider normalization RFQ',
+                status: 'draft',
+                submission_deadline: new Date(Date.now() - 86400000).toISOString(),
+                vendors_count: 1,
+                quotes_count: 1,
+              },
+              expected_quotes: 1,
+              normalization: {
+                total_quotes: 1,
+                ready_count: hasBlockingIssues ? 0 : 1,
+                accepted_count: hasBlockingIssues ? 0 : 1,
+                progress_pct: hasBlockingIssues ? 0 : 100,
+                uploaded_count: 0,
+                needs_review_count: hasBlockingIssues ? 1 : 0,
+              },
+              comparison: null,
+              approvals: {
+                pending_count: 0,
+                approved_count: 0,
+                rejected_count: 0,
+                overall: 'none',
+              },
+              activity: [],
+            },
+          }),
+        });
+        return;
+      }
+
+      if (pathname.endsWith(`/rfqs/${rfqId}/activity`)) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ data: [] }),
         });
         return;
       }

@@ -19,6 +19,8 @@ test.describe('provider quote e2e with mocked API responses', () => {
       return;
     }
 
+    await page.setViewportSize({ width: 1800, height: 1200 });
+
     const rfqLineId = 'rfq-line-1';
     let hasBlockingIssues = true;
     let blockingIssueCount = 1;
@@ -125,9 +127,56 @@ test.describe('provider quote e2e with mocked API responses', () => {
               status: 'draft',
               quotes_count: fixture.quotes.length,
               vendors_count: fixture.quotes.length,
-              submission_deadline: new Date(Date.now() + fixture.submissionDeadlineDaysFromNow * 86400000).toISOString(),
+              submission_deadline: new Date(Date.now() - 86400000).toISOString(),
             },
           }),
+        });
+        return;
+      }
+
+      if (pathname.endsWith(`/rfqs/${rfqId}/overview`)) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            data: {
+              rfq: {
+                id: rfqId,
+                rfq_number: rfqId,
+                title: fixture.title,
+                status: 'draft',
+                submission_deadline: new Date(Date.now() - 86400000).toISOString(),
+                vendors_count: 1,
+                quotes_count: 1,
+              },
+              expected_quotes: 1,
+              normalization: {
+                total_quotes: 1,
+                ready_count: hasBlockingIssues ? 0 : 1,
+                accepted_count: hasBlockingIssues ? 0 : 1,
+                progress_pct: hasBlockingIssues ? 0 : 100,
+                uploaded_count: 0,
+                needs_review_count: hasBlockingIssues ? 1 : 0,
+              },
+              comparison: null,
+              approvals: {
+                pending_count: 0,
+                approved_count: 0,
+                rejected_count: 0,
+                overall: 'none',
+              },
+              activity: [],
+            },
+          }),
+        });
+        return;
+      }
+
+      if (pathname.endsWith(`/rfqs/${rfqId}/activity`)) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ data: [] }),
         });
         return;
       }
@@ -251,16 +300,21 @@ test.describe('provider quote e2e with mocked API responses', () => {
         return;
       }
 
-      if (pathname.endsWith(`/quote-submissions/${quoteId}/source-lines/${sourceLine.id}`) && method === 'PUT') {
+      if (pathname.endsWith(`/normalization/source-lines/${sourceLine.id}/override`) && method === 'PUT') {
         const body = route.request().postDataJSON() as Record<string, unknown>;
-        sourceLine.source_unit_price = String(body.source_unit_price ?? '12.34');
+        const overrideData =
+          body.override_data && typeof body.override_data === 'object'
+            ? body.override_data as Record<string, unknown>
+            : {};
+
+        sourceLine.source_unit_price = String(overrideData.unit_price ?? '12.34');
         sourceLine.effective_values = {
           ...sourceLine.effective_values,
           unit_price: sourceLine.source_unit_price,
         };
         sourceLine.is_buyer_overridden = true;
         sourceLine.latest_override = {
-          reason_code: String(body.reason ?? 'price_correction'),
+          reason_code: String(body.reason_code ?? 'price_correction'),
           note: String(body.note ?? 'Matched supplier quote'),
           actor_name: fixture.buyer.name,
           actor_user_id: 'user-provider-fake',
@@ -317,16 +371,14 @@ test.describe('provider quote e2e with mocked API responses', () => {
     await expect(page.getByRole('cell', { name: fixture.quotes[0]?.vendorName ?? '' })).toBeVisible();
     await expect(page.getByText(/blocking issues/i)).toBeVisible();
 
-    await page.goto(`/rfqs/${rfqId}/quote-intake/${quoteId}`);
-    await expect(page.getByRole('button', { name: /accept & normalize/i })).toBeVisible();
-    await page.getByRole('button', { name: /accept & normalize/i }).click();
+    await page.goto(`/rfqs/${rfqId}/quote-intake/${quoteId}/normalize`);
 
-    await expect(page.getByText(/source lines/i)).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Source lines' })).toBeVisible();
     await expect(page.getByText(/provider confidence 88\.25%/i)).toBeVisible();
     await expect(page.getByText(/provider suggested/i)).toBeVisible();
     await expect(page.getByRole('button', { name: /freeze comparison/i })).toBeDisabled();
 
-    await page.getByRole('button', { name: /edit source line 1/i }).click({ force: true });
+    await page.getByRole('button', { name: /edit source line 1/i }).click();
     await page.getByLabel(/unit price source line 1/i).fill('12.34');
     await page.getByLabel(/reason code source line 1/i).selectOption('price_correction');
     await page.getByLabel(/note source line 1/i).fill('Matched supplier quote');

@@ -297,6 +297,7 @@ final class NormalizationReviewWorkflowTest extends ApiTestCase
                 'source_unit_price' => '24.50',
                 'rfq_line_item_id' => $lineItem->id,
                 'note' => 'Typed from vendor email after extraction outage',
+                'reason' => 'manual_entry_required',
             ],
             $headers,
         );
@@ -306,6 +307,7 @@ final class NormalizationReviewWorkflowTest extends ApiTestCase
         $create->assertJsonPath('data.provenance.origin', 'manual');
         $create->assertJsonPath('data.provenance.user_id', $user->id);
         $create->assertJsonPath('data.provenance.note', 'Typed from vendor email after extraction outage');
+        $create->assertJsonPath('data.provenance.reason', 'manual_entry_required');
         $create->assertJsonPath('data.ai_confidence', null);
         $create->assertJsonPath('data.taxonomy_code', null);
         $create->assertJsonPath('data.provider_provenance', null);
@@ -325,14 +327,16 @@ final class NormalizationReviewWorkflowTest extends ApiTestCase
                 'source_uom' => 'EA',
                 'source_unit_price' => '23.75',
                 'rfq_line_item_id' => $lineItem->id,
-                'reason' => 'Corrected unit price from page 2',
+                'reason' => 'price_correction',
+                'note' => 'Corrected unit price from page 2',
             ],
             $headers,
         );
 
         $update->assertOk();
         $update->assertJsonPath('data.source_description', 'Manual Widget quoted line revised');
-        $update->assertJsonPath('data.provenance.reason', 'Corrected unit price from page 2');
+        $update->assertJsonPath('data.provenance.reason', 'price_correction');
+        $update->assertJsonPath('data.provenance.note', 'Corrected unit price from page 2');
         $update->assertJsonPath('data.provenance.user_id', $user->id);
         $update->assertJsonPath('data.ai_confidence', null);
         $update->assertJsonPath('data.provider_provenance', null);
@@ -383,10 +387,12 @@ final class NormalizationReviewWorkflowTest extends ApiTestCase
 
         $this->postJson('/api/v1/quote-submissions/' . $quote->id . '/source-lines', [
             'source_description' => 'Cross tenant line',
+            'reason' => 'manual_entry_required',
         ], $headers)->assertNotFound();
 
         $this->putJson('/api/v1/quote-submissions/' . $quote->id . '/source-lines/' . $sourceLine->id, [
             'source_description' => 'Cross tenant edit',
+            'reason' => 'manual_entry_required',
         ], $headers)->assertNotFound();
 
         $this->deleteJson(
@@ -394,6 +400,58 @@ final class NormalizationReviewWorkflowTest extends ApiTestCase
             [],
             $headers,
         )->assertNotFound();
+    }
+
+    public function test_manual_source_line_create_requires_structured_reason(): void
+    {
+        $user = $this->createUser();
+        [, $lineItem, $quote] = $this->createManualReviewFixture($user);
+        $headers = $this->authHeaders((string) $user->tenant_id, (string) $user->id);
+
+        $missingReason = $this->postJson(
+            '/api/v1/quote-submissions/' . $quote->id . '/source-lines',
+            [
+                'source_description' => 'Manual Widget quoted line',
+                'rfq_line_item_id' => $lineItem->id,
+            ],
+            $headers,
+        );
+
+        $missingReason->assertStatus(422);
+        $missingReason->assertJsonPath('details.reason.0', 'The reason field is required.');
+    }
+
+    public function test_manual_source_line_update_requires_note_for_other_reason(): void
+    {
+        $user = $this->createUser();
+        [, $lineItem, $quote] = $this->createManualReviewFixture($user);
+        $headers = $this->authHeaders((string) $user->tenant_id, (string) $user->id);
+
+        $create = $this->postJson(
+            '/api/v1/quote-submissions/' . $quote->id . '/source-lines',
+            [
+                'source_description' => 'Manual Widget quoted line valid',
+                'rfq_line_item_id' => $lineItem->id,
+                'reason' => 'manual_entry_required',
+            ],
+            $headers,
+        );
+
+        $create->assertCreated();
+        $lineId = (string) $create->json('data.id');
+
+        $missingOtherNote = $this->putJson(
+            '/api/v1/quote-submissions/' . $quote->id . '/source-lines/' . $lineId,
+            [
+                'source_description' => 'Manual Widget quoted line other reason',
+                'rfq_line_item_id' => $lineItem->id,
+                'reason' => 'other',
+            ],
+            $headers,
+        );
+
+        $missingOtherNote->assertStatus(422);
+        $missingOtherNote->assertJsonPath('details.note.0', 'The note field is required when reason is other.');
     }
 
     public function test_source_lines_endpoint_serializes_provider_suggested_effective_and_override_state(): void

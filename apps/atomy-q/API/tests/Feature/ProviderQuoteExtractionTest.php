@@ -187,6 +187,53 @@ final class ProviderQuoteExtractionTest extends ApiTestCase
         self::assertSame('mistral-ocr', $transport->payload['plugins'][0]['pdf']['engine'] ?? null);
     }
 
+    public function testProviderModeUploadStillDispatchesExtractionWhenHealthSnapshotIsUnavailableButEndpointIsConfigured(): void
+    {
+        $this->bindAiRuntimeStatus([
+            'quote_document_extraction' => new AiCapabilityStatus(
+                featureKey: 'quote_document_extraction',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_DOCUMENT_INTELLIGENCE,
+                endpointGroup: AiStatusSchema::ENDPOINT_GROUP_DOCUMENT,
+                fallbackUiMode: AiStatusSchema::FALLBACK_UI_MODE_SHOW_MANUAL_CONTINUITY_BANNER,
+                messageKey: 'ai.quote_document_extraction.manual_continuity',
+                status: AiStatusSchema::CAPABILITY_STATUS_DEGRADED,
+                available: false,
+                reasonCodes: ['health_probe_failed'],
+                operatorCritical: true,
+                diagnostics: ['mode' => AiStatusSchema::MODE_PROVIDER],
+            ),
+        ]);
+
+        $this->configureProviderDocumentEndpoint();
+        $transport = new class implements ProviderAiTransportInterface {
+            public function invoke(string $endpointGroup, array $payload): array
+            {
+                return FakeOpenRouterDocumentResponses::successfulQuoteExtraction();
+            }
+        };
+        $this->app->instance(ProviderAiTransportInterface::class, $transport);
+        $this->refreshProviderBindings();
+        $this->app->instance(ProviderAiTransportInterface::class, $transport);
+
+        $user = $this->createUser();
+        $rfq = $this->createRfq($user);
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/quote-submissions/upload', [
+                'rfq_id' => $rfq->id,
+                'vendor_id' => (string) Str::ulid(),
+                'vendor_name' => 'Probe Degraded Vendor',
+                'file' => $this->sampleQuotePdf(),
+            ]);
+
+        $response->assertCreated();
+
+        $submission = QuoteSubmission::query()->findOrFail((string) $response->json('data.id'));
+        self::assertContains($submission->status, ['ready', 'needs_review']);
+        self::assertSame(1, $submission->normalizationSourceLines()->count());
+        self::assertNull($submission->error_code);
+    }
+
     public function testProviderModeUploadHandlesTransportErrors(): void
     {
         $this->configureProviderDocumentEndpoint();

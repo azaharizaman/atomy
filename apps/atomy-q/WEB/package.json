@@ -17,7 +17,7 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "PWDEBUG=1 playwright test",
     "test:e2e:install": "playwright install --with-deps",
-    "test:e2e:provider-quote:fake": "cross-env NEXT_PUBLIC_AI_MODE=provider playwright test tests/provider-quote-e2e.spec.ts",
+    "test:e2e:provider-quote:fake": "cross-env NEXT_PUBLIC_AI_MODE=provider playwright test tests/provider-quote-e2e.spec.ts tests/provider-normalization-degraded.spec.ts --workers=1",
     "test:e2e:provider-quote:live": "cross-env AI_PROVIDER_E2E=true AI_MODE=provider NEXT_PUBLIC_AI_MODE=provider playwright test tests/provider-quote-live.spec.ts"
   },
   "dependencies": {

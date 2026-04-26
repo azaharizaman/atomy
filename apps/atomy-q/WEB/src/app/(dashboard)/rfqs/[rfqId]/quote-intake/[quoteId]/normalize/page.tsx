@@ -18,6 +18,7 @@ import {
 } from '@/hooks/use-normalization-source-lines';
 import { useFreezeComparison } from '@/hooks/use-freeze-comparison';
 import { useRfqLineItems } from '@/hooks/use-rfq-line-items';
+import { useComparisonReadiness } from '@/hooks/use-comparison-readiness';
 import { AlertTriangle, Lock, Pencil, Plus, Save, Trash2, Unlock, X } from 'lucide-react';
 
 const MOCK_SOURCE_LINES = [
@@ -79,6 +80,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
   const rfq = rfqQuery.data;
   const aiStatus = useAiStatus();
   const normLive = useNormalizationReview(rfqId, { enabled: !useMocks });
+  const comparisonReadiness = useComparisonReadiness(rfqId, { enabled: !useMocks });
   const sourceLinesQuery = useNormalizationSourceLines(rfqId, { enabled: !useMocks });
   const rfqLineItemsQuery = useRfqLineItems(rfqId);
   const manualSourceLines = useManualNormalizationSourceLineMutations(rfqId);
@@ -120,6 +122,10 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
   const sourceLinesError =
     sourceLinesQuery.error instanceof Error ? sourceLinesQuery.error.message : 'Source-line data could not be loaded.';
   const reviewError = normLive.error instanceof Error ? normLive.error.message : 'Review data could not be loaded.';
+  const submissionDeadlineMs = rfq?.submission_deadline ? Date.parse(rfq.submission_deadline) : Number.NaN;
+  const submissionWindowStillOpen = !useMocks && Number.isFinite(submissionDeadlineMs) && submissionDeadlineMs > Date.now();
+  const comparisonFreezeBlockedByReadiness =
+    !useMocks && (!comparisonReadiness.canFreezeComparison || submissionWindowStillOpen);
 
   function updateManualForm(field: keyof ManualSourceLineFormState, value: string): void {
     setManualForm((current) => ({ ...current, [field]: value }));
@@ -237,7 +243,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
     return `${numeric.toFixed(2)}%`;
   }
 
-  const freezeDisabled = hasBlockingIssues || freeze.isPending;
+  const freezeDisabled = hasBlockingIssues || freeze.isPending || comparisonFreezeBlockedByReadiness;
 
   return (
     <div className="space-y-5">
@@ -292,6 +298,22 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
               ))}
             </ul>
           )}
+        </Card>
+      )}
+      {!useMocks && submissionWindowStillOpen && (
+        <Card className="border-slate-200 bg-slate-50 p-4 space-y-1">
+          <p className="text-sm font-semibold text-slate-900">Comparison freeze unavailable</p>
+          <p className="text-xs text-slate-600">
+            Submission deadline has not passed yet. Final comparison remains blocked until the RFQ closes.
+          </p>
+        </Card>
+      )}
+      {!useMocks && !submissionWindowStillOpen && !comparisonReadiness.allQuotesReady && (
+        <Card className="border-slate-200 bg-slate-50 p-4 space-y-1">
+          <p className="text-sm font-semibold text-slate-900">Comparison freeze waiting on quote readiness</p>
+          <p className="text-xs text-slate-600">
+            All active quote submissions must reach ready state before final comparison can be frozen.
+          </p>
         </Card>
       )}
       <div className="flex items-center gap-3 flex-wrap">

@@ -18,6 +18,7 @@ use App\Models\Rfq;
 use App\Models\RfqLineItem;
 use App\Services\QuoteIntake\DecisionTrailRecorder;
 use App\Services\QuoteIntake\QuoteSubmissionReadinessService;
+use App\Adapters\Ai\Contracts\AiEndpointRegistryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -524,11 +525,23 @@ final class QuoteSubmissionController extends Controller
     private function shouldUseManualExtractionContinuity(): bool
     {
         $mode = (string) config('atomy.ai.mode', AiStatusSchema::MODE_DETERMINISTIC);
-        if (!in_array($mode, [AiStatusSchema::MODE_PROVIDER, AiStatusSchema::MODE_OFF], true)) {
+        if ($mode === AiStatusSchema::MODE_OFF) {
+            return true;
+        }
+
+        if ($mode !== AiStatusSchema::MODE_PROVIDER) {
             return false;
         }
 
-        return !$this->aiCapabilityAvailable('quote_document_extraction');
+        try {
+            /** @var AiEndpointRegistryInterface $endpointRegistry */
+            $endpointRegistry = app(AiEndpointRegistryInterface::class);
+            $endpointConfig = $endpointRegistry->endpointConfig(AiStatusSchema::ENDPOINT_GROUP_DOCUMENT);
+
+            return $endpointConfig === null || $endpointConfig->enabled === false;
+        } catch (Throwable) {
+            return true;
+        }
     }
 
     private function markExtractionUnavailable(QuoteSubmission $submission): void
