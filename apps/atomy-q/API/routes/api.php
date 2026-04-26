@@ -2,6 +2,47 @@
 
 declare(strict_types=1);
 
+/*
+|--------------------------------------------------------------------------
+| API Routes - Table of Contents
+|--------------------------------------------------------------------------
+|
+| This file defines all API v1 routes for the Atomy-Q application.
+| Routes are organized into sections for easy navigation and reference.
+|
+| Section Index:
+|   §1  - Authentication & Session          (auth)                 → 9 endpoints
+|   §2  - Dashboard                       (dashboard)            → 5 endpoints
+|   §3  - RFQ Management                   (rfqs)                → 12 endpoints
+|   §4  - RFQ Templates                    (rfq-templates)       → 7 endpoints
+|   §5  - Vendor Management                (vendors)             → 8 endpoints
+|   §6  - Vendor Invitations               (rfqs.*\/invitations)  → 3 endpoints
+|   §7  - Quote Intake                     (quote-submissions)  → 7 endpoints
+|   §8  - Quote Normalization              (normalization)       → 10 endpoints
+|   §9  - Comparison Matrix                (comparison-runs)     → 9 endpoints
+|   §10 - Scoring Models                   (scoring-models)      → 8 endpoints
+|   §11 - Scoring Policies                 (scoring-policies)   → 8 endpoints
+|   §12 - Scenarios                        (scenarios)           → 5 endpoints
+|   §13 - Risk & Compliance                (risk-items)          → 3 endpoints (+ 4 vendor sub-routes)
+|   §14 - Approvals                        (approvals)           → 12 endpoints
+|   §15 - Operational Approvals           (operational-approvals) → 4 endpoints
+|   §16 - Negotiations                     (negotiations)        → 5 endpoints
+|   §17 - Award Decision                   (awards)              → 7 endpoints
+|   §18 - PO/Contract Handoff              (handoffs)            → 6 endpoints
+|   §19 - Documents                        (documents)          → 6 endpoints
+|   §20 - Search                           (search)              → 3 endpoints
+|   §21 - Reports                          (reports)             → 4 endpoints
+|   §22 - Settings                         (settings)            → 5 endpoints
+|   §23 - Users & Access                   (users)               → 6 endpoints
+|   §24 - Projects                         (projects)            → 5 endpoints
+|   §25 - Tasks                            (tasks)               → 5 endpoints
+|   §26 - Integrations                     (integrations)        → 6 endpoints
+|   §27 - Decision Trail                   (decision-trail)     → 3 endpoints
+|
+| Total: ~180 endpoints
+|
+*/
+
 use App\Http\Controllers\Api\V1\AccountController;
 use App\Http\Controllers\Api\V1\AiStatusController;
 use App\Http\Controllers\Api\V1\ApprovalController;
@@ -152,7 +193,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::get('{id}/governance', [VendorGovernanceController::class, 'show']);
         Route::post('{id}/governance/generate', [VendorGovernanceController::class, 'generate']);
 
-        // Risk-related vendor endpoints (Section 14)
+        // Risk-related vendor endpoints (Section 13)
         Route::post('{id}/sanctions-screening', [VendorGovernanceController::class, 'sanctionsScreening'])
             ->middleware('idempotency')
             ->name('v1.vendors.sanctions-screening');

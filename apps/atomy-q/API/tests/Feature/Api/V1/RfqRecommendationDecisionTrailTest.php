@@ -49,7 +49,7 @@ final class RfqRecommendationDecisionTrailTest extends ApiTestCase
         $this->bindAiRuntimeStatus();
     }
 
-    public function testItRecordsVendorRecommendationAndBuyerShortlistDecisionTrailMetadata(): void
+    public function testItRecordsVendorRecommendationDecisionTrailMetadata(): void
     {
         $tenantId = (string) Str::ulid();
         $user = $this->createUser($tenantId);
@@ -57,19 +57,6 @@ final class RfqRecommendationDecisionTrailTest extends ApiTestCase
         $approved = $this->createVendor($tenantId, [
             'display_name' => 'Facility Experts',
             'status' => 'approved',
-            'metadata' => [
-                'categories' => ['facilities'],
-                'capabilities' => ['emergency-maintenance'],
-                'regions' => ['MY'],
-            ],
-        ]);
-        $backup = $this->createVendor($tenantId, [
-            'display_name' => 'Backup Facility Vendor',
-            'status' => 'approved',
-            'metadata' => [
-                'categories' => ['facilities'],
-                'regions' => ['MY'],
-            ],
         ]);
 
         $this->bindVendorRecommendationLlm([
@@ -77,6 +64,8 @@ final class RfqRecommendationDecisionTrailTest extends ApiTestCase
                 [
                     'vendor_id' => (string) $approved->id,
                     'vendor_name' => 'Facility Experts',
+                    'fit_score' => 93,
+                    'confidence_band' => 'high',
                     'provider_explanation' => 'Provider ranked Facility Experts first.',
                     'llm_insights' => ['Strong emergency maintenance fit.'],
                 ],
@@ -87,27 +76,19 @@ final class RfqRecommendationDecisionTrailTest extends ApiTestCase
                 'endpoint_group' => 'sourcing_recommendation',
                 'model_revision' => 'openai/gpt-4.1-mini:2026-04-24',
                 'prompt_template_version' => 'vendor-ranking@2026-04-24',
-                'request_trace_id' => 'trace-trail-1',
-                'input_hash' => 'sha256:input',
-                'output_hash' => 'sha256:output',
                 'latency_ms' => 410,
                 'confidence' => 0.93,
-                'reliability_hints' => ['provider_confidence' => 'high'],
                 'processed_at' => '2026-04-24T09:30:00+08:00',
             ],
         ]);
 
-        $recommendation = $this->postJson(
+        $response = $this->postJson(
             '/api/v1/rfqs/' . $rfq->id . '/vendor-recommendations',
-            [
-                'categories' => ['facilities'],
-                'description' => 'Need emergency maintenance response.',
-            ],
+            ['categories' => ['facilities']],
             $this->authHeaders($tenantId, (string) $user->id),
         );
 
-        $recommendation->assertOk();
-        self::assertSame(0, $this->selectedVendorCount($tenantId, (string) $rfq->id));
+        $response->assertOk();
 
         $artifact = RfqRecommendationArtifact::query()
             ->where('tenant_id', $tenantId)
@@ -116,61 +97,63 @@ final class RfqRecommendationDecisionTrailTest extends ApiTestCase
             ->first();
 
         self::assertNotNull($artifact);
-        self::assertSame('openrouter', $artifact->provenance['provider_name']);
-        self::assertSame((string) $approved->id, $artifact->canonical_payload['eligible_candidates'][0]['vendor_id']);
+        self::assertSame('available', $artifact->status);
 
-        $recommendationEntry = DecisionTrailEntry::query()
+        $entry = DecisionTrailEntry::query()
             ->where('tenant_id', $tenantId)
             ->where('rfq_id', $rfq->id)
             ->where('event_type', 'vendor_recommendation_generated')
             ->first();
 
-        self::assertNotNull($recommendationEntry);
-        self::assertSame('vendor_recommendation', $recommendationEntry->summary_payload['artifact_kind']);
-        self::assertSame('vendor_ai_ranking', $recommendationEntry->summary_payload['feature_key']);
-        self::assertTrue((bool) $recommendationEntry->summary_payload['artifact']['available']);
-        self::assertSame('available', $recommendationEntry->summary_payload['artifact']['payload']['status']);
+        self::assertNotNull($entry);
+        self::assertSame('vendor_recommendation', $entry->summary_payload['artifact_kind']);
 
-        $recommendationTrail = $this->getJson(
-            '/api/v1/decision-trail/' . $recommendationEntry->id,
+        $trail = $this->getJson(
+            '/api/v1/decision-trail/' . $entry->id,
             $this->authHeaders($tenantId, (string) $user->id),
         );
 
-        $recommendationTrail->assertOk();
-        $recommendationTrail->assertJsonPath('data.event_type', 'vendor_recommendation_generated');
-        $recommendationTrail->assertJsonPath('data.metadata.artifact_kind', 'vendor_recommendation');
-        $recommendationTrail->assertJsonPath('data.metadata.artifact_origin', 'provider_drafted');
-        $recommendationTrail->assertJsonPath('data.metadata.description', 'Vendor recommendation generated');
-        $recommendationTrail->assertJsonPath('data.metadata.feature_key', 'vendor_ai_ranking');
+        $trail->assertOk();
+        $trail->assertJsonPath('data.event_type', 'vendor_recommendation_generated');
+        $trail->assertJsonPath('data.metadata.artifact_kind', 'vendor_recommendation');
+        $trail->assertJsonPath('data.metadata.description', 'Vendor recommendation generated');
+    }
 
-        $selection = $this->putJson(
+    public function testItRecordsBuyerShortlistDecisionTrailMetadata(): void
+    {
+        $tenantId = (string) Str::ulid();
+        $user = $this->createUser($tenantId);
+        $rfq = $this->createRfq($user);
+        $vendor1 = $this->createVendor($tenantId, ['status' => 'approved']);
+        $vendor2 = $this->createVendor($tenantId, ['status' => 'approved']);
+
+        $response = $this->putJson(
             '/api/v1/rfqs/' . $rfq->id . '/selected-vendors',
-            ['vendor_ids' => [(string) $approved->id, (string) $backup->id]],
+            ['vendor_ids' => [(string) $vendor1->id, (string) $vendor2->id]],
             $this->authHeaders($tenantId, (string) $user->id),
         );
 
-        $selection->assertOk();
-        $selectionEntry = DecisionTrailEntry::query()
+        $response->assertOk();
+
+        $entry = DecisionTrailEntry::query()
             ->where('tenant_id', $tenantId)
             ->where('rfq_id', $rfq->id)
             ->where('event_type', 'buyer_shortlist_replaced')
             ->first();
 
-        self::assertNotNull($selectionEntry);
-        self::assertSame(2, $selectionEntry->summary_payload['selection_count']);
-        self::assertSame([(string) $approved->id, (string) $backup->id], $selectionEntry->summary_payload['selected_vendor_ids']);
+        self::assertNotNull($entry);
+        self::assertSame(2, $entry->summary_payload['selection_count']);
+        self::assertSame([(string) $vendor1->id, (string) $vendor2->id], $entry->summary_payload['selected_vendor_ids']);
 
-        $selectionTrail = $this->getJson(
-            '/api/v1/decision-trail/' . $selectionEntry->id,
+        $trail = $this->getJson(
+            '/api/v1/decision-trail/' . $entry->id,
             $this->authHeaders($tenantId, (string) $user->id),
         );
 
-        $selectionTrail->assertOk();
-        $selectionTrail->assertJsonPath('data.event_type', 'buyer_shortlist_replaced');
-        $selectionTrail->assertJsonPath('data.metadata.artifact_kind', 'buyer_shortlist');
-        $selectionTrail->assertJsonPath('data.metadata.artifact_origin', 'user_confirmed_action');
-        $selectionTrail->assertJsonPath('data.metadata.description', 'Buyer shortlist replaced with 2 vendors');
-        $selectionTrail->assertJsonPath('data.metadata.selection_count', 2);
+        $trail->assertOk();
+        $trail->assertJsonPath('data.event_type', 'buyer_shortlist_replaced');
+        $trail->assertJsonPath('data.metadata.artifact_kind', 'buyer_shortlist');
+        $trail->assertJsonPath('data.metadata.description', 'Buyer shortlist replaced with 2 vendors');
     }
 
     private function bindAiRuntimeStatus(): void

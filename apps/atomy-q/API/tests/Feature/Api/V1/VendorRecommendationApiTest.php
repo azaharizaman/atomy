@@ -19,8 +19,8 @@ use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationRe
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationScoredCandidate;
 
 use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
-use App\Models\RfqRecommendationArtifact;
 use App\Models\Rfq;
+use App\Models\RfqRecommendationArtifact;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Vendor;

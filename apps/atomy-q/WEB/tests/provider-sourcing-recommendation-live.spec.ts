@@ -38,6 +38,10 @@ test.describe('provider-backed sourcing recommendation e2e with live backend', (
     const token = String(loginPayload.access_token ?? loginPayload.token ?? '');
     expect(token).not.toBe('');
 
+    if (!loginPayload.user || typeof loginPayload.user !== 'object' || !loginPayload.user.id) {
+      throw new Error(`Login response missing valid user data: ${JSON.stringify(loginPayload)}`);
+    }
+
     const user = loginPayload.user as {
       id: string;
       name: string;

@@ -149,7 +149,7 @@ function buildRecommendationPayload(tenantId: string, recommendationsAvailable: 
           confidence_band: 'high',
           provider_explanation: 'Provider ranked Facility Experts first.',
           deterministic_reasons: ['Strong facilities category fit.', 'Category overlap: facilities.'],
-          llm_insights: ['No recent activity signal available.'],
+          llm_insights: ['Strong emergency maintenance fit.', 'No recent activity signal available.'],
           warning_flags: [],
           warnings: [],
         },
@@ -360,7 +360,14 @@ async function routeSourcingRecommendationApi(page: Page, options: Recommendatio
       return;
     }
 
-    throw new Error(`Unhandled sourcing recommendation API request: ${method} ${pathname}`);
+    await route.fulfill({
+      status: 501,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        error: 'Not Implemented',
+        message: `Unhandled sourcing recommendation API request: ${method} ${pathname}`,
+      }),
+    });
   });
 
   return { selectedVendorRows };

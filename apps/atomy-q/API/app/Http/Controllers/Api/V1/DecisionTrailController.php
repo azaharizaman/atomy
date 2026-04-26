@@ -266,12 +266,14 @@ final class DecisionTrailController extends Controller
     private function buyerShortlistMetadata(DecisionTrailEntry $entry): array
     {
         $summary = is_array($entry->summary_payload) ? $entry->summary_payload : [];
-        $selectedVendorIds = array_values(array_filter(
-            array_map(static fn (mixed $value): string => trim((string) $value), $summary['selected_vendor_ids'] ?? []),
-            static fn (string $value): bool => $value !== '',
-        ));
+        $selectedVendorIds = is_array($summary['selected_vendor_ids'] ?? null)
+            ? array_values(array_filter(
+                array_map(static fn (mixed $value): string => trim((string) $value), $summary['selected_vendor_ids']),
+                static fn (string $value): bool => $value !== '',
+            ))
+            : [];
         $selectionCount = is_int($summary['selection_count'] ?? null)
-            ? (int) $summary['selection_count']
+            ? $summary['selection_count']
             : count($selectedVendorIds);
 
         return [

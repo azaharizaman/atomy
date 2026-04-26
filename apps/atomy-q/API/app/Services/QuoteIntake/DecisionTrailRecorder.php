@@ -8,7 +8,7 @@ use App\Models\DecisionTrailEntry;
 use InvalidArgumentException;
 use Illuminate\Support\Facades\DB;
 
-final readonly class DecisionTrailRecorder
+final readonly class DecisionTrailRecorder implements DecisionTrailRecorderInterface
 {
     /**
      * Append a hash-chained decision trail row for a frozen comparison snapshot.

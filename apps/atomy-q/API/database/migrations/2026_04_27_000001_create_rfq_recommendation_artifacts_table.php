@@ -12,7 +12,7 @@ return new class extends Migration
     {
         Schema::create('rfq_recommendation_artifacts', function (Blueprint $table): void {
             $table->ulid('id')->primary();
-            $table->ulid('tenant_id')->index();
+            $table->ulid('tenant_id');
             $table->ulid('rfq_id');
             $table->string('feature_key', 64);
             $table->string('status', 32);

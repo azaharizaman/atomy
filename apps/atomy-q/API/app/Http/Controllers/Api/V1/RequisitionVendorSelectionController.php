@@ -6,10 +6,10 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
-use App\Services\QuoteIntake\DecisionTrailRecorder;
 use App\Models\RequisitionSelectedVendor;
 use App\Models\Rfq;
 use App\Models\Vendor;
+use App\Services\QuoteIntake\DecisionTrailRecorder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,6 +21,10 @@ use Nexus\Vendor\Enums\VendorStatus;
 final class RequisitionVendorSelectionController extends Controller
 {
     use ExtractsAuthContext;
+
+    public function __construct(
+        private readonly DecisionTrailRecorder $decisionTrailRecorder,
+    ) {}
 
     public function index(Request $request, string $rfqId): JsonResponse
     {
@@ -81,9 +85,7 @@ final class RequisitionVendorSelectionController extends Controller
             ], 422);
         }
 
-        $decisionTrailRecorder = app(DecisionTrailRecorder::class);
-
-        $rows = DB::transaction(function () use ($rfq, $tenantId, $vendorIds, $request, $vendors, $decisionTrailRecorder): Collection {
+        $rows = DB::transaction(function () use ($rfq, $tenantId, $vendorIds, $request, $vendors): Collection {
             RequisitionSelectedVendor::query()
                 ->where('tenant_id', $tenantId)
                 ->where('rfq_id', $rfq->id)
@@ -114,13 +116,10 @@ final class RequisitionVendorSelectionController extends Controller
             }
 
             $selectedVendorIds = $selections->map(static fn (RequisitionSelectedVendor $selection): string => (string) $selection->vendor_id)->values()->all();
-            $decisionTrailRecorder->recordBuyerShortlistReplaced(
+            $this->decisionTrailRecorder->recordBuyerShortlistReplaced(
                 $tenantId,
                 (string) $rfq->id,
                 [
-                    'artifact_kind' => 'buyer_shortlist',
-                    'artifact_origin' => 'user_confirmed_action',
-                    'feature_key' => 'requisition_selected_vendors',
                     'selection_count' => $selections->count(),
                     'selected_vendor_ids' => $selectedVendorIds,
                     'artifact' => [
@@ -133,8 +132,8 @@ final class RequisitionVendorSelectionController extends Controller
                         'provenance' => [
                             'source' => 'user_action',
                             'action' => 'shortlist_replaced',
-                            'selected_by_user_id' => $this->userId($request),
-                            'generated_at' => now('UTC')->toAtomString(),
+                            'selected_by_user_id' => $userId,
+                            'generated_at' => $now->toAtomString(),
                         ],
                     ],
                 ],

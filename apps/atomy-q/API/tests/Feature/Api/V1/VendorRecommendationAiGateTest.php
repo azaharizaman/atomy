@@ -73,13 +73,7 @@ final class VendorRecommendationAiGateTest extends ApiTestCase
 
     public function testLegacyRecommendationRouteReturns404(): void
     {
-        $tenantId = (string) Str::ulid();
-        $user = $this->createUser($tenantId);
-
-        $response = $this->getJson(
-            '/api/v1/recommendations/run-123',
-            $this->authHeaders($tenantId, (string) $user->id),
-        );
+        $response = $this->getJson('/api/v1/recommendations/run-123');
 
         $response->assertNotFound();
     }
