@@ -34,8 +34,18 @@ interface ManualSourceLineFormState {
   source_uom: string;
   source_unit_price: string;
   rfq_line_item_id: string;
+  reason: string;
   note: string;
 }
+
+const NORMALIZATION_REASON_OPTIONS = [
+  { value: 'supplier_document_mismatch', label: 'Supplier document mismatch' },
+  { value: 'rfq_mapping_incorrect', label: 'RFQ mapping incorrect' },
+  { value: 'quantity_or_uom_correction', label: 'Quantity or UOM correction' },
+  { value: 'price_correction', label: 'Price correction' },
+  { value: 'manual_entry_required', label: 'Manual entry required' },
+  { value: 'other', label: 'Other' },
+] as const;
 
 const EMPTY_MANUAL_LINE: ManualSourceLineFormState = {
   source_description: '',
@@ -43,6 +53,7 @@ const EMPTY_MANUAL_LINE: ManualSourceLineFormState = {
   source_uom: '',
   source_unit_price: '',
   rfq_line_item_id: '',
+  reason: '',
   note: '',
 };
 
@@ -58,7 +69,8 @@ function formFromSourceLine(line: NormalizationSourceLineRow): ManualSourceLineF
     source_uom: line.source_uom ?? '',
     source_unit_price: line.source_unit_price ?? '',
     rfq_line_item_id: line.rfq_line_item_id ?? '',
-    note: '',
+    reason: '',
+    note: line.latest_override?.note ?? '',
   };
 }
 
@@ -119,7 +131,9 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
 
   function submitManualSourceLine(): void {
     const description = manualForm.source_description.trim();
-    if (description === '') return;
+    const reason = manualForm.reason.trim();
+    const note = normalizeNullableField(manualForm.note);
+    if (description === '' || reason === '' || (reason === 'other' && note === null)) return;
 
     manualSourceLines.createSourceLine.mutate({
       quoteSubmissionId: quoteId,
@@ -128,8 +142,8 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
       source_uom: normalizeNullableField(manualForm.source_uom),
       source_unit_price: normalizeNullableField(manualForm.source_unit_price),
       rfq_line_item_id: normalizeNullableField(manualForm.rfq_line_item_id),
-      note: normalizeNullableField(manualForm.note),
-      reason: 'Manual entry from normalization workspace',
+      note,
+      reason,
     });
     setManualForm(EMPTY_MANUAL_LINE);
   }
@@ -141,18 +155,25 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
 
   function saveEdit(lineId: string): void {
     const description = editForm.source_description.trim();
-    if (description === '' || manualSourceLines.updateSourceLine.isPending) return;
+    const reason = editForm.reason.trim();
+    const note = normalizeNullableField(editForm.note);
+    if (
+      description === '' ||
+      reason === '' ||
+      (reason === 'other' && note === null) ||
+      manualSourceLines.overrideSourceLine.isPending
+    ) return;
 
-    manualSourceLines.updateSourceLine.mutate({
-      quoteSubmissionId: quoteId,
+    manualSourceLines.overrideSourceLine.mutate({
       id: lineId,
-      source_description: description,
-      source_quantity: normalizeNullableField(editForm.source_quantity),
-      source_uom: normalizeNullableField(editForm.source_uom),
-      source_unit_price: normalizeNullableField(editForm.source_unit_price),
-      rfq_line_item_id: normalizeNullableField(editForm.rfq_line_item_id),
-      note: normalizeNullableField(editForm.note),
-      reason: 'Manual correction from normalization workspace',
+      override_data: {
+        rfq_line_item_id: editForm.rfq_line_item_id,
+        quantity: normalizeNullableField(editForm.source_quantity),
+        uom: normalizeNullableField(editForm.source_uom),
+        unit_price: normalizeNullableField(editForm.source_unit_price),
+      },
+      reason_code: editForm.reason,
+      note,
     });
     setEditingLineId(null);
     setEditForm(EMPTY_MANUAL_LINE);
@@ -194,6 +215,26 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
 
   function checkboxId(section: 'source' | 'mapping', lineId: string): string {
     return `${section}-${lineId}`;
+  }
+
+  function formatReasonCode(reasonCode: string | null | undefined): string {
+    if (!reasonCode) return 'Reason not recorded';
+
+    const option = NORMALIZATION_REASON_OPTIONS.find((item) => item.value === reasonCode);
+    if (option) return option.label;
+
+    return reasonCode.replaceAll('_', ' ');
+  }
+
+  function providerConfidenceLabel(value: string | null | undefined): string | null {
+    if (!value) return null;
+
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) {
+      return value;
+    }
+
+    return `${numeric.toFixed(2)}%`;
   }
 
   const freezeDisabled = hasBlockingIssues || freeze.isPending;
@@ -339,6 +380,22 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                     </select>
                   </label>
                   <label className="text-xs font-medium text-slate-600">
+                    Reason code
+                    <select
+                      aria-label="Reason code"
+                      className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      value={manualForm.reason}
+                      onChange={(event) => updateManualForm('reason', event.target.value)}
+                    >
+                      <option value="">Select reason</option>
+                      {NORMALIZATION_REASON_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="text-xs font-medium text-slate-600">
                     Note
                     <input
                       aria-label="Note"
@@ -352,7 +409,12 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                       size="sm"
                       variant="outline"
                       type="button"
-                      disabled={manualForm.source_description.trim() === '' || manualSourceLines.createSourceLine.isPending}
+                      disabled={
+                        manualForm.source_description.trim() === '' ||
+                        manualForm.reason.trim() === '' ||
+                        (manualForm.reason === 'other' && manualForm.note.trim() === '') ||
+                        manualSourceLines.createSourceLine.isPending
+                      }
                       onClick={submitManualSourceLine}
                     >
                       <Plus size={14} className="mr-1.5" />
@@ -436,16 +498,40 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                         <option value="">Unmapped</option>
                         {rfqLineItems.map((line) => (
                           <option key={line.id} value={line.id}>
-                            {line.description}
+                          {line.description}
+                        </option>
+                        ))}
+                      </select>
+                      <select
+                        aria-label={`Reason code source line ${lineNumber}`}
+                        className="h-8 rounded border border-slate-300 px-2 text-xs"
+                        value={editForm.reason}
+                        onChange={(event) => updateEditForm('reason', event.target.value)}
+                      >
+                        <option value="">Select reason</option>
+                        {NORMALIZATION_REASON_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
                           </option>
                         ))}
                       </select>
+                      <input
+                        aria-label={`Note source line ${lineNumber}`}
+                        className="h-8 rounded border border-slate-300 px-2 text-xs"
+                        value={editForm.note}
+                        onChange={(event) => updateEditForm('note', event.target.value)}
+                      />
                       <div className="flex items-center gap-1">
                         <Button
                           size="sm"
                           variant="outline"
                           type="button"
-                          disabled={editForm.source_description.trim() === '' || manualSourceLines.updateSourceLine.isPending}
+                          disabled={
+                            editForm.source_description.trim() === '' ||
+                            editForm.reason.trim() === '' ||
+                            (editForm.reason === 'other' && editForm.note.trim() === '') ||
+                            manualSourceLines.overrideSourceLine.isPending
+                          }
                           onClick={() => saveEdit(liveLine.id)}
                         >
                           <Save size={14} className="mr-1.5" />
@@ -458,37 +544,54 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-3">
-                      <input
-                        id={sourceCheckboxId}
-                        type="checkbox"
-                        className="rounded border-slate-300"
-                        checked={isSelected(line.id)}
-                        onChange={() => toggleSelection(line.id)}
-                      />
-                      <label htmlFor={sourceCheckboxId} className="sr-only">
-                        Select source line {lineNumber}
-                      </label>
-                      <span className="w-6 text-slate-500">{lineNumber}</span>
-                      <span className="flex-1 truncate text-slate-800">{liveLine.source_description}</span>
-                      <span className="text-slate-500">{`${liveLine.source_quantity ?? '—'} ${liveLine.source_uom ?? ''}`.trim()}</span>
-                      <span className="font-medium tabular-nums">{formatPrice(unitPrice)}</span>
-                      <StatusBadge status={liveLine.has_blocking_issue ? 'pending' : 'approved'} size="xs" label={liveLine.confidence} />
-                      <Button size="sm" variant="ghost" type="button" onClick={() => startEdit(liveLine)}>
-                        <Pencil size={14} className="mr-1.5" />
-                        Edit source line {lineNumber}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        type="button"
-                        disabled={manualSourceLines.deleteSourceLine.isPending}
-                        onClick={() => deleteSourceLine(liveLine.id, lineNumber)}
-                      >
-                        <Trash2 size={14} className="mr-1.5" />
-                        Delete source line {lineNumber}
-                      </Button>
-                    </div>
+                    <>
+                      <div className="flex items-center gap-3">
+                        <input
+                          id={sourceCheckboxId}
+                          type="checkbox"
+                          className="rounded border-slate-300"
+                          checked={isSelected(line.id)}
+                          onChange={() => toggleSelection(line.id)}
+                        />
+                        <label htmlFor={sourceCheckboxId} className="sr-only">
+                          Select source line {lineNumber}
+                        </label>
+                        <span className="w-6 text-slate-500">{lineNumber}</span>
+                        <span className="flex-1 truncate text-slate-800">{liveLine.source_description}</span>
+                        <span className="text-slate-500">{`${liveLine.source_quantity ?? '—'} ${liveLine.source_uom ?? ''}`.trim()}</span>
+                        <span className="font-medium tabular-nums">{formatPrice(unitPrice)}</span>
+                        <StatusBadge status={liveLine.has_blocking_issue ? 'pending' : 'approved'} size="xs" label={liveLine.confidence} />
+                        {liveLine.is_buyer_overridden ? (
+                          <StatusBadge status="pending" size="xs" label="Buyer override" />
+                        ) : (
+                          <StatusBadge status="draft" size="xs" label="Provider suggested" />
+                        )}
+                        <Button size="sm" variant="ghost" type="button" onClick={() => startEdit(liveLine)}>
+                          <Pencil size={14} className="mr-1.5" />
+                          Edit source line {lineNumber}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          type="button"
+                          disabled={manualSourceLines.deleteSourceLine.isPending}
+                          onClick={() => deleteSourceLine(liveLine.id, lineNumber)}
+                        >
+                          <Trash2 size={14} className="mr-1.5" />
+                          Delete source line {lineNumber}
+                        </Button>
+                      </div>
+                      <div className="mt-2 grid gap-1 text-[11px] text-slate-500 md:grid-cols-2">
+                        <span>
+                          Provider confidence {providerConfidenceLabel(liveLine.ai_confidence) ?? 'Unavailable'}
+                        </span>
+                        <span>
+                          {liveLine.is_buyer_overridden
+                            ? `Override reason ${formatReasonCode(liveLine.latest_override?.reason_code)}`
+                            : `Suggested mapping ${liveLine.provider_suggested?.rfq_line_item_id ?? 'Unmapped'}`}
+                        </span>
+                      </div>
+                    </>
                   )}
                 </div>
               );

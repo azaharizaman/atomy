@@ -1,0 +1,4 @@
+- [ ] Task 1: Audit QuoteSubmissionController source-line methods
+- [ ] Task 2: Refactor Manual source-line creation/update to NormalizationController path
+- [ ] Task 3: Redirect routes in api.php
+- [ ] Task 4: Verify atomicity of NormalizationOverrideService

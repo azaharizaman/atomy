@@ -59,6 +59,26 @@ describe('useNormalizationSourceLines (live mode)', () => {
             source_description: 'Line item',
             has_blocking_issue: false,
             confidence: 'high',
+            ai_confidence: '87.50',
+            provider_suggested: {
+              rfq_line_item_id: 'rfq-line-provider',
+              quantity: '3.0000',
+              uom: 'ea',
+              unit_price: '14.2500',
+            },
+            effective_values: {
+              rfq_line_item_id: 'rfq-line-effective',
+              quantity: '2.0000',
+              uom: 'box',
+              unit_price: '12.0000',
+            },
+            is_buyer_overridden: true,
+            latest_override: {
+              reason_code: 'price_correction',
+              note: 'Supplier PDF totals were wrong',
+              actor_name: 'Buyer One',
+              overridden_at: '2026-04-26T01:00:00Z',
+            },
           },
         ],
       },
@@ -71,6 +91,11 @@ describe('useNormalizationSourceLines (live mode)', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toHaveLength(1);
     expect(result.current.data?.[0].id).toBe('line-1');
+    expect(result.current.data?.[0].provider_suggested?.rfq_line_item_id).toBe('rfq-line-provider');
+    expect(result.current.data?.[0].effective_values?.rfq_line_item_id).toBe('rfq-line-effective');
+    expect(result.current.data?.[0].is_buyer_overridden).toBe(true);
+    expect(result.current.data?.[0].latest_override?.reason_code).toBe('price_correction');
+    expect(result.current.data?.[0].ai_confidence).toBe('87.50');
   });
 
   it('surfaces an error when the live API resolves to undefined', async () => {

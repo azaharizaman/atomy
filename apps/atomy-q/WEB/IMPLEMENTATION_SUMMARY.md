@@ -1,5 +1,23 @@
 # Implementation Summary
 
+## 2026-04-26 Provider-Normalization Workspace Provenance And Reason-Coded Overrides
+
+- `src/hooks/use-normalization-source-lines.ts` now normalizes the provider-normalization API contract directly instead of inferring state from ad hoc raw payloads. Live rows expose:
+  - `provider_suggested`
+  - `effective_values`
+  - `is_buyer_overridden`
+  - `latest_override`
+  - `ai_confidence`
+- `src/app/(dashboard)/rfqs/[rfqId]/quote-intake/[quoteId]/normalize/page.tsx` now renders provider confidence near the editable source-line decision point, distinguishes provider-suggested rows from buyer-overridden rows, and shows the latest override reason where present.
+- Manual source-line create/update flows in the normalize workspace now require a structured reason-code selection, and choosing `other` requires a note before submit is enabled.
+- Degraded/unavailable normalization messaging remains capability-scoped; manual source-line controls still stay active when the page has live data.
+- Expanded focused regression coverage:
+  - `src/hooks/use-normalization-source-lines.live.test.ts`
+  - `src/app/(dashboard)/rfqs/[rfqId]/quote-intake/[quoteId]/normalize/page.test.tsx`
+  - `src/hooks/use-normalization-review.live.test.ts`
+- Verification:
+  - `cd apps/atomy-q/WEB && npm run test:unit -- src/app/'(dashboard)'/rfqs/[rfqId]/quote-intake/[quoteId]/normalize/page.test.tsx src/hooks/use-normalization-source-lines.live.test.ts src/hooks/use-normalization-review.live.test.ts` -> PASS (18 tests).
+
 ## 2026-04-24 AI Launch Readiness Runbook And Operator Handoff
 
 - Updated the WEB README to point operators at the AI launch-readiness design and plan docs, the shared AI status contract, and the documentation-led verification entry point.

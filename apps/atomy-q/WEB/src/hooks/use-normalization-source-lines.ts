@@ -16,6 +16,22 @@ export interface ManualSourceLineInput {
   reason?: string | null;
 }
 
+export interface NormalizationValueSnapshot {
+  rfq_line_item_id: string | null;
+  quantity: string | null;
+  uom: string | null;
+  unit_price: string | null;
+}
+
+export interface LatestNormalizationOverride {
+  reason_code: string | null;
+  note: string | null;
+  actor_name: string | null;
+  actor_user_id: string | null;
+  overridden_at: string | null;
+  provider_confidence: string | null;
+}
+
 export interface CreateManualSourceLineInput extends ManualSourceLineInput {
   quoteSubmissionId: string;
 }
@@ -53,6 +69,39 @@ export interface NormalizationSourceLineRow {
   extraction_origin?: string | null;
   origin?: string | null;
   provider_name?: string | null;
+  ai_confidence?: string | null;
+  provider_suggested?: NormalizationValueSnapshot | null;
+  effective_values?: NormalizationValueSnapshot | null;
+  is_buyer_overridden: boolean;
+  latest_override?: LatestNormalizationOverride | null;
+}
+
+function normalizeValueSnapshot(value: unknown): NormalizationValueSnapshot | null {
+  if (!isObject(value)) {
+    return null;
+  }
+
+  return {
+    rfq_line_item_id: toText(value.rfq_line_item_id),
+    quantity: toText(value.quantity),
+    uom: toText(value.uom),
+    unit_price: toText(value.unit_price),
+  };
+}
+
+function normalizeLatestOverride(value: unknown): LatestNormalizationOverride | null {
+  if (!isObject(value)) {
+    return null;
+  }
+
+  return {
+    reason_code: toText(value.reason_code),
+    note: toText(value.note),
+    actor_name: toText(value.actor_name),
+    actor_user_id: toText(value.actor_user_id),
+    overridden_at: toText(value.overridden_at),
+    provider_confidence: toText(value.provider_confidence),
+  };
 }
 
 function normalizeSourceLines(payload: unknown): NormalizationSourceLineRow[] {
@@ -118,6 +167,11 @@ function normalizeSourceLines(payload: unknown): NormalizationSourceLineRow[] {
         row.extraction_origin !== undefined && row.extraction_origin !== null ? String(row.extraction_origin) : null,
       origin: row.origin !== undefined && row.origin !== null ? String(row.origin) : null,
       provider_name: row.provider_name !== undefined && row.provider_name !== null ? String(row.provider_name) : null,
+      ai_confidence: row.ai_confidence !== undefined && row.ai_confidence !== null ? String(row.ai_confidence) : null,
+      provider_suggested: normalizeValueSnapshot(row.provider_suggested),
+      effective_values: normalizeValueSnapshot(row.effective_values),
+      is_buyer_overridden: Boolean(row.is_buyer_overridden),
+      latest_override: normalizeLatestOverride(row.latest_override),
     };
   });
 }
@@ -189,12 +243,12 @@ export function useManualNormalizationSourceLineMutations(rfqId: string) {
     onSuccess: invalidate,
   });
 
-  const updateSourceLine = useMutation({
-    mutationFn: async (input: UpdateManualSourceLineInput) => {
-      const { quoteSubmissionId, id, ...payloadInput } = input;
+  const overrideSourceLine = useMutation({
+    mutationFn: async (input: { id: string; override_data: NormalizationValueSnapshot; reason_code: string; note: string | null }) => {
+      const { id, override_data, reason_code, note } = input;
       const { data } = await api.put(
-        `/quote-submissions/${encodeURIComponent(quoteSubmissionId)}/source-lines/${encodeURIComponent(id)}`,
-        manualPayload(payloadInput),
+        `/normalization/source-lines/${encodeURIComponent(id)}/override`,
+        { override_data, reason_code, note },
       );
       return data;
     },
@@ -211,5 +265,5 @@ export function useManualNormalizationSourceLineMutations(rfqId: string) {
     onSuccess: invalidate,
   });
 
-  return { createSourceLine, updateSourceLine, deleteSourceLine };
+  return { createSourceLine, overrideSourceLine, deleteSourceLine };
 }

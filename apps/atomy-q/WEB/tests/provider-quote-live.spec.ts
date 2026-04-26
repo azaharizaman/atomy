@@ -27,7 +27,7 @@ test.describe('provider-backed quote e2e with live OpenRouter', () => {
   );
 
   for (const fixture of fixtures) {
-    test(`uploads provider quotes for ${fixture.requisitionId}`, async ({ page, request }) => {
+    test(`uploads provider quotes and closes normalization for ${fixture.requisitionId}`, async ({ page, request }) => {
       const apiBase = process.env.NEXT_PUBLIC_API_URL ?? process.env.E2E_API_URL ?? 'http://localhost:8000/api/v1';
       const email = process.env.E2E_EMAIL ?? 'user1@example.com';
       const password = process.env.E2E_PASSWORD ?? 'secret';
@@ -86,6 +86,8 @@ test.describe('provider-backed quote e2e with live OpenRouter', () => {
       const rfqId = String(createRfqPayload.data?.id ?? '');
       expect(rfqId).not.toBe('');
 
+      const createdLineItemIds: string[] = [];
+
       for (const lineItem of fixture.rfqLineItems) {
         const lineResponse = await request.post(`${apiBase}/rfqs/${encodeURIComponent(rfqId)}/line-items`, {
           headers: {
@@ -101,7 +103,10 @@ test.describe('provider-backed quote e2e with live OpenRouter', () => {
           },
         });
         expect(lineResponse.ok()).toBeTruthy();
+        const linePayload = await lineResponse.json();
+        createdLineItemIds.push(String(linePayload.data?.id ?? ''));
       }
+      expect(createdLineItemIds.every((id) => id !== '')).toBeTruthy();
 
       for (const [index, quote] of fixture.quotes.entries()) {
         const uploadResponse = await request.post(`${apiBase}/quote-submissions/upload`, {
@@ -148,6 +153,64 @@ test.describe('provider-backed quote e2e with live OpenRouter', () => {
         })
         .toBeGreaterThanOrEqual(fixture.e2e.assertions.sourceLinesMin);
 
+      const sourceLinesResponse = await request.get(
+        `${apiBase}/normalization/${encodeURIComponent(rfqId)}/source-lines`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      expect(sourceLinesResponse.ok()).toBeTruthy();
+
+      const sourceLinesPayload = await sourceLinesResponse.json();
+      const sourceLines = Array.isArray(sourceLinesPayload.data) ? sourceLinesPayload.data as Array<Record<string, unknown>> : [];
+      expect(sourceLines.length).toBeGreaterThanOrEqual(fixture.e2e.assertions.sourceLinesMin);
+
+      const firstSourceLine = sourceLines[0];
+      expect(firstSourceLine).toBeTruthy();
+      const sourceLineId = String(firstSourceLine.id ?? '');
+      expect(sourceLineId).not.toBe('');
+
+      const overrideResponse = await request.put(
+        `${apiBase}/normalization/source-lines/${encodeURIComponent(sourceLineId)}/override`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          data: {
+            override_data: {
+              rfq_line_item_id: createdLineItemIds[0],
+              unit_price: firstSourceLine.source_unit_price ?? '0',
+            },
+            reason_code: 'manual_entry_required',
+            note: 'Live normalization alpha readiness proof',
+          },
+        },
+      );
+      expect(overrideResponse.ok()).toBeTruthy();
+
+      await expect
+        .poll(async () => {
+          const conflictsResponse = await request.get(
+            `${apiBase}/normalization/${encodeURIComponent(rfqId)}/conflicts`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+          expect(conflictsResponse.ok()).toBeTruthy();
+          const conflictsPayload = await conflictsResponse.json();
+
+          return Boolean(conflictsPayload.meta?.has_blocking_issues);
+        }, {
+          timeout: 60_000,
+          intervals: [1_000, 2_000, 5_000],
+        })
+        .toBe(false);
+
       const quoteSubmissionsResponse = await request.get(
         `${apiBase}/quote-submissions?rfq_id=${encodeURIComponent(rfqId)}`,
         {
@@ -159,12 +222,29 @@ test.describe('provider-backed quote e2e with live OpenRouter', () => {
       expect(quoteSubmissionsResponse.ok()).toBeTruthy();
 
       const quoteSubmissionsPayload = await quoteSubmissionsResponse.json();
-      const visibleVendorName = (quoteSubmissionsPayload.data as Array<{ vendor_name?: string; status?: string }> | undefined)
-        ?.find((submission) => submission.status !== 'failed' && submission.vendor_name)?.vendor_name;
+      const visibleSubmission = (quoteSubmissionsPayload.data as Array<{ id?: string; vendor_name?: string; status?: string }> | undefined)
+        ?.find((submission) => submission.status !== 'failed' && submission.vendor_name);
+      const visibleVendorName = visibleSubmission?.vendor_name;
       expect(visibleVendorName).toBeTruthy();
+      const visibleQuoteId = String(visibleSubmission?.id ?? '');
+      expect(visibleQuoteId).not.toBe('');
 
       await page.goto(`/rfqs/${encodeURIComponent(rfqId)}/quote-intake`);
       await expect(page.getByRole('heading', { name: 'Quote Intake' })).toBeVisible();
+      await page.goto(`/rfqs/${encodeURIComponent(rfqId)}/quote-intake/${encodeURIComponent(visibleQuoteId)}/normalize`);
+      await expect(page.getByText(/source lines/i)).toBeVisible();
+      await expect(page.getByRole('button', { name: /freeze comparison/i })).toBeEnabled();
+
+      const freezeResponse = await request.post(`${apiBase}/comparison-runs/final`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        data: {
+          rfq_id: rfqId,
+        },
+      });
+      expect(freezeResponse.ok()).toBeTruthy();
     });
   }
 });

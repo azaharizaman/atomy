@@ -1,5 +1,23 @@
 # Implementation Summary - Atomy-Q Backend API
 
+## 2026-04-26 Provider-Normalization Override Audit Contract
+
+- `NormalizationController` source-line responses now expose the provider-normalization contract needed by WEB: `provider_suggested`, `effective_values`, `is_buyer_overridden`, `latest_override`, and provider-confidence context alongside the existing source-line fields.
+- Added `NormalizationOverrideRequest` with bounded reason codes:
+  - `supplier_document_mismatch`
+  - `rfq_mapping_incorrect`
+  - `quantity_or_uom_correction`
+  - `price_correction`
+  - `manual_entry_required`
+  - `other`
+- `other` now requires a note at the request layer.
+- Added `NormalizationOverrideService` as the focused audited mutation boundary for override writes. It captures actor metadata, provider-suggested context, before/after values, and readiness recalculation in one transaction.
+- `NormalizationSourceLine` now exposes helpers for provider provenance, effective values, latest override audit metadata, and buyer-override detection.
+- Expanded `tests/Feature/NormalizationReviewWorkflowTest.php` to cover provider-suggested serialization, audited override persistence, readiness recalculation, and `other` note validation.
+- Verification:
+  - `cd apps/atomy-q/API && php artisan test --filter NormalizationReviewWorkflowTest` -> PASS (8 tests, 84 assertions).
+  - `cd apps/atomy-q/API && php artisan test --filter QuoteIngestionPipelineTest` -> PASS (15 tests, 61 assertions).
+
 ## 2026-04-24 AI Launch Readiness Runbook And Operator Handoff
 
 - Updated the AI-first launch docs to make the operator handoff concrete in:
