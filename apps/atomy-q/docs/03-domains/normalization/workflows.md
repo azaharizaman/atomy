@@ -17,7 +17,7 @@ A user opens the normalization workspace for an RFQ.
 
 1. The API confirms the RFQ belongs to the current tenant.
 2. The controller loads source lines for the RFQ’s quote submissions.
-3. The response includes source description, quantities, prices, mapped RFQ line IDs, conflicts, and readiness metrics.
+3. The response includes source description, effective mapped values, provider-suggested values when present, provider confidence, buyer-override status, conflicts, and readiness metrics.
 
 ### Outputs
 
@@ -63,15 +63,17 @@ A user overrides a source line or removes an override.
 
 ### Steps
 
-1. The API validates the override payload.
-2. The controller updates the source-line `raw_data` override payload.
-3. If the override includes a numeric unit price, the source-line unit price is updated too.
-4. The readiness service is re-evaluated.
-5. Reverting the override removes the override payload and returns `204`.
+1. The API validates the override payload, including a bounded reason code set.
+2. If the reason code is `other`, the API requires a note.
+3. The controller routes the change through the audited override boundary.
+4. The override flow records the previous effective value, the new effective value, provider-suggested context, actor metadata, reason code, optional note, and timestamp.
+5. The effective source-line value is updated without destroying provider-origin provenance.
+6. The readiness service is re-evaluated before success is returned.
+7. Reverting the override removes the active override state and returns `204`.
 
 ### Outputs
 
-- Override acknowledgment
+- Override acknowledgment with refreshed effective state
 - Reverted override acknowledgment
 - Updated readiness metadata
 
@@ -100,6 +102,31 @@ A user resolves a normalization conflict.
 ### Failure Handling
 
 - Missing conflicts return `404`.
+
+## Workflow 004A - Continue Manually When Provider Normalization Is Unavailable
+
+### Trigger
+
+A user opens normalization while provider normalization is degraded, unavailable, or incomplete.
+
+### Steps
+
+1. The workspace shows capability-scoped unavailable messaging rather than a generic page failure.
+2. Existing source lines remain visible.
+3. Users can still add, edit, delete, map, and override source lines manually.
+4. Manual edits and overrides still require the same reason-coded audit capture where applicable.
+5. Readiness clears only when the effective normalized state is valid.
+
+### Outputs
+
+- Truthful unavailable messaging
+- Manual source-line mutation responses
+- Updated readiness metadata
+
+### Failure Handling
+
+- Provider degradation does not fabricate provider success.
+- Manual continuity remains available unless the live normalization payload itself fails.
 
 ## Workflow 005 - Lock Or Unlock Normalization
 

@@ -1,5 +1,23 @@
 # Implementation Summary - Atomy-Q Backend API
 
+## 2026-04-26 Provider-Normalization Override Audit Contract
+
+- `NormalizationController` source-line responses now expose the provider-normalization contract needed by WEB: `provider_suggested`, `effective_values`, `is_buyer_overridden`, `latest_override`, and provider-confidence context alongside the existing source-line fields.
+- Added `NormalizationOverrideRequest` with bounded reason codes:
+  - `supplier_document_mismatch`
+  - `rfq_mapping_incorrect`
+  - `quantity_or_uom_correction`
+  - `price_correction`
+  - `manual_entry_required`
+  - `other`
+- `other` now requires a note at the request layer.
+- Added `NormalizationOverrideService` as the focused audited mutation boundary for override writes. It captures actor metadata, provider-suggested context, before/after values, and readiness recalculation in one transaction.
+- `NormalizationSourceLine` now exposes helpers for provider provenance, effective values, latest override audit metadata, and buyer-override detection.
+- Expanded `tests/Feature/NormalizationReviewWorkflowTest.php` to cover provider-suggested serialization, audited override persistence, readiness recalculation, and `other` note validation.
+- Verification:
+  - `cd apps/atomy-q/API && php artisan test --filter NormalizationReviewWorkflowTest` -> PASS (8 tests, 84 assertions).
+  - `cd apps/atomy-q/API && php artisan test --filter QuoteIngestionPipelineTest` -> PASS (15 tests, 61 assertions).
+
 ## 2026-04-24 AI Launch Readiness Runbook And Operator Handoff
 
 - Updated the AI-first launch docs to make the operator handoff concrete in:
@@ -473,6 +491,7 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 ## 2026-04-24 AI Quote Intake Manual Continuity
 
 - `QuoteSubmissionController::upload` now honors the Plan 1 AI runtime state for document extraction when `AI_MODE` is `provider` or `off`; unavailable/disabled extraction leaves the uploaded quote in `needs_review` with truthful `EXTRACTION_UNAVAILABLE`/`EXTRACTION_DISABLED` status instead of letting legacy `QUOTE_INTELLIGENCE_MODE` fabricate deterministic success.
+- Provider document extraction dispatch is now gated by endpoint configuration/enabled state rather than transient health-probe availability, so degraded `/ai/status` snapshots do not suppress real provider extraction when the document endpoint is configured.
 - Added tenant-scoped manual source-line CRUD under `/api/v1/quote-submissions/{id}/source-lines`, including readiness recalculation, line-count updates, manual decision-trail events, and tenant-safe `404` behavior for cross-tenant quote/source-line access.
 - Manual source-line provenance is serialized through `raw_data.provenance` and response fields with `origin=manual`, acting user id, timestamp, and optional `note`/`reason`; manual rows explicitly return `ai_confidence`, `taxonomy_code`, `mapping_version`, and provider provenance as `null`.
 - Normalization source-line list responses now expose origin/provenance/provider provenance plus normalization AI availability metadata so WEB can distinguish manual continuity from unavailable AI suggestions.

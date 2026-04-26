@@ -124,29 +124,36 @@ final readonly class DecisionTrailRecorder
         );
     }
 
+    /**
+     * @param array<string, mixed> $summary Tenant-safe, machine-readable summary (counts, ids) for manual normalization audit events.
+     *     Allowed fields include `actor_user_id`, `actor_name`, `reason_code`, `note`,
+     *     `provider_confidence`, `before`, `after`, `provider_suggested`, `origin`,
+     *     `quote_submission_id`, `source_line_id`, `event_type`, and `timestamp`.
+     */
     public function recordManualSourceLineEvent(
         string $tenantId,
         string $rfqId,
         string $quoteSubmissionId,
         string $sourceLineId,
         string $eventType,
+        array $summary = [],
     ): void {
         $this->record(
             tenantId: $tenantId,
             rfqId: $rfqId,
             comparisonRunId: $quoteSubmissionId,
             eventType: $eventType,
-            summary: [
+            summary: array_replace([
                 'origin' => 'manual',
                 'quote_submission_id' => $quoteSubmissionId,
                 'source_line_id' => $sourceLineId,
                 'event_type' => $eventType,
-            ],
+            ], $summary),
         );
     }
 
     /**
-     * @param array<string, mixed> $summary Tenant-safe, machine-readable summary (counts, ids); avoid PII.
+     * @param array<string, mixed> $summary Tenant-safe, machine-readable summary (counts, ids); avoid PII unless the caller is a manual normalization audit event documented above.
      */
     private function record(
         string $tenantId,
