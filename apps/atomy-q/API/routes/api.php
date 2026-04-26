@@ -18,7 +18,6 @@ use App\Http\Controllers\Api\V1\NormalizationController;
 use App\Http\Controllers\Api\V1\OperationalApprovalController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\QuoteSubmissionController;
-use App\Http\Controllers\Api\V1\RecommendationController;
 use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\RegisterCompanyController;
 use App\Http\Controllers\Api\V1\RequisitionVendorSelectionController;
@@ -239,15 +238,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::delete('{id}', [ScenarioController::class, 'destroy']);
     });
 
-    // --- Section 13: Recommendations (4 endpoints) ---
-    Route::prefix('recommendations')->group(function (): void {
-        Route::get('{runId}', [RecommendationController::class, 'show']);
-        Route::get('{runId}/mcda', [RecommendationController::class, 'mcda']);
-        Route::post('{runId}/override', [RecommendationController::class, 'override']);
-        Route::post('{runId}/rerun', [RecommendationController::class, 'rerun']);
-    });
-
-    // --- Section 14: Risk & Compliance (3 top-level + 4 vendor sub-routes above) ---
+    // --- Section 13: Risk & Compliance (3 top-level + 4 vendor sub-routes above) ---
     Route::prefix('risk-items')->group(function (): void {
         Route::get('/', [RiskComplianceController::class, 'index']);
         Route::post('generate', [RiskComplianceController::class, 'generate']);
@@ -255,7 +246,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::post('{id}/exception', [RiskComplianceController::class, 'exception']);
     });
 
-    // --- Section 15: Approvals (12 endpoints) ---
+    // --- Section 14: Approvals (12 endpoints) ---
     Route::prefix('approvals')->group(function (): void {
         Route::get('/', [ApprovalController::class, 'index']);
         Route::post('bulk-approve', [ApprovalController::class, 'bulkApprove']);

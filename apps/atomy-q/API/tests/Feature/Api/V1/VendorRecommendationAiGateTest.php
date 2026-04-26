@@ -71,21 +71,17 @@ final class VendorRecommendationAiGateTest extends ApiTestCase
         $response->assertJsonPath('data.reason_codes.0', 'provider_unavailable');
     }
 
-    public function testItReturnsStructuredUnavailableForRecommendationEndpointsWhenFeatureIsNotDefined(): void
+    public function testLegacyRecommendationRouteReturns404(): void
     {
         $tenantId = (string) Str::ulid();
         $user = $this->createUser($tenantId);
-        $this->bindAiRuntimeStatus([]);
 
         $response = $this->getJson(
             '/api/v1/recommendations/run-123',
             $this->authHeaders($tenantId, (string) $user->id),
         );
 
-        $response->assertStatus(503);
-        $response->assertJsonPath('data.feature_key', 'recommendation_ai_endpoint');
-        $response->assertJsonPath('data.status', AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE);
-        $response->assertJsonPath('data.available', false);
+        $response->assertNotFound();
     }
 
     public function testItReturnsStructuredUnavailableWhenRuntimeStatusProbeThrows(): void
