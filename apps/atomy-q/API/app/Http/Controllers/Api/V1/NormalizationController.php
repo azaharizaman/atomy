@@ -431,7 +431,7 @@ final class NormalizationController extends Controller
             return response()->json(['message' => 'Source line not found'], 404);
         }
 
-        $result = $this->overrideService->applyOverride(
+        $result = $this->overrideService->updateSourceLine(
             sourceLine: $line,
             actorUserId: $this->userId($request),
             validated: $request->validated(),

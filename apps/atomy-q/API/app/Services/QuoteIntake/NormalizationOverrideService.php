@@ -50,11 +50,8 @@ final readonly class NormalizationOverrideService
     public function updateSourceLine(NormalizationSourceLine $sourceLine, string $actorUserId, array $validated): array
     {
         return DB::transaction(function () use ($sourceLine, $actorUserId, $validated): array {
-            // ... (existing update logic)
-            return ['line' => $sourceLine, 'readiness' => []];
-        });
-    }
-
+            $submission = $sourceLine->quoteSubmission;
+            $line = $sourceLine;
             $rawData = $line->getRawData();
             $providerProvenance = $this->providerProvenanceSnapshot($line, $rawData);
             $overrideData = $this->normalizeOverrideData($validated['override_data'], $line, $submission);
@@ -125,8 +122,6 @@ final readonly class NormalizationOverrideService
                 'readiness' => $readiness,
             ];
         });
-
-        return $result;
     }
 
     /**
