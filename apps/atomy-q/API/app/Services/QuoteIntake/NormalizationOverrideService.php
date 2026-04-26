@@ -20,15 +20,7 @@ final readonly class NormalizationOverrideService
     ) {}
 
     /**
-     * @param array{
-     *     override_data: array<string, mixed>,
-     *     reason_code: string,
-     *     note?: string|null
-     * } $validated
-     * @return array{line: NormalizationSourceLine, readiness: array{has_blocking_issues: bool, blocking_issue_count: int, next_status: string}}
-     */
-    /**
-     * @param array<string, mixed> $validated
+     * @param array{override_data: array<string, mixed>, reason_code: string, note?: string|null} $validated
      * @param string $actorUserId
      * @return array{line: NormalizationSourceLine, readiness: array{has_blocking_issues: bool, blocking_issue_count: int, next_status: string}}
      */
@@ -54,14 +46,14 @@ final readonly class NormalizationOverrideService
             $submission = $sourceLine->quoteSubmission;
             $line = $sourceLine;
             $rawData = $line->getRawData();
-            $providerProvenance = $this->providerProvenanceSnapshot($line, $rawData);
+            $providerProvenance = $this->getProviderProvenanceFromRaw($rawData);
             $overrideData = $this->normalizeOverrideData($validated['override_data'], $line, $submission);
-            $before = $this->beforeValues($line, array_keys($overrideData));
+            $before = $this->effectiveValuesFor($line, array_keys($overrideData));
 
             $this->applyOverrideData($line, $overrideData);
 
-            $after = $this->afterValues($line, array_keys($overrideData));
-            $providerConfidence = $line->ai_confidence !== null ? number_format((float) $line->ai_confidence, 2, '.', '') : null;
+            $after = $this->effectiveValuesFor($line, array_keys($overrideData));
+            $providerConfidence = $line->ai_confidence !== null ? $this->decimalStringOrNull($line->ai_confidence, 2) : null;
             $providerSuggestedValues = is_array($providerProvenance) ? ($providerProvenance['suggested_values'] ?? null) : null;
             $timestamp = Carbon::now()->toAtomString();
 
@@ -133,10 +125,66 @@ final readonly class NormalizationOverrideService
     }
 
     /**
-     * @param array<string, mixed> $rawData
-     * @return array<string, mixed>
+     * @return array{line: NormalizationSourceLine, readiness: array{has_blocking_issues: bool, blocking_issue_count: int, next_status: string}}
      */
-    private function providerProvenanceSnapshot(NormalizationSourceLine $line, array $rawData): ?array
+    public function revertOverride(NormalizationSourceLine $sourceLine, string $actorUserId): array
+    {
+        return DB::transaction(function () use ($sourceLine, $actorUserId): array {
+            $submission = $sourceLine->quoteSubmission;
+            $line = $sourceLine;
+            $rawData = $line->getRawData();
+            $providerProvenance = $this->getProviderProvenanceFromRaw($rawData);
+            $previousOverrideAudit = is_array($rawData['override_audit'] ?? null) ? $rawData['override_audit'] : null;
+
+            unset($rawData['override'], $rawData['override_audit'], $rawData['override_history']);
+            if ($providerProvenance !== null) {
+                $rawData['provider_provenance'] = $providerProvenance;
+            } else {
+                unset($rawData['provider_provenance']);
+            }
+
+            $line->raw_data = $rawData;
+            $line->save();
+
+            $readiness = $this->readiness->evaluate($submission);
+            $submission->status = $readiness['next_status'];
+            $submission->errors_count = $readiness['blocking_issue_count'];
+            $submission->save();
+
+            $this->decisionTrail->recordManualSourceLineEvent(
+                tenantId: (string) $submission->tenant_id,
+                rfqId: (string) $submission->rfq_id,
+                quoteSubmissionId: (string) $submission->id,
+                sourceLineId: (string) $line->id,
+                eventType: 'normalization_source_line_override_reverted',
+                summary: array_filter([
+                    'origin' => 'buyer_override',
+                    'quote_submission_id' => (string) $submission->id,
+                    'source_line_id' => (string) $line->id,
+                    'actor_user_id' => $actorUserId,
+                    'previous_reason_code' => is_array($previousOverrideAudit) ? ($previousOverrideAudit['reason_code'] ?? null) : null,
+                    'timestamp' => Carbon::now()->toAtomString(),
+                ], static fn (mixed $value): bool => $value !== null),
+            );
+
+            $line->loadMissing([
+                'quoteSubmission:id,tenant_id,rfq_id,vendor_id,vendor_name,status,confidence',
+                'rfqLineItem:id,rfq_id,description,quantity,uom,unit_price,currency',
+                'conflicts',
+            ]);
+
+            return [
+                'line' => $line,
+                'readiness' => $readiness,
+            ];
+        });
+    }
+
+    /**
+     * @param array<string, mixed> $rawData
+     * @return array<string, mixed>|null
+     */
+    private function getProviderProvenanceFromRaw(array $rawData): ?array
     {
         $existing = $rawData['provider_provenance'] ?? null;
         if (is_array($existing)) {
@@ -181,32 +229,16 @@ final readonly class NormalizationOverrideService
      * @param list<string> $keys
      * @return array<string, string|null>
      */
-    private function beforeValues(NormalizationSourceLine $line, array $keys): array
+    private function effectiveValuesFor(NormalizationSourceLine $line, array $keys): array
     {
         $effectiveValues = $line->effectiveValues();
-        $before = [];
+        $values = [];
 
         foreach ($keys as $key) {
-            $before[$key] = $effectiveValues[$this->effectiveValueKey($key)] ?? null;
+            $values[$key] = $effectiveValues[$key] ?? null;
         }
 
-        return $before;
-    }
-
-    /**
-     * @param list<string> $keys
-     * @return array<string, string|null>
-     */
-    private function afterValues(NormalizationSourceLine $line, array $keys): array
-    {
-        $effectiveValues = $line->effectiveValues();
-        $after = [];
-
-        foreach ($keys as $key) {
-            $after[$key] = $effectiveValues[$this->effectiveValueKey($key)] ?? null;
-        }
-
-        return $after;
+        return $values;
     }
 
     /**
@@ -263,12 +295,45 @@ final readonly class NormalizationOverrideService
             return null;
         }
 
-        return $this->decimalString($value, $scale);
+        if (! is_numeric($value)) {
+            return $this->nullableString($value);
+        }
+
+        $normalized = (string) $value;
+
+        if (function_exists('bcadd')) {
+            return bcadd($normalized, '0', $scale);
+        }
+
+        return $this->normalizeDecimalString($normalized, $scale);
     }
 
-    private function decimalString(mixed $value, int $scale): string
+    private function normalizeDecimalString(string $value, int $scale): ?string
     {
-        return number_format((float) $value, $scale, '.', '');
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        if (! preg_match('/^([+-]?)(\d+)(?:\.(\d+))?$/', $trimmed, $matches)) {
+            return $this->nullableString($trimmed);
+        }
+
+        $sign = $matches[1];
+        $integerPart = ltrim($matches[2], '0');
+        if ($integerPart === '') {
+            $integerPart = '0';
+        }
+
+        $fractionPart = $matches[3] ?? '';
+        if ($scale === 0) {
+            return $sign . $integerPart;
+        }
+
+        $fractionPart = substr($fractionPart, 0, $scale);
+        $fractionPart = str_pad($fractionPart, $scale, '0');
+
+        return $sign . $integerPart . '.' . $fractionPart;
     }
 
     private function normalizedNote(mixed $note): ?string
@@ -299,16 +364,5 @@ final readonly class NormalizationOverrideService
         $normalized = is_string($name) ? trim($name) : '';
 
         return $normalized !== '' ? $normalized : $actorUserId;
-    }
-
-    private function effectiveValueKey(string $overrideKey): string
-    {
-        return match ($overrideKey) {
-            'quantity' => 'quantity',
-            'uom' => 'uom',
-            'unit_price' => 'unit_price',
-            'rfq_line_item_id' => 'rfq_line_item_id',
-            default => $overrideKey,
-        };
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Adapters\Ai\Contracts\AiEndpointRegistryInterface;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
 use App\Http\Controllers\Controller;
@@ -18,7 +19,6 @@ use App\Models\Rfq;
 use App\Models\RfqLineItem;
 use App\Services\QuoteIntake\DecisionTrailRecorder;
 use App\Services\QuoteIntake\QuoteSubmissionReadinessService;
-use App\Adapters\Ai\Contracts\AiEndpointRegistryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -37,6 +37,7 @@ final class QuoteSubmissionController extends Controller
     public function __construct(
         private readonly QuoteSubmissionReadinessService $readiness,
         private readonly DecisionTrailRecorder $decisionTrail,
+        private readonly AiEndpointRegistryInterface $endpointRegistry,
     ) {}
 
     /**
@@ -534,9 +535,7 @@ final class QuoteSubmissionController extends Controller
         }
 
         try {
-            /** @var AiEndpointRegistryInterface $endpointRegistry */
-            $endpointRegistry = app(AiEndpointRegistryInterface::class);
-            $endpointConfig = $endpointRegistry->endpointConfig(AiStatusSchema::ENDPOINT_GROUP_DOCUMENT);
+            $endpointConfig = $this->endpointRegistry->endpointConfig(AiStatusSchema::ENDPOINT_GROUP_DOCUMENT);
 
             return $endpointConfig === null || $endpointConfig->enabled === false;
         } catch (Throwable) {

@@ -77,7 +77,7 @@ describe('useNormalizationSourceLines (live mode)', () => {
               reason_code: 'price_correction',
               note: 'Supplier PDF totals were wrong',
               actor_name: 'Buyer One',
-              overridden_at: '2026-04-26T01:00:00Z',
+              timestamp: '2026-04-26T01:00:00Z',
             },
           },
         ],

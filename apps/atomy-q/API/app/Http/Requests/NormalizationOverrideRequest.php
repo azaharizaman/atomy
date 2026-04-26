@@ -10,7 +10,7 @@ use Illuminate\Validation\Validator;
 
 final class NormalizationOverrideRequest extends FormRequest
 {
-    private const REASON_CODES = [
+    public const REASON_CODES = [
         'supplier_document_mismatch',
         'rfq_mapping_incorrect',
         'quantity_or_uom_correction',

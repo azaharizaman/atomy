@@ -25,7 +25,23 @@ function loadEnvValue(filePath: string, key: string): string | undefined {
       continue;
     }
 
-    return trimmed.slice(equalsIndex + 1).trim();
+    const rawValue = trimmed.slice(equalsIndex + 1).trim();
+    if (rawValue === '') {
+      return '';
+    }
+
+    const quote = rawValue[0];
+    if (quote === '"' || quote === "'") {
+      const closingQuoteIndex = rawValue.lastIndexOf(quote);
+      if (closingQuoteIndex > 0) {
+        return rawValue.slice(1, closingQuoteIndex);
+      }
+    }
+
+    const commentIndex = rawValue.indexOf('#');
+    const valueWithoutComment = commentIndex >= 0 ? rawValue.slice(0, commentIndex) : rawValue;
+
+    return valueWithoutComment.trim();
   }
 
   return undefined;

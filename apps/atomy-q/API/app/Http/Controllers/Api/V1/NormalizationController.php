@@ -224,7 +224,7 @@ final class NormalizationController extends Controller
             return null;
         }
 
-        return $line->effectiveValues();
+        return null;
     }
 
     private function nullableString(mixed $value): ?string
@@ -248,7 +248,41 @@ final class NormalizationController extends Controller
             return $this->nullableString($value);
         }
 
-        return number_format((float) $value, $scale, '.', '');
+        $normalized = (string) $value;
+
+        if (function_exists('bcadd')) {
+            return bcadd($normalized, '0', $scale);
+        }
+
+        return $this->normalizeDecimalString($normalized, $scale);
+    }
+
+    private function normalizeDecimalString(string $value, int $scale): ?string
+    {
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        if (! preg_match('/^([+-]?)(\d+)(?:\.(\d+))?$/', $trimmed, $matches)) {
+            return $this->nullableString($trimmed);
+        }
+
+        $sign = $matches[1];
+        $integerPart = ltrim($matches[2], '0');
+        if ($integerPart === '') {
+            $integerPart = '0';
+        }
+
+        $fractionPart = $matches[3] ?? '';
+        if ($scale === 0) {
+            return $sign . $integerPart;
+        }
+
+        $fractionPart = substr($fractionPart, 0, $scale);
+        $fractionPart = str_pad($fractionPart, $scale, '0');
+
+        return $sign . $integerPart . '.' . $fractionPart;
     }
 
     /**
@@ -456,12 +490,7 @@ final class NormalizationController extends Controller
             return response()->json(['message' => 'Source line not found'], 404);
         }
 
-        $raw = $line->raw_data ?? [];
-        unset($raw['override']);
-        $line->raw_data = $raw;
-        $line->save();
-
-        $this->applyReadinessToSubmission($line->quoteSubmission);
+        $this->overrideService->revertOverride($line, $this->userId($request));
 
         return response()->json(null, 204);
     }

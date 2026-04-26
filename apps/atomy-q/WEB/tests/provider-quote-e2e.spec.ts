@@ -65,7 +65,7 @@ test.describe('provider quote e2e with mocked API responses', () => {
         note: string;
         actor_name: string;
         actor_user_id: string;
-        overridden_at: string;
+        timestamp: string;
         provider_confidence: string;
       },
     };
@@ -318,7 +318,7 @@ test.describe('provider quote e2e with mocked API responses', () => {
           note: String(body.note ?? 'Matched supplier quote'),
           actor_name: fixture.buyer.name,
           actor_user_id: 'user-provider-fake',
-          overridden_at: new Date().toISOString(),
+          timestamp: new Date().toISOString(),
           provider_confidence: '88.25',
         };
         sourceLine.blocking_issue_count = 0;

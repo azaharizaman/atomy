@@ -26,14 +26,7 @@ final class ManualNormalizationSourceLineRequest extends FormRequest
             'source_unit_price' => ['nullable', 'numeric', 'min:0'],
             'rfq_line_item_id' => ['nullable', 'string'],
             'note' => ['nullable', 'string', 'max:1000', 'required_if:reason,other'],
-            'reason' => ['required', 'string', Rule::in([
-                'supplier_document_mismatch',
-                'rfq_mapping_incorrect',
-                'quantity_or_uom_correction',
-                'price_correction',
-                'manual_entry_required',
-                'other',
-            ])],
+            'reason' => ['required', 'string', Rule::in(NormalizationOverrideRequest::REASON_CODES)],
             'sort_order' => ['nullable', 'integer', 'min:0'],
         ];
     }

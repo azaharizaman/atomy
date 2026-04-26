@@ -160,7 +160,7 @@ describe('NormalizeQuotePage', () => {
             reason_code: 'price_correction',
             note: 'Typed from signed quote',
             actor_name: 'Buyer One',
-            overridden_at: '2026-04-26T01:00:00Z',
+            timestamp: '2026-04-26T01:00:00Z',
           },
         },
         {
@@ -390,5 +390,29 @@ describe('NormalizeQuotePage', () => {
     vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
     fireEvent.click(screen.getByRole('button', { name: /delete source line 1/i }));
     expect(mockDeleteSourceLine).toHaveBeenCalledWith({ quoteSubmissionId: 'q1', id: 'line-1' });
+  });
+
+  it('sends null for unmapped RFQ line overrides', async () => {
+    await renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: /edit source line 1/i }));
+    fireEvent.change(screen.getByLabelText(/rfq line source line 1/i), {
+      target: { value: '' },
+    });
+    fireEvent.change(screen.getByLabelText(/reason code source line 1/i), { target: { value: 'price_correction' } });
+    fireEvent.click(screen.getByRole('button', { name: /save source line 1/i }));
+
+    expect(mockOverrideSourceLine).toHaveBeenCalledWith({
+      id: 'line-1',
+      override_data: {
+        rfq_line_item_id: null,
+        source_description: 'Widget A',
+        quantity: '2',
+        uom: 'ea',
+        unit_price: null,
+      },
+      note: 'Typed from signed quote',
+      reason_code: 'price_correction',
+    });
   });
 });

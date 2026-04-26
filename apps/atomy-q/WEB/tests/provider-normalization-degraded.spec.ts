@@ -253,11 +253,7 @@ test.describe('provider normalization degraded manual continuity', () => {
         return;
       }
 
-      await route.fulfill({
-        status: 404,
-        contentType: 'application/json',
-        body: JSON.stringify({ message: `Unhandled mocked API path: ${pathname}` }),
-      });
+      throw new Error(`Unhandled mocked API path: ${method} ${pathname}`);
     });
 
     await page.goto(`/rfqs/${rfqId}/quote-intake/${quoteId}/normalize`);

@@ -278,10 +278,27 @@ test.describe('provider-backed quote e2e with live OpenRouter', () => {
       await expect(page.getByText(/provider confidence/i)).toBeVisible();
       await expect(page.getByText(/provider suggested/i)).toBeVisible();
 
+      const missingProviderMappings: string[] = [];
       for (const [quoteSubmissionId, lines] of sourceLinesByQuoteSubmission.entries()) {
         for (const candidateLine of lines) {
           const sourceLineId = String(candidateLine.id ?? '');
           expect(sourceLineId).not.toBe('');
+
+          const mappedLineId = candidateLine.rfq_line_item_id;
+          const sourceUnitPrice = candidateLine.source_unit_price;
+          if (
+            mappedLineId === null
+            || mappedLineId === undefined
+            || String(mappedLineId).trim() === ''
+            || sourceUnitPrice === null
+            || sourceUnitPrice === undefined
+            || String(sourceUnitPrice).trim() === ''
+          ) {
+            missingProviderMappings.push(
+              `${quoteSubmissionId}:${sourceLineId} missing rfq_line_item_id=${String(mappedLineId ?? '')} source_unit_price=${String(sourceUnitPrice ?? '')}`,
+            );
+            continue;
+          }
 
           const overrideResponse = await request.put(
             `${apiBase}/normalization/source-lines/${encodeURIComponent(sourceLineId)}/override`,
@@ -292,8 +309,8 @@ test.describe('provider-backed quote e2e with live OpenRouter', () => {
               },
               data: {
                 override_data: {
-                  rfq_line_item_id: String(candidateLine.rfq_line_item_id ?? createdLineItemIds[0]),
-                  unit_price: candidateLine.source_unit_price ?? '0',
+                  rfq_line_item_id: String(mappedLineId),
+                  unit_price: String(sourceUnitPrice),
                 },
                 reason_code: 'manual_entry_required',
                 note: `Live normalization alpha readiness proof for ${quoteSubmissionId}`,
@@ -303,6 +320,7 @@ test.describe('provider-backed quote e2e with live OpenRouter', () => {
           expect(overrideResponse.ok()).toBeTruthy();
         }
       }
+      expect(missingProviderMappings).toEqual([]);
       await expect
         .poll(async () => {
           const conflictsResponse = await request.get(

@@ -25,7 +25,7 @@ export interface NormalizationValueSnapshot {
 }
 
 export interface NormalizationOverrideData extends NormalizationValueSnapshot {
-  source_description: string;
+  source_description?: string;
 }
 
 export interface LatestNormalizationOverride {
@@ -33,7 +33,7 @@ export interface LatestNormalizationOverride {
   note: string | null;
   actor_name: string | null;
   actor_user_id: string | null;
-  overridden_at: string | null;
+  timestamp: string | null;
   provider_confidence: string | null;
 }
 
@@ -105,7 +105,7 @@ function normalizeLatestOverride(value: unknown): LatestNormalizationOverride | 
     note: toText(value.note),
     actor_name: toText(value.actor_name),
     actor_user_id: toText(value.actor_user_id),
-    overridden_at: toText(value.overridden_at),
+    timestamp: toText(value.timestamp),
     provider_confidence: toText(value.provider_confidence),
   };
 }

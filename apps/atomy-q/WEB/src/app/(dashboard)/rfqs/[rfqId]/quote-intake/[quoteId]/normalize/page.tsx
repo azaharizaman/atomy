@@ -123,9 +123,11 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
     sourceLinesQuery.error instanceof Error ? sourceLinesQuery.error.message : 'Source-line data could not be loaded.';
   const reviewError = normLive.error instanceof Error ? normLive.error.message : 'Review data could not be loaded.';
   const submissionDeadlineMs = rfq?.submission_deadline ? Date.parse(rfq.submission_deadline) : Number.NaN;
-  const submissionWindowStillOpen = !useMocks && Number.isFinite(submissionDeadlineMs) && submissionDeadlineMs > Date.now();
+  const hasValidSubmissionDeadline = rfq !== undefined && Number.isFinite(submissionDeadlineMs);
+  const submissionWindowStillOpen =
+    !useMocks && (!hasValidSubmissionDeadline || submissionDeadlineMs > Date.now());
   const comparisonFreezeBlockedByReadiness =
-    !useMocks && (!comparisonReadiness.canFreezeComparison || submissionWindowStillOpen);
+    !useMocks && (!hasValidSubmissionDeadline || !comparisonReadiness.canFreezeComparison || submissionWindowStillOpen);
 
   function updateManualForm(field: keyof ManualSourceLineFormState, value: string): void {
     setManualForm((current) => ({ ...current, [field]: value }));
@@ -173,7 +175,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
     manualSourceLines.overrideSourceLine.mutate({
       id: lineId,
       override_data: {
-        rfq_line_item_id: editForm.rfq_line_item_id,
+        rfq_line_item_id: normalizeNullableField(editForm.rfq_line_item_id),
         source_description: description,
         quantity: normalizeNullableField(editForm.source_quantity),
         uom: normalizeNullableField(editForm.source_uom),
@@ -242,6 +244,20 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
     }
 
     return `${numeric.toFixed(2)}%`;
+  }
+
+  function suggestedMappingLabel(line: NormalizationSourceLineRow): string {
+    const suggestedId = line.provider_suggested?.rfq_line_item_id;
+    if (!suggestedId || suggestedId.trim() === '') {
+      return 'Unmapped';
+    }
+
+    const matchedLine = rfqLineItems.find((item) => item.id === suggestedId);
+    if (matchedLine) {
+      return matchedLine.description;
+    }
+
+    return suggestedId;
   }
 
   const freezeDisabled = hasBlockingIssues || freeze.isPending || comparisonFreezeBlockedByReadiness;
@@ -572,7 +588,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                         <span>
                           {liveLine.is_buyer_overridden
                             ? `Override reason ${formatReasonCode(liveLine.latest_override?.reason_code)}`
-                            : `Suggested mapping ${liveLine.provider_suggested?.rfq_line_item_id ?? 'Unmapped'}`}
+                            : `Suggested mapping ${suggestedMappingLabel(liveLine)}`}
                         </span>
                       </div>
                     </div>
@@ -621,7 +637,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                         <span>
                           {liveLine.is_buyer_overridden
                             ? `Override reason ${formatReasonCode(liveLine.latest_override?.reason_code)}`
-                            : `Suggested mapping ${liveLine.provider_suggested?.rfq_line_item_id ?? 'Unmapped'}`}
+                            : `Suggested mapping ${suggestedMappingLabel(liveLine)}`}
                         </span>
                       </div>
                     </>

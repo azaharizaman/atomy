@@ -124,6 +124,9 @@ final readonly class DecisionTrailRecorder
         );
     }
 
+    /**
+     * @param array<string, mixed> $summary Tenant-safe, machine-readable summary (counts, ids); avoid PII.
+     */
     public function recordManualSourceLineEvent(
         string $tenantId,
         string $rfqId,

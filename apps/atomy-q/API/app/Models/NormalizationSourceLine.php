@@ -108,9 +108,9 @@ class NormalizationSourceLine extends Model implements NormalizationSourceLineRe
         return [
             'source_description' => $this->source_description !== null ? (string) $this->source_description : null,
             'rfq_line_item_id' => $this->rfq_line_item_id !== null ? (string) $this->rfq_line_item_id : null,
-            'quantity' => $this->source_quantity !== null ? number_format((float) $this->source_quantity, 4, '.', '') : null,
+            'quantity' => $this->source_quantity !== null ? $this->decimalString((string) $this->source_quantity, 4) : null,
             'uom' => $this->source_uom !== null ? (string) $this->source_uom : null,
-            'unit_price' => $this->source_unit_price !== null ? number_format((float) $this->source_unit_price, 4, '.', '') : null,
+            'unit_price' => $this->source_unit_price !== null ? $this->decimalString((string) $this->source_unit_price, 4) : null,
         ];
     }
 
@@ -138,10 +138,56 @@ class NormalizationSourceLine extends Model implements NormalizationSourceLineRe
     {
         $override = $this->getRawData()['override'] ?? null;
 
-        return match (true) {
-            $override === null, $override === '', $override === [] => false,
-            is_string($override) => trim($override) !== '',
-            default => true,
-        };
+        if ($override === null || $override === '') {
+            return false;
+        }
+
+        if (is_string($override)) {
+            return trim($override) !== '';
+        }
+
+        if (is_array($override)) {
+            foreach ($override as $value) {
+                if ($value !== null && (! is_string($value) || trim($value) !== '')) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        return false;
+    }
+
+    private function decimalString(string $value, int $scale): ?string
+    {
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        if (function_exists('bcadd')) {
+            return bcadd($trimmed, '0', $scale);
+        }
+
+        if (! preg_match('/^([+-]?)(\d+)(?:\.(\d+))?$/', $trimmed, $matches)) {
+            return trim($trimmed) === '' ? null : $trimmed;
+        }
+
+        $sign = $matches[1];
+        $integerPart = ltrim($matches[2], '0');
+        if ($integerPart === '') {
+            $integerPart = '0';
+        }
+
+        $fractionPart = $matches[3] ?? '';
+        if ($scale === 0) {
+            return $sign . $integerPart;
+        }
+
+        $fractionPart = substr($fractionPart, 0, $scale);
+        $fractionPart = str_pad($fractionPart, $scale, '0');
+
+        return $sign . $integerPart . '.' . $fractionPart;
     }
 }
