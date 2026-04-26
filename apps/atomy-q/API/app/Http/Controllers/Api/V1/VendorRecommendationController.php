@@ -7,19 +7,22 @@ namespace App\Http\Controllers\Api\V1;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
+use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
+use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Nexus\ProcurementML\ValueObjects\VendorRecommendationEligibleCandidate;
 use Nexus\ProcurementML\ValueObjects\VendorRecommendationExcludedCandidate;
 use Nexus\ProcurementOperations\Contracts\VendorRecommendationCoordinatorInterface;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationCandidate;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationRequest;
-use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
-use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
 use App\Http\Controllers\Controller;
 use App\Models\Rfq;
 use App\Models\RfqLineItem;
+use App\Models\RfqRecommendationArtifact;
 use App\Models\Vendor;
+use App\Services\QuoteIntake\DecisionTrailRecorder;
 
 final class VendorRecommendationController extends Controller
 {
@@ -30,6 +33,7 @@ final class VendorRecommendationController extends Controller
         Request $request,
         string $rfqId,
         VendorRecommendationCoordinatorInterface $coordinator,
+        DecisionTrailRecorder $decisionTrailRecorder,
     ): JsonResponse {
         $tenantId = $this->tenantId($request);
         $rfq = $this->findRfq($tenantId, $rfqId);
@@ -98,6 +102,54 @@ final class VendorRecommendationController extends Controller
             ]),
             $result->excludedCandidates,
         );
+        $canonicalPayload = $this->canonicalRecommendationPayload(
+            $result->tenantId,
+            $result->rfqId,
+            $result->status->value,
+            $result->eligibleCandidates,
+            $excludedCandidates,
+            $result->providerExplanation,
+            $result->deterministicReasonSet,
+        );
+        $provenance = $result->provenance?->toArray();
+
+        DB::transaction(function () use (
+            $canonicalPayload,
+            $provenance,
+            $decisionTrailRecorder,
+            $rfq,
+            $tenantId,
+        ): void {
+            RfqRecommendationArtifact::query()->updateOrCreate(
+                [
+                    'tenant_id' => $tenantId,
+                    'rfq_id' => $rfq->id,
+                    'feature_key' => 'vendor_ai_ranking',
+                ],
+                [
+                    'status' => 'available',
+                    'canonical_payload' => $canonicalPayload,
+                    'provenance' => $provenance,
+                ],
+            );
+
+            $decisionTrailRecorder->recordVendorRecommendationGenerated(
+                $tenantId,
+                (string) $rfq->id,
+                [
+                    'artifact_kind' => 'vendor_recommendation',
+                    'artifact_origin' => 'provider_drafted',
+                    'feature_key' => 'vendor_ai_ranking',
+                    'available' => true,
+                    'artifact' => [
+                        'feature_key' => 'vendor_ai_ranking',
+                        'available' => true,
+                        'payload' => $canonicalPayload,
+                        'provenance' => $provenance,
+                    ],
+                ],
+            );
+        });
 
         return response()->json([
             'data' => [
@@ -111,12 +163,7 @@ final class VendorRecommendationController extends Controller
                 'excluded_candidates' => $excludedCandidates,
                 'provider_explanation' => $result->providerExplanation,
                 'deterministic_reason_set' => $result->deterministicReasonSet,
-                'provenance' => $result->provenance?->toArray(),
-                'candidates' => array_map(
-                    fn (VendorRecommendationEligibleCandidate $candidate): array => $this->serializeLegacyCandidate($candidate),
-                    $result->eligibleCandidates,
-                ),
-                'excluded_reasons' => $excludedCandidates,
+                'provenance' => $provenance,
             ],
         ]);
     }
@@ -178,21 +225,6 @@ final class VendorRecommendationController extends Controller
             'fit_score' => $candidate->fitScore,
             'confidence_band' => $candidate->confidenceBand,
             'provider_explanation' => $candidate->providerExplanation,
-            'deterministic_reasons' => $candidate->deterministicReasons,
-            'llm_insights' => $candidate->llmInsights,
-            'warning_flags' => $candidate->warningFlags,
-            'warnings' => $candidate->warnings,
-        ];
-    }
-
-    private function serializeLegacyCandidate(VendorRecommendationEligibleCandidate $candidate): array
-    {
-        return [
-            'vendor_id' => $candidate->vendorId,
-            'vendor_name' => $candidate->vendorName,
-            'fit_score' => $candidate->fitScore,
-            'confidence_band' => $candidate->confidenceBand,
-            'recommended_reason_summary' => $candidate->providerExplanation,
             'deterministic_reasons' => $candidate->deterministicReasons,
             'llm_insights' => $candidate->llmInsights,
             'warning_flags' => $candidate->warningFlags,
@@ -293,6 +325,35 @@ final class VendorRecommendationController extends Controller
         $value = trim((string) $value);
 
         return $value === '' ? null : $value;
+    }
+
+    /**
+     * @param list<VendorRecommendationEligibleCandidate> $eligibleCandidates
+     * @param list<array{vendor_id: string, vendor_name: string, reason: string, status: string}> $excludedCandidates
+     * @param list<string> $deterministicReasonSet
+     * @return array<string, mixed>
+     */
+    private function canonicalRecommendationPayload(
+        string $tenantId,
+        string $rfqId,
+        string $status,
+        array $eligibleCandidates,
+        array $excludedCandidates,
+        ?string $providerExplanation,
+        array $deterministicReasonSet,
+    ): array {
+        return [
+            'tenant_id' => $tenantId,
+            'rfq_id' => $rfqId,
+            'status' => $status,
+            'eligible_candidates' => array_map(
+                fn (VendorRecommendationEligibleCandidate $candidate): array => $this->serializeEligibleCandidate($candidate),
+                $eligibleCandidates,
+            ),
+            'excluded_candidates' => $excludedCandidates,
+            'provider_explanation' => $providerExplanation,
+            'deterministic_reason_set' => $deterministicReasonSet,
+        ];
     }
 
     private function normalizeIdentifier(string $value): string

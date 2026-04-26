@@ -159,6 +159,11 @@ final class DecisionTrailController extends Controller
                 'artifact_kind' => 'comparison_snapshot',
                 'description' => 'Comparison snapshot frozen',
             ],
+            'vendor_recommendation_generated' => fn (DecisionTrailEntry $trailEntry): array => $this->artifactMetadata(
+                artifactKind: 'vendor_recommendation',
+                defaultDescription: 'Vendor recommendation generated',
+                artifact: $this->artifactFromEntry($trailEntry, ['artifact']),
+            ),
             'comparison_ai_overlay_generated' => fn (DecisionTrailEntry $trailEntry): array => $this->artifactMetadata(
                 artifactKind: 'comparison_ai_overlay',
                 defaultDescription: 'Comparison AI overlay generated',
@@ -169,6 +174,7 @@ final class DecisionTrailController extends Controller
             'award_created' => fn (DecisionTrailEntry $trailEntry): array => $this->awardWorkflowMetadata($trailEntry),
             'award_debriefed' => fn (DecisionTrailEntry $trailEntry): array => $this->awardWorkflowMetadata($trailEntry),
             'award_signed_off' => fn (DecisionTrailEntry $trailEntry): array => $this->awardWorkflowMetadata($trailEntry),
+            'buyer_shortlist_replaced' => fn (DecisionTrailEntry $trailEntry): array => $this->buyerShortlistMetadata($trailEntry),
         ];
 
         if (isset($exactHandlers[$entry->event_type])) {
@@ -251,6 +257,32 @@ final class DecisionTrailController extends Controller
                 'award_signed_off' => 'Award signed off',
                 default => $entry->event_type,
             },
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function buyerShortlistMetadata(DecisionTrailEntry $entry): array
+    {
+        $summary = is_array($entry->summary_payload) ? $entry->summary_payload : [];
+        $selectedVendorIds = array_values(array_filter(
+            array_map(static fn (mixed $value): string => trim((string) $value), $summary['selected_vendor_ids'] ?? []),
+            static fn (string $value): bool => $value !== '',
+        ));
+        $selectionCount = is_int($summary['selection_count'] ?? null)
+            ? (int) $summary['selection_count']
+            : count($selectedVendorIds);
+
+        return [
+            'artifact_origin' => 'user_confirmed_action',
+            'artifact_kind' => 'buyer_shortlist',
+            'description' => $selectionCount > 0
+                ? 'Buyer shortlist replaced with ' . $selectionCount . ' vendors'
+                : 'Buyer shortlist replaced',
+            'selection_count' => $selectionCount,
+            'selected_vendor_ids' => $selectedVendorIds,
+            'feature_key' => $summary['feature_key'] ?? 'requisition_selected_vendors',
         ];
     }
 

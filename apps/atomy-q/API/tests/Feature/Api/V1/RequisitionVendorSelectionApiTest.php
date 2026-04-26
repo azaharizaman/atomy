@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Api\V1;
 
 use App\Models\Rfq;
+use App\Models\DecisionTrailEntry;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Vendor;
@@ -159,6 +160,22 @@ final class RequisitionVendorSelectionApiTest extends ApiTestCase
             'vendor_id' => $vendorB->id,
             'selected_by_user_id' => (string) $user->id,
         ]);
+        $this->assertDatabaseHas('decision_trail_entries', [
+            'tenant_id' => $tenantId,
+            'rfq_id' => $rfq->id,
+            'comparison_run_id' => $rfq->id,
+            'event_type' => 'buyer_shortlist_replaced',
+        ]);
+
+        $entry = DecisionTrailEntry::query()
+            ->where('tenant_id', $tenantId)
+            ->where('rfq_id', $rfq->id)
+            ->where('event_type', 'buyer_shortlist_replaced')
+            ->first();
+
+        self::assertNotNull($entry);
+        self::assertSame(2, $entry->summary_payload['selection_count']);
+        self::assertSame([(string) $vendorA->id, (string) $vendorB->id], $entry->summary_payload['selected_vendor_ids']);
 
         $this->assertCount(
             2,

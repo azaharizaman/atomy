@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
+use App\Services\QuoteIntake\DecisionTrailRecorder;
 use App\Models\RequisitionSelectedVendor;
 use App\Models\Rfq;
 use App\Models\Vendor;
@@ -61,7 +62,7 @@ final class RequisitionVendorSelectionController extends Controller
         $vendorIds = array_values(array_map('strval', $validated['vendor_ids']));
 
         $vendors = Vendor::query()
-            ->where('tenant_id', $tenantId)
+            ->whereRaw('lower(tenant_id) = ?', [$this->normalizeIdentifier($tenantId)])
             ->whereIn('id', $vendorIds)
             ->get()
             ->keyBy(fn (Vendor $vendor): string => (string) $vendor->id);
@@ -80,7 +81,9 @@ final class RequisitionVendorSelectionController extends Controller
             ], 422);
         }
 
-        $rows = DB::transaction(function () use ($rfq, $tenantId, $vendorIds, $request, $vendors): Collection {
+        $decisionTrailRecorder = app(DecisionTrailRecorder::class);
+
+        $rows = DB::transaction(function () use ($rfq, $tenantId, $vendorIds, $request, $vendors, $decisionTrailRecorder): Collection {
             RequisitionSelectedVendor::query()
                 ->where('tenant_id', $tenantId)
                 ->where('rfq_id', $rfq->id)
@@ -109,6 +112,33 @@ final class RequisitionVendorSelectionController extends Controller
                 $selection->setRelation('vendor', $vendors->get((string) $selection->vendor_id));
                 $selections->push($selection);
             }
+
+            $selectedVendorIds = $selections->map(static fn (RequisitionSelectedVendor $selection): string => (string) $selection->vendor_id)->values()->all();
+            $decisionTrailRecorder->recordBuyerShortlistReplaced(
+                $tenantId,
+                (string) $rfq->id,
+                [
+                    'artifact_kind' => 'buyer_shortlist',
+                    'artifact_origin' => 'user_confirmed_action',
+                    'feature_key' => 'requisition_selected_vendors',
+                    'selection_count' => $selections->count(),
+                    'selected_vendor_ids' => $selectedVendorIds,
+                    'artifact' => [
+                        'feature_key' => 'requisition_selected_vendors',
+                        'available' => true,
+                        'payload' => [
+                            'rfq_id' => (string) $rfq->id,
+                            'vendor_ids' => $selectedVendorIds,
+                        ],
+                        'provenance' => [
+                            'source' => 'user_action',
+                            'action' => 'shortlist_replaced',
+                            'selected_by_user_id' => $this->userId($request),
+                            'generated_at' => now('UTC')->toAtomString(),
+                        ],
+                    ],
+                ],
+            );
 
             return $selections;
         });

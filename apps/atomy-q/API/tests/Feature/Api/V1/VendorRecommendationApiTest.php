@@ -7,6 +7,7 @@ namespace Tests\Feature\Api\V1;
 use DateTimeImmutable;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -18,6 +19,7 @@ use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationRe
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationScoredCandidate;
 
 use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use App\Models\RfqRecommendationArtifact;
 use App\Models\Rfq;
 use App\Models\Tenant;
 use App\Models\User;
@@ -119,13 +121,28 @@ final class VendorRecommendationApiTest extends ApiTestCase
         $response->assertJsonPath('data.eligible_candidates.0.vendor_name', 'Facility Experts');
         $response->assertJsonPath('data.eligible_candidates.0.provider_explanation', 'Provider ranked Facility Experts first.');
         $response->assertJsonPath('data.provenance.provider_name', 'openrouter');
-        $response->assertJsonPath('data.candidates.0.vendor_id', (string) $approved->id);
+        self::assertArrayNotHasKey('candidates', $response->json('data'));
+        self::assertArrayNotHasKey('excluded_reasons', $response->json('data'));
         $this->assertIsInt($response->json('data.eligible_candidates.0.fit_score'));
         $this->assertNotEmpty($response->json('data.eligible_candidates.0.deterministic_reasons'));
         $this->assertIsArray($response->json('data.eligible_candidates.0.warning_flags'));
         $this->assertIsArray($response->json('data.eligible_candidates.0.warnings'));
         $this->assertContains((string) $draft->id, array_column($response->json('data.excluded_candidates'), 'vendor_id'));
         $this->assertNotContains((string) $draft->id, array_column($response->json('data.eligible_candidates'), 'vendor_id'));
+        self::assertSame(0, DB::table('requisition_selected_vendors')->where('tenant_id', $tenantId)->where('rfq_id', $rfq->id)->count());
+
+        $artifact = RfqRecommendationArtifact::query()
+            ->where('tenant_id', $tenantId)
+            ->where('rfq_id', $rfq->id)
+            ->where('feature_key', 'vendor_ai_ranking')
+            ->first();
+
+        self::assertNotNull($artifact);
+        self::assertSame('available', $artifact->status);
+        self::assertSame('vendor_ai_ranking', $artifact->feature_key);
+        self::assertSame('openrouter', $artifact->provenance['provider_name']);
+        self::assertSame('available', $artifact->canonical_payload['status']);
+        self::assertSame((string) $approved->id, $artifact->canonical_payload['eligible_candidates'][0]['vendor_id']);
     }
 
     public function testItReturns422ForMalformedRecommendationContext(): void
@@ -200,10 +217,21 @@ final class VendorRecommendationApiTest extends ApiTestCase
         $response->assertOk();
         $response->assertJsonPath('data.status', 'available');
         $response->assertJsonPath('data.eligible_candidates', []);
-        $response->assertJsonPath('data.candidates', []);
         $response->assertJsonPath('data.provider_explanation', 'No approved vendors met the provider threshold.');
         $response->assertJsonPath('data.provenance.provider_name', 'openrouter');
+        self::assertArrayNotHasKey('candidates', $response->json('data'));
+        self::assertArrayNotHasKey('excluded_reasons', $response->json('data'));
         $this->assertSame('suspended', $response->json('data.excluded_candidates.0.status'));
+
+        $artifact = RfqRecommendationArtifact::query()
+            ->where('tenant_id', $tenantId)
+            ->where('rfq_id', $rfq->id)
+            ->where('feature_key', 'vendor_ai_ranking')
+            ->first();
+
+        self::assertNotNull($artifact);
+        self::assertSame([], $artifact->canonical_payload['eligible_candidates']);
+        self::assertNotEmpty($artifact->canonical_payload['deterministic_reason_set']);
     }
 
     private function createUser(string $tenantId): User
