@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Adapters\Ai\Contracts\AiEndpointRegistryInterface;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Api\V1\Concerns\InteractsWithAiAvailability;
 use App\Http\Controllers\Controller;
@@ -36,6 +37,7 @@ final class QuoteSubmissionController extends Controller
     public function __construct(
         private readonly QuoteSubmissionReadinessService $readiness,
         private readonly DecisionTrailRecorder $decisionTrail,
+        private readonly AiEndpointRegistryInterface $endpointRegistry,
     ) {}
 
     /**
@@ -524,11 +526,21 @@ final class QuoteSubmissionController extends Controller
     private function shouldUseManualExtractionContinuity(): bool
     {
         $mode = (string) config('atomy.ai.mode', AiStatusSchema::MODE_DETERMINISTIC);
-        if (!in_array($mode, [AiStatusSchema::MODE_PROVIDER, AiStatusSchema::MODE_OFF], true)) {
+        if ($mode === AiStatusSchema::MODE_OFF) {
+            return true;
+        }
+
+        if ($mode !== AiStatusSchema::MODE_PROVIDER) {
             return false;
         }
 
-        return !$this->aiCapabilityAvailable('quote_document_extraction');
+        try {
+            $endpointConfig = $this->endpointRegistry->endpointConfig(AiStatusSchema::ENDPOINT_GROUP_DOCUMENT);
+
+            return $endpointConfig === null || $endpointConfig->enabled === false;
+        } catch (Throwable) {
+            return true;
+        }
     }
 
     private function markExtractionUnavailable(QuoteSubmission $submission): void

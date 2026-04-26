@@ -124,24 +124,28 @@ final readonly class DecisionTrailRecorder
         );
     }
 
+    /**
+     * @param array<string, mixed> $summary Tenant-safe, machine-readable summary (counts, ids); avoid PII.
+     */
     public function recordManualSourceLineEvent(
         string $tenantId,
         string $rfqId,
         string $quoteSubmissionId,
         string $sourceLineId,
         string $eventType,
+        array $summary = [],
     ): void {
         $this->record(
             tenantId: $tenantId,
             rfqId: $rfqId,
             comparisonRunId: $quoteSubmissionId,
             eventType: $eventType,
-            summary: [
+            summary: array_replace([
                 'origin' => 'manual',
                 'quote_submission_id' => $quoteSubmissionId,
                 'source_line_id' => $sourceLineId,
                 'event_type' => $eventType,
-            ],
+            ], $summary),
         );
     }
 

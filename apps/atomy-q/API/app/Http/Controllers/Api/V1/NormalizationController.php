@@ -14,6 +14,7 @@ use App\Models\NormalizationSourceLine;
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
 use App\Models\RfqLineItem;
+use App\Services\QuoteIntake\NormalizationOverrideService;
 use App\Services\QuoteIntake\QuoteSubmissionReadinessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,6 +28,7 @@ final class NormalizationController extends Controller
 
     public function __construct(
         private readonly QuoteSubmissionReadinessService $readiness,
+        private readonly NormalizationOverrideService $overrideService,
     ) {}
 
     private function rfqForTenant(string $tenantId, string $rfqId): ?Rfq
@@ -50,10 +52,17 @@ final class NormalizationController extends Controller
      */
     private function serializeSourceLine(NormalizationSourceLine $line): array
     {
-        $rawData = is_array($line->raw_data) ? $line->raw_data : [];
+        $rawData = $line->getRawData();
         $provenance = is_array($rawData['provenance'] ?? null) ? $rawData['provenance'] : null;
+        $providerProvenance = $line->providerProvenance();
+        $latestOverride = $line->latestOverrideAudit();
         $origin = is_array($provenance) ? (string) ($provenance['origin'] ?? '') : '';
-        $providerProvenance = is_array($rawData['provider_provenance'] ?? null) ? $rawData['provider_provenance'] : null;
+        if ($origin === '' && $providerProvenance !== null) {
+            $origin = (string) ($providerProvenance['origin'] ?? 'provider');
+        }
+
+        $providerSuggested = $this->providerSuggestedValues($line, $origin, $providerProvenance, $latestOverride);
+        $effectiveValues = $line->effectiveValues();
         unset($rawData['provenance'], $rawData['provider_provenance']);
         $conflictCount = $line->conflicts->count();
         $blockingIssueCount = $line->conflicts->whereNull('resolution')->count();
@@ -82,6 +91,10 @@ final class NormalizationController extends Controller
             'origin' => $origin !== '' ? $origin : null,
             'provenance' => $provenance,
             'provider_provenance' => $providerProvenance,
+            'provider_suggested' => $providerSuggested,
+            'effective_values' => $effectiveValues,
+            'is_buyer_overridden' => $line->hasBuyerOverride(),
+            'latest_override' => $latestOverride,
             'sort_order' => $line->sort_order,
             'confidence' => $confidenceLabel,
             'conflict_count' => $conflictCount,
@@ -184,6 +197,92 @@ final class NormalizationController extends Controller
                 ],
             ],
         ]);
+    }
+
+    /**
+     * @param array<string, mixed>|null $providerProvenance
+     * @param array<string, mixed>|null $latestOverride
+     * @return array{rfq_line_item_id: string|null, quantity: string|null, uom: string|null, unit_price: string|null}|null
+     */
+    private function providerSuggestedValues(
+        NormalizationSourceLine $line,
+        string $origin,
+        ?array $providerProvenance,
+        ?array $latestOverride,
+    ): ?array {
+        $suggestedValues = $providerProvenance['suggested_values'] ?? $latestOverride['provider_suggested'] ?? null;
+        if (is_array($suggestedValues)) {
+            return [
+                'rfq_line_item_id' => $this->nullableString($suggestedValues['rfq_line_item_id'] ?? null),
+                'quantity' => $this->decimalStringOrNull($suggestedValues['quantity'] ?? null, 4),
+                'uom' => $this->nullableString($suggestedValues['uom'] ?? null),
+                'unit_price' => $this->decimalStringOrNull($suggestedValues['unit_price'] ?? null, 4),
+            ];
+        }
+
+        if ($origin === 'manual') {
+            return null;
+        }
+
+        return null;
+    }
+
+    private function nullableString(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $normalized = trim((string) $value);
+
+        return $normalized === '' ? null : $normalized;
+    }
+
+    private function decimalStringOrNull(mixed $value, int $scale): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (! is_numeric($value)) {
+            return $this->nullableString($value);
+        }
+
+        $normalized = (string) $value;
+
+        if (function_exists('bcadd')) {
+            return bcadd($normalized, '0', $scale);
+        }
+
+        return $this->normalizeDecimalString($normalized, $scale);
+    }
+
+    private function normalizeDecimalString(string $value, int $scale): ?string
+    {
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        if (! preg_match('/^([+-]?)(\d+)(?:\.(\d+))?$/', $trimmed, $matches)) {
+            return $this->nullableString($trimmed);
+        }
+
+        $sign = $matches[1];
+        $integerPart = ltrim($matches[2], '0');
+        if ($integerPart === '') {
+            $integerPart = '0';
+        }
+
+        $fractionPart = $matches[3] ?? '';
+        if ($scale === 0) {
+            return $sign . $integerPart;
+        }
+
+        $fractionPart = substr($fractionPart, 0, $scale);
+        $fractionPart = str_pad($fractionPart, $scale, '0');
+
+        return $sign . $integerPart . '.' . $fractionPart;
     }
 
     /**
@@ -350,37 +449,31 @@ final class NormalizationController extends Controller
     public function override(NormalizationOverrideRequest $request, string $id): JsonResponse
     {
         $tenantId = $this->tenantId($request);
-        $validated = $request->validated();
 
         $line = NormalizationSourceLine::query()
             ->where('tenant_id', $tenantId)
             ->where('id', $id)
+            ->with([
+                'quoteSubmission:id,tenant_id,rfq_id,vendor_id,vendor_name,status,confidence',
+                'rfqLineItem:id,rfq_id,description,quantity,uom,unit_price,currency',
+                'conflicts' => static function ($q) use ($tenantId): void {
+                    $q->where('tenant_id', $tenantId);
+                },
+            ])
             ->first();
         if ($line === null) {
             return response()->json(['message' => 'Source line not found'], 404);
         }
 
-        $raw = $line->raw_data ?? [];
-        $raw['override'] = $validated['override_data'];
-        $line->raw_data = $raw;
-
-        if (isset($validated['override_data']['unit_price']) && is_numeric($validated['override_data']['unit_price'])) {
-            $line->source_unit_price = (string) $validated['override_data']['unit_price'];
-        }
-
-        $line->save();
-
-        $submission = $line->quoteSubmission;
-        $this->applyReadinessToSubmission($submission);
+        $result = $this->overrideService->updateSourceLine(
+            sourceLine: $line,
+            actorUserId: $this->userId($request),
+            validated: $request->validated(),
+        );
 
         return response()->json([
-            'data' => [
-                'id' => $id,
-                'is_overridden' => true,
-                'override_data' => $validated['override_data'],
-                'issue_code' => $validated['issue_code'] ?? null,
-            ],
-            'meta' => $this->readiness->evaluate($submission),
+            'data' => $this->serializeSourceLine($result['line']),
+            'meta' => $result['readiness'],
         ]);
     }
 
@@ -397,12 +490,7 @@ final class NormalizationController extends Controller
             return response()->json(['message' => 'Source line not found'], 404);
         }
 
-        $raw = $line->raw_data ?? [];
-        unset($raw['override']);
-        $line->raw_data = $raw;
-        $line->save();
-
-        $this->applyReadinessToSubmission($line->quoteSubmission);
+        $this->overrideService->revertOverride($line, $this->userId($request));
 
         return response()->json(null, 204);
     }

@@ -1,4 +1,58 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { defineConfig, devices } from '@playwright/test';
+
+function loadEnvValue(filePath: string, key: string): string | undefined {
+  if (!fs.existsSync(filePath)) {
+    return undefined;
+  }
+
+  const lines = fs.readFileSync(filePath, 'utf8').split(/\r?\n/);
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed === '' || trimmed.startsWith('#')) {
+      continue;
+    }
+
+    const equalsIndex = trimmed.indexOf('=');
+    if (equalsIndex <= 0) {
+      continue;
+    }
+
+    const parsedKey = trimmed.slice(0, equalsIndex).trim();
+    if (parsedKey !== key) {
+      continue;
+    }
+
+    const rawValue = trimmed.slice(equalsIndex + 1).trim();
+    if (rawValue === '') {
+      return '';
+    }
+
+    const quote = rawValue[0];
+    if (quote === '"' || quote === "'") {
+      const closingQuoteIndex = rawValue.lastIndexOf(quote);
+      if (closingQuoteIndex > 0) {
+        return rawValue.slice(1, closingQuoteIndex);
+      }
+    }
+
+    const commentIndex = rawValue.indexOf('#');
+    const valueWithoutComment = commentIndex >= 0 ? rawValue.slice(0, commentIndex) : rawValue;
+
+    return valueWithoutComment.trim();
+  }
+
+  return undefined;
+}
+
+const apiEnvPath = path.resolve(__dirname, '../API/.env');
+const openRouterCallGapSecondsFromApiEnv = loadEnvValue(apiEnvPath, 'OPENROUTER_E2E_CALL_GAP_SECONDS');
+
+if (process.env.OPENROUTER_E2E_CALL_GAP_SECONDS === undefined && openRouterCallGapSecondsFromApiEnv !== undefined) {
+  process.env.OPENROUTER_E2E_CALL_GAP_SECONDS = openRouterCallGapSecondsFromApiEnv;
+}
 
 process.env.NEXT_PUBLIC_USE_MOCKS ??= 'false';
 process.env.NEXT_PUBLIC_API_URL ??= 'http://localhost:8000/api/v1';
@@ -20,6 +74,9 @@ const webServerEnv: Record<string, string> = {
 
 if (process.env.NEXT_PUBLIC_AI_MODE !== undefined) {
   webServerEnv.NEXT_PUBLIC_AI_MODE = process.env.NEXT_PUBLIC_AI_MODE;
+}
+if (process.env.OPENROUTER_E2E_CALL_GAP_SECONDS !== undefined) {
+  webServerEnv.OPENROUTER_E2E_CALL_GAP_SECONDS = process.env.OPENROUTER_E2E_CALL_GAP_SECONDS;
 }
 
 export default defineConfig({
