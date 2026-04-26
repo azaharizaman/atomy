@@ -100,11 +100,21 @@ PASS (19 tests, 98 assertions).
 - Verification:
   - `cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Feature/ComparisonRunWorkflowTest.php tests/Feature/AwardWorkflowTest.php tests/Feature/ApprovalAlphaPathTest.php` -> PASS (30 tests, 203 assertions).
 
+## 2026-04-27 Vendor Sourcing Recommendation Canonical Path
+
+- `App\Adapters\Ai\ProviderSourcingRecommendationClient` remains the provider-backed implementation for `VendorRecommendationLlmInterface`, and `VendorRecommendationController` now exposes only the canonical plan-3 payload keys: `status`, `eligible_candidates`, `excluded_candidates`, `provider_explanation`, `deterministic_reason_set`, and `provenance`.
+- Legacy recommendation aliases are gone from the API response contract; `candidates` and `excluded_reasons` are intentionally absent, and the WEB layer now normalizes only the canonical fields.
+- `RfqRecommendationArtifact` persists the tenant-safe recommendation payload and provenance for each generated recommendation, so the stored artifact remains the source of truth for `vendor_recommendation_generated` evidence.
+- Buyer shortlist persistence stays separate in `requisition_selected_vendors`, and `buyer_shortlist_replaced` decision-trail entries now carry the shortlist evidence independently of the recommendation artifact.
+- `vendor_ai_ranking` remains feature-gated through AI availability checks; when unavailable, the API returns a structured unavailable response instead of synthetic recommendation success, while manual shortlist persistence remains available through `selected-vendors`.
+- Verification:
+  - `cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Unit/Adapters/Ai/AiAdaptersTest.php tests/Feature/Api/V1/VendorRecommendationApiTest.php tests/Feature/Api/V1/VendorRecommendationAiGateTest.php tests/Feature/Api/V1/RfqRecommendationDecisionTrailTest.php tests/Feature/Api/V1/RequisitionVendorSelectionApiTest.php` -> PASS (captured in prior API verification for this slice).
+
 ## 2026-04-24 AI Sourcing Recommendation Runtime And Honest Gating
 
 - Added `App\Adapters\Ai\ProviderSourcingRecommendationClient`, which implements `VendorRecommendationLlmInterface` via the shared provider transport and calls the sourcing recommendation endpoint group with tenant-scoped RFQ context plus deterministic eligible candidates.
 - `AppServiceProvider` now binds `VendorRecommendationLlmInterface` to the provider client so provider-backed recommendation ranking is the runtime default in provider mode.
-- `VendorRecommendationController` now returns the plan-3 contract shape: `status`, `eligible_candidates`, `excluded_candidates`, `provider_explanation`, `deterministic_reason_set`, and `provenance`, while preserving the legacy `candidates` and `excluded_reasons` aliases for existing consumers.
+- `VendorRecommendationController` now returns the plan-3 contract shape: `status`, `eligible_candidates`, `excluded_candidates`, `provider_explanation`, `deterministic_reason_set`, and `provenance`.
 - AI ranking is now feature-gated through `vendor_ai_ranking`; when that capability is unavailable, degraded beyond policy, or the coordinator returns `unavailable`, the API returns a structured unavailable response instead of synthetic recommendation success.
 - `RecommendationController` now uses the same availability concern and returns honest structured unavailability for the still-unimplemented `recommendation_ai_endpoint` surface instead of advertising stub success.
 - `InteractsWithAiAvailability` now hardens runtime probing: it catches status snapshot failures, synthesizes a fallback snapshot, and prevents stale `available` diagnostics from leaking into unavailable responses.

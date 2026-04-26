@@ -90,9 +90,34 @@ A buyer opens the compliance or history tabs for a vendor.
 
 - Missing vendors return `404`.
 
+## Workflow 005 - Review Sourcing Recommendation And Save Shortlist
+
+### Trigger
+
+A buyer opens an RFQ vendors page and reviews provider-backed recommendation output.
+
+### Steps
+
+1. The API generates or loads the recommendation artifact for the RFQ and tenant.
+2. The controller returns ranked candidates, excluded candidates, provider explanation, deterministic reasons, and provenance.
+3. The UI renders the recommendation as advisory guidance only. It does not auto-select vendors or mutate the shortlist from the recommendation response.
+4. The buyer manually selects approved vendors and persists the shortlist through `PUT /rfqs/{rfqId}/selected-vendors`.
+5. The selected-vendors mutation writes the authoritative shortlist and creates separate shortlist decision-trail evidence.
+
+### Outputs
+
+- Recommendation summary and ranked candidate list
+- Persisted buyer shortlist
+
+### Failure Handling
+
+- Recommendation unavailability does not block shortlist selection or save.
+- Missing RFQs still return `404`.
+
 ## Domains Involved
 
 - Vendors
 - RFQ
 - Awards
 - Quote Intake
+- Decision Trail
