@@ -146,6 +146,7 @@ final class RequisitionVendorSelectionApiTest extends ApiTestCase
         $response->assertJsonPath('data.0.vendor_email', 'alpha@example.com');
         $response->assertJsonPath('data.0.status', 'approved');
         $response->assertJsonPath('data.0.selected_by_user_id', (string) $user->id);
+        self::assertArrayNotHasKey('vendor_display_name', $response->json('data.0'));
         $this->assertNotNull($response->json('data.0.selected_at'));
 
         $this->assertDatabaseHas('requisition_selected_vendors', [

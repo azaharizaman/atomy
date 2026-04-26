@@ -189,7 +189,6 @@ final class RequisitionVendorSelectionController extends Controller
             'rfq_id' => (string) $selection->rfq_id,
             'vendor_id' => (string) $selection->vendor_id,
             'vendor_name' => $this->vendorDisplayName($vendor),
-            'vendor_display_name' => $this->vendorDisplayName($vendor),
             'vendor_email' => $this->vendorEmail($vendor),
             'status' => $vendor !== null ? (string) $vendor->status : null,
             'selected_at' => $selection->selected_at?->toAtomString(),
