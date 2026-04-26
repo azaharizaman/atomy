@@ -564,6 +564,16 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                           Cancel
                         </Button>
                       </div>
+                      <div className="mt-1 grid gap-1 text-[11px] text-slate-500 lg:col-span-6">
+                        <span>
+                          Provider confidence {providerConfidenceLabel(liveLine.ai_confidence) ?? 'Unavailable'}
+                        </span>
+                        <span>
+                          {liveLine.is_buyer_overridden
+                            ? `Override reason ${formatReasonCode(liveLine.latest_override?.reason_code)}`
+                            : `Suggested mapping ${liveLine.provider_suggested?.rfq_line_item_id ?? 'Unmapped'}`}
+                        </span>
+                      </div>
                     </div>
                   ) : (
                     <>

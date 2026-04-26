@@ -692,6 +692,98 @@ final class NormalizationReviewWorkflowTest extends ApiTestCase
         self::assertSame(['unit_price' => '12.3400'], $entry->summary_payload['after']);
     }
 
+    public function test_manual_override_does_not_fabricate_provider_provenance_and_records_actor_name(): void
+    {
+        $user = $this->createUser();
+        $rfq = Rfq::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_number' => 'RFQ-NORM-5A',
+            'title' => 'Normalization RFQ',
+            'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
+            'status' => 'published',
+        ]);
+
+        $lineItem = RfqLineItem::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'description' => 'Manual Valve',
+            'quantity' => 1,
+            'uom' => 'EA',
+            'unit_price' => 9.99,
+            'currency' => 'USD',
+            'sort_order' => 0,
+        ]);
+
+        $quote = QuoteSubmission::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'vendor_id' => (string) Str::ulid(),
+            'vendor_name' => 'Vendor',
+            'status' => 'needs_review',
+            'submitted_at' => now(),
+            'confidence' => 80.0,
+            'line_items_count' => 1,
+            'warnings_count' => 0,
+            'errors_count' => 1,
+        ]);
+
+        $sourceLine = NormalizationSourceLine::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'quote_submission_id' => $quote->id,
+            'rfq_line_item_id' => $lineItem->id,
+            'source_description' => 'Manual valve quoted line',
+            'source_quantity' => 1,
+            'source_uom' => 'EA',
+            'source_unit_price' => 9.99,
+            'raw_data' => [
+                'provenance' => [
+                    'origin' => 'manual',
+                    'user_id' => $user->id,
+                    'timestamp' => '2026-04-26T08:00:00+00:00',
+                ],
+            ],
+            'sort_order' => 0,
+            'ai_confidence' => null,
+            'taxonomy_code' => null,
+            'mapping_version' => null,
+        ]);
+
+        $response = $this->putJson(
+            '/api/v1/normalization/source-lines/' . $sourceLine->id . '/override',
+            [
+                'override_data' => [
+                    'unit_price' => '8.99',
+                ],
+                'reason_code' => 'manual_entry_required',
+                'note' => 'Buyer entered the final value directly',
+            ],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $response->assertOk();
+        $response->assertJsonPath('data.provider_provenance', null);
+        $response->assertJsonPath('data.provider_suggested', null);
+        $response->assertJsonPath('data.latest_override.actor_name', $user->name);
+        $response->assertJsonPath('data.latest_override.provider_confidence', null);
+
+        $sourceLine->refresh();
+        self::assertSame('manual', $sourceLine->raw_data['provenance']['origin']);
+        self::assertArrayNotHasKey('provider_provenance', $sourceLine->raw_data);
+        self::assertSame($user->name, $sourceLine->raw_data['override_audit']['actor_name']);
+        self::assertNull($sourceLine->raw_data['override_audit']['provider_confidence']);
+
+        $entry = DecisionTrailEntry::query()
+            ->where('tenant_id', $user->tenant_id)
+            ->where('comparison_run_id', $quote->id)
+            ->where('event_type', 'normalization_source_line_overridden')
+            ->first();
+
+        self::assertNotNull($entry);
+        self::assertSame($user->name, $entry->summary_payload['actor_name']);
+        self::assertNull($entry->summary_payload['provider_suggested']);
+    }
+
     public function test_override_requires_note_when_reason_is_other(): void
     {
         $user = $this->createUser();

@@ -335,6 +335,9 @@ describe('NormalizeQuotePage', () => {
     expect(await screen.findByText(/buyer override/i)).toBeInTheDocument();
     expect(screen.getByText(/provider confidence 87\.50%/i)).toBeInTheDocument();
     expect(screen.getByText(/override reason price correction/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /edit source line 1/i }));
+    expect(screen.getByText(/provider confidence 87\.50%/i)).toBeInTheDocument();
   });
 
   it('submits manual source-line create, update, and delete actions', async () => {

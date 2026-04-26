@@ -7,6 +7,7 @@ namespace App\Services\QuoteIntake;
 use App\Models\NormalizationSourceLine;
 use App\Models\QuoteSubmission;
 use App\Models\RfqLineItem;
+use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -61,23 +62,29 @@ final readonly class NormalizationOverrideService
 
             $after = $this->afterValues($line, array_keys($overrideData));
             $providerConfidence = $line->ai_confidence !== null ? number_format((float) $line->ai_confidence, 2, '.', '') : null;
+            $providerSuggestedValues = is_array($providerProvenance) ? ($providerProvenance['suggested_values'] ?? null) : null;
             $timestamp = Carbon::now()->toAtomString();
 
             $latestOverride = [
                 'actor_user_id' => $actorUserId,
+                'actor_name' => $this->actorDisplayName((string) $submission->tenant_id, $actorUserId),
                 'timestamp' => $timestamp,
                 'reason_code' => $validated['reason_code'],
                 'note' => $this->normalizedNote($validated['note'] ?? null),
                 'provider_confidence' => $providerConfidence,
                 'before' => $before,
                 'after' => $after,
-                'provider_suggested' => $providerProvenance['suggested_values'] ?? null,
+                'provider_suggested' => $providerSuggestedValues,
             ];
 
             $history = is_array($rawData['override_history'] ?? null) ? $rawData['override_history'] : [];
             $history[] = $latestOverride;
 
-            $rawData['provider_provenance'] = $providerProvenance;
+            if ($providerProvenance !== null) {
+                $rawData['provider_provenance'] = $providerProvenance;
+            } else {
+                unset($rawData['provider_provenance']);
+            }
             $rawData['override'] = $overrideData;
             $rawData['override_audit'] = $latestOverride;
             $rawData['override_history'] = $history;
@@ -101,12 +108,13 @@ final readonly class NormalizationOverrideService
                     'quote_submission_id' => (string) $submission->id,
                     'source_line_id' => (string) $line->id,
                     'actor_user_id' => $actorUserId,
+                    'actor_name' => $latestOverride['actor_name'],
                     'reason_code' => $validated['reason_code'],
                     'note' => $latestOverride['note'],
                     'provider_confidence' => $providerConfidence,
                     'before' => $before,
                     'after' => $after,
-                    'provider_suggested' => $providerProvenance['suggested_values'] ?? null,
+                    'provider_suggested' => $providerSuggestedValues,
                     'timestamp' => $timestamp,
                 ],
             );
@@ -128,25 +136,14 @@ final readonly class NormalizationOverrideService
      * @param array<string, mixed> $rawData
      * @return array<string, mixed>
      */
-    private function providerProvenanceSnapshot(NormalizationSourceLine $line, array $rawData): array
+    private function providerProvenanceSnapshot(NormalizationSourceLine $line, array $rawData): ?array
     {
         $existing = $rawData['provider_provenance'] ?? null;
         if (is_array($existing)) {
-            if (! is_array($existing['suggested_values'] ?? null)) {
-                $existing['suggested_values'] = $line->effectiveValues();
-            }
-
             return $existing;
         }
 
-        return [
-            'origin' => 'provider',
-            'captured_at' => Carbon::now()->toAtomString(),
-            'suggested_values' => $line->effectiveValues(),
-            'ai_confidence' => $line->ai_confidence !== null ? number_format((float) $line->ai_confidence, 2, '.', '') : null,
-            'taxonomy_code' => $line->taxonomy_code,
-            'mapping_version' => $line->mapping_version,
-        ];
+        return null;
     }
 
     /**
@@ -264,6 +261,18 @@ final readonly class NormalizationOverrideService
         $normalized = trim((string) $note);
 
         return $normalized === '' ? null : $normalized;
+    }
+
+    private function actorDisplayName(string $tenantId, string $actorUserId): string
+    {
+        $name = User::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $actorUserId)
+            ->value('name');
+
+        $normalized = is_string($name) ? trim($name) : '';
+
+        return $normalized !== '' ? $normalized : $actorUserId;
     }
 
     private function effectiveValueKey(string $overrideKey): string
