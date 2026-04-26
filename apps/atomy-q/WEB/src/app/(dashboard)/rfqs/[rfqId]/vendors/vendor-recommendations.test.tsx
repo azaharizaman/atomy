@@ -9,6 +9,7 @@ const mockUseRfqVendors = vi.fn();
 const mockUseRequisitionVendorSelection = vi.fn();
 const mockUseUpdateRequisitionVendorSelection = vi.fn();
 const mockUseVendorRecommendations = vi.fn();
+const mockUseVendorGovernanceMap = vi.fn();
 const mockUseAiStatus = vi.fn();
 
 vi.mock('@/hooks/use-rfq', () => ({
@@ -39,6 +40,14 @@ vi.mock('@/hooks/use-update-requisition-vendor-selection', () => ({
 vi.mock('@/hooks/use-vendor-recommendations', () => ({
   useVendorRecommendations: (...args: unknown[]) => mockUseVendorRecommendations(...args),
 }));
+
+vi.mock('@/hooks/use-vendor-governance', async () => {
+  const actual = await vi.importActual<typeof import('@/hooks/use-vendor-governance')>('@/hooks/use-vendor-governance');
+  return {
+    ...actual,
+    useVendorGovernanceMap: (...args: unknown[]) => mockUseVendorGovernanceMap(...args),
+  };
+});
 
 vi.mock('@/hooks/use-ai-status', () => ({
   useAiStatus: () => mockUseAiStatus(),
@@ -132,8 +141,6 @@ describe('vendor recommendations in RFQ vendor selection', () => {
         providerExplanation: 'The AI ranking prioritizes facilities coverage and local response readiness.',
         deterministicReasonSet: ['Category overlap: facilities.', 'Geography coverage matches SG.'],
         provenance: { provider: 'openrouter', endpointGroup: 'vendor_ranking' },
-        candidates: eligibleCandidates,
-        excludedReasons: [],
       },
       isLoading: false,
       isError: false,
@@ -142,6 +149,12 @@ describe('vendor recommendations in RFQ vendor selection', () => {
     mockUseUpdateRequisitionVendorSelection.mockReturnValue({
       mutateAsync: vi.fn().mockResolvedValue(undefined),
       isPending: false,
+      isError: false,
+      error: null,
+    });
+    mockUseVendorGovernanceMap.mockReturnValue({
+      data: new Map(),
+      isLoading: false,
       isError: false,
       error: null,
     });
@@ -200,8 +213,6 @@ describe('vendor recommendations in RFQ vendor selection', () => {
         providerExplanation: 'AI recommendation is unavailable. You can still manually select vendors.',
         deterministicReasonSet: [],
         provenance: { code: 'ai_unavailable' },
-        candidates: [],
-        excludedReasons: [],
       },
       isLoading: false,
       isError: false,

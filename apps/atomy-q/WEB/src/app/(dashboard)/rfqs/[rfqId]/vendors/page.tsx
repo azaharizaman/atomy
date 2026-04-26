@@ -45,7 +45,7 @@ function RfqVendorSelectionPanel({ rfqId }: { rfqId: string }) {
   );
   const recommendedById = React.useMemo(() => {
     const recommendations = new Map<string, VendorRecommendationCandidate>();
-    for (const candidate of recommendationsQuery.data?.eligibleCandidates ?? recommendationsQuery.data?.candidates ?? []) {
+    for (const candidate of recommendationsQuery.data?.eligibleCandidates ?? []) {
       recommendations.set(candidate.vendorId, candidate);
     }
 

@@ -35,8 +35,6 @@ export interface VendorRecommendationResult {
   providerExplanation: string | null;
   deterministicReasonSet: string[];
   provenance: Record<string, unknown> | null;
-  candidates: VendorRecommendationCandidate[];
-  excludedReasons: VendorRecommendationExcludedReason[];
 }
 
 interface VendorRecommendationFallbackContext {
@@ -216,19 +214,17 @@ export function normalizeVendorRecommendationPayload(
   const error = pickField(source, 'error');
   const payloadObject = isObject(error) ? error : source;
   const eligibleCandidates = normalizeResultList(
-    pickField(payloadObject, 'eligible_candidates', 'eligibleCandidates', 'candidates'),
+    pickField(payloadObject, 'eligible_candidates'),
     normalizeCandidate,
   );
-  const excludedCandidates = normalizeExcludedList(
-    pickField(payloadObject, 'excluded_candidates', 'excludedCandidates', 'excluded_reasons', 'excludedReasons'),
-  );
+  const excludedCandidates = normalizeExcludedList(pickField(payloadObject, 'excluded_candidates'));
   const providerExplanation =
-    optionalText(pickField(payloadObject, 'provider_explanation', 'providerExplanation')) ??
+    optionalText(pickField(payloadObject, 'provider_explanation')) ??
     optionalText(isObject(error) ? pickField(error, 'message') : undefined) ??
     optionalText(envelope ? pickField(envelope, 'message') : undefined);
 
   const deterministicReasonSet = stringList(
-    pickField(payloadObject, 'deterministic_reason_set', 'deterministicReasonSet', 'deterministic_reasons'),
+    pickField(payloadObject, 'deterministic_reason_set'),
     'deterministic_reason_set',
     'Invalid vendor recommendation payload',
   );
@@ -247,8 +243,6 @@ export function normalizeVendorRecommendationPayload(
     providerExplanation,
     deterministicReasonSet,
     provenance,
-    candidates: eligibleCandidates,
-    excludedReasons: excludedCandidates,
   };
 }
 

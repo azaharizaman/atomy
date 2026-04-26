@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { normalizeVendorRecommendationPayload } from './use-vendor-recommendations';
 
 describe('normalizeVendorRecommendationPayload', () => {
-  it('parses the new recommendation payload shape and keeps legacy aliases in sync', () => {
+  it('parses the canonical recommendation payload shape', () => {
     const result = normalizeVendorRecommendationPayload({
       data: {
         tenant_id: 'tenant-1',
@@ -37,36 +37,13 @@ describe('normalizeVendorRecommendationPayload', () => {
           endpoint_group: 'vendor_ranking',
           model: 'gpt-4.1-mini',
         },
-        candidates: [
-          {
-            vendor_id: 'vendor-1',
-            vendor_name: 'Alpha Procurement',
-            fit_score: 93,
-            confidence_band: 'high',
-            provider_explanation: 'Strong category fit.',
-            deterministic_reasons: ['Category overlap: facilities.'],
-            llm_insights: ['Narrative support.'],
-            warning_flags: ['thin_history'],
-            warnings: ['Recent history is thin.'],
-          },
-        ],
-        excluded_reasons: [
-          {
-            vendor_id: 'vendor-2',
-            vendor_name: 'Beta Supply',
-            reason: 'Does not cover the requested category.',
-            status: 'excluded',
-          },
-        ],
       },
     });
 
     expect(result.status).toBe('available');
     expect(result.eligibleCandidates).toHaveLength(1);
     expect(result.eligibleCandidates[0]?.recommendedReasonSummary).toBe('Strong category fit.');
-    expect(result.candidates).toBe(result.eligibleCandidates);
     expect(result.excludedCandidates).toHaveLength(1);
-    expect(result.excludedReasons).toBe(result.excludedCandidates);
     expect(result.providerExplanation).toBe('AI ranking is based on supplier history and category match.');
     expect(result.deterministicReasonSet).toEqual(['Category overlap: facilities.']);
     expect(result.provenance).toMatchObject({
@@ -74,9 +51,11 @@ describe('normalizeVendorRecommendationPayload', () => {
       endpoint_group: 'vendor_ranking',
       model: 'gpt-4.1-mini',
     });
+    expect(Object.prototype.hasOwnProperty.call(result, 'candidates')).toBe(false);
+    expect(Object.prototype.hasOwnProperty.call(result, 'excludedReasons')).toBe(false);
   });
 
-  it('accepts legacy candidate aliases', () => {
+  it('ignores legacy candidate aliases', () => {
     const result = normalizeVendorRecommendationPayload({
       data: {
         tenantId: 'tenant-1',
@@ -103,8 +82,10 @@ describe('normalizeVendorRecommendationPayload', () => {
     });
 
     expect(result.status).toBe('available');
-    expect(result.candidates[0]?.vendorId).toBe('vendor-1');
-    expect(result.excludedReasons).toEqual([]);
+    expect(result.eligibleCandidates).toEqual([]);
+    expect(result.excludedCandidates).toEqual([]);
+    expect(Object.prototype.hasOwnProperty.call(result, 'candidates')).toBe(false);
+    expect(Object.prototype.hasOwnProperty.call(result, 'excludedReasons')).toBe(false);
   });
 
   it('parses structured unavailable payloads without treating them as errors', () => {
