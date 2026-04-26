@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace App\Services\QuoteIntake;
 
-use App\Support\DecimalString;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+
 use App\Models\NormalizationSourceLine;
 use App\Models\QuoteSubmission;
 use App\Models\RfqLineItem;
 use App\Models\User;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
+use App\Support\DecimalString;
 
 final readonly class NormalizationOverrideService
 {
@@ -31,8 +32,54 @@ final readonly class NormalizationOverrideService
             $sourceLine = new NormalizationSourceLine();
             $sourceLine->tenant_id = $submission->tenant_id;
             $sourceLine->quote_submission_id = $submission->id;
-            // ... (rest of logic: apply data, save, refresh readiness, record trail)
-            return ['line' => $sourceLine, 'readiness' => []];
+            $sourceLine->source_vendor = $submission->vendor_name;
+            $sourceLine->sort_order = ((int) NormalizationSourceLine::query()
+                ->where('tenant_id', $submission->tenant_id)
+                ->where('quote_submission_id', $submission->id)
+                ->max('sort_order')) + 1;
+
+            $overrideData = $this->normalizeOverrideData($validated['override_data'], $sourceLine, $submission);
+            $before = $this->effectiveValuesFor($sourceLine, array_keys($overrideData));
+            $this->applyOverrideData($sourceLine, $overrideData);
+            $after = $this->effectiveValuesFor($sourceLine, array_keys($overrideData));
+
+            $sourceLine->save();
+
+            $readiness = $this->readiness->evaluate($submission);
+            $submission->status = $readiness['next_status'];
+            $submission->errors_count = $readiness['blocking_issue_count'];
+            $submission->line_items_count = $submission->normalizationSourceLines()->count();
+            $submission->save();
+
+            $timestamp = Carbon::now()->toAtomString();
+            $this->decisionTrail->recordManualSourceLineEvent(
+                tenantId: (string) $submission->tenant_id,
+                rfqId: (string) $submission->rfq_id,
+                quoteSubmissionId: (string) $submission->id,
+                sourceLineId: (string) $sourceLine->id,
+                eventType: 'manual_source_line_created',
+                summary: array_filter([
+                    'actor_user_id' => $actorUserId,
+                    'actor_name' => $this->actorDisplayName((string) $submission->tenant_id, $actorUserId),
+                    'reason_code' => $validated['reason_code'],
+                    'note' => $this->normalizedNote($validated['note'] ?? null),
+                    'before' => $before,
+                    'after' => $after,
+                    'timestamp' => $timestamp,
+                ], static fn (mixed $value): bool => $value !== null),
+            );
+
+            $sourceLine->refresh();
+            $sourceLine->loadMissing([
+                'quoteSubmission:id,tenant_id,rfq_id,vendor_id,vendor_name,status,confidence',
+                'rfqLineItem:id,rfq_id,description,quantity,uom,unit_price,currency',
+                'conflicts',
+            ]);
+
+            return [
+                'line' => $sourceLine,
+                'readiness' => $readiness,
+            ];
         });
     }
 

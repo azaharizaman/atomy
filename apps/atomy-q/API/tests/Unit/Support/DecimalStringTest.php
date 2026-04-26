@@ -19,6 +19,14 @@ final class DecimalStringTest extends TestCase
     {
         self::assertSame('12.3400', DecimalString::normalize(' 12.34 ', 4));
         self::assertSame('-5', DecimalString::normalize(' -0005 ', 0));
-        self::assertSame('0.000', DecimalString::normalize('0', 3));
+        self::assertSame('0', DecimalString::normalize('0', 3));
+    }
+
+    public function testNormalizeCanonicalizesZeroAndLeadingPlus(): void
+    {
+        self::assertSame('0', DecimalString::normalize('-0', 0));
+        self::assertSame('0', DecimalString::normalize('-0.0001', 3));
+        self::assertSame('5', DecimalString::normalize('+5', 0));
+        self::assertSame('12.34', DecimalString::normalize('12.345', 2));
     }
 }

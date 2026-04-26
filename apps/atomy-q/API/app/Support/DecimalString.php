@@ -19,7 +19,11 @@ final class DecimalString
             return null;
         }
 
-        $sign = $matches[1];
+        if (function_exists('bcadd')) {
+            return self::canonicalizeNormalized((string) bcadd($trimmed, '0', $scale));
+        }
+
+        $sign = $matches[1] === '-' ? '-' : '';
         $integerPart = ltrim($matches[2], '0');
         if ($integerPart === '') {
             $integerPart = '0';
@@ -27,12 +31,30 @@ final class DecimalString
 
         $fractionPart = $matches[3] ?? '';
         if ($scale === 0) {
-            return $sign . $integerPart;
+            return self::canonicalizeNormalized((string) ($sign . $integerPart));
         }
 
-        $fractionPart = substr($fractionPart, 0, $scale);
-        $fractionPart = str_pad($fractionPart, $scale, '0');
+        $normalizedFraction = substr($fractionPart, 0, $scale);
+        $normalizedFraction = str_pad($normalizedFraction, $scale, '0');
 
-        return $sign . $integerPart . '.' . $fractionPart;
+        return self::canonicalizeNormalized($sign . $integerPart . '.' . $normalizedFraction);
+    }
+
+    private static function canonicalizeNormalized(string $normalized): string
+    {
+        $trimmed = trim($normalized);
+        if ($trimmed === '') {
+            return '0';
+        }
+
+        if ($trimmed[0] === '+') {
+            $trimmed = substr($trimmed, 1);
+        }
+
+        if (preg_match('/^-?0+(?:\.0+)?$/', $trimmed) === 1) {
+            return '0';
+        }
+
+        return $trimmed;
     }
 }
