@@ -22,6 +22,7 @@ test.describe('provider quote e2e with mocked API responses', () => {
     await page.setViewportSize({ width: 1800, height: 1200 });
 
     const rfqLineId = 'rfq-line-1';
+    const unhandledPaths: string[] = [];
     let hasBlockingIssues = true;
     let blockingIssueCount = 1;
     let comparisonFreezeRequested = false;
@@ -82,6 +83,44 @@ test.describe('provider quote e2e with mocked API responses', () => {
       const url = new URL(route.request().url());
       const pathname = url.pathname;
       const method = route.request().method();
+
+      if (pathname.endsWith('/feature-flags')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ data: { projects: true, tasks: true } }),
+        });
+        return;
+      }
+
+      if (pathname.endsWith('/rfqs/counts')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            data: {
+              draft: 0,
+              published: 0,
+              closed: 0,
+              awarded: 0,
+              cancelled: 0,
+              active: 0,
+              pending: 0,
+              archived: 0,
+            },
+          }),
+        });
+        return;
+      }
+
+      if (pathname.endsWith('/approvals') && method === 'GET') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ data: [], meta: { total: 0, total_pages: 1, current_page: 1, per_page: 20 } }),
+        });
+        return;
+      }
 
       if (pathname.endsWith('/ai/status')) {
         await route.fulfill({
@@ -358,6 +397,7 @@ test.describe('provider quote e2e with mocked API responses', () => {
         return;
       }
 
+      unhandledPaths.push(`${method} ${pathname}`);
       await route.fulfill({
         status: 404,
         contentType: 'application/json',
@@ -390,5 +430,6 @@ test.describe('provider quote e2e with mocked API responses', () => {
 
     await page.getByRole('button', { name: /freeze comparison/i }).click();
     await expect.poll(() => comparisonFreezeRequested).toBe(true);
+    expect(unhandledPaths, unhandledPaths.join('\n')).toEqual([]);
   });
 });

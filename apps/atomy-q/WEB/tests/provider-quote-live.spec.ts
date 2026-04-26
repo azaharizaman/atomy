@@ -333,8 +333,16 @@ test.describe('provider-backed quote e2e with live OpenRouter', () => {
           );
           expect(conflictsResponse.ok()).toBeTruthy();
           const conflictsPayload = await conflictsResponse.json();
+          const meta = conflictsPayload.meta;
+          if (meta === null || typeof meta !== 'object' || Array.isArray(meta)) {
+            throw new Error('Unexpected normalization conflicts response: missing meta object.');
+          }
 
-          return Boolean(conflictsPayload.meta?.has_blocking_issues);
+          if (typeof meta.has_blocking_issues !== 'boolean') {
+            throw new Error('Unexpected normalization conflicts response: meta.has_blocking_issues must be boolean.');
+          }
+
+          return meta.has_blocking_issues;
         }, {
           timeout: 120_000,
           intervals: [1_000, 2_000, 5_000],

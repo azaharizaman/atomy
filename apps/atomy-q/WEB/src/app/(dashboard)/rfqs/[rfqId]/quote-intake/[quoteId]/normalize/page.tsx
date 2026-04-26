@@ -125,7 +125,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
   const submissionDeadlineMs = rfq?.submission_deadline ? Date.parse(rfq.submission_deadline) : Number.NaN;
   const hasValidSubmissionDeadline = rfq !== undefined && Number.isFinite(submissionDeadlineMs);
   const submissionWindowStillOpen =
-    !useMocks && (!hasValidSubmissionDeadline || submissionDeadlineMs > Date.now());
+    !useMocks && rfq !== undefined && (!hasValidSubmissionDeadline || submissionDeadlineMs > Date.now());
   const comparisonFreezeBlockedByReadiness =
     !useMocks && (!hasValidSubmissionDeadline || !comparisonReadiness.canFreezeComparison || submissionWindowStillOpen);
 
@@ -143,17 +143,23 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
     const note = normalizeNullableField(manualForm.note);
     if (description === '' || reason === '' || (reason === 'other' && note === null)) return;
 
-    manualSourceLines.createSourceLine.mutate({
-      quoteSubmissionId: quoteId,
-      source_description: description,
-      source_quantity: normalizeNullableField(manualForm.source_quantity),
-      source_uom: normalizeNullableField(manualForm.source_uom),
-      source_unit_price: normalizeNullableField(manualForm.source_unit_price),
-      rfq_line_item_id: normalizeNullableField(manualForm.rfq_line_item_id),
-      note,
-      reason,
-    });
-    setManualForm(EMPTY_MANUAL_LINE);
+    manualSourceLines.createSourceLine.mutate(
+      {
+        quoteSubmissionId: quoteId,
+        source_description: description,
+        source_quantity: normalizeNullableField(manualForm.source_quantity),
+        source_uom: normalizeNullableField(manualForm.source_uom),
+        source_unit_price: normalizeNullableField(manualForm.source_unit_price),
+        rfq_line_item_id: normalizeNullableField(manualForm.rfq_line_item_id),
+        note,
+        reason,
+      },
+      {
+        onSuccess: () => {
+          setManualForm(EMPTY_MANUAL_LINE);
+        },
+      },
+    );
   }
 
   function startEdit(line: NormalizationSourceLineRow): void {
@@ -172,20 +178,26 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
       manualSourceLines.overrideSourceLine.isPending
     ) return;
 
-    manualSourceLines.overrideSourceLine.mutate({
-      id: lineId,
-      override_data: {
-        rfq_line_item_id: normalizeNullableField(editForm.rfq_line_item_id),
-        source_description: description,
-        quantity: normalizeNullableField(editForm.source_quantity),
-        uom: normalizeNullableField(editForm.source_uom),
-        unit_price: normalizeNullableField(editForm.source_unit_price),
+    manualSourceLines.overrideSourceLine.mutate(
+      {
+        id: lineId,
+        override_data: {
+          rfq_line_item_id: normalizeNullableField(editForm.rfq_line_item_id),
+          source_description: description,
+          quantity: normalizeNullableField(editForm.source_quantity),
+          uom: normalizeNullableField(editForm.source_uom),
+          unit_price: normalizeNullableField(editForm.source_unit_price),
+        },
+        reason_code: editForm.reason,
+        note,
       },
-      reason_code: editForm.reason,
-      note,
-    });
-    setEditingLineId(null);
-    setEditForm(EMPTY_MANUAL_LINE);
+      {
+        onSuccess: () => {
+          setEditingLineId(null);
+          setEditForm(EMPTY_MANUAL_LINE);
+        },
+      },
+    );
   }
 
   function toggleSelection(lineId: string): void {
@@ -331,6 +343,12 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
           <p className="text-xs text-slate-600">
             All active quote submissions must reach ready state before final comparison can be frozen.
           </p>
+        </Card>
+      )}
+      {!useMocks && rfqQuery.isLoading && (
+        <Card className="border-slate-200 bg-slate-50 p-4 space-y-1">
+          <p className="text-sm font-semibold text-slate-900">Loading RFQ details</p>
+          <p className="text-xs text-slate-600">Waiting for the RFQ record before checking the submission deadline.</p>
         </Card>
       )}
       <div className="flex items-center gap-3 flex-wrap">

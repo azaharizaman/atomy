@@ -157,7 +157,7 @@ describe('useNormalizationSourceLines (live mode)', () => {
     });
   });
 
-  it('overrides and deletes manual source lines through REST-shaped normalization endpoints', async () => {
+  it('overrides via normalization endpoint and deletes via quote-submission endpoint', async () => {
     putMock.mockResolvedValueOnce({ data: { data: { id: 'line-1' } } });
     deleteMock.mockResolvedValueOnce({ data: { data: { id: 'line-1', deleted: true } } });
     const { useManualNormalizationSourceLineMutations } = await import('@/hooks/use-normalization-source-lines');

@@ -7,6 +7,7 @@ const quoteId = 'quote-degraded-1';
 
 test.describe('provider normalization degraded manual continuity', () => {
   test('keeps manual normalization usable and allows freeze without fabricated provider success', async ({ page }) => {
+    const unhandledPaths: string[] = [];
     let hasBlockingIssues = true;
     let blockingIssueCount = 1;
     let comparisonFreezeRequested = false;
@@ -24,6 +25,44 @@ test.describe('provider normalization degraded manual continuity', () => {
       const url = new URL(route.request().url());
       const pathname = url.pathname;
       const method = route.request().method();
+
+      if (pathname.endsWith('/feature-flags')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ data: { projects: true, tasks: true } }),
+        });
+        return;
+      }
+
+      if (pathname.endsWith('/rfqs/counts')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            data: {
+              draft: 0,
+              published: 0,
+              closed: 0,
+              awarded: 0,
+              cancelled: 0,
+              active: 0,
+              pending: 0,
+              archived: 0,
+            },
+          }),
+        });
+        return;
+      }
+
+      if (pathname.endsWith('/approvals') && method === 'GET') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ data: [], meta: { total: 0, total_pages: 1, current_page: 1, per_page: 20 } }),
+        });
+        return;
+      }
 
       if (pathname.endsWith('/ai/status')) {
         await route.fulfill({
@@ -253,7 +292,12 @@ test.describe('provider normalization degraded manual continuity', () => {
         return;
       }
 
-      throw new Error(`Unhandled mocked API path: ${method} ${pathname}`);
+      unhandledPaths.push(`${method} ${pathname}`);
+      await route.fulfill({
+        status: 404,
+        contentType: 'application/json',
+        body: JSON.stringify({ message: `Unhandled mocked API path: ${method} ${pathname}` }),
+      });
     });
 
     await page.goto(`/rfqs/${rfqId}/quote-intake/${quoteId}/normalize`);
@@ -276,5 +320,6 @@ test.describe('provider normalization degraded manual continuity', () => {
 
     await page.getByRole('button', { name: /freeze comparison/i }).click();
     await expect.poll(() => comparisonFreezeRequested).toBe(true);
+    expect(unhandledPaths, unhandledPaths.join('\n')).toEqual([]);
   });
 });

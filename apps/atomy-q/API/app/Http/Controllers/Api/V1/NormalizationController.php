@@ -16,6 +16,7 @@ use App\Models\Rfq;
 use App\Models\RfqLineItem;
 use App\Services\QuoteIntake\NormalizationOverrideService;
 use App\Services\QuoteIntake\QuoteSubmissionReadinessService;
+use App\Support\DecimalString;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -61,7 +62,7 @@ final class NormalizationController extends Controller
             $origin = (string) ($providerProvenance['origin'] ?? 'provider');
         }
 
-        $providerSuggested = $this->providerSuggestedValues($line, $origin, $providerProvenance, $latestOverride);
+        $providerSuggested = $this->providerSuggestedValues($providerProvenance, $latestOverride);
         $effectiveValues = $line->effectiveValues();
         unset($rawData['provenance'], $rawData['provider_provenance']);
         $conflictCount = $line->conflicts->count();
@@ -205,8 +206,6 @@ final class NormalizationController extends Controller
      * @return array{rfq_line_item_id: string|null, quantity: string|null, uom: string|null, unit_price: string|null}|null
      */
     private function providerSuggestedValues(
-        NormalizationSourceLine $line,
-        string $origin,
         ?array $providerProvenance,
         ?array $latestOverride,
     ): ?array {
@@ -218,10 +217,6 @@ final class NormalizationController extends Controller
                 'uom' => $this->nullableString($suggestedValues['uom'] ?? null),
                 'unit_price' => $this->decimalStringOrNull($suggestedValues['unit_price'] ?? null, 4),
             ];
-        }
-
-        if ($origin === 'manual') {
-            return null;
         }
 
         return null;
@@ -245,7 +240,7 @@ final class NormalizationController extends Controller
         }
 
         if (! is_numeric($value)) {
-            return $this->nullableString($value);
+            return null;
         }
 
         $normalized = (string) $value;
@@ -254,35 +249,7 @@ final class NormalizationController extends Controller
             return bcadd($normalized, '0', $scale);
         }
 
-        return $this->normalizeDecimalString($normalized, $scale);
-    }
-
-    private function normalizeDecimalString(string $value, int $scale): ?string
-    {
-        $trimmed = trim($value);
-        if ($trimmed === '') {
-            return null;
-        }
-
-        if (! preg_match('/^([+-]?)(\d+)(?:\.(\d+))?$/', $trimmed, $matches)) {
-            return $this->nullableString($trimmed);
-        }
-
-        $sign = $matches[1];
-        $integerPart = ltrim($matches[2], '0');
-        if ($integerPart === '') {
-            $integerPart = '0';
-        }
-
-        $fractionPart = $matches[3] ?? '';
-        if ($scale === 0) {
-            return $sign . $integerPart;
-        }
-
-        $fractionPart = substr($fractionPart, 0, $scale);
-        $fractionPart = str_pad($fractionPart, $scale, '0');
-
-        return $sign . $integerPart . '.' . $fractionPart;
+        return DecimalString::normalize($normalized, $scale);
     }
 
     /**
@@ -346,6 +313,13 @@ final class NormalizationController extends Controller
         $line = NormalizationSourceLine::query()
             ->where('tenant_id', $tenantId)
             ->where('id', $id)
+            ->with([
+                'quoteSubmission:id,tenant_id,rfq_id,vendor_id,vendor_name,status,confidence',
+                'rfqLineItem:id,rfq_id,description,quantity,uom,unit_price,currency',
+                'conflicts' => static function ($q) use ($tenantId): void {
+                    $q->where('tenant_id', $tenantId);
+                },
+            ])
             ->first();
         if ($line === null) {
             return response()->json(['message' => 'Source line not found'], 404);
@@ -485,6 +459,13 @@ final class NormalizationController extends Controller
         $line = NormalizationSourceLine::query()
             ->where('tenant_id', $tenantId)
             ->where('id', $id)
+            ->with([
+                'quoteSubmission:id,tenant_id,rfq_id,vendor_id,vendor_name,status,confidence',
+                'rfqLineItem:id,rfq_id,description,quantity,uom,unit_price,currency',
+                'conflicts' => static function ($q) use ($tenantId): void {
+                    $q->where('tenant_id', $tenantId);
+                },
+            ])
             ->first();
         if ($line === null) {
             return response()->json(['message' => 'Source line not found'], 404);

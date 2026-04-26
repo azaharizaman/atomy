@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Support\DecimalString;
 use DomainException;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
@@ -162,7 +163,7 @@ class NormalizationSourceLine extends Model implements NormalizationSourceLineRe
     private function decimalString(string $value, int $scale): ?string
     {
         $trimmed = trim($value);
-        if ($trimmed === '') {
+        if ($trimmed === '' || ! is_numeric($trimmed)) {
             return null;
         }
 
@@ -170,24 +171,6 @@ class NormalizationSourceLine extends Model implements NormalizationSourceLineRe
             return bcadd($trimmed, '0', $scale);
         }
 
-        if (! preg_match('/^([+-]?)(\d+)(?:\.(\d+))?$/', $trimmed, $matches)) {
-            return trim($trimmed) === '' ? null : $trimmed;
-        }
-
-        $sign = $matches[1];
-        $integerPart = ltrim($matches[2], '0');
-        if ($integerPart === '') {
-            $integerPart = '0';
-        }
-
-        $fractionPart = $matches[3] ?? '';
-        if ($scale === 0) {
-            return $sign . $integerPart;
-        }
-
-        $fractionPart = substr($fractionPart, 0, $scale);
-        $fractionPart = str_pad($fractionPart, $scale, '0');
-
-        return $sign . $integerPart . '.' . $fractionPart;
+        return DecimalString::normalize($trimmed, $scale);
     }
 }

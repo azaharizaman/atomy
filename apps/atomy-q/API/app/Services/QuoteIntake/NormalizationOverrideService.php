@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\QuoteIntake;
 
+use App\Support\DecimalString;
 use App\Models\NormalizationSourceLine;
 use App\Models\QuoteSubmission;
 use App\Models\RfqLineItem;
@@ -296,7 +297,7 @@ final readonly class NormalizationOverrideService
         }
 
         if (! is_numeric($value)) {
-            return $this->nullableString($value);
+            return null;
         }
 
         $normalized = (string) $value;
@@ -305,35 +306,7 @@ final readonly class NormalizationOverrideService
             return bcadd($normalized, '0', $scale);
         }
 
-        return $this->normalizeDecimalString($normalized, $scale);
-    }
-
-    private function normalizeDecimalString(string $value, int $scale): ?string
-    {
-        $trimmed = trim($value);
-        if ($trimmed === '') {
-            return null;
-        }
-
-        if (! preg_match('/^([+-]?)(\d+)(?:\.(\d+))?$/', $trimmed, $matches)) {
-            return $this->nullableString($trimmed);
-        }
-
-        $sign = $matches[1];
-        $integerPart = ltrim($matches[2], '0');
-        if ($integerPart === '') {
-            $integerPart = '0';
-        }
-
-        $fractionPart = $matches[3] ?? '';
-        if ($scale === 0) {
-            return $sign . $integerPart;
-        }
-
-        $fractionPart = substr($fractionPart, 0, $scale);
-        $fractionPart = str_pad($fractionPart, $scale, '0');
-
-        return $sign . $integerPart . '.' . $fractionPart;
+        return DecimalString::normalize($normalized, $scale);
     }
 
     private function normalizedNote(mixed $note): ?string

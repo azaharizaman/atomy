@@ -319,7 +319,7 @@ final class NormalizationReviewWorkflowTest extends ApiTestCase
         self::assertSame('ready', $quote->status);
         self::assertSame(1, $quote->line_items_count);
 
-        $update = $this->putJson(
+        $update = $this->patchJson(
             '/api/v1/quote-submissions/' . $quote->id . '/source-lines/' . $lineId,
             [
                 'source_description' => 'Manual Widget quoted line revised',
@@ -390,7 +390,7 @@ final class NormalizationReviewWorkflowTest extends ApiTestCase
             'reason' => 'manual_entry_required',
         ], $headers)->assertNotFound();
 
-        $this->putJson('/api/v1/quote-submissions/' . $quote->id . '/source-lines/' . $sourceLine->id, [
+        $this->patchJson('/api/v1/quote-submissions/' . $quote->id . '/source-lines/' . $sourceLine->id, [
             'source_description' => 'Cross tenant edit',
             'reason' => 'manual_entry_required',
         ], $headers)->assertNotFound();
@@ -440,7 +440,7 @@ final class NormalizationReviewWorkflowTest extends ApiTestCase
         $create->assertCreated();
         $lineId = (string) $create->json('data.id');
 
-        $missingOtherNote = $this->putJson(
+        $missingOtherNote = $this->patchJson(
             '/api/v1/quote-submissions/' . $quote->id . '/source-lines/' . $lineId,
             [
                 'source_description' => 'Manual Widget quoted line other reason',
@@ -833,6 +833,22 @@ final class NormalizationReviewWorkflowTest extends ApiTestCase
 
         $response->assertStatus(422);
         $response->assertJsonPath('details.note.0', 'The note field is required when reason code is other.');
+
+        $whitespaceNote = $this->putJson(
+            '/api/v1/normalization/source-lines/' . $sourceLine->id . '/override',
+            [
+                'override_data' => [
+                    'unit_price' => '9.99',
+                ],
+                'reason_code' => 'other',
+                'note' => '   ',
+            ],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $whitespaceNote->assertStatus(422);
+        $whitespaceNote->assertJsonPath('details.note.0', 'The note field is required when reason code is other.');
+        self::assertCount(1, $whitespaceNote->json('details.note'));
     }
 
     public function test_override_allows_clearing_fields_updates_description_and_keeps_price_precision(): void
@@ -920,8 +936,8 @@ final class NormalizationReviewWorkflowTest extends ApiTestCase
         $response->assertJsonPath('data.effective_values.rfq_line_item_id', null);
         $response->assertJsonPath('data.effective_values.quantity', null);
         $response->assertJsonPath('data.effective_values.uom', null);
-        $response->assertJsonPath('data.effective_values.unit_price', '12.3457');
-        $response->assertJsonPath('data.latest_override.after.unit_price', '12.3457');
+        $response->assertJsonPath('data.effective_values.unit_price', '12.3456');
+        $response->assertJsonPath('data.latest_override.after.unit_price', '12.3456');
         $response->assertJsonPath('data.latest_override.after.quantity', null);
         $response->assertJsonPath('data.latest_override.after.uom', null);
 
@@ -930,7 +946,7 @@ final class NormalizationReviewWorkflowTest extends ApiTestCase
         self::assertNull($sourceLine->rfq_line_item_id);
         self::assertNull($sourceLine->source_quantity);
         self::assertNull($sourceLine->source_uom);
-        self::assertSame('12.3457', $sourceLine->source_unit_price);
+        self::assertSame('12.3456', $sourceLine->source_unit_price);
         self::assertSame('12.3456', $sourceLine->raw_data['provider_provenance']['suggested_values']['unit_price']);
     }
 }
