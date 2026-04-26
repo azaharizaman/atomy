@@ -168,6 +168,7 @@ describe('useNormalizationSourceLines (live mode)', () => {
       id: 'line-1',
       override_data: {
         rfq_line_item_id: 'rfq-line-1',
+        source_description: 'Line item',
         quantity: '3',
         uom: 'box',
         unit_price: null,
@@ -183,6 +184,7 @@ describe('useNormalizationSourceLines (live mode)', () => {
     expect(putMock).toHaveBeenCalledWith('/normalization/source-lines/line-1/override', {
       override_data: {
         rfq_line_item_id: 'rfq-line-1',
+        source_description: 'Line item',
         quantity: '3',
         uom: 'box',
         unit_price: null,

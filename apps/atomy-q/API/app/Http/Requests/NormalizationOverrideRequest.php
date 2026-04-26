@@ -31,10 +31,11 @@ final class NormalizationOverrideRequest extends FormRequest
     {
         return [
             'override_data' => ['required', 'array', 'min:1'],
-            'override_data.rfq_line_item_id' => ['sometimes', 'string'],
-            'override_data.quantity' => ['sometimes', 'numeric', 'min:0'],
-            'override_data.uom' => ['sometimes', 'string', 'max:32'],
-            'override_data.unit_price' => ['sometimes', 'numeric', 'min:0'],
+            'override_data.rfq_line_item_id' => ['sometimes', 'nullable', 'string'],
+            'override_data.source_description' => ['sometimes', 'string', 'max:2000'],
+            'override_data.quantity' => ['sometimes', 'nullable', 'numeric', 'min:0'],
+            'override_data.uom' => ['sometimes', 'nullable', 'string', 'max:32'],
+            'override_data.unit_price' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'reason_code' => ['required', 'string', Rule::in(self::REASON_CODES)],
             'note' => ['nullable', 'string', 'max:1000', 'required_if:reason_code,other'],
         ];

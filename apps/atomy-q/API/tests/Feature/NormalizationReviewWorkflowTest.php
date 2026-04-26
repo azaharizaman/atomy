@@ -669,7 +669,7 @@ final class NormalizationReviewWorkflowTest extends ApiTestCase
         $sourceLine->refresh();
         self::assertSame('12.3400', $sourceLine->source_unit_price);
         self::assertIsArray($sourceLine->raw_data);
-        self::assertSame('12.34', $sourceLine->raw_data['override']['unit_price']);
+        self::assertSame('12.3400', $sourceLine->raw_data['override']['unit_price']);
         self::assertSame('price_correction', $sourceLine->raw_data['override_audit']['reason_code']);
         self::assertSame($user->id, $sourceLine->raw_data['override_audit']['actor_user_id']);
         self::assertSame('88.25', $sourceLine->raw_data['override_audit']['provider_confidence']);
@@ -833,5 +833,104 @@ final class NormalizationReviewWorkflowTest extends ApiTestCase
 
         $response->assertStatus(422);
         $response->assertJsonPath('details.note.0', 'The note field is required when reason code is other.');
+    }
+
+    public function test_override_allows_clearing_fields_updates_description_and_keeps_price_precision(): void
+    {
+        $user = $this->createUser();
+        $rfq = Rfq::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_number' => 'RFQ-NORM-7',
+            'title' => 'Normalization RFQ',
+            'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
+            'status' => 'published',
+        ]);
+
+        $lineItem = RfqLineItem::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'description' => 'Precision Valve',
+            'quantity' => 1,
+            'uom' => 'EA',
+            'unit_price' => 12.3456,
+            'currency' => 'USD',
+            'sort_order' => 0,
+        ]);
+
+        $quote = QuoteSubmission::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'vendor_id' => (string) Str::ulid(),
+            'vendor_name' => 'Vendor',
+            'status' => 'needs_review',
+            'submitted_at' => now(),
+            'confidence' => 88.25,
+            'line_items_count' => 1,
+            'warnings_count' => 0,
+            'errors_count' => 1,
+        ]);
+
+        $sourceLine = NormalizationSourceLine::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'quote_submission_id' => $quote->id,
+            'rfq_line_item_id' => $lineItem->id,
+            'source_description' => 'Old description',
+            'source_quantity' => 1,
+            'source_uom' => 'EA',
+            'source_unit_price' => 12.3456,
+            'raw_data' => [
+                'provider_provenance' => [
+                    'origin' => 'provider',
+                    'captured_at' => '2026-04-26T08:00:00+00:00',
+                    'suggested_values' => [
+                        'rfq_line_item_id' => $lineItem->id,
+                        'quantity' => '1.0000',
+                        'uom' => 'EA',
+                        'unit_price' => '12.3456',
+                    ],
+                ],
+            ],
+            'sort_order' => 0,
+            'ai_confidence' => 88.25,
+            'taxonomy_code' => 'VALVE.PRECISION',
+            'mapping_version' => 'provider-v1',
+        ]);
+
+        $response = $this->putJson(
+            '/api/v1/normalization/source-lines/' . $sourceLine->id . '/override',
+            [
+                'override_data' => [
+                    'source_description' => 'Corrected precision valve',
+                    'rfq_line_item_id' => null,
+                    'quantity' => null,
+                    'uom' => null,
+                    'unit_price' => '12.34567',
+                ],
+                'reason_code' => 'price_correction',
+                'note' => 'Buyer corrected the extracted line',
+            ],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $response->assertOk();
+        $response->assertJsonPath('data.source_description', 'Corrected precision valve');
+        $response->assertJsonPath('data.rfq_line_item_id', null);
+        $response->assertJsonPath('data.effective_values.source_description', 'Corrected precision valve');
+        $response->assertJsonPath('data.effective_values.rfq_line_item_id', null);
+        $response->assertJsonPath('data.effective_values.quantity', null);
+        $response->assertJsonPath('data.effective_values.uom', null);
+        $response->assertJsonPath('data.effective_values.unit_price', '12.3457');
+        $response->assertJsonPath('data.latest_override.after.unit_price', '12.3457');
+        $response->assertJsonPath('data.latest_override.after.quantity', null);
+        $response->assertJsonPath('data.latest_override.after.uom', null);
+
+        $sourceLine->refresh();
+        self::assertSame('Corrected precision valve', $sourceLine->source_description);
+        self::assertNull($sourceLine->rfq_line_item_id);
+        self::assertNull($sourceLine->source_quantity);
+        self::assertNull($sourceLine->source_uom);
+        self::assertSame('12.3457', $sourceLine->source_unit_price);
+        self::assertSame('12.3456', $sourceLine->raw_data['provider_provenance']['suggested_values']['unit_price']);
     }
 }

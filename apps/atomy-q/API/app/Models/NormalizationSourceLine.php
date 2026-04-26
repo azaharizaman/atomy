@@ -101,11 +101,12 @@ class NormalizationSourceLine extends Model implements NormalizationSourceLineRe
     }
 
     /**
-     * @return array{rfq_line_item_id: string|null, quantity: string|null, uom: string|null, unit_price: string|null}
+     * @return array{source_description: string|null, rfq_line_item_id: string|null, quantity: string|null, uom: string|null, unit_price: string|null}
      */
     public function effectiveValues(): array
     {
         return [
+            'source_description' => $this->source_description !== null ? (string) $this->source_description : null,
             'rfq_line_item_id' => $this->rfq_line_item_id !== null ? (string) $this->rfq_line_item_id : null,
             'quantity' => $this->source_quantity !== null ? number_format((float) $this->source_quantity, 4, '.', '') : null,
             'uom' => $this->source_uom !== null ? (string) $this->source_uom : null,

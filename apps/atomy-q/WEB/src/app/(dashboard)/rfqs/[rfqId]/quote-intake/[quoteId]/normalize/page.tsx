@@ -174,6 +174,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
       id: lineId,
       override_data: {
         rfq_line_item_id: editForm.rfq_line_item_id,
+        source_description: description,
         quantity: normalizeNullableField(editForm.source_quantity),
         uom: normalizeNullableField(editForm.source_uom),
         unit_price: normalizeNullableField(editForm.source_unit_price),

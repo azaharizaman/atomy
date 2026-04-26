@@ -337,6 +337,9 @@ describe('NormalizeQuotePage', () => {
     expect(screen.getByText(/override reason price correction/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /edit source line 1/i }));
+    fireEvent.change(screen.getByLabelText(/description source line 1/i), {
+      target: { value: 'Updated Widget A' },
+    });
     expect(screen.getByText(/provider confidence 87\.50%/i)).toBeInTheDocument();
   });
 
@@ -366,12 +369,16 @@ describe('NormalizeQuotePage', () => {
     });
 
     fireEvent.click(screen.getByRole('button', { name: /edit source line 1/i }));
+    fireEvent.change(screen.getByLabelText(/description source line 1/i), {
+      target: { value: 'Typed from signed quote' },
+    });
     fireEvent.change(screen.getByLabelText(/reason code source line 1/i), { target: { value: 'price_correction' } });
     fireEvent.click(screen.getByRole('button', { name: /save source line 1/i }));
     expect(mockOverrideSourceLine).toHaveBeenCalledWith({
       id: 'line-1',
       override_data: {
         rfq_line_item_id: 'rfq-line-1',
+        source_description: 'Typed from signed quote',
         quantity: '2',
         uom: 'ea',
         unit_price: null,

@@ -17,10 +17,15 @@ export interface ManualSourceLineInput {
 }
 
 export interface NormalizationValueSnapshot {
+  source_description?: string | null;
   rfq_line_item_id: string | null;
   quantity: string | null;
   uom: string | null;
   unit_price: string | null;
+}
+
+export interface NormalizationOverrideData extends NormalizationValueSnapshot {
+  source_description: string;
 }
 
 export interface LatestNormalizationOverride {
@@ -82,6 +87,7 @@ function normalizeValueSnapshot(value: unknown): NormalizationValueSnapshot | nu
   }
 
   return {
+    source_description: toText(value.source_description),
     rfq_line_item_id: toText(value.rfq_line_item_id),
     quantity: toText(value.quantity),
     uom: toText(value.uom),
@@ -244,7 +250,7 @@ export function useManualNormalizationSourceLineMutations(rfqId: string) {
   });
 
   const overrideSourceLine = useMutation({
-    mutationFn: async (input: { id: string; override_data: NormalizationValueSnapshot; reason_code: string; note: string | null }) => {
+    mutationFn: async (input: { id: string; override_data: NormalizationOverrideData; reason_code: string; note: string | null }) => {
       const { id, override_data, reason_code, note } = input;
       const { data } = await api.put(
         `/normalization/source-lines/${encodeURIComponent(id)}/override`,

@@ -158,16 +158,20 @@ final readonly class NormalizationOverrideService
             $normalized['rfq_line_item_id'] = $this->validatedRfqLineId($submission, $line, $overrideData['rfq_line_item_id']);
         }
 
+        if (array_key_exists('source_description', $overrideData)) {
+            $normalized['source_description'] = trim((string) $overrideData['source_description']);
+        }
+
         if (array_key_exists('quantity', $overrideData)) {
-            $normalized['quantity'] = $this->decimalString($overrideData['quantity'], 4);
+            $normalized['quantity'] = $this->decimalStringOrNull($overrideData['quantity'], 4);
         }
 
         if (array_key_exists('uom', $overrideData)) {
-            $normalized['uom'] = trim((string) $overrideData['uom']);
+            $normalized['uom'] = $this->nullableString($overrideData['uom']);
         }
 
         if (array_key_exists('unit_price', $overrideData)) {
-            $normalized['unit_price'] = $this->decimalString($overrideData['unit_price'], 2);
+            $normalized['unit_price'] = $this->decimalStringOrNull($overrideData['unit_price'], 4);
         }
 
         return $normalized;
@@ -214,6 +218,10 @@ final readonly class NormalizationOverrideService
             $line->rfq_line_item_id = $overrideData['rfq_line_item_id'];
         }
 
+        if (array_key_exists('source_description', $overrideData)) {
+            $line->source_description = $overrideData['source_description'];
+        }
+
         if (array_key_exists('quantity', $overrideData)) {
             $line->source_quantity = $overrideData['quantity'];
         }
@@ -227,13 +235,11 @@ final readonly class NormalizationOverrideService
         }
     }
 
-    private function validatedRfqLineId(QuoteSubmission $submission, NormalizationSourceLine $line, mixed $rfqLineItemId): string
+    private function validatedRfqLineId(QuoteSubmission $submission, NormalizationSourceLine $line, mixed $rfqLineItemId): ?string
     {
         $candidate = trim((string) $rfqLineItemId);
         if ($candidate === '') {
-            throw ValidationException::withMessages([
-                'override_data.rfq_line_item_id' => ['RFQ line id cannot be blank.'],
-            ]);
+            return null;
         }
 
         $rfqLine = RfqLineItem::query()
@@ -251,6 +257,15 @@ final readonly class NormalizationOverrideService
         return $candidate;
     }
 
+    private function decimalStringOrNull(mixed $value, int $scale): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return $this->decimalString($value, $scale);
+    }
+
     private function decimalString(mixed $value, int $scale): string
     {
         return number_format((float) $value, $scale, '.', '');
@@ -259,6 +274,17 @@ final readonly class NormalizationOverrideService
     private function normalizedNote(mixed $note): ?string
     {
         $normalized = trim((string) $note);
+
+        return $normalized === '' ? null : $normalized;
+    }
+
+    private function nullableString(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $normalized = trim((string) $value);
 
         return $normalized === '' ? null : $normalized;
     }
