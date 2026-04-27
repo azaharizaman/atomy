@@ -1,7 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTestWrapper } from '@/test/utils';
-import { useComparisonRunReadiness } from './use-comparison-run-readiness';
 
 const mockGet = vi.hoisted(() => vi.fn());
 
@@ -36,6 +35,7 @@ describe('useComparisonRunReadiness', () => {
       },
     });
 
+    const { useComparisonRunReadiness } = await import('./use-comparison-run-readiness');
     const { Wrapper } = createTestWrapper();
     const { result } = renderHook(() => useComparisonRunReadiness('run-42'), { wrapper: Wrapper });
 
@@ -65,6 +65,7 @@ describe('useComparisonRunReadiness', () => {
       },
     });
 
+    const { useComparisonRunReadiness } = await import('./use-comparison-run-readiness');
     const { Wrapper } = createTestWrapper();
     const { result } = renderHook(() => useComparisonRunReadiness('run-42'), { wrapper: Wrapper });
 
@@ -73,15 +74,28 @@ describe('useComparisonRunReadiness', () => {
     expect(result.current.error?.message).toMatch(/message/i);
   });
 
-  it('stays idle in mock mode', async () => {
-    process.env.NEXT_PUBLIC_USE_MOCKS = 'true';
+  it('still fetches readiness when the flag is set', async () => {
+    mockGet.mockResolvedValueOnce({
+      data: {
+        data: {
+          id: 'run-42',
+          readiness: {
+            is_ready: true,
+            is_preview_only: false,
+            blockers: [],
+            warnings: [],
+          },
+        },
+      },
+    });
 
+    const { useComparisonRunReadiness } = await import('./use-comparison-run-readiness');
     const { Wrapper } = createTestWrapper();
     const { result } = renderHook(() => useComparisonRunReadiness('run-42'), { wrapper: Wrapper });
 
-    await waitFor(() => expect(result.current.fetchStatus).toBe('idle'));
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(result.current.status).toBe('pending');
-    expect(mockGet).not.toHaveBeenCalled();
+    expect(mockGet).toHaveBeenCalledTimes(1);
+    expect(result.current.data?.id).toBe('run-42');
   });
 });

@@ -35,7 +35,7 @@ function RfqLineItemsPageContent({ rfqId }: { rfqId: string }) {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
 
   const isWritable = rfq?.status === 'draft';
-  const canPersist = isWritable && process.env.NEXT_PUBLIC_USE_MOCKS !== 'true';
+  const canPersist = isWritable;
 
   const handleCreated = React.useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ['rfqs', rfqId, 'line-items'] });

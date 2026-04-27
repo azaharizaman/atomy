@@ -155,7 +155,7 @@ export function LineItemDrawer({
     setError(null);
 
     if (!isWritable) {
-      setError('Turn off NEXT_PUBLIC_USE_MOCKS to save line items.');
+      setError('Line items can only be created while the RFQ is in draft.');
       return;
     }
 
@@ -236,7 +236,7 @@ export function LineItemDrawer({
         <form onSubmit={submit} className="flex-1 overflow-y-auto p-4 space-y-4">
           {!isWritable && (
             <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-              Mock mode is read-only for line-item creation. Turn off NEXT_PUBLIC_USE_MOCKS to save.
+              Line items are read-only unless the RFQ is in draft.
             </div>
           )}
           {error && <div className="text-sm text-red-600">{error}</div>}

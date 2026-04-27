@@ -125,44 +125,7 @@ export function useApprovalsList(params: UseApprovalsParams) {
       page: params.page ?? 1,
     }],
     queryFn: async (): Promise<ApprovalsListResult> => {
-      const isMock = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
       const page = Math.max(1, params.page ?? 1);
-      if (isMock) {
-        const { getSeedPendingApprovals } = await import('@/data/seed');
-        const seed = getSeedPendingApprovals();
-        let rows: ApprovalListRow[] = seed.map((a) => ({
-          id: a.id,
-          rfq_id: a.rfqId,
-          rfq_title: a.summary,
-          type: a.type,
-          type_label: a.type,
-          status: 'pending',
-          priority: a.priority,
-          summary: a.summary,
-          sla: a.sla,
-          sla_variant: a.slaVariant,
-          assignee: a.assignee,
-          requested_at: null,
-        }));
-        if (params.rfq_id) {
-          rows = rows.filter((r) => r.rfq_id === params.rfq_id);
-        }
-        if (params.type) {
-          rows = rows.filter((r) => r.type === params.type);
-        }
-        if (params.status && params.status !== 'pending') {
-          rows = [];
-        }
-        const perPage = 20;
-        const total = rows.length;
-        const totalPages = Math.max(1, Math.ceil(total / perPage));
-        const start = (page - 1) * perPage;
-        return {
-          items: rows.slice(start, start + perPage),
-          meta: { current_page: page, per_page: perPage, total, total_pages: totalPages },
-        };
-      }
-
       const data = await fetchLiveOrFail<{ data: ApprovalListRow[] }>('/approvals', {
         params: {
           rfq_id: params.rfq_id || undefined,
@@ -203,26 +166,6 @@ export function useApprovalDetail(id: string | undefined) {
     queryFn: async (): Promise<ApprovalDetail> => {
       if (!id) throw new Error('Approval id required');
 
-      if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true') {
-        const { getSeedPendingApprovals } = await import('@/data/seed');
-        const row = getSeedPendingApprovals().find((a) => a.id === id);
-        if (!row) throw new Error('Not found');
-        return {
-          id: row.id,
-          rfq_id: row.rfqId,
-          type: row.type,
-          type_label: row.type,
-          status: 'pending',
-          priority: row.priority,
-          summary: row.summary,
-          assignee: row.assignee,
-          sla: row.sla,
-          sla_variant: row.slaVariant,
-          requested_at: null,
-          comparison_run: null,
-        };
-      }
-
       const data = await fetchLiveOrFail<{ data: ApprovalDetail }>(`/approvals/${encodeURIComponent(id)}`);
       if (data === undefined) {
         throw new Error('Approval detail unavailable');
@@ -262,16 +205,12 @@ export function useRfqPendingApprovalCount(rfqId: string | undefined) {
   return useQuery({
     queryKey: ['approvals', 'pending-count', rfqId],
     queryFn: async (): Promise<number | undefined> => {
-      if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true') {
-        return undefined;
-      }
-
       const data = await fetchLiveOrFail<{ data: ApprovalListRow[] }>('/approvals', {
         params: { status: 'pending', rfq_id: rfqId, per_page: 1, page: 1 },
       });
 
       if (data === undefined) {
-        return undefined;
+        throw new Error('Approvals pending-count unavailable');
       }
 
       const meta = parseApprovalsMeta(data);

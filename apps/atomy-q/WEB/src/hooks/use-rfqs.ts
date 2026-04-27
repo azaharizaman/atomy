@@ -151,42 +151,21 @@ function normalizeRfqsPayload(payload: unknown): RfqListItem[] {
   });
 }
 
-const SEED_PER_PAGE = 20;
-
 export function useRfqs(params: UseRfqsParams) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
   return useQuery({
     queryKey: ['rfqs', params],
-    enabled: true, // Always enabled, but queryFn switches logic
+    enabled: true,
     queryFn: async (): Promise<RfqsListResult> => {
-      const page = Math.max(1, params.page ?? 1);
-
-      if (!useMocks) {
-        const { projectId, ...restParams } = params;
-        const apiParams: Record<string, string | number | undefined> = { ...restParams };
-        if (projectId) apiParams.project_id = projectId;
-        const { data } = await api.get('/rfqs', { params: apiParams });
-        const items = normalizeRfqsPayload(data).filter((x) => x.id);
-        const metaFromApi = parseRfqsMeta(data);
-        if (metaFromApi === null) {
-          throw new Error('Invalid RFQ list response: pagination meta');
-        }
-        return { items, meta: metaFromApi };
+      const { projectId, ...restParams } = params;
+      const apiParams: Record<string, string | number | undefined> = { ...restParams };
+      if (projectId) apiParams.project_id = projectId;
+      const { data } = await api.get('/rfqs', { params: apiParams });
+      const items = normalizeRfqsPayload(data).filter((x) => x.id);
+      const metaFromApi = parseRfqsMeta(data);
+      if (metaFromApi === null) {
+        throw new Error('Invalid RFQ list response: pagination meta');
       }
-
-      const { getSeedRfqListItems } = await import('@/data/seed');
-      const { items, total } = getSeedRfqListItems(params);
-      const totalPages = Math.max(1, Math.ceil(total / SEED_PER_PAGE));
-      return {
-        items,
-        meta: {
-          current_page: page,
-          per_page: SEED_PER_PAGE,
-          total,
-          total_pages: totalPages,
-        },
-      };
+      return { items, meta: metaFromApi };
     },
   });
 }

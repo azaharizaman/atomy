@@ -298,11 +298,9 @@ async function fetchVendorRecommendations(rfqId: string): Promise<VendorRecommen
 }
 
 export function useVendorRecommendations(rfqId: string) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
   return useQuery({
     queryKey: ['rfqs', rfqId, 'vendor-recommendations'],
-    enabled: !useMocks && Boolean(rfqId),
+    enabled: Boolean(rfqId),
     queryFn: () => fetchVendorRecommendations(rfqId),
   });
 }

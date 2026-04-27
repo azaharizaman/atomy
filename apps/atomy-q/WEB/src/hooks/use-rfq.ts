@@ -102,19 +102,10 @@ function normalizeRfq(payload: unknown): RfqDetail {
 }
 
 export function useRfq(rfqId: string, options?: { enabled?: boolean }) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
   return useQuery({
     queryKey: ['rfqs', rfqId],
     enabled: Boolean(rfqId) && options?.enabled !== false,
     queryFn: async () => {
-      if (useMocks) {
-        const { getSeedRfqDetail } = await import('@/data/seed');
-        const detail = getSeedRfqDetail(rfqId);
-        if (!detail) throw new Error('RFQ not found');
-        return normalizeRfq(detail);
-      }
-
       const data = await fetchLiveOrFail<{ data: RfqDetail }>(`/rfqs/${encodeURIComponent(rfqId)}`);
 
       if (data === undefined) {

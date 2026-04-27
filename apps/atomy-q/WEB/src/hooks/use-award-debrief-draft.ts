@@ -4,8 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchLiveOrFail } from '@/lib/api-live';
 import { isObject, toText, unwrapResponse } from '@/hooks/normalize-utils';
 
-const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
 export interface AwardDebriefDraft {
   featureKey: string;
   available: boolean;
@@ -64,7 +62,7 @@ export function useAwardDebriefDraft(
 ) {
   return useQuery({
     queryKey: ['award-debrief-draft', awardId, vendorId],
-    enabled: Boolean(awardId) && Boolean(vendorId) && options?.enabled !== false && !useMocks,
+    enabled: Boolean(awardId) && Boolean(vendorId) && options?.enabled !== false,
     queryFn: async (): Promise<AwardDebriefDraft> => {
       const data = await fetchLiveOrFail(
         `/awards/${encodeURIComponent(awardId)}/debrief-draft/${encodeURIComponent(vendorId)}`,

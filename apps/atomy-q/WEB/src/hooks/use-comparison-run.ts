@@ -246,53 +246,10 @@ function normalizeComparisonRun(payload: unknown): ComparisonRunDetail {
   };
 }
 
-async function buildMockComparisonRun(runId: string, rfqId?: string): Promise<ComparisonRunDetail> {
-  // This mock payload is intentionally minimal/non-functional for award-evidence checks in mock mode.
-  // In mock mode, hasCompleteAwardPricingEvidence (see use-award.ts) will always return false.
-  // A real seed-derived snapshot would require getSeedComparisonRunsByRfqId and buildMockComparisonRun logic.
-  const { getSeedComparisonRunsByRfqId } = await import('@/data/seed');
-  const run = rfqId ? getSeedComparisonRunsByRfqId(rfqId).find((item) => item.id === runId || item.runId === runId) : null;
-  if (!run) {
-    return {
-      id: runId,
-      rfqId: rfqId ?? '',
-      name: 'Comparison Run',
-      status: 'draft',
-      isPreview: true,
-      snapshot: null,
-      aiOverlay: null,
-      createdAt: null,
-    };
-  }
-
-  return {
-    id: run.id,
-    rfqId: run.rfqId,
-    name: run.type === 'final' ? 'Final comparison' : 'Preview comparison',
-    status: run.status,
-    isPreview: run.type !== 'final',
-    snapshot: {
-      rfqVersion: 1,
-      normalizedLines: [],
-      resolutions: [],
-      currencyMeta: {},
-      vendors: [],
-    },
-    aiOverlay: null,
-    createdAt: null,
-  };
-}
-
 export function useComparisonRun(runId: string, options?: { rfqId?: string }) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
   return useQuery({
     queryKey: ['comparison-run', options?.rfqId ?? runId, runId],
     queryFn: async (): Promise<ComparisonRunDetail> => {
-      if (useMocks) {
-        return buildMockComparisonRun(runId, options?.rfqId);
-      }
-
       const data = await fetchLiveOrFail<{ data: ComparisonRunDetail }>(`/comparison-runs/${encodeURIComponent(runId)}`);
 
       if (data === undefined) {

@@ -153,37 +153,9 @@ function normalizeComparisonRunMatrix(payload: unknown): ComparisonRunMatrix {
 }
 
 export function useComparisonRunMatrix(runId: string, options?: { rfqId?: string }) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
   return useQuery({
     queryKey: ['comparison-run-matrix', options?.rfqId ?? runId, runId],
     queryFn: async (): Promise<ComparisonRunMatrix> => {
-      if (useMocks) {
-        const { getSeedComparisonRunsByRfqId } = await import('@/data/seed');
-        const seedRun = options?.rfqId
-          ? getSeedComparisonRunsByRfqId(options.rfqId).find((item) => item.id === runId || item.runId === runId)
-          : null;
-        return {
-          id: seedRun?.id ?? runId,
-          clusters: [
-            {
-              clusterKey: 'default',
-              basis: 'Sample cluster for demo',
-              offers: [],
-              statistics: {
-                minNormalizedUnitPrice: 0,
-                maxNormalizedUnitPrice: 0,
-                avgNormalizedUnitPrice: 0,
-              },
-              recommendation: {
-                recommendedVendorId: 'demo-vendor',
-                reason: 'Demo mode - no comparison data',
-              },
-            },
-          ],
-        };
-      }
-
       const data = await fetchLiveOrFail<{ data: ComparisonRunMatrix }>(`/comparison-runs/${encodeURIComponent(runId)}/matrix`);
 
       if (data === undefined) {
