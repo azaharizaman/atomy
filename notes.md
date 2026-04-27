@@ -277,3 +277,140 @@ Your earlier spec becomes much stronger once tiered governance is added, because
 * audit effort is proportional
 * enterprise buyers trust system more
 
+
+--------------------------
+
+Laravel-Way Opportunities for Atomy-Q API
+High-Impact Improvements (DX Priority)
+Recommendation
+1. Expand FormRequest Validation
+2. Add Tenant Global Scope
+3. Laravel Policies for Authorization
+4. Standardize API Resources & Collections
+5. Split Routes File
+Architectural Considerations
+Don't add these the "naive" way - integrate with existing Nexus architecture:
+Laravel Feature          →  Nexus Integration
+─────────────────────────────────────────────────
+FormRequest::authorize() →  Combine with NexusPermission middleware
+Laravel Policy           →  Wrap ProjectAclService, don't replace
+Global Tenant Scope      →  Use tenant context from existing TenantContext middleware
+API Resources            →  Keep transformers in Http/Resources, align with DTOs
+Specific Quick Wins
+1. Tenant Global Scope (prevents query leaks):
+// app/Scopes/TenantScope.php
+final class TenantScope implements Scope
+{
+    public function apply(Builder $builder, Model $model): void
+    {
+        if (auth()->check()) {
+            $builder->where('tenant_id', auth()->user()->tenant_id);
+        }
+    }
+}
+2. Standardize Response Trait:
+trait ApiResponse
+{
+    public function success(mixed $data, int $status = 200): JsonResponse
+    public function created(mixed $data): JsonResponse
+    public function error(string $message, int $status): JsonResponse
+}
+3. Route File Decomposition:
+// routes/api.php
+require __DIR__.'/api/v1/rfqs.php';
+require __DIR__.'/api/v1/projects.php';
+require __DIR__.'/api/v1/vendors.php';
+Recommendation
+Start with Tenant Global Scope + FormRequest expansion - these prevent bugs and standardize validation with minimal refactoring risk. Authorization (Policies) should wrap existing ProjectAclService rather than replace it.
+▣  Build · Big Pickle · 2m 35s
+how about Factories. I saw there is only one factories and seed data are being manually hand coded. Since atomy-q is still in active development do you think factories adoption can increase the code mentainability?
+Thinking: The user is asking about Model Factories in Laravel and whether they should adopt more of them. They noted:
+1. There's only one factory currently
+2. Seed data is manually hand-coded
+3. The app is in active development
+Let me check the current state of factories and seeders in the API to give a concrete assessment.
+✱ Glob "**/database/factories/**/*.php" in apps/atomy-q/API (1 match)
+✱ Glob "**/database/seeders/**/*.php" in apps/atomy-q/API (2 matches)
+→ Read apps/atomy-q/API/database/seeders 
+Thinking: Let me read both seeders to see the manual approach they use.
+→ Read apps/atomy-q/API/database/seeders/PetrochemicalTenantSeeder.php 
+→ Read apps/atomy-q/API/database/factories/UserFactory.php 
+→ Read apps/atomy-q/API/database/seeders/DatabaseSeeder.php 
+Thinking: The user is asking about factories and whether their adoption can increase code maintainability given the current state of the seeder.
+Looking at the code:
+1. PetrochemicalTenantSeeder.php - 1200+ lines of hand-coded seeder that:
+   - Inserts raw SQL via DB::table()->insert() directly
+   - Uses Str::ulid() to generate IDs
+   - Has complex logic for building relationships
+   - Contains 30+ helper methods
+   - Creates 56 RFQs, 100+ quotes, vendors, etc.
+2. UserFactory.php - Only factory exists, 51 lines, simple
+The seeder is doing things "the hard way" - directly inserting raw data instead of using factories + models. This is:
+- Hard to maintain
+- Hard to test
+- Duplicates model logic (field names, relationships)
+- No reuse for tests
+Benefits of Factory adoption:
+1. Test isolation - Tests can create fresh, isolated records without the full seeder
+2. TDD - Factories enable writing tests first
+3. DRY - Definition lives with the model (in factory), not duplicated in seeder
+4. Faker integration - Realistic data generation
+5. States & variants - Easy to create "draft rfq", "published rfq", "awarded rfq" states
+6. Relationships - Laravel handles cascading relationships via hasMany, belongsTo
+7. CI/CD - Quick DB setup for tests without running full seeder
+For Atomy-Q specifically, factories would help:
+- Unit tests can create RFQs with specific states
+- Feature tests don't need full seeder data
+- Developers can create test scenarios quickly
+- The seeder itself could use factories internally
+The trade-off is upfront investment to create 46 factories (for 47 models). But this pays off in long-term maintainability.
+I should summarize the key insights and make a clear recommendation based on what's most practical for this codebase.
+Yes, factories adoption would significantly improve maintainability. The current seeder is an anti-pattern - 1200+ lines of raw DB::table()->insert() calls duplicating model field knowledge.
+Current Problem
+// PetrochemicalTenantSeeder.php:627-649 - manually duplicating model structure
+DB::table('rfqs')->insert([
+    'id' => $rfqId,
+    'tenant_id' => $this->tenantId,
+    'project_id' => $ctx['project_id'],
+    'rfq_number' => $ctx['rfq_number'],
+    'title' => $ctx['title'],
+    // ... 20+ fields manually typed
+    'created_at' => $this->now,
+    'updated_at' => $this->now,
+]);
+Factory Benefits for Atomy-Q
+Aspect	Current (Manual)
+Model changes	Update seeder + all test calls
+Test isolation	Needs full migrate:fresh --seed
+State variants	Copy-paste logic
+Relationships	Manual ID tracking
+Test data	56 RFQs seeded always
+Recommended Approach
+Phase 1: Core Domain Models (highest test churn)
+- RfqFactory with states: draft, published, closed, awarded
+- QuoteSubmissionFactory with states: uploaded, extracting, ready, failed
+- ProjectFactory, VendorFactory, UserFactory (extend existing)
+Phase 2: Supporting Entities
+- RfqLineItemFactory, VendorInvitationFactory
+- ComparisonRunFactory, ApprovalFactory
+Phase 3: The Seeder Refactor
+// After factories exist, seeder becomes ~100 lines
+public function run(): void
+{
+    $tenant = Tenant::factory()->create();
+    $users = User::factory()->count(8)->for($tenant)->create();
+    $projects = Project::factory()->count(12)->for($tenant)->create();
+    
+    // ... relationships auto-handled
+    Rfq::factory()
+        ->for($tenant)
+        ->for($projects->random())
+        ->awarded()
+        ->hasQuotes(3)
+        ->create();
+}
+Trade-off Consideration
+Cost: ~2-3 days to create 40+ factories  
+Benefit: Immediate TDD enablement + reduced test suite runtime (no full seed for unit tests) + DRY model definitions
+For active development with 60+ tests, the payoff is weeks of cumulative time saved per year.
+▣  Build · Big Pickle · 32.2s
