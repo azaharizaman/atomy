@@ -84,15 +84,6 @@ export function useQuoteSubmission(quoteId: string, options?: { enabled?: boolea
     queryKey: ['quote-submissions', quoteId],
     queryFn: async (): Promise<QuoteSubmissionSummary> => {
       const data = await fetchLiveOrFail<{ data: QuoteSubmissionSummary }>(`/quote-submissions/${encodeURIComponent(quoteId)}`);
-
-      if (data === undefined) {
-        return {
-          id: quoteId,
-          status: 'ready',
-          blocking_issue_count: 0,
-          vendor_name: 'Vendor',
-        };
-      }
       return normalizeQuoteSubmission(data);
     },
     enabled,

@@ -262,41 +262,10 @@ async function buildAwardCreatePayload(input: { rfqId: string; comparisonRunId: 
 
 export function useAward(rfqId: string) {
   const qc = useQueryClient();
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
   const query = useQuery({
     queryKey: ['awards', rfqId],
     queryFn: async (): Promise<AwardRecord[]> => {
-      if (useMocks) {
-        const { getSeedAwardByRfqId } = await import('@/data/seed');
-        const seed = getSeedAwardByRfqId(rfqId);
-        if (!seed) return [];
-        return [
-          {
-            id: `seed-award-${seed.rfqId}`,
-            rfq_id: rfqId,
-            vendor_id: seed.winnerVendorId,
-            vendor_name: seed.winnerVendorName,
-            status: 'signed_off',
-            amount: seed.amount ?? null,
-            currency: 'USD',
-            split_details: [],
-            protest_id: null,
-            signoff_at: null,
-            signed_off_by: null,
-            comparison: {
-              vendors: [
-                {
-                  vendor_id: seed.winnerVendorId,
-                  vendor_name: seed.winnerVendorName,
-                  quote_submission_id: null,
-                },
-              ],
-            },
-          },
-        ];
-      }
-
       const data = await fetchLiveOrFail<{ data: AwardRecord[] }>('/awards', { params: { rfq_id: rfqId } });
 
       if (data === undefined) {

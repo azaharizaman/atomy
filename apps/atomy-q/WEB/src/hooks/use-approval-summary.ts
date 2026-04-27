@@ -4,8 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchLiveOrFail } from '@/lib/api-live';
 import { isObject, toText, unwrapResponse } from '@/hooks/normalize-utils';
 
-const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
 export interface ApprovalSummary {
   featureKey: string;
   available: boolean;
@@ -53,7 +51,7 @@ function normalizeApprovalSummaryPayload(payload: unknown): ApprovalSummary {
 export function useApprovalSummary(approvalId: string, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ['approval-summary', approvalId],
-    enabled: Boolean(approvalId) && options?.enabled !== false && !useMocks,
+    enabled: Boolean(approvalId) && options?.enabled !== false,
     queryFn: async (): Promise<ApprovalSummary> => {
       const data = await fetchLiveOrFail(`/approvals/${encodeURIComponent(approvalId)}/summary`);
       if (data === undefined) {

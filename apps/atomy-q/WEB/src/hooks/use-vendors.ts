@@ -364,12 +364,10 @@ async function invokeVendorIndex(filters: VendorListFilters): Promise<VendorList
 }
 
 export function useVendors(filters: VendorListFilters = {}) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
   const queryKey = buildVendorListQueryKey(filters);
 
   return useQuery({
     queryKey,
-    enabled: !useMocks,
     queryFn: async (): Promise<VendorListResult> => invokeVendorIndex(filters),
   });
 }

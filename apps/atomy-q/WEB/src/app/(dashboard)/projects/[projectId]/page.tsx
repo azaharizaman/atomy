@@ -44,7 +44,6 @@ export default function ProjectDetailPage() {
   const [editEndDate, setEditEndDate] = React.useState('');
   const [editPmId, setEditPmId] = React.useState('');
   const authUser = useAuthStore((state) => state.user);
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
   const { data: project, isLoading: projectLoading, error: projectError } = useProject(projectId, {
     enabled: projectsQueryEnabled,
@@ -62,23 +61,8 @@ export default function ProjectDetailPage() {
   const { data: aclData, isLoading: aclLoading, isError: aclIsError, error: aclError } = useProjectAcl(projectId, {
     enabled: projectsQueryEnabled,
   });
-  const { data: usersData } = useUsers();
+  const { data: usersData, isLoading: usersLoading } = useUsers();
   const userOptions = React.useMemo(() => usersData?.items ?? [], [usersData?.items]);
-  const managerOptions = React.useMemo(() => {
-    if (userOptions.length > 0) return userOptions;
-    if (!useMocks || authUser == null) return [];
-    return [
-      {
-        id: authUser.id,
-        name: authUser.name,
-        email: authUser.email,
-        status: 'active',
-        role: authUser.role,
-        createdAt: null,
-        lastLoginAt: null,
-      },
-    ];
-  }, [authUser, userOptions, useMocks]);
   const acl = aclData ?? EMPTY_PROJECT_ACL;
   const updateProject = useUpdateProject(projectId);
   const updateStatus = useUpdateProjectStatus(projectId);
@@ -97,28 +81,18 @@ export default function ProjectDetailPage() {
   }, [project, editMode]);
 
   React.useEffect(() => {
-    if (!editMode) {
+    if (!editMode || usersLoading || userOptions.length === 0) {
       return;
     }
 
-    const currentSelectionExists = editPmId !== '' && managerOptions.some((user) => user.id === editPmId);
-    if (currentSelectionExists) {
-      return;
+    // Only auto-set if currently empty and we have a valid auth user in options
+    if (editPmId === '') {
+      const currentUserId = authUser?.id ?? '';
+      if (currentUserId !== '' && userOptions.some((user) => user.id === currentUserId)) {
+        setEditPmId(currentUserId);
+      }
     }
-
-    const currentUserId = authUser?.id ?? '';
-    if (currentUserId !== '' && managerOptions.some((user) => user.id === currentUserId)) {
-      setEditPmId(currentUserId);
-      return;
-    }
-
-    if (managerOptions.length > 0) {
-      setEditPmId(managerOptions[0].id);
-      return;
-    }
-
-    setEditPmId('');
-  }, [authUser?.id, editMode, editPmId, managerOptions]);
+  }, [authUser?.id, editMode, editPmId, userOptions, usersLoading]);
 
   const aclSyncKey = React.useMemo(
     () => acl.map((e) => `${e.userId}:${e.role}`).join('|'),
@@ -288,11 +262,16 @@ export default function ProjectDetailPage() {
                 <option value="" disabled>
                   Select a user
                 </option>
-                {managerOptions.map((user) => (
+                {userOptions.map((user) => (
                   <option key={user.id} value={user.id}>
                     {user.name ?? user.email} ({user.email})
                   </option>
                 ))}
+                {editPmId !== '' && !userOptions.some((u) => u.id === editPmId) && (
+                  <option value={editPmId}>
+                    {project.projectManagerId === editPmId ? (project as any).projectManagerName || 'Current Manager' : 'Unknown User'} ({editPmId})
+                  </option>
+                )}
               </select>
             </div>
             <div className="flex gap-2">

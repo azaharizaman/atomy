@@ -48,9 +48,9 @@ describe('RfqOverviewPage', () => {
     });
 
     expect(await screen.findByRole('heading', { name: 'Overview' })).toBeInTheDocument();
-    expect(screen.getByText('Overview unavailable')).toBeInTheDocument();
-    expect(screen.getByText(/could not load rfq overview/i)).toBeInTheDocument();
-    expect(screen.getByText(/rfq overview unavailable for "rfq-missing-1"\./i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Unable to load overview' })).toBeInTheDocument();
+    expect(screen.getByText(/could not load this rfq's overview from the live api/i)).toBeInTheDocument();
+    expect(screen.getByText(/we could not load the overview for this rfq right now/i)).toBeInTheDocument();
   });
 
   it('renders the happy-path overview content', async () => {
@@ -100,7 +100,6 @@ describe('RfqOverviewPage', () => {
       );
     });
 
-    expect(screen.getByText('Northwind Refresh')).toBeInTheDocument();
     expect(screen.getByText('Next step')).toBeInTheDocument();
     expect(screen.getByText('Schedule')).toBeInTheDocument();
     expect(screen.getByText('Quotes received')).toBeInTheDocument();

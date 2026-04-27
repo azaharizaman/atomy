@@ -19,20 +19,6 @@ export interface RfqLineItemRow {
   sort_order: number;
 }
 
-interface SeedLineItem {
-  id: string;
-  rfqId: string;
-  rowType: 'heading' | 'line';
-  section: string | null;
-  description: string;
-  quantity: number;
-  uom: string;
-  unitPrice: number;
-  currency: string;
-  specifications: string | null;
-  sortOrder: number;
-}
-
 function toRequiredNumber(value: unknown, fieldName: string): number {
   if (value === null || value === undefined) {
     throw new Error(`RFQ line item is missing ${fieldName}.`);
@@ -108,37 +94,10 @@ function normalizeLineItems(payload: unknown): RfqLineItemRow[] {
   });
 }
 
-function mapSeedLineItems(items: SeedLineItem[]): RfqLineItemRow[] {
-  return items.map((item) => ({
-    id: item.id,
-    rfq_id: item.rfqId,
-    rowType: item.rowType,
-    section: item.section,
-    description: item.description,
-    quantity: item.quantity,
-    uom: item.uom,
-    unit_price: item.unitPrice,
-    currency: item.currency,
-    specifications: item.specifications,
-    sort_order: item.sortOrder,
-  }));
-}
-
 export function useRfqLineItems(rfqId: string) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
-  const mockQuery = useQuery({
-    queryKey: ['rfqs', rfqId, 'line-items', 'mock'],
-    enabled: useMocks && Boolean(rfqId),
-    queryFn: async () => {
-      const { getSeedLineItemsByRfqId } = await import('@/data/seed');
-      return mapSeedLineItems(getSeedLineItemsByRfqId(rfqId));
-    },
-  });
-
-  const liveQuery = useQuery({
+  return useQuery({
     queryKey: ['rfqs', rfqId, 'line-items'],
-    enabled: !useMocks && Boolean(rfqId),
+    enabled: Boolean(rfqId),
     queryFn: async () => {
       const data = await fetchLiveOrFail<{ data: RfqLineItemRow[] }>(`/rfqs/${encodeURIComponent(rfqId)}/line-items`);
 
@@ -149,6 +108,4 @@ export function useRfqLineItems(rfqId: string) {
       return normalizeLineItems(data);
     },
   });
-
-  return useMocks ? mockQuery : liveQuery;
 }

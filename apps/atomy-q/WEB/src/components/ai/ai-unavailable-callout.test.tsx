@@ -30,13 +30,4 @@ describe('AiUnavailableCallout', () => {
     expect(screen.getByText('ai.vendor.summary.blocked')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Review manually' })).toBeInTheDocument();
   });
-
-  it('renders mapped copy for mock mode status', () => {
-    render(<AiUnavailableCallout messageKey="ai.status.mock_mode" />);
-
-    expect(
-      screen.getByText('AI is running in deterministic mock mode. Use the manual path for AI-assisted workflows.'),
-    ).toBeInTheDocument();
-    expect(screen.getByText('ai.status.mock_mode')).toBeInTheDocument();
-  });
 });

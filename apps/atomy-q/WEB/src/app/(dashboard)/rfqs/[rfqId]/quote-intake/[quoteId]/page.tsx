@@ -8,11 +8,8 @@ import { RecordHeader } from '@/components/ds/RecordHeader';
 import { ConfidenceBadge } from '@/components/ds/Badge';
 import { SecondaryTabs } from '@/components/ds/Tabs';
 import { useAiStatus } from '@/hooks/use-ai-status';
-import { useRfq } from '@/hooks/use-rfq';
 import { useQuoteSubmission } from '@/hooks/use-quote-submission';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
-
-const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
 export default function QuoteIntakeDetailPage({
   params,
@@ -22,7 +19,6 @@ export default function QuoteIntakeDetailPage({
   const router = useRouter();
   const { rfqId, quoteId } = React.use(params);
   const aiStatus = useAiStatus();
-  const { data: rfq } = useRfq(rfqId);
   const { data: submission } = useQuoteSubmission(quoteId);
   const [activeTab, setActiveTab] = React.useState('overview');
   const blockingCount = submission?.blocking_issue_count ?? 0;
@@ -40,9 +36,8 @@ export default function QuoteIntakeDetailPage({
   const uploadedAt = submission?.submitted_at ?? null;
   const statusLabel = submission?.status === 'ready' ? 'Ready' : submission?.status === 'needs_review' ? 'Needs review' : submission?.status ?? 'Uploaded';
   const statusBadge = submission?.status === 'ready' ? 'approved' : submission?.status === 'needs_review' ? 'pending' : submission?.status === 'failed' ? 'error' : 'processing';
-  const showExtractionUnavailable =
-    !useMocks && aiStatus.shouldShowUnavailableMessage('quote_document_extraction');
-  const hideExtractionControls = !useMocks && aiStatus.shouldHideAiControls('quote_document_extraction');
+  const showExtractionUnavailable = aiStatus.shouldShowUnavailableMessage('quote_document_extraction');
+  const hideExtractionControls = aiStatus.shouldHideAiControls('quote_document_extraction');
 
   const validationItems = [
     { label: 'Line count match', pass: true },
@@ -53,7 +48,7 @@ export default function QuoteIntakeDetailPage({
 
   return (
     <div className="space-y-5">
-      {!useMocks && blockingCount > 0 && (
+      {blockingCount > 0 && (
         <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
           <span className="font-semibold">Blocking issues:</span> {blockingCount} — resolve in normalize before comparison freeze.
         </div>

@@ -30,12 +30,11 @@ async function invokeVendorShow(vendorId: string) {
 }
 
 export function useVendor(vendorId: string) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
   const normalizedVendorId = vendorId.trim();
 
   return useQuery({
     queryKey: ['vendors', normalizedVendorId],
-    enabled: !useMocks && normalizedVendorId !== '',
+    enabled: normalizedVendorId !== '',
     queryFn: async () => invokeVendorShow(normalizedVendorId),
   });
 }

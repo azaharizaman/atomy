@@ -88,11 +88,9 @@ export function normalizeRequisitionVendorSelectionPayload(payload: unknown): Re
 }
 
 export function useRequisitionVendorSelection(rfqId: string) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
   return useQuery({
     queryKey: ['rfqs', rfqId, 'selected-vendors'],
-    enabled: !useMocks && Boolean(rfqId),
+    enabled: Boolean(rfqId),
     queryFn: async (): Promise<RequisitionVendorSelectionRow[]> => {
       const data = await fetchLiveOrFail<unknown>(
         `/rfqs/${encodeURIComponent(rfqId)}/selected-vendors`,

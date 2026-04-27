@@ -17,20 +17,10 @@ type LiveApiError = Error & {
   response?: unknown;
 };
 
-/**
- * Fetches from API in live mode, throwing a descriptive error on failure.
- * In mock mode, returns undefined to signal the caller should use seed data.
- */
 export async function fetchLiveOrFail<T>(
   endpoint: string,
   options?: FetchLiveOrFailOptions
-): Promise<T | undefined> {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
-  if (useMocks) {
-    return undefined;
-  }
-
+): Promise<T> {
   try {
     const { data } = await api.get(endpoint, options);
     return data as T;

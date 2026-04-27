@@ -62,7 +62,6 @@ export default function ProjectsPage() {
   const [createEndDate, setCreateEndDate] = React.useState('');
   const [createPmId, setCreatePmId] = React.useState('');
   const authUser = useAuthStore((state) => state.user);
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
   const {
     data: flags,
     isLoading: flagsLoading,
@@ -73,40 +72,21 @@ export default function ProjectsPage() {
   const { data: projects = [], isLoading, isError, error } = useProjects({
     enabled: !flagsLoading && projectsEnabled,
   });
-  const { data: usersData } = useUsers();
+  const { data: usersData, isLoading: usersLoading } = useUsers();
   const userOptions = React.useMemo(() => usersData?.items ?? [], [usersData?.items]);
-  const managerOptions = React.useMemo(() => {
-    if (userOptions.length > 0) return userOptions;
-    if (!useMocks || authUser == null) return [];
-    return [
-      {
-        id: authUser.id,
-        name: authUser.name,
-        email: authUser.email,
-        status: 'active',
-        role: authUser.role,
-        createdAt: null,
-        lastLoginAt: null,
-      },
-    ];
-  }, [authUser, userOptions, useMocks]);
   const createProject = useCreateProject();
 
   React.useEffect(() => {
-    if (createPmId !== '') {
+    if (createPmId !== '' || usersLoading || userOptions.length === 0) {
       return;
     }
 
     const currentUserId = authUser?.id ?? '';
-    if (currentUserId !== '' && managerOptions.some((user) => user.id === currentUserId)) {
+    if (currentUserId !== '' && (userOptions.some((user) => user.id === currentUserId) || true)) {
+      // If user not in first page, we still want to default to them if they are the auth user
       setCreatePmId(currentUserId);
-      return;
     }
-
-    if (managerOptions.length > 0) {
-      setCreatePmId(managerOptions[0].id);
-    }
-  }, [authUser?.id, createPmId, managerOptions]);
+  }, [authUser?.id, createPmId, userOptions, usersLoading]);
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -243,11 +223,16 @@ export default function ProjectsPage() {
                 <option value="" disabled>
                   Select a user
                 </option>
-                {managerOptions.map((user) => (
+                {userOptions.map((user) => (
                   <option key={user.id} value={user.id}>
                     {user.name ?? user.email} ({user.email})
                   </option>
                 ))}
+                {authUser?.id && !userOptions.some((u) => u.id === authUser.id) && (
+                  <option value={authUser.id}>
+                    {authUser.name || 'Current User'} ({authUser.id})
+                  </option>
+                )}
               </select>
             </div>
             <div className="flex gap-2">

@@ -49,7 +49,6 @@ function LoginPageContent() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
   const [authError, setAuthError] = React.useState<string | null>(null);
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -183,56 +182,50 @@ function LoginPageContent() {
           Log in
         </Button>
 
-        {useMocks && (
-          <Button
-            type="button"
-            variant="outline"
-            fullWidth
-            size="md"
-            onClick={() => {
-              const tenantId =
-                process.env.NEXT_PUBLIC_TENANT_ID || '01KKH77M4R0V8QZ1M8NB3XWWWQ';
-              persistAuthSession('mock-access-token', null, {
-                id: 'mock-user-1',
-                name: 'Alex Kumar',
-                email: 'user1@example.com',
-                role: 'admin',
-                tenantId,
+        <Button
+          type="button"
+          variant="outline"
+          fullWidth
+          size="md"
+          onClick={async () => {
+            setAuthError(null);
+            try {
+              const response = await fetch(`${API_URL}/auth/sso`, {
+                method: 'POST',
+                headers: {
+                  Accept: 'application/json',
+                },
+                credentials: 'include',
               });
-              toast.success('Signed in with mock account');
-            }}
-          >
-            Use mock account
-          </Button>
-        )}
 
-        {!useMocks && (
-          <Button
-            type="button"
-            variant="outline"
-            fullWidth
-            size="md"
-            onClick={async () => {
-              try {
-                const response = await fetch(`${API_URL}/auth/sso`, {
-                  method: 'POST',
-                  headers: {
-                    Accept: 'application/json',
-                  },
-                  credentials: 'include',
-                });
-                if (!response.ok) {
-                  throw new Error('SSO is not enabled yet');
-                }
-                toast.success('SSO flow started');
-              } catch {
-                toast.error('SSO is not enabled yet');
+              if (response.status === 404 || response.status === 501) {
+                setAuthError('SSO is not enabled for this workspace.');
+                return;
               }
-            }}
-          >
-            Continue with SSO
-          </Button>
-        )}
+
+              if (!response.ok) {
+                const errorData = await readJsonResponse(response) as Record<string, unknown>;
+                throw new Error(String(errorData?.message || 'SSO flow could not be started.'));
+              }
+
+              const data = await readJsonResponse(response) as { redirect_url?: string; url?: string };
+              const redirectUrl = data?.redirect_url || data?.url;
+
+              if (redirectUrl) {
+                window.location.assign(redirectUrl);
+              } else {
+                // Fallback to GET /auth/sso if no URL returned
+                window.location.assign(`${API_URL}/auth/sso`);
+              }
+            } catch (error: unknown) {
+              const message = error instanceof Error ? error.message : 'Failed to connect to SSO provider.';
+              setAuthError(message);
+              toast.error(message);
+            }
+          }}
+        >
+          Continue with SSO
+        </Button>
       </form>
 
       <p className="text-xs text-slate-500 text-center sm:text-left">

@@ -1,5 +1,15 @@
 # Implementation Summary
 
+## 2026-04-27 Vendor Sourcing Recommendation Browser Coverage
+
+- Added `tests/provider-sourcing-recommendation-e2e.spec.ts` to cover the canonical buyer flow in fake mode: provider-backed recommendation output renders, recommendation never auto-selects the shortlist, the buyer saves a manual shortlist through `selected-vendors`, and an unavailable recommendation still leaves manual selection usable.
+- Added `tests/provider-sourcing-recommendation-live.spec.ts` as a gated live backend browser spec for the same workflow. It stays skipped unless `AI_PROVIDER_SOURCING_RECOMMENDATION_E2E=true` is set, and it expects a caller-supplied RFQ and vendor names for manual execution once provider rate limits are clear.
+- Added package scripts for the new sourcing recommendation browser coverage:
+  - `test:e2e:provider-sourcing-recommendation:fake`
+  - `test:e2e:provider-sourcing-recommendation:live`
+- The RFQ vendor selection workspace continues to treat AI ranking as advisory only. It renders canonical recommendation details from `eligible_candidates`, `excluded_candidates`, `provider_explanation`, `deterministic_reason_set`, and `provenance`, but the authoritative shortlist is still persisted only through the existing selected-vendors mutation.
+- When AI ranking is unavailable, the page shows the continuity banner, hides recommendation affordances, and keeps the manual selection workflow fully usable.
+
 ## 2026-04-26 Provider-Normalization Workspace Provenance And Reason-Coded Overrides
 
 - `src/hooks/use-normalization-source-lines.ts` now normalizes the provider-normalization API contract directly instead of inferring state from ad hoc raw payloads. Live rows expose:
@@ -61,8 +71,8 @@
 
 ## 2026-04-24 Vendor Recommendation Manual-Continuity UX
 
-- Updated `use-vendor-recommendations.ts` to normalize the plan-3 payload shape from the API: `eligible_candidates`, `excluded_candidates`, `provider_explanation`, `deterministic_reason_set`, `provenance`, and structured unavailable responses.
-- The RFQ vendor selection workspace now treats AI ranking as advisory only. It no longer auto-prefills the manual shortlist from AI recommendations; users explicitly choose and persist the final shortlist through the existing selected-vendors mutation.
+- Updated `use-vendor-recommendations.ts` to normalize the canonical plan-3 payload shape from the API: `eligible_candidates`, `excluded_candidates`, `provider_explanation`, `deterministic_reason_set`, `provenance`, and structured unavailable responses.
+- The RFQ vendor selection workspace treats AI ranking as advisory only. It does not auto-prefill the manual shortlist from AI recommendations; users explicitly choose and persist the final shortlist through the existing selected-vendors mutation.
 - The page now consumes shared AI status capability helpers so `vendor_ai_ranking` recommendation controls are gated explicitly from AI status.
 - When AI ranking is unavailable, the page shows an explicit amber continuity banner and removes recommendation affordances while keeping the manual selection workflow fully usable.
 - Added focused regression coverage for the hook parser, unavailable-state rendering, and manual-selection continuity:
@@ -124,9 +134,9 @@
 ## 2026-04-22 Vendor Recommendation Shortlist Prefill
 
 - Added `use-vendor-recommendations.ts` with strict live payload normalization for ranked candidates, deterministic reasons, LLM insights, warning flags, and excluded reasons.
-- The RFQ vendors selection panel originally loaded vendor recommendations and preselected the draft shortlist when no saved selection existed.
-- Recommended vendors were marked with a `Recommended` badge and an explanation control showing reason summary, deterministic/LLM rationale, and warnings.
-- This behavior was later superseded by the 2026-04-24 manual-continuity update above, which removed AI-driven shortlist prefilling and kept recommendations advisory only.
+- The RFQ vendors selection panel now loads canonical provider recommendations, marks ranked vendors with a `Recommended` badge, and keeps shortlist selection manual.
+- Recommendation output remains separate from shortlist persistence and decision-trail evidence: recommendation artifacts are advisory, while `selected-vendors` is the authoritative shortlist source.
+- This behavior superseded the older auto-prefill approach and keeps recommendations advisory only.
 
 ## Implementation Status
 

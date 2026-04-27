@@ -12,6 +12,7 @@ import { ActiveRecordMenu } from '@/components/workspace/active-record-menu';
 import { RfqInsightsSidebar } from '@/components/workspace/rfq-insights-sidebar';
 import { EmptyState, SectionCard } from '@/components/ds/Card';
 import { isAlphaMode } from '@/lib/alpha-mode';
+import { getRfqRecordErrorMessage } from '@/lib/rfq-error-copy';
 import { useRfq } from '@/hooks/use-rfq';
 import { useFeatureFlags } from '@/hooks/use-feature-flags';
 import { type RfqStatus, RFQ_STATUSES } from '@/hooks/use-rfqs';
@@ -92,14 +93,14 @@ export default function RfqWorkspaceLayout({ children, params }: { children: Rea
             <div className="w-[360px] shrink-0 bg-white border-r border-slate-200 overflow-y-auto">
               <div className="px-4 pt-4 pb-4 border-b border-slate-200">
                 <div className="text-xs font-mono text-slate-400">{rfqId}</div>
-                <div className="text-sm font-semibold text-slate-900">RFQ context unavailable</div>
+                <div className="text-sm font-semibold text-slate-900">Unable to load this RFQ</div>
               </div>
               <div className="p-4">
-                <SectionCard title="Workspace context unavailable" subtitle="Mandatory RFQ shell data could not be loaded.">
+                <SectionCard title="Unable to load this RFQ" subtitle="The RFQ record could not be loaded from the live API.">
                   <EmptyState
                     icon={<AlertTriangle size={20} />}
-                    title="Could not load RFQ record"
-                    description={error instanceof Error ? error.message : 'The RFQ workspace shell could not load this record.'}
+                    title="Could not load this RFQ"
+                    description={getRfqRecordErrorMessage(error)}
                   />
                 </SectionCard>
               </div>
@@ -111,11 +112,11 @@ export default function RfqWorkspaceLayout({ children, params }: { children: Rea
                 <div className="p-6 flex-1">
                   <div className="max-w-7xl mx-auto space-y-6">
                     {!isLoading && !record && isError && (
-                      <SectionCard title="RFQ workspace unavailable" subtitle="Mandatory RFQ context failed to load.">
+                      <SectionCard title="Unable to load this RFQ" subtitle="The RFQ record could not be loaded from the live API.">
                         <EmptyState
                           icon={<AlertTriangle size={20} />}
-                          title="Could not load RFQ workspace context"
-                          description={error instanceof Error ? error.message : 'The workspace shell could not load the RFQ record.'}
+                          title="Could not load this RFQ"
+                          description={getRfqRecordErrorMessage(error)}
                         />
                       </SectionCard>
                     )}

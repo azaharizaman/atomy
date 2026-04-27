@@ -71,6 +71,8 @@ use App\Services\Task\AtomyTaskQuery;
 use Nexus\Adapter\Laravel\Vendor\Repositories\EloquentVendorRepository;
 use App\Services\Tenant\RequestTenantContext;
 use App\OpenApi\IdempotencyErrorCodesDocumentTransformer;
+use App\Services\QuoteIntake\DecisionTrailRecorder;
+use App\Services\QuoteIntake\DecisionTrailRecorderInterface;
 use Dedoc\Scramble\Scramble;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Support\ServiceProvider;
@@ -567,6 +569,8 @@ class AppServiceProvider extends ServiceProvider
         // Persist identity audit events (Gap 7 extension) instead of dropping them on the floor.
         $this->app->singleton(AtomyAuditLogRepository::class);
         $this->app->singleton(AuditLogRepositoryInterface::class, AtomyAuditLogRepository::class);
+
+        $this->app->singleton(DecisionTrailRecorderInterface::class, DecisionTrailRecorder::class);
     }
 
     /**

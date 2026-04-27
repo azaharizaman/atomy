@@ -55,25 +55,9 @@ function normalizeInvitationPayload(payload: unknown): RfqVendorRow[] {
 }
 
 export function useRfqVendors(rfqId: string) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
   return useQuery({
     queryKey: ['rfqs', rfqId, 'vendors'],
     queryFn: async (): Promise<RfqVendorRow[]> => {
-      if (useMocks) {
-        const { getSeedVendorsByRfqId } = await import('@/data/seed');
-        const seededPayload = {
-          data: getSeedVendorsByRfqId(rfqId).map((vendor) => ({
-            id: vendor.id,
-            vendor_id: vendor.id,
-            vendor_name: vendor.name,
-            status: vendor.status,
-            vendor_email: vendor.email,
-          })),
-        };
-        return normalizeInvitationPayload(seededPayload);
-      }
-
       const data = await fetchLiveOrFail<{ data: RfqVendorRow[] }>(`/rfqs/${encodeURIComponent(rfqId)}/invitations`);
 
       if (data === undefined) {

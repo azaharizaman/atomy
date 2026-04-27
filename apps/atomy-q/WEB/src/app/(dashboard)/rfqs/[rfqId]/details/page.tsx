@@ -42,9 +42,7 @@ function defaultsFromRfq(rfq: RfqDetail): ScheduleFormValues {
   };
 }
 
-const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
-export function RfqDetailsPageContent({ rfqId }: { rfqId: string }) {
+function RfqDetailsPageContent({ rfqId }: { rfqId: string }) {
   const { data: rfq, isLoading, isError, error } = useRfq(rfqId);
   const updateRfq = useUpdateRfq(rfqId);
   const [isEditing, setIsEditing] = React.useState(false);
@@ -82,10 +80,6 @@ export function RfqDetailsPageContent({ rfqId }: { rfqId: string }) {
   }, [rfq, isEditing, form]);
 
   const onSubmit = form.handleSubmit(async (values) => {
-    if (useMocks) {
-      toast.error('Turn off NEXT_PUBLIC_USE_MOCKS to save changes to the API.');
-      return;
-    }
     try {
       await updateRfq.mutateAsync({
         title: values.title.trim(),
@@ -187,13 +181,6 @@ export function RfqDetailsPageContent({ rfqId }: { rfqId: string }) {
       <StickyPageActions active={isEditing} targetRef={headerActionsRef}>
         {renderHeaderActions()}
       </StickyPageActions>
-
-      {useMocks && (
-        <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
-          Mock data is on: schedule fields load from seed, but <strong>Save</strong> needs a live API (
-          <code className="text-[11px]">NEXT_PUBLIC_USE_MOCKS=false</code>).
-        </p>
-      )}
 
       {!isEditing ? (
         <>

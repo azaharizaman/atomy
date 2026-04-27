@@ -59,25 +59,25 @@ export function useRfqNavCounts() {
   return useQuery({
     queryKey: ['rfqs', 'counts'],
     queryFn: async (): Promise<RfqNavCounts> => {
-      const data = await fetchLiveOrFail<{ data?: Partial<RfqNavCounts> }>('/rfqs/counts');
-
-      if (data === undefined) {
+      try {
+        const data = await fetchLiveOrFail<{ data?: Partial<RfqNavCounts> }>('/rfqs/counts');
+        const d = data?.data;
+        const published = parseCount(d?.published) ?? 0;
+        const cancelled = parseCount(d?.cancelled) ?? 0;
+        return {
+          draft: parseCount(d?.draft) ?? 0,
+          published,
+          closed: parseCount(d?.closed) ?? 0,
+          awarded: parseCount(d?.awarded) ?? 0,
+          cancelled,
+          active: parseCount(d?.active) ?? published,
+          pending: parseCount(d?.pending) ?? 0,
+          archived: parseCount(d?.archived) ?? cancelled,
+        };
+      } catch (e) {
+        console.error('Failed to load RFQ counts:', e);
         return { ...emptyCounts };
       }
-
-      const d = data?.data;
-      const published = parseCount(d?.published) ?? 0;
-      const cancelled = parseCount(d?.cancelled) ?? 0;
-      return {
-        draft: parseCount(d?.draft) ?? 0,
-        published,
-        closed: parseCount(d?.closed) ?? 0,
-        awarded: parseCount(d?.awarded) ?? 0,
-        cancelled,
-        active: parseCount(d?.active) ?? published,
-        pending: parseCount(d?.pending) ?? 0,
-        archived: parseCount(d?.archived) ?? cancelled,
-      };
     },
   });
 }

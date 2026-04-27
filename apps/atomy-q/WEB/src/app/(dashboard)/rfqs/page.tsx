@@ -33,7 +33,6 @@ function OwnerCell({ name }: { name: string }) {
 
 export default function RfqsPage() {
   const router = useRouter();
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
   const [q, setQ] = React.useState('');
   const [status, setStatus] = React.useState('');
   const [owner, setOwner] = React.useState('');
@@ -64,9 +63,13 @@ export default function RfqsPage() {
   const visibleRows = data?.items ?? [];
   const totalPages = data?.meta?.total_pages ?? 1;
   const totalItems = data?.meta?.total ?? visibleRows.length;
-  const bulkActions = getRfqBulkActionLabels(useMocks).map((label) => ({
+  const bulkActions = getRfqBulkActionLabels().map((label) => ({
     label,
-    onClick: (_ids: Array<string | number>) => { /* TODO: wire live bulk mutations */ },
+    onClick: (_ids: Array<string | number>) => {
+      import('sonner').then(({ toast }) => {
+        toast.info(`${label} coming soon`);
+      });
+    },
   }));
 
   const activeFilters = [

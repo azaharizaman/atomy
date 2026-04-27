@@ -1,39 +1,55 @@
-import { afterAll, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { createTestWrapper } from '@/test/utils';
-
 import { useRfqs } from '@/hooks/use-rfqs';
 
-const originalMocks = process.env.NEXT_PUBLIC_USE_MOCKS;
-process.env.NEXT_PUBLIC_USE_MOCKS = 'true';
+const getMock = vi.hoisted(() => vi.fn());
 
-describe('useRfqs (seed fallback)', () => {
-  afterAll(() => {
-    if (originalMocks === undefined) {
-      delete process.env.NEXT_PUBLIC_USE_MOCKS;
-    } else {
-      process.env.NEXT_PUBLIC_USE_MOCKS = originalMocks;
-    }
+vi.mock('@/lib/api', () => ({
+  api: {
+    get: getMock,
+  },
+}));
+
+describe('useRfqs (live-only)', () => {
+  beforeEach(() => {
+    getMock.mockReset();
   });
 
-  it('filters by projectId when provided', async () => {
+  it('fetches live RFQs', async () => {
+    getMock.mockResolvedValueOnce({
+      data: {
+        data: [
+          {
+            id: 'rfq-1',
+            title: 'Live RFQ',
+            status: 'active',
+            project_id: 'project-1',
+          },
+        ],
+        meta: {
+          current_page: 1,
+          per_page: 20,
+          total: 1,
+          total_pages: 1,
+        },
+      },
+    });
+
     const { Wrapper } = createTestWrapper();
-    const { result } = renderHook(() => useRfqs({ projectId: '01JNE4ZHT9S0VQ7E2GQW1QYJ7B' }), { wrapper: Wrapper });
 
-    await waitFor(() => expect(result.current.isError || result.current.isSuccess).toBe(true));
-    if (result.current.isError) throw result.current.error;
-    const items = result.current.data?.items ?? [];
-    expect(items.length).toBeGreaterThan(0);
-    expect(items.every((x) => x.projectId === '01JNE4ZHT9S0VQ7E2GQW1QYJ7B')).toBe(true);
-  });
+    const { result } = renderHook(() => useRfqs({ projectId: 'project-1' }), { wrapper: Wrapper });
 
-  it('returns empty list when projectId matches none', async () => {
-    const { Wrapper } = createTestWrapper();
-    const { result } = renderHook(() => useRfqs({ projectId: 'no-such-project' }), { wrapper: Wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    await waitFor(() => expect(result.current.isError || result.current.isSuccess).toBe(true));
-    if (result.current.isError) throw result.current.error;
-    expect(result.current.data?.items).toEqual([]);
+    expect(getMock).toHaveBeenCalledTimes(1);
+    expect(getMock.mock.calls[0][0]).toBe('/rfqs');
+    expect(getMock.mock.calls[0][1]).toEqual({
+      params: {
+        project_id: 'project-1',
+      },
+    });
+    expect(result.current.data?.items).toHaveLength(1);
+    expect(result.current.data?.items[0]?.id).toBe('rfq-1');
   });
 });
-

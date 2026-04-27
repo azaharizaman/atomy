@@ -18,8 +18,6 @@ import { useComparisonRunMatrix } from '@/hooks/use-comparison-run-matrix';
 import { useComparisonRuns } from '@/hooks/use-comparison-runs';
 import { useRfq } from '@/hooks/use-rfq';
 
-const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
 function JsonBlock({ title, value }: { title: string; value: Record<string, unknown> }) {
   return (
     <div className="space-y-2">
@@ -98,12 +96,12 @@ function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
   const showAwardGuidanceUnavailable = aiStatus.shouldShowUnavailableMessage('award_ai_guidance');
   const hideAwardGuidance = aiStatus.shouldHideAiControls('award_ai_guidance');
   const awardGuidanceQuery = useAwardGuidance(displayAward?.id ?? '', {
-    enabled: Boolean(displayAward?.id) && !useMocks,
+    enabled: Boolean(displayAward?.id),
   });
   const awardGuidance = awardGuidanceQuery.data ?? null;
   const awardGuidancePayload = awardGuidance?.payload ?? null;
   const debriefDraftQuery = useAwardDebriefDraft(displayAward?.id ?? '', selectedDraftVendorId, {
-    enabled: Boolean(displayAward?.id) && Boolean(selectedDraftVendorId) && !useMocks,
+    enabled: Boolean(displayAward?.id) && Boolean(selectedDraftVendorId),
   });
   const debriefDraft = debriefDraftQuery.data ?? null;
   const debriefDraftPayload = debriefDraft?.payload ?? null;
@@ -250,7 +248,7 @@ function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
                 <Button
                   size="sm"
                   variant="primary"
-                  disabled={selectedVendorId === '' || store.isPending || useMocks || isFinalEvidenceLoading}
+                  disabled={selectedVendorId === '' || store.isPending || isFinalEvidenceLoading}
                   onClick={() => {
                     if (selectedVendorId !== '') {
                       setAwardError('');
@@ -279,7 +277,7 @@ function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
               <Button
                 size="sm"
                 variant="primary"
-                disabled={!displayAward || displayAward.status === 'signed_off' || signoff.isPending || useMocks}
+                disabled={!displayAward || displayAward.status === 'signed_off' || signoff.isPending}
                 onClick={() => {
                   if (displayAward) {
                     setSignoffError('');
@@ -413,7 +411,7 @@ function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
                       <Button
                         size="xs"
                         variant="outline"
-                        disabled={!displayAward || vendor.vendor_id === '' || useMocks}
+                        disabled={!displayAward || vendor.vendor_id === ''}
                         onClick={() => setSelectedDraftVendorId(vendor.vendor_id)}
                       >
                         Review AI draft
@@ -421,13 +419,7 @@ function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
                       <Button
                         size="xs"
                         variant="ghost"
-                        disabled={
-                          !displayAward ||
-                          vendor.vendor_id === '' ||
-                          debrief.isPending ||
-                          useMocks ||
-                          debriefMessage.trim() === ''
-                        }
+                        disabled={!displayAward || vendor.vendor_id === '' || debrief.isPending || debriefMessage.trim() === ''}
                         onClick={() => {
                           const message = debriefMessage.trim();
                           if (displayAward && vendor.vendor_id && message !== '') {

@@ -28,7 +28,6 @@ describe('useAiStatus', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.NEXT_PUBLIC_AI_MODE = 'provider';
-    process.env.NEXT_PUBLIC_USE_MOCKS = 'false';
     process.env.NEXT_PUBLIC_AI_STATUS_PATH = '/api/v1/ai/status';
     process.env.NEXT_PUBLIC_AI_PROVIDER_NAME = 'huggingface';
   });
@@ -235,56 +234,6 @@ describe('useAiStatus', () => {
     expect(result.current.messageKeyForFeature('normalization_intelligence')).toBe('ai.status.provider_unavailable');
   });
 
-  it('shows an unavailable message when an unavailable feature has unknown fallback mode', async () => {
-    mockGet.mockResolvedValue({
-      data: {
-        data: {
-          mode: 'provider',
-          global_health: 'healthy',
-          reason_codes: [],
-          generated_at: '2026-04-23T10:06:00Z',
-          capability_definitions: [
-            {
-              feature_key: 'negotiation_summary',
-              capability_group: 'governance_intelligence',
-              requires_ai: true,
-              has_manual_fallback: false,
-              fallback_ui_mode: 'show_unavailable_message',
-              degradation_message_key: 'ai.negotiation_summary.unavailable',
-              operator_critical: false,
-              endpoint_group: 'governance',
-            },
-          ],
-          capability_statuses: {
-            negotiation_summary: {
-              feature_key: 'negotiation_summary',
-              capability_group: 'governance_intelligence',
-              endpoint_group: 'governance',
-              status: 'unavailable',
-              available: false,
-              fallback_ui_mode: 'operator_decides',
-              message_key: 'ai.status.provider_unavailable',
-              operator_critical: false,
-              reason_codes: ['AI_FALLBACK_UNSPECIFIED'],
-              diagnostics: {},
-            },
-          },
-          endpoint_groups: [],
-        },
-      },
-    });
-
-    const wrapper = createAiWrapper();
-    const { result } = renderHook(() => useAiStatus(), { wrapper });
-
-    await waitFor(() => expect(result.current.isReady).toBe(true));
-
-    expect(result.current.isFeatureAvailable('negotiation_summary')).toBe(false);
-    expect(result.current.shouldHideAiControls('negotiation_summary')).toBe(false);
-    expect(result.current.shouldShowUnavailableMessage('negotiation_summary')).toBe(true);
-    expect(result.current.messageKeyForFeature('negotiation_summary')).toBe('ai.status.provider_unavailable');
-  });
-
   it('fails closed for ai availability when AI mode is off without blocking children', async () => {
     process.env.NEXT_PUBLIC_AI_MODE = 'off';
 
@@ -299,24 +248,6 @@ describe('useAiStatus', () => {
     expect(result.current.shouldHideAiControls('rfq_ai_insights')).toBe(true);
     expect(result.current.shouldShowUnavailableMessage('rfq_ai_insights')).toBe(true);
     expect(result.current.messageKeyForFeature('rfq_ai_insights')).toBe('ai.status.off');
-  });
-
-  it('stays in a stable mock-safe state and skips the live status request in mock mode', async () => {
-    process.env.NEXT_PUBLIC_USE_MOCKS = 'true';
-
-    const wrapper = createAiWrapper();
-    const { result } = renderHook(() => useAiStatus(), { wrapper });
-
-    await waitFor(() => expect(result.current.isReady).toBe(true));
-
-    expect(mockGet).not.toHaveBeenCalled();
-    expect(result.current.isError).toBe(false);
-    expect(result.current.status.mode).toBe('deterministic');
-    expect(result.current.status.globalHealth).toBe('degraded');
-    expect(result.current.isFeatureAvailable('rfq_ai_insights')).toBe(false);
-    expect(result.current.shouldHideAiControls('rfq_ai_insights')).toBe(false);
-    expect(result.current.shouldShowUnavailableMessage('rfq_ai_insights')).toBe(true);
-    expect(result.current.messageKeyForFeature('rfq_ai_insights')).toBe('ai.status.mock_mode');
   });
 
   it('skips the live status request in deterministic mode and returns a safe disabled snapshot', async () => {

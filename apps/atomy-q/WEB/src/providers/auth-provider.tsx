@@ -13,10 +13,6 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
       if (isAuthenticated && !token) {
         if (!refreshToken) {
           setLoading(false);
-          // Mock / dev login persists user + isAuthenticated but not access token; allow session after full page load.
-          if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true' && user) {
-            return;
-          }
           logout();
           return;
         }

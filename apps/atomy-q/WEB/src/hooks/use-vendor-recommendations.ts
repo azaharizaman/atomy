@@ -35,8 +35,6 @@ export interface VendorRecommendationResult {
   providerExplanation: string | null;
   deterministicReasonSet: string[];
   provenance: Record<string, unknown> | null;
-  candidates: VendorRecommendationCandidate[];
-  excludedReasons: VendorRecommendationExcludedReason[];
 }
 
 interface VendorRecommendationFallbackContext {
@@ -103,28 +101,26 @@ function normalizeCandidate(row: unknown, index: number): VendorRecommendationCa
   const context = `Invalid vendor recommendation candidate at index ${index}`;
 
   return {
-    vendorId: requireText(pickField(row, 'vendor_id', 'vendorId'), 'vendor_id', context),
-    vendorName: requireText(pickField(row, 'vendor_name', 'vendorName'), 'vendor_name', context),
-    fitScore: requireNumber(pickField(row, 'fit_score', 'fitScore'), 'fit_score', context),
-    confidenceBand: requireText(pickField(row, 'confidence_band', 'confidenceBand'), 'confidence_band', context),
+    vendorId: requireText(pickField(row, 'vendor_id'), 'vendor_id', context),
+    vendorName: requireText(pickField(row, 'vendor_name'), 'vendor_name', context),
+    fitScore: requireNumber(pickField(row, 'fit_score'), 'fit_score', context),
+    confidenceBand: requireText(pickField(row, 'confidence_band'), 'confidence_band', context),
     recommendedReasonSummary: requireText(
       pickField(
         row,
         'provider_explanation',
-        'providerExplanation',
         'recommended_reason_summary',
-        'recommendedReasonSummary',
       ),
       'provider_explanation',
       context,
     ),
     deterministicReasons: stringList(
-      pickField(row, 'deterministic_reasons', 'deterministicReasons'),
+      pickField(row, 'deterministic_reasons'),
       'deterministic_reasons',
       context,
     ),
-    llmInsights: stringList(pickField(row, 'llm_insights', 'llmInsights'), 'llm_insights', context),
-    warningFlags: stringList(pickField(row, 'warning_flags', 'warningFlags'), 'warning_flags', context),
+    llmInsights: stringList(pickField(row, 'llm_insights'), 'llm_insights', context),
+    warningFlags: stringList(pickField(row, 'warning_flags'), 'warning_flags', context),
     warnings: stringList(pickField(row, 'warnings'), 'warnings', context),
   };
 }
@@ -138,8 +134,8 @@ function normalizeExcluded(row: unknown, index: number): VendorRecommendationExc
   const status = optionalText(pickField(row, 'status'));
 
   return {
-    vendorId: requireText(pickField(row, 'vendor_id', 'vendorId'), 'vendor_id', context),
-    vendorName: requireText(pickField(row, 'vendor_name', 'vendorName'), 'vendor_name', context),
+    vendorId: requireText(pickField(row, 'vendor_id'), 'vendor_id', context),
+    vendorName: requireText(pickField(row, 'vendor_name'), 'vendor_name', context),
     reason: requireText(pickField(row, 'reason'), 'reason', context),
     status,
   };
@@ -216,27 +212,25 @@ export function normalizeVendorRecommendationPayload(
   const error = pickField(source, 'error');
   const payloadObject = isObject(error) ? error : source;
   const eligibleCandidates = normalizeResultList(
-    pickField(payloadObject, 'eligible_candidates', 'eligibleCandidates', 'candidates'),
+    pickField(payloadObject, 'eligible_candidates'),
     normalizeCandidate,
   );
-  const excludedCandidates = normalizeExcludedList(
-    pickField(payloadObject, 'excluded_candidates', 'excludedCandidates', 'excluded_reasons', 'excludedReasons'),
-  );
+  const excludedCandidates = normalizeExcludedList(pickField(payloadObject, 'excluded_candidates'));
   const providerExplanation =
-    optionalText(pickField(payloadObject, 'provider_explanation', 'providerExplanation')) ??
+    optionalText(pickField(payloadObject, 'provider_explanation')) ??
     optionalText(isObject(error) ? pickField(error, 'message') : undefined) ??
     optionalText(envelope ? pickField(envelope, 'message') : undefined);
 
   const deterministicReasonSet = stringList(
-    pickField(payloadObject, 'deterministic_reason_set', 'deterministicReasonSet', 'deterministic_reasons'),
+    pickField(payloadObject, 'deterministic_reason_set'),
     'deterministic_reason_set',
     'Invalid vendor recommendation payload',
   );
   const provenance = normalizeProvenance(pickField(payloadObject, 'provenance'));
 
   const tenantId =
-    optionalText(pickField(source, 'tenant_id', 'tenantId')) ?? optionalText(fallbackContext.tenantId) ?? '';
-  const rfqId = optionalText(pickField(source, 'rfq_id', 'rfqId')) ?? optionalText(fallbackContext.rfqId) ?? '';
+    optionalText(pickField(source, 'tenant_id')) ?? optionalText(fallbackContext.tenantId) ?? '';
+  const rfqId = optionalText(pickField(source, 'rfq_id')) ?? optionalText(fallbackContext.rfqId) ?? '';
 
   return {
     tenantId,
@@ -247,8 +241,6 @@ export function normalizeVendorRecommendationPayload(
     providerExplanation,
     deterministicReasonSet,
     provenance,
-    candidates: eligibleCandidates,
-    excludedReasons: excludedCandidates,
   };
 }
 
@@ -304,11 +296,9 @@ async function fetchVendorRecommendations(rfqId: string): Promise<VendorRecommen
 }
 
 export function useVendorRecommendations(rfqId: string) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
   return useQuery({
     queryKey: ['rfqs', rfqId, 'vendor-recommendations'],
-    enabled: !useMocks && Boolean(rfqId),
+    enabled: Boolean(rfqId),
     queryFn: () => fetchVendorRecommendations(rfqId),
   });
 }

@@ -242,23 +242,20 @@ async function fetchVendorGovernance(vendorId: string): Promise<VendorGovernance
 }
 
 export function useVendorGovernance(vendorId: string) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
   const normalizedVendorId = vendorId.trim();
 
   return useQuery({
     queryKey: ['vendors', normalizedVendorId, 'governance'],
-    enabled: !useMocks && normalizedVendorId !== '',
+    enabled: normalizedVendorId !== '',
     queryFn: () => fetchVendorGovernance(normalizedVendorId),
   });
 }
 
 export function useVendorGovernanceMap(vendorIds: string[]) {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
   const uniqueVendorIds = Array.from(new Set(vendorIds.map((id) => id.trim()).filter(Boolean))).sort();
   const results = useQueries({
     queries: uniqueVendorIds.map((vendorId) => ({
       queryKey: ['vendors', vendorId, 'governance'],
-      enabled: !useMocks,
       queryFn: () => fetchVendorGovernance(vendorId),
     })),
   });

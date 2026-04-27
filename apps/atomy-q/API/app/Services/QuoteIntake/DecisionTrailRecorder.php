@@ -8,7 +8,7 @@ use App\Models\DecisionTrailEntry;
 use InvalidArgumentException;
 use Illuminate\Support\Facades\DB;
 
-final readonly class DecisionTrailRecorder
+final readonly class DecisionTrailRecorder implements DecisionTrailRecorderInterface
 {
     /**
      * Append a hash-chained decision trail row for a frozen comparison snapshot.
@@ -85,9 +85,56 @@ final readonly class DecisionTrailRecorder
     }
 
     /**
+     * @param array<string, mixed> $summary Tenant-safe, machine-readable summary (counts, ids); avoid PII.
+     */
+    public function recordVendorRecommendationGenerated(
+        string $tenantId,
+        string $rfqId,
+        array $summary,
+        string $origin = 'ai_generated',
+        string $featureKey = 'vendor_recommendation',
+    ): void {
+        $this->recordAiArtifactGenerated(
+            tenantId: $tenantId,
+            rfqId: $rfqId,
+            comparisonRunId: $rfqId,
+            eventType: 'vendor_recommendation_generated',
+            summary: array_replace([
+                'artifact_kind' => 'vendor_recommendation',
+                'artifact_origin' => $origin,
+                'feature_key' => $featureKey,
+                'available' => true,
+            ], $summary),
+        );
+    }
+
+    /**
+     * @param array<string, mixed> $summary Tenant-safe, machine-readable summary (counts, ids); avoid PII.
+     */
+    public function recordBuyerShortlistReplaced(
+        string $tenantId,
+        string $rfqId,
+        array $summary,
+    ): void {
+        $this->record(
+            tenantId: $tenantId,
+            rfqId: $rfqId,
+            comparisonRunId: $rfqId,
+            eventType: 'buyer_shortlist_replaced',
+            summary: array_replace([
+                'artifact_kind' => 'buyer_shortlist',
+                'artifact_origin' => 'user_confirmed_action',
+                'feature_key' => 'requisition_selected_vendors',
+                'event_type' => 'buyer_shortlist_replaced',
+            ], $summary),
+        );
+    }
+
+    /**
      * Record one of the AI artifact events used by the RFQ sourcing chain.
      *
      * Allowed values are `comparison_ai_overlay_generated`,
+     * `vendor_recommendation_generated`,
      * `award_ai_guidance_generated:{awardId}`,
      * `award_ai_debrief_draft_generated`,
      * and `approval_ai_summary_generated:{approvalId}`.
@@ -194,14 +241,27 @@ final readonly class DecisionTrailRecorder
 
     private function isAllowedAiArtifactEventType(string $eventType): bool
     {
-        if ($eventType === 'comparison_ai_overlay_generated' || $eventType === 'award_ai_debrief_draft_generated') {
+        $exactNames = [
+            'comparison_ai_overlay_generated',
+            'award_ai_debrief_draft_generated',
+            'vendor_recommendation_generated',
+        ];
+
+        if (in_array($eventType, $exactNames, true)) {
             return true;
         }
 
-        if (preg_match('/^award_ai_guidance_generated:[^:]+$/', $eventType) === 1) {
-            return true;
+        $patterns = [
+            '/^award_ai_guidance_generated:[^:]+$/',
+            '/^approval_ai_summary_generated:[^:]+$/',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $eventType) === 1) {
+                return true;
+            }
         }
 
-        return preg_match('/^approval_ai_summary_generated:[^:]+$/', $eventType) === 1;
+        return false;
     }
 }
