@@ -21,7 +21,9 @@ final class ProjectFactory extends Factory
             'client_id' => fake()->uuid(),
             'start_date' => fake()->dateTimeBetween('now', '+1 month'),
             'end_date' => fake()->dateTimeBetween('+2 months', '+12 months'),
-            'project_manager_id' => User::factory(),
+            'project_manager_id' => function (array $attributes) {
+                return User::factory()->create(['tenant_id' => $attributes['tenant_id']])->id;
+            },
             'status' => 'active',
             'budget_type' => fake()->randomElement(['fixed', 'time_and_materials', 'cost_plus']),
             'completion_percentage' => 0.0,
@@ -64,18 +66,5 @@ final class ProjectFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'status' => 'cancelled',
         ]);
-    }
-
-    public function configure(): static
-    {
-        return $this->afterCreating(function (Project $project): void {
-            if ($project->tenant_id && !$project->project_manager_id) {
-                $project->project_manager_id = User::factory()
-                    ->for($project->tenant, 'tenant')
-                    ->create()
-                    ->getKey();
-                $project->save();
-            }
-        });
     }
 }

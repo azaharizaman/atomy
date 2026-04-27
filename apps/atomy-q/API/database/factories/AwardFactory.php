@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Database\Factories;
 
 use App\Models\Award;
-use App\Models\Rfq;
 use App\Models\ComparisonRun;
-use App\Models\Vendor;
-use App\Models\User;
+use App\Models\Rfq;
 use App\Models\Tenant;
+use App\Models\User;
+use App\Models\Vendor;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 final class AwardFactory extends Factory
 {
@@ -18,11 +19,14 @@ final class AwardFactory extends Factory
 
     public function definition(): array
     {
+        $tenant = Tenant::factory()->create();
+        $vendor = Vendor::factory()->create(['tenant_id' => $tenant->id]);
+
         return [
-            'tenant_id' => Tenant::factory(),
-            'rfq_id' => Rfq::factory(),
-            'comparison_run_id' => ComparisonRun::factory(),
-            'vendor_id' => Vendor::factory(),
+            'tenant_id' => $tenant->id,
+            'rfq_id' => Rfq::factory()->create(['tenant_id' => $tenant->id])->id,
+            'comparison_run_id' => ComparisonRun::factory()->create(['tenant_id' => $tenant->id])->id,
+            'vendor_id' => $vendor->id,
             'status' => 'pending',
             'amount' => fake()->randomFloat(2, 10000, 500000),
             'currency' => 'USD',
@@ -43,18 +47,20 @@ final class AwardFactory extends Factory
 
     public function signedOff(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'status' => 'signed_off',
-            'signoff_at' => now(),
-            'signed_off_by' => User::factory(),
-        ]);
+        return $this->state(function (array $attributes) {
+            return [
+                'status' => 'signed_off',
+                'signoff_at' => now(),
+                'signed_off_by' => User::factory()->state(['tenant_id' => $attributes['tenant_id']]),
+            ];
+        });
     }
 
     public function protested(): static
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'protested',
-            'protest_id' => fake()->uuid(),
+            'protest_id' => (string) Str::ulid(),
         ]);
     }
 

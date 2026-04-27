@@ -16,14 +16,16 @@ final class ComparisonRunFactory extends Factory
 
     public function definition(): array
     {
+        $tenant = Tenant::factory()->create();
+
         return [
-            'tenant_id' => Tenant::factory(),
-            'rfq_id' => Rfq::factory(),
+            'tenant_id' => $tenant->id,
+            'rfq_id' => Rfq::factory()->create(['tenant_id' => $tenant->id])->id,
             'name' => fake()->sentence(3),
             'description' => fake()->paragraph(),
             'idempotency_key' => fake()->uuid(),
             'is_preview' => false,
-            'created_by' => User::factory(),
+            'created_by' => User::factory()->create(['tenant_id' => $tenant->id])->id,
             'request_payload' => [],
             'matrix_payload' => [],
             'scoring_payload' => [],

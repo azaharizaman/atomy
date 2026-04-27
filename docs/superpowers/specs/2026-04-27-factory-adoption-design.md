@@ -440,3 +440,8 @@ public function run(): void
 - Factories: `database/factories/{Model}Factory.php`
 - Seeder: `database/seeders/PetrochemicalTenantSeeder.php`
 - Models: `app/Models/{Model}.php`
+- Module summaries: `app/Modules/{Module}/IMPLEMENTATION_SUMMARY.md`
+
+## Completion Criteria
+
+When behavior or public contracts change, update `IMPLEMENTATION_SUMMARY.md` in the affected module with the relevant fields (purpose, contracts, factory states, relationships).

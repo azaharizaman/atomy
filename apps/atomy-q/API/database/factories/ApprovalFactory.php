@@ -17,13 +17,15 @@ final class ApprovalFactory extends Factory
 
     public function definition(): array
     {
+        $tenant = Tenant::factory()->create();
+
         return [
-            'tenant_id' => Tenant::factory(),
-            'rfq_id' => Rfq::factory(),
-            'comparison_run_id' => ComparisonRun::factory(),
+            'tenant_id' => $tenant->id,
+            'rfq_id' => Rfq::factory()->create(['tenant_id' => $tenant->id])->id,
+            'comparison_run_id' => ComparisonRun::factory()->create(['tenant_id' => $tenant->id])->id,
             'type' => 'value_approval',
             'status' => 'pending',
-            'requested_by' => User::factory(),
+            'requested_by' => User::factory()->create(['tenant_id' => $tenant->id])->id,
             'requested_at' => now(),
             'amount' => fake()->randomFloat(2, 10000, 500000),
             'currency' => 'USD',
@@ -45,21 +47,25 @@ final class ApprovalFactory extends Factory
 
     public function approved(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'status' => 'approved',
-            'approved_at' => now(),
-            'approved_by' => User::factory(),
-        ]);
+        return $this->state(function (array $attributes) {
+            return [
+                'status' => 'approved',
+                'approved_at' => now(),
+                'approved_by' => User::factory()->state(['tenant_id' => $attributes['tenant_id']]),
+            ];
+        });
     }
 
     public function rejected(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'status' => 'rejected',
-            'approved_at' => now(),
-            'approved_by' => User::factory(),
-            'notes' => fake()->sentence(),
-        ]);
+        return $this->state(function (array $attributes) {
+            return [
+                'status' => 'rejected',
+                'approved_at' => now(),
+                'approved_by' => User::factory()->state(['tenant_id' => $attributes['tenant_id']]),
+                'notes' => fake()->sentence(),
+            ];
+        });
     }
 
     public function snoozed(): static

@@ -6,9 +6,9 @@ namespace Database\Factories;
 
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
-use App\Models\Vendor;
-use App\Models\User;
 use App\Models\Tenant;
+use App\Models\User;
+use App\Models\Vendor;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 final class QuoteSubmissionFactory extends Factory
@@ -17,12 +17,15 @@ final class QuoteSubmissionFactory extends Factory
 
     public function definition(): array
     {
+        $tenant = Tenant::factory()->create();
+        $vendor = Vendor::factory()->create(['tenant_id' => $tenant->id]);
+
         return [
-            'tenant_id' => Tenant::factory(),
-            'rfq_id' => Rfq::factory(),
-            'vendor_id' => Vendor::factory(),
-            'vendor_name' => fake()->company(),
-            'uploaded_by' => User::factory(),
+            'tenant_id' => $tenant->id,
+            'rfq_id' => Rfq::factory()->create(['tenant_id' => $tenant->id])->id,
+            'vendor_id' => $vendor->id,
+            'vendor_name' => $vendor->legal_name,
+            'uploaded_by' => User::factory()->create(['tenant_id' => $tenant->id])->id,
             'file_path' => 'quotes/' . fake()->uuid() . '.pdf',
             'file_type' => 'application/pdf',
             'original_filename' => fake()->word() . '.pdf',

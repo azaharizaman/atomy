@@ -14,7 +14,7 @@ final class TenantFactory extends Factory
     public function definition(): array
     {
         return [
-            'code' => strtoupper(fake()->unique()->bothify('????')),
+            'code' => strtoupper(fake()->unique()->bothify('??????-###')),
             'name' => fake()->company(),
             'email' => fake()->companyEmail(),
             'status' => 'pending',

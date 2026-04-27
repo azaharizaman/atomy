@@ -28,5 +28,6 @@ final class UserFactoryTest extends TestCase
         $user = User::factory()->admin()->create();
 
         $this->assertSame('admin', $user->role);
+        $this->assertSame('active', $user->status);
     }
 }
