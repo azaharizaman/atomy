@@ -87,7 +87,6 @@ final class VendorController extends Controller
 
             $vendor = new Vendor();
             $vendor->tenant_id = $this->normalizeIdentifier($tenantId);
-            $vendor->tax_id = null;
             $this->applyVendorAttributes($vendor, $validated);
             $vendor->status = VendorStatus::Draft->value;
             $vendor->save();
@@ -270,11 +269,6 @@ final class VendorController extends Controller
             'approval_record' => $approvalRecord,
             'created_at' => $vendor->created_at?->toAtomString(),
             'updated_at' => $vendor->updated_at?->toAtomString(),
-            'name' => (string) $vendor->legal_name,
-            'trading_name' => (string) $vendor->display_name,
-            'country_code' => (string) $vendor->country_of_registration,
-            'email' => (string) $vendor->primary_contact_email,
-            'phone' => $this->nullableString($vendor->primary_contact_phone),
         ];
     }
 
@@ -298,13 +292,11 @@ final class VendorController extends Controller
     {
         if (array_key_exists('legal_name', $validated)) {
             $legalName = (string) $validated['legal_name'];
-            $vendor->name = $legalName;
             $vendor->legal_name = $legalName;
         }
 
         if (array_key_exists('display_name', $validated)) {
             $displayName = (string) $validated['display_name'];
-            $vendor->trading_name = $displayName;
             $vendor->display_name = $displayName;
         }
 
@@ -314,7 +306,6 @@ final class VendorController extends Controller
 
         if (array_key_exists('country_of_registration', $validated)) {
             $countryOfRegistration = (string) $validated['country_of_registration'];
-            $vendor->country_code = $countryOfRegistration;
             $vendor->country_of_registration = $countryOfRegistration;
         }
 
@@ -324,7 +315,6 @@ final class VendorController extends Controller
 
         if (array_key_exists('primary_contact_email', $validated)) {
             $primaryContactEmail = (string) $validated['primary_contact_email'];
-            $vendor->email = $primaryContactEmail;
             $vendor->primary_contact_email = $primaryContactEmail;
         }
 
@@ -333,7 +323,6 @@ final class VendorController extends Controller
             // Preserve nulls: if incoming is null, persist null; else string
             $normalizedPhone = $phone !== null ? (string) $phone : null;
 
-            $vendor->phone = $normalizedPhone;
             $vendor->primary_contact_phone = $normalizedPhone;
         }
     }

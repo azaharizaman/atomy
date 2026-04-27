@@ -19,22 +19,17 @@ class Vendor extends Model
 
     protected $fillable = [
         'tenant_id',
-        'name',
-        'trading_name',
         'registration_number',
         'tax_id',
-        'country_code',
-        'email',
-        'phone',
-        'status',
-        'onboarded_at',
-        'metadata',
         'legal_name',
         'display_name',
         'country_of_registration',
         'primary_contact_name',
         'primary_contact_email',
         'primary_contact_phone',
+        'status',
+        'onboarded_at',
+        'metadata',
         'approved_by_user_id',
         'approved_at',
         'approval_note',
@@ -48,25 +43,6 @@ class Vendor extends Model
         'updated_at' => 'datetime',
     ];
 
-    protected static function booted(): void
-    {
-        static::creating(function (self $vendor): void {
-            self::normalizeIdentifier($vendor, 'id');
-            self::normalizeIdentifier($vendor, 'tenant_id');
-            self::syncLegacyField($vendor, 'legal_name', ['name']);
-            self::syncLegacyField($vendor, 'display_name', ['trading_name', 'name']);
-            self::syncLegacyField($vendor, 'country_of_registration', ['country_code']);
-            self::syncLegacyField($vendor, 'primary_contact_name', ['trading_name', 'name']);
-            self::syncLegacyField($vendor, 'primary_contact_email', ['email']);
-            self::syncLegacyField($vendor, 'primary_contact_phone', ['phone']);
-        });
-
-        static::saving(function (self $vendor): void {
-            self::normalizeIdentifier($vendor, 'id');
-            self::normalizeIdentifier($vendor, 'tenant_id');
-        });
-    }
-
     public function getPrimaryContactPhoneAttribute(mixed $value): ?string
     {
         return self::trimmedOrNull($value);
@@ -75,39 +51,6 @@ class Vendor extends Model
     public function setPrimaryContactPhoneAttribute(mixed $value): void
     {
         $this->attributes['primary_contact_phone'] = self::trimmedOrNull($value) ?? '';
-    }
-
-    /**
-     * @param list<string> $legacyAttributes
-     */
-    private static function syncLegacyField(self $vendor, string $canonicalAttribute, array $legacyAttributes): void
-    {
-        $currentValue = self::trimmedOrNull($vendor->getAttribute($canonicalAttribute));
-
-        if ($currentValue !== null) {
-            return;
-        }
-
-        if ($vendor->isDirty($canonicalAttribute)) {
-            return;
-        }
-
-        foreach ($legacyAttributes as $legacyAttribute) {
-            $legacyValue = self::trimmedOrNull($vendor->getAttribute($legacyAttribute));
-
-            if ($legacyValue !== null) {
-                $vendor->setAttribute($canonicalAttribute, $legacyValue);
-                return;
-            }
-        }
-    }
-
-    private static function normalizeIdentifier(self $vendor, string $attribute): void
-    {
-        $value = self::trimmedOrNull($vendor->getAttribute($attribute));
-        if ($value !== null) {
-            $vendor->setAttribute($attribute, strtolower($value));
-        }
     }
 
     private static function trimmedOrNull(mixed $value): ?string

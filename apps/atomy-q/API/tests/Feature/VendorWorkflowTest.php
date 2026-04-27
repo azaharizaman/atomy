@@ -54,13 +54,14 @@ final class VendorWorkflowTest extends ApiTestCase
         /** @var Vendor $vendor */
         $vendor = Vendor::query()->create(array_merge([
             'tenant_id' => $tenantId,
-            'name' => 'Acme Industrial',
-            'trading_name' => 'Acme',
+            'legal_name' => 'Acme Industrial Sdn Bhd',
+            'display_name' => 'Acme',
             'registration_number' => 'REG-1001',
             'tax_id' => 'TAX-1001',
-            'country_code' => 'MY',
-            'email' => 'sales@acme.test',
-            'phone' => '+60-12345678',
+            'country_of_registration' => 'MY',
+            'primary_contact_name' => 'Acme Sales',
+            'primary_contact_email' => 'sales@acme.test',
+            'primary_contact_phone' => '+60-12345678',
             'status' => 'active',
             'onboarded_at' => now()->subDays(10),
             'metadata' => [
@@ -77,9 +78,9 @@ final class VendorWorkflowTest extends ApiTestCase
     public function testIndexReturnsTenantScopedVendorRows(): void
     {
         $user = $this->createUser();
-        $this->createVendor((string) $user->tenant_id, ['name' => 'Vendor A']);
-        $this->createVendor((string) $user->tenant_id, ['name' => 'Vendor B']);
-        $this->createVendor((string) Str::ulid(), ['name' => 'Other Tenant Vendor']);
+        $this->createVendor((string) $user->tenant_id, ['display_name' => 'Vendor A']);
+        $this->createVendor((string) $user->tenant_id, ['display_name' => 'Vendor B']);
+        $this->createVendor((string) Str::ulid(), ['display_name' => 'Other Tenant Vendor']);
 
         $response = $this->getJson(
             '/api/v1/vendors',
@@ -89,7 +90,7 @@ final class VendorWorkflowTest extends ApiTestCase
         $response->assertOk();
         $response->assertJsonPath('meta.total', 2);
         $response->assertJsonCount(2, 'data');
-        $response->assertJsonMissing(['name' => 'Other Tenant Vendor']);
+        $response->assertJsonMissing(['display_name' => 'Other Tenant Vendor']);
     }
 
     public function testShowReturns404ForCrossTenantVendor(): void
@@ -114,7 +115,7 @@ final class VendorWorkflowTest extends ApiTestCase
             'tenant_id' => $user->tenant_id,
             'rfq_id' => (string) Str::ulid(),
             'vendor_id' => $vendor->id,
-            'vendor_name' => $vendor->name,
+            'vendor_name' => $vendor->display_name,
             'status' => 'ready',
             'submitted_at' => now(),
             'confidence' => 90.0,
@@ -126,7 +127,7 @@ final class VendorWorkflowTest extends ApiTestCase
             'tenant_id' => $user->tenant_id,
             'rfq_id' => (string) Str::ulid(),
             'vendor_id' => $vendor->id,
-            'vendor_name' => $vendor->name,
+            'vendor_name' => $vendor->display_name,
             'status' => 'processing',
             'submitted_at' => now(),
             'confidence' => 70.0,
@@ -186,11 +187,11 @@ final class VendorWorkflowTest extends ApiTestCase
         $response->assertJsonPath('data.last_checked_at', '2026-04-01T00:00:00+00:00');
     }
 
-    public function testExplicitClearDoesNotGetRehydratedFromLegacyPhone(): void
+    public function testExplicitClearLeavesPrimaryContactPhoneNull(): void
     {
         $user = $this->createUser();
         $vendor = $this->createVendor((string) $user->tenant_id, [
-            'phone' => '+60-11111111',
+            'primary_contact_phone' => '+60-11111111',
         ]);
 
         $vendor->primary_contact_phone = null;
@@ -198,7 +199,6 @@ final class VendorWorkflowTest extends ApiTestCase
         $vendor->refresh();
 
         $this->assertNull($vendor->primary_contact_phone);
-        $this->assertSame('+60-11111111', $vendor->phone);
     }
 
     public function testHistoryReturnsTenantScopedAwardRows(): void

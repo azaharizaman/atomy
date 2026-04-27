@@ -32,23 +32,9 @@ final class ProjectController extends Controller
     private const SELF_CLIENT_ID = 'self';
 
     /**
-     * Canonical project ACL roles (Phase 2 plan): Owner > Admin > Editor > Viewer.
-     *
-     * Legacy role names are accepted for backwards compatibility and normalized
-     * to canonical values on write.
+     * Canonical project ACL roles (highest -> lowest): owner > admin > editor > viewer.
      */
-    private const ACL_ROLES = ['owner', 'admin', 'editor', 'viewer', 'manager', 'contributor', 'client_stakeholder'];
-
-    private const ACL_ROLE_NORMALIZATION = [
-        'owner' => 'owner',
-        'admin' => 'admin',
-        'editor' => 'editor',
-        'viewer' => 'viewer',
-        // legacy aliases
-        'manager' => 'admin',
-        'contributor' => 'editor',
-        'client_stakeholder' => 'viewer',
-    ];
+    private const ACL_ROLES = ['owner', 'admin', 'editor', 'viewer'];
 
     public function __construct(
         private readonly ProjectService $projects,
@@ -449,12 +435,10 @@ final class ProjectController extends Controller
                 ->where('project_id', $id)
                 ->delete();
             foreach ($validated['roles'] as $entry) {
-                $rawRole = strtolower(trim((string) $entry['role']));
-                $normalizedRole = self::ACL_ROLE_NORMALIZATION[$rawRole] ?? 'viewer';
                 ProjectAcl::query()->create([
                     'project_id' => $id,
                     'user_id' => $entry['user_id'],
-                    'role' => $normalizedRole,
+                    'role' => strtolower(trim((string) $entry['role'])),
                     'tenant_id' => $tenantId,
                 ]);
             }

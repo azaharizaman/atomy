@@ -16,7 +16,12 @@ composer install
 ```
 
 ### Atomy-Q
-Main SaaS app.
+Main SaaS app. In Active Development. No Previous Release
+When considering a design spec
+- DO NOT create backward compatibility workaround.
+- DO NOT consider legacy code/method/interoperability, everything must be overwritten as new and current
+- DO NOT create workaround to minimize breaking change. This is a new application, it will break things and we are going to fix it
+- Laravel API of atomy-q application must prioritize 'Laravel-Way' of laravel community best practices
 
 #### Atomy-Q Backend (API)
 Run from `qpps/atomy-q/API`.

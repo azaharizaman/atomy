@@ -13,19 +13,25 @@ return new class extends Migration
         Schema::create('vendors', function (Blueprint $table): void {
             $table->ulid('id')->primary();
             $table->ulid('tenant_id')->index();
-            $table->string('name');
-            $table->string('trading_name')->nullable();
             $table->string('registration_number')->nullable();
             $table->string('tax_id')->nullable();
-            $table->string('country_code')->default('MY');
-            $table->string('email');
-            $table->string('phone')->nullable();
+            $table->string('legal_name');
+            $table->string('display_name');
+            $table->string('country_of_registration');
+            $table->string('primary_contact_name');
+            $table->string('primary_contact_email');
+            $table->string('primary_contact_phone')->nullable();
             $table->string('status')->default('active');
             $table->timestamp('onboarded_at')->nullable();
             $table->json('metadata')->nullable();
+            $table->ulid('approved_by_user_id')->nullable()->index();
+            $table->timestamp('approved_at')->nullable();
+            $table->text('approval_note')->nullable();
             $table->timestamps();
 
             $table->index(['tenant_id', 'status']);
+            $table->index(['tenant_id', 'display_name']);
+            $table->index(['tenant_id', 'primary_contact_email']);
         });
     }
 

@@ -9,23 +9,13 @@ use App\Models\ProjectAcl;
 final readonly class ProjectAclService
 {
     /**
-     * Canonical access levels (highest -> lowest):
-     * owner > admin > editor > viewer.
-     *
-     * Legacy stored roles are supported for backwards compatibility:
-     * - manager => admin
-     * - contributor => editor
-     * - client_stakeholder => viewer
+     * Canonical access levels (highest -> lowest): owner > admin > editor > viewer.
      */
     private const ROLE_RANK = [
         'owner' => 4,
         'admin' => 3,
         'editor' => 2,
         'viewer' => 1,
-        // legacy aliases
-        'manager' => 3,
-        'contributor' => 2,
-        'client_stakeholder' => 1,
     ];
 
     public function userCanViewProject(string $tenantId, string $userId, string $projectId): bool

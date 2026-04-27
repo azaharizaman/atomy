@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('status')->default('pending');
             $table->timestamp('invited_at')->nullable();
             $table->timestamp('responded_at')->nullable();
+            $table->timestamp('reminded_at')->nullable();
             $table->string('channel')->nullable();
             $table->timestamps();
 

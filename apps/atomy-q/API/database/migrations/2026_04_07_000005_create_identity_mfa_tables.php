@@ -12,6 +12,7 @@ return new class extends Migration
     {
         Schema::create('mfa_enrollments', function (Blueprint $table): void {
             $table->ulid('id')->primary();
+            $table->ulid('tenant_id')->index();
             $table->ulid('user_id')->index();
             $table->string('method');
             $table->text('secret');
@@ -28,6 +29,7 @@ return new class extends Migration
 
         Schema::create('mfa_backup_codes', function (Blueprint $table): void {
             $table->ulid('id')->primary();
+            $table->ulid('tenant_id')->index();
             $table->ulid('user_id')->index();
             $table->string('code_hash');
             $table->timestamp('used_at')->nullable();

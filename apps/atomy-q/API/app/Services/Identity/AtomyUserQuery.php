@@ -103,22 +103,6 @@ final readonly class AtomyUserQuery implements UserQueryInterface
             $roles = $query->get()->all();
         }
 
-        // Legacy single-role column fallback (pre-RBAC).
-        $legacyRole = trim((string) ($user->role ?? ''));
-        if ($legacyRole !== '' && $legacyRole !== 'user') {
-            $alreadyPresent = false;
-            foreach ($roles as $role) {
-                if ($role instanceof RoleInterface && strtolower(trim($role->getName())) === strtolower($legacyRole)) {
-                    $alreadyPresent = true;
-                    break;
-                }
-            }
-
-            if (! $alreadyPresent) {
-                $roles[] = new AtomyLegacyRole($legacyRole, $tenantId);
-            }
-        }
-
         return $roles;
     }
 

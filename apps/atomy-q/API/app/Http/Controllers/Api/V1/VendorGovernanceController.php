@@ -187,8 +187,8 @@ final class VendorGovernanceController extends Controller
             ]);
 
             $record = VendorEvidence::query()->create([
-                'tenant_id' => $this->normalizeIdentifier($tenantId),
-                'vendor_id' => $this->normalizeIdentifier((string) $vendor->id),
+                'tenant_id' => $tenantId,
+                'vendor_id' => (string) $vendor->id,
                 'domain' => 'compliance',
                 'type' => 'sanctions_screening',
                 'title' => trim((string) ($validated['title'] ?? 'Manual sanctions screening')),
@@ -243,23 +243,23 @@ final class VendorGovernanceController extends Controller
     private function findVendor(string $tenantId, string $vendorId): ?Vendor
     {
         return Vendor::query()
-            ->where('tenant_id', $this->normalizeIdentifier($tenantId))
-            ->where('id', $this->normalizeIdentifier($vendorId))
+            ->where('tenant_id', $tenantId)
+            ->where('id', $vendorId)
             ->first();
     }
 
     private function evidenceQuery(string $tenantId, string $vendorId): \Illuminate\Database\Eloquent\Builder
     {
         return VendorEvidence::query()
-            ->where('tenant_id', $this->normalizeIdentifier($tenantId))
-            ->where('vendor_id', $this->normalizeIdentifier($vendorId));
+            ->where('tenant_id', $tenantId)
+            ->where('vendor_id', $vendorId);
     }
 
     private function findingQuery(string $tenantId, string $vendorId): \Illuminate\Database\Eloquent\Builder
     {
         return VendorFinding::query()
-            ->where('tenant_id', $this->normalizeIdentifier($tenantId))
-            ->where('vendor_id', $this->normalizeIdentifier($vendorId));
+            ->where('tenant_id', $tenantId)
+            ->where('vendor_id', $vendorId);
     }
 
     private function serializeEvidence(VendorEvidence $record): array

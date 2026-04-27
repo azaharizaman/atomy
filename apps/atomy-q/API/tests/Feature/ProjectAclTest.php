@@ -166,7 +166,7 @@ class ProjectAclTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_client_stakeholder_role_can_view_project_scoped_rfq(): void
+    public function test_viewer_role_can_view_project_scoped_rfq(): void
     {
         $user = $this->createUser();
         $project = ProjectModel::query()->create([
@@ -181,7 +181,7 @@ class ProjectAclTest extends TestCase
         ProjectAcl::query()->create([
             'project_id' => $project->id,
             'user_id' => $user->id,
-            'role' => 'client_stakeholder',
+            'role' => 'viewer',
             'tenant_id' => $user->tenant_id,
         ]);
         $rfq = Rfq::query()->create([

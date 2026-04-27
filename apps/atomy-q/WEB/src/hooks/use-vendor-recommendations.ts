@@ -105,15 +105,7 @@ function normalizeCandidate(row: unknown, index: number): VendorRecommendationCa
     vendorName: requireText(pickField(row, 'vendor_name'), 'vendor_name', context),
     fitScore: requireNumber(pickField(row, 'fit_score'), 'fit_score', context),
     confidenceBand: requireText(pickField(row, 'confidence_band'), 'confidence_band', context),
-    recommendedReasonSummary: requireText(
-      pickField(
-        row,
-        'provider_explanation',
-        'recommended_reason_summary',
-      ),
-      'provider_explanation',
-      context,
-    ),
+    recommendedReasonSummary: requireText(pickField(row, 'provider_explanation'), 'provider_explanation', context),
     deterministicReasons: stringList(
       pickField(row, 'deterministic_reasons'),
       'deterministic_reasons',

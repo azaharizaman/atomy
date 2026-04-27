@@ -14,7 +14,7 @@ return new class extends Migration
             $table->ulid('id')->primary();
             $table->ulid('project_id');
             $table->ulid('user_id');
-            $table->string('role'); // owner, manager, contributor, viewer, client_stakeholder
+            $table->string('role'); // owner, admin, editor, viewer
             $table->ulid('tenant_id')->index();
             $table->timestamps();
 

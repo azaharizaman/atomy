@@ -258,20 +258,14 @@ final class VendorInvitationController extends Controller
 
     private function vendorEmail(Vendor $vendor): ?string
     {
-        foreach ([$vendor->primary_contact_email, $vendor->email] as $candidate) {
-            $value = trim((string) $candidate);
+        $value = trim((string) $vendor->primary_contact_email);
 
-            if ($value !== '') {
-                return $value;
-            }
-        }
-
-        return null;
+        return $value === '' ? null : $value;
     }
 
     private function vendorName(Vendor $vendor): ?string
     {
-        foreach ([$vendor->display_name, $vendor->legal_name, $vendor->name] as $candidate) {
+        foreach ([$vendor->display_name, $vendor->legal_name] as $candidate) {
             $value = trim((string) $candidate);
 
             if ($value !== '') {

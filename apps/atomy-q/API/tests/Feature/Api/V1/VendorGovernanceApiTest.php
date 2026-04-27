@@ -172,8 +172,8 @@ final class VendorGovernanceApiTest extends ApiTestCase
         $this->assertSame(
             1,
             VendorEvidence::query()
-                ->where('tenant_id', strtolower($tenantId))
-                ->where('vendor_id', strtolower((string) $vendor->id))
+                ->where('tenant_id', $tenantId)
+                ->where('vendor_id', (string) $vendor->id)
                 ->where('type', 'sanctions_screening')
                 ->count(),
         );
@@ -316,20 +316,15 @@ final class VendorGovernanceApiTest extends ApiTestCase
         /** @var Vendor $vendor */
         $vendor = Vendor::query()->create(array_merge([
             'tenant_id' => $tenantId,
-            'name' => 'Northwind Holdings Sdn Bhd',
-            'trading_name' => 'Northwind',
-            'registration_number' => '202601234567',
-            'tax_id' => 'TAX-202601234567',
-            'country_code' => 'MY',
-            'email' => 'contact@northwind.test',
-            'phone' => '+60123456789',
-            'status' => 'approved',
             'legal_name' => 'Northwind Holdings Sdn Bhd',
             'display_name' => 'Northwind',
+            'registration_number' => '202601234567',
+            'tax_id' => 'TAX-202601234567',
             'country_of_registration' => 'MY',
             'primary_contact_name' => 'Nadia Rahman',
             'primary_contact_email' => 'contact@northwind.test',
             'primary_contact_phone' => '+60123456789',
+            'status' => 'approved',
         ], $overrides));
 
         return $vendor;

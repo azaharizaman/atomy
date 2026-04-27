@@ -86,11 +86,6 @@ final class VendorStatusController extends Controller
             'approval_record' => $this->serializeApprovalRecord($vendor),
             'created_at' => $vendor->created_at?->toAtomString(),
             'updated_at' => $vendor->updated_at?->toAtomString(),
-            'name' => (string) $vendor->legal_name,
-            'trading_name' => (string) $vendor->display_name,
-            'country_code' => (string) $vendor->country_of_registration,
-            'email' => (string) $vendor->primary_contact_email,
-            'phone' => $this->nullableString($vendor->phone),
         ];
     }
 

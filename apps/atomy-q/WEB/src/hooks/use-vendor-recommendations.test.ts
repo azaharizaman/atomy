@@ -88,6 +88,35 @@ describe('normalizeVendorRecommendationPayload', () => {
     expect(Object.prototype.hasOwnProperty.call(result, 'excludedReasons')).toBe(false);
   });
 
+  it('rejects the removed recommended_reason_summary alias', () => {
+    expect(() =>
+      normalizeVendorRecommendationPayload({
+        data: {
+          tenant_id: 'tenant-1',
+          rfq_id: 'rfq-1',
+          status: 'available',
+          eligible_candidates: [
+            {
+              vendor_id: 'vendor-1',
+              vendor_name: 'Alpha Procurement',
+              fit_score: 93,
+              confidence_band: 'high',
+              recommended_reason_summary: 'Strong category fit.',
+              deterministic_reasons: ['Category overlap: facilities.'],
+              llm_insights: [],
+              warning_flags: [],
+              warnings: [],
+            },
+          ],
+          excluded_candidates: [],
+          provider_explanation: 'Legacy payload should not be accepted.',
+          deterministic_reason_set: ['Category overlap: facilities.'],
+          provenance: null,
+        },
+      }),
+    ).toThrow(/missing provider_explanation/);
+  });
+
   it('parses structured unavailable payloads without treating them as errors', () => {
     const result = normalizeVendorRecommendationPayload({
       message: 'AI capability unavailable',

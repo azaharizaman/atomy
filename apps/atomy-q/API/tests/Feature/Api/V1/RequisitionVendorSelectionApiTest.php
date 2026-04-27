@@ -76,12 +76,7 @@ final class RequisitionVendorSelectionApiTest extends ApiTestCase
         /** @var Vendor $vendor */
         $vendor = Vendor::query()->create(array_merge([
             'tenant_id' => $tenantId,
-            'name' => 'Acme Holdings Sdn Bhd',
-            'trading_name' => 'Acme Trading',
             'registration_number' => '201901234567',
-            'country_code' => 'MY',
-            'email' => 'acme@example.com',
-            'phone' => '+60123456789',
             'status' => 'approved',
             'legal_name' => 'Acme Holdings Sdn Bhd',
             'display_name' => 'Acme Trading',
@@ -117,17 +112,14 @@ final class RequisitionVendorSelectionApiTest extends ApiTestCase
         $vendorA = $this->createVendor($tenantId, [
             'display_name' => 'Alpha Trading',
             'primary_contact_email' => 'alpha@example.com',
-            'email' => 'alpha@example.com',
         ]);
         $vendorB = $this->createVendor($tenantId, [
             'display_name' => 'Bravo Supplies',
             'primary_contact_email' => 'bravo@example.com',
-            'email' => 'bravo@example.com',
         ]);
         $vendorC = $this->createVendor($tenantId, [
             'display_name' => 'Charlie Industrial',
             'primary_contact_email' => 'charlie@example.com',
-            'email' => 'charlie@example.com',
         ]);
 
         $response = $this->putJson(

@@ -22,9 +22,13 @@ return new class extends Migration
             $table->string('locale')->default('en');
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamp('last_login_at')->nullable();
+            $table->integer('failed_login_attempts')->default(0);
+            $table->string('lockout_reason')->nullable();
+            $table->timestamp('lockout_expires_at')->nullable();
+            $table->boolean('mfa_enabled')->default(false);
             $table->timestamps();
 
-            $table->unique(['tenant_id', 'email']);
+            $table->unique('email');
             $table->index(['tenant_id', 'status']);
         });
     }

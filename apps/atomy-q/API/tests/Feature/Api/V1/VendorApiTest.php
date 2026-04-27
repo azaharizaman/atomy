@@ -56,13 +56,8 @@ final class VendorApiTest extends ApiTestCase
         /** @var Vendor $vendor */
         $vendor = Vendor::query()->create(array_merge([
             'tenant_id' => $tenantId,
-            'name' => 'Acme Holdings Sdn Bhd',
-            'trading_name' => 'Acme Trading',
             'registration_number' => '201901234567',
             'tax_id' => 'TAX-201901234567',
-            'country_code' => 'MY',
-            'email' => 'amina@example.com',
-            'phone' => '+60123456789',
             'legal_name' => 'Acme Holdings Sdn Bhd',
             'display_name' => 'Acme Trading',
             'country_of_registration' => 'MY',
@@ -152,7 +147,6 @@ final class VendorApiTest extends ApiTestCase
 
         $response->assertCreated();
         $response->assertJsonPath('data.primary_contact_phone', null);
-        $response->assertJsonPath('data.phone', null);
     }
 
     public function testShowVendorForCurrentTenant(): void
@@ -224,7 +218,6 @@ final class VendorApiTest extends ApiTestCase
         $response->assertOk();
         $response->assertJsonMissingValidationErrors();
         $response->assertJsonPath('data.display_name', 'New Name');
-        $response->assertJsonPath('data.trading_name', 'New Name');
         $response->assertJsonPath('data.legal_name', 'Acme Holdings Sdn Bhd');
         $response->assertJsonPath('data.registration_number', '201901234567');
         $response->assertJsonPath('data.country_of_registration', 'MY');
@@ -237,17 +230,12 @@ final class VendorApiTest extends ApiTestCase
 
         $this->assertSame($original->tenant_id, $vendor->tenant_id);
         $this->assertSame('New Name', $vendor->display_name);
-        $this->assertSame('New Name', $vendor->trading_name);
         $this->assertSame('Acme Holdings Sdn Bhd', $vendor->legal_name);
-        $this->assertSame('Acme Holdings Sdn Bhd', $vendor->name);
         $this->assertSame('201901234567', $vendor->registration_number);
         $this->assertSame('MY', $vendor->country_of_registration);
-        $this->assertSame('MY', $vendor->country_code);
         $this->assertSame('Amina Zain', $vendor->primary_contact_name);
         $this->assertSame('amina@example.com', $vendor->primary_contact_email);
-        $this->assertSame('amina@example.com', $vendor->email);
         $this->assertSame('+60123456789', $vendor->primary_contact_phone);
-        $this->assertSame('+60123456789', $vendor->phone);
         $this->assertSame($originalStatus, $vendor->status);
     }
 

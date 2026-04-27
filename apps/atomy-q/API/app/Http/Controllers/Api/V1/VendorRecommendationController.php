@@ -203,7 +203,7 @@ final class VendorRecommendationController extends Controller
             status: strtolower(trim((string) $vendor->status)),
             categories: $this->stringList($metadata['categories'] ?? []),
             capabilities: $this->stringList($metadata['capabilities'] ?? []),
-            regions: $this->stringList($metadata['regions'] ?? [$vendor->country_of_registration, $vendor->country_code]),
+            regions: $this->stringList($metadata['regions'] ?? [$vendor->country_of_registration]),
             spendBand: $this->nullableString($metadata['spend_band'] ?? null),
             lastActiveAt: $this->dateTimeOrNull($metadata['last_active_at'] ?? $vendor->updated_at),
             historicalParticipationCount: max(0, (int) ($metadata['historical_participation_count'] ?? 0)),
@@ -230,7 +230,7 @@ final class VendorRecommendationController extends Controller
 
     private function vendorDisplayName(Vendor $vendor): string
     {
-        foreach ([$vendor->display_name, $vendor->legal_name, $vendor->trading_name, $vendor->name] as $candidate) {
+        foreach ([$vendor->display_name, $vendor->legal_name] as $candidate) {
             $value = trim((string) $candidate);
 
             if ($value !== '') {

@@ -125,41 +125,6 @@ final readonly class AtomyDecisionTrailWriter implements DecisionTrailWriterInte
     }
 
     /**
-     * Legacy entrypoint for backward compatibility with Alpha callers that pass (source, action, payload).
-     *
-     * @deprecated Use write() with typed array entries instead
-     *
-     * @param string $tenantId
-     * @param string $rfqId
-     * @param string $source Event source name
-     * @param string $action Action name
-     * @param array<string, mixed> $payload Event payload
-     *
-     * @return array<int, array{
-     *   sequence: int,
-     *   event_type: string,
-     *   payload_hash: string,
-     *   previous_hash: string,
-     *   entry_hash: string,
-     *   occurred_at: string
-     * }>
-     */
-    public function writeLegacy(
-        string $tenantId,
-        string $rfqId,
-        string $source,
-        string $action,
-        array $payload
-    ): array {
-        $entries = [[
-            'event_type' => $source . ':' . $action,
-            'payload' => $payload,
-        ]];
-
-        return $this->write($tenantId, $rfqId, $entries, 1, '');
-    }
-
-    /**
      * @return array{0: string, 1: string|null} [rfqId, idempotencyKey]
      */
     private function resolveRfqContext(string $tenantId, string $rfqId): array

@@ -74,12 +74,7 @@ final class RfqInvitationApiTest extends ApiTestCase
         /** @var Vendor $vendor */
         $vendor = Vendor::query()->create(array_merge([
             'tenant_id' => $tenantId,
-            'name' => 'Acme Holdings Sdn Bhd',
-            'trading_name' => 'Acme Trading',
             'registration_number' => '201901234567',
-            'country_code' => 'MY',
-            'email' => 'acme@example.com',
-            'phone' => '+60123456789',
             'status' => 'approved',
             'legal_name' => 'Acme Holdings Sdn Bhd',
             'display_name' => 'Acme Trading',
@@ -176,9 +171,7 @@ final class RfqInvitationApiTest extends ApiTestCase
         $vendor = $this->createVendor($tenantId, [
             'display_name' => '',
             'legal_name' => '',
-            'name' => '',
             'primary_contact_email' => '',
-            'email' => '',
         ]);
 
         $this->putJson(

@@ -21,6 +21,9 @@ return new class extends Migration
             $table->string('source_uom')->nullable();
             $table->decimal('source_unit_price', 15, 4)->nullable();
             $table->json('raw_data')->nullable();
+            $table->decimal('ai_confidence', 5, 2)->nullable();
+            $table->string('taxonomy_code')->nullable();
+            $table->string('mapping_version')->nullable();
             $table->integer('sort_order')->default(0);
             $table->timestamps();
 
