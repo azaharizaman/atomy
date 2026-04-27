@@ -17,15 +17,23 @@ final class ApprovalFactory extends Factory
 
     public function definition(): array
     {
-        $tenant = Tenant::factory()->create();
-
         return [
-            'tenant_id' => $tenant->id,
-            'rfq_id' => Rfq::factory()->create(['tenant_id' => $tenant->id])->id,
-            'comparison_run_id' => ComparisonRun::factory()->create(['tenant_id' => $tenant->id])->id,
+            'tenant_id' => Tenant::factory(),
+            'rfq_id' => function (array $attributes) {
+                return Rfq::factory()->create(['tenant_id' => $attributes['tenant_id']])->id;
+            },
+            'comparison_run_id' => function (array $attributes) {
+                $rfq = Rfq::find($attributes['rfq_id']);
+                return ComparisonRun::factory()->create([
+                    'tenant_id' => $attributes['tenant_id'],
+                    'rfq_id' => $rfq->id,
+                ])->id;
+            },
             'type' => 'value_approval',
             'status' => 'pending',
-            'requested_by' => User::factory()->create(['tenant_id' => $tenant->id])->id,
+            'requested_by' => function (array $attributes) {
+                return User::factory()->create(['tenant_id' => $attributes['tenant_id']])->id;
+            },
             'requested_at' => now(),
             'amount' => fake()->randomFloat(2, 10000, 500000),
             'currency' => 'USD',
@@ -47,25 +55,25 @@ final class ApprovalFactory extends Factory
 
     public function approved(): static
     {
-        return $this->state(function (array $attributes) {
-            return [
-                'status' => 'approved',
-                'approved_at' => now(),
-                'approved_by' => User::factory()->state(['tenant_id' => $attributes['tenant_id']]),
-            ];
-        });
+        return $this->state(fn (array $attributes) => [
+            'status' => 'approved',
+            'approved_at' => now(),
+            'approved_by' => function (array $resolvedAttributes) {
+                return User::factory()->create(['tenant_id' => $resolvedAttributes['tenant_id']])->id;
+            },
+        ]);
     }
 
     public function rejected(): static
     {
-        return $this->state(function (array $attributes) {
-            return [
-                'status' => 'rejected',
-                'approved_at' => now(),
-                'approved_by' => User::factory()->state(['tenant_id' => $attributes['tenant_id']]),
-                'notes' => fake()->sentence(),
-            ];
-        });
+        return $this->state(fn (array $attributes) => [
+            'status' => 'rejected',
+            'approved_at' => now(),
+            'approved_by' => function (array $resolvedAttributes) {
+                return User::factory()->create(['tenant_id' => $resolvedAttributes['tenant_id']])->id;
+            },
+            'notes' => fake()->sentence(),
+        ]);
     }
 
     public function snoozed(): static
@@ -81,6 +89,10 @@ final class ApprovalFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'rfq_id' => $rfq->id,
             'tenant_id' => $rfq->tenant_id,
+            'comparison_run_id' => ComparisonRun::factory()->create([
+                'tenant_id' => $rfq->tenant_id,
+                'rfq_id' => $rfq->id,
+            ])->id,
         ]);
     }
 
@@ -89,6 +101,7 @@ final class ApprovalFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'comparison_run_id' => $comparisonRun->id,
             'tenant_id' => $comparisonRun->tenant_id,
+            'rfq_id' => $comparisonRun->rfq_id,
         ]);
     }
 }

@@ -9,21 +9,21 @@ use Tests\TestCase;
 
 final class UserFactoryTest extends TestCase
 {
-    public function test_user_active_state(): void
+    public function testUserActiveState(): void
     {
         $user = User::factory()->active()->create();
 
         $this->assertSame('active', $user->status);
     }
 
-    public function test_user_locked_state(): void
+    public function testUserLockedState(): void
     {
         $user = User::factory()->locked()->create();
 
         $this->assertSame('locked', $user->status);
     }
 
-    public function test_user_admin_state(): void
+    public function testUserAdminState(): void
     {
         $user = User::factory()->admin()->create();
 

@@ -17,15 +17,22 @@ final class QuoteSubmissionFactory extends Factory
 
     public function definition(): array
     {
-        $tenant = Tenant::factory()->create();
-        $vendor = Vendor::factory()->create(['tenant_id' => $tenant->id]);
-
         return [
-            'tenant_id' => $tenant->id,
-            'rfq_id' => Rfq::factory()->create(['tenant_id' => $tenant->id])->id,
-            'vendor_id' => $vendor->id,
-            'vendor_name' => $vendor->legal_name,
-            'uploaded_by' => User::factory()->create(['tenant_id' => $tenant->id])->id,
+            'tenant_id' => Tenant::factory(),
+            'rfq_id' => function (array $attributes) {
+                return Rfq::factory()->create(['tenant_id' => $attributes['tenant_id']])->id;
+            },
+            'vendor_id' => function (array $attributes) {
+                $vendor = Vendor::factory()->create(['tenant_id' => $attributes['tenant_id']]);
+                return $vendor->id;
+            },
+            'vendor_name' => function (array $attributes) {
+                $vendor = Vendor::find($attributes['vendor_id']);
+                return $vendor->legal_name;
+            },
+            'uploaded_by' => function (array $attributes) {
+                return User::factory()->create(['tenant_id' => $attributes['tenant_id']])->id;
+            },
             'file_path' => 'quotes/' . fake()->uuid() . '.pdf',
             'file_type' => 'application/pdf',
             'original_filename' => fake()->word() . '.pdf',
@@ -120,6 +127,12 @@ final class QuoteSubmissionFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'rfq_id' => $rfq->id,
             'tenant_id' => $rfq->tenant_id,
+            'uploaded_by' => User::factory()->create(['tenant_id' => $rfq->tenant_id])->id,
+            'vendor_id' => Vendor::factory()->create(['tenant_id' => $rfq->tenant_id])->id,
+            'vendor_name' => function (array $attributes) {
+                $vendor = Vendor::find($attributes['vendor_id']);
+                return $vendor->legal_name;
+            },
         ]);
     }
 
@@ -129,6 +142,8 @@ final class QuoteSubmissionFactory extends Factory
             'vendor_id' => $vendor->id,
             'vendor_name' => $vendor->legal_name,
             'tenant_id' => $vendor->tenant_id,
+            'uploaded_by' => User::factory()->create(['tenant_id' => $vendor->tenant_id])->id,
+            'rfq_id' => Rfq::factory()->create(['tenant_id' => $vendor->tenant_id])->id,
         ]);
     }
 }

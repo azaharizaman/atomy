@@ -16,16 +16,20 @@ final class ComparisonRunFactory extends Factory
 
     public function definition(): array
     {
-        $tenant = Tenant::factory()->create();
-
         return [
-            'tenant_id' => $tenant->id,
-            'rfq_id' => Rfq::factory()->create(['tenant_id' => $tenant->id])->id,
+            'tenant_id' => Tenant::factory(),
+            'rfq_id' => function (array $attributes) {
+                $tenantId = $attributes['tenant_id'];
+                return Rfq::factory()->create(['tenant_id' => $tenantId])->id;
+            },
             'name' => fake()->sentence(3),
             'description' => fake()->paragraph(),
             'idempotency_key' => fake()->uuid(),
             'is_preview' => false,
-            'created_by' => User::factory()->create(['tenant_id' => $tenant->id])->id,
+            'created_by' => function (array $attributes) {
+                $tenantId = $attributes['tenant_id'];
+                return User::factory()->create(['tenant_id' => $tenantId])->id;
+            },
             'request_payload' => [],
             'matrix_payload' => [],
             'scoring_payload' => [],
@@ -71,6 +75,7 @@ final class ComparisonRunFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'rfq_id' => $rfq->id,
             'tenant_id' => $rfq->tenant_id,
+            'created_by' => User::factory()->create(['tenant_id' => $rfq->tenant_id])->id,
         ]);
     }
 
@@ -79,6 +84,7 @@ final class ComparisonRunFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'created_by' => $user->id,
             'tenant_id' => $user->tenant_id,
+            'rfq_id' => Rfq::factory()->create(['tenant_id' => $user->tenant_id])->id,
         ]);
     }
 }

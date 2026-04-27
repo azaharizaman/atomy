@@ -32,11 +32,11 @@ final class FactoryTenantScopeTest extends TestCase
     public function test_approval_approved_state_uses_same_tenant(): void
     {
         $approval = Approval::factory()->approved()->create();
-        if ($approval->approved_by) {
-            $approvedBy = \App\Models\User::find($approval->approved_by);
-            $this->assertNotNull($approvedBy);
-            $this->assertSame($approval->tenant_id, $approvedBy->tenant_id);
-        }
+
+        $this->assertNotNull($approval->approved_by);
+        $approvedBy = \App\Models\User::find($approval->approved_by);
+        $this->assertNotNull($approvedBy);
+        $this->assertSame($approval->tenant_id, $approvedBy->tenant_id);
     }
 
     public function test_award_factory_uses_same_tenant(): void

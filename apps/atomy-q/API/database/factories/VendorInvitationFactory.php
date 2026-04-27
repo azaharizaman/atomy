@@ -17,12 +17,14 @@ final class VendorInvitationFactory extends Factory
 
     public function definition(): array
     {
-        $tenant = Tenant::factory()->create();
-
         return [
-            'tenant_id' => $tenant->id,
-            'rfq_id' => Rfq::factory()->create(['tenant_id' => $tenant->id])->id,
-            'vendor_id' => Vendor::factory()->create(['tenant_id' => $tenant->id])->id,
+            'tenant_id' => Tenant::factory(),
+            'rfq_id' => function (array $attributes) {
+                return Rfq::factory()->create(['tenant_id' => $attributes['tenant_id']])->id;
+            },
+            'vendor_id' => function (array $attributes) {
+                return Vendor::factory()->create(['tenant_id' => $attributes['tenant_id']])->id;
+            },
             'vendor_email' => fake()->companyEmail(),
             'vendor_name' => fake()->company(),
             'status' => 'pending',
@@ -62,6 +64,7 @@ final class VendorInvitationFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'rfq_id' => $rfq->id,
             'tenant_id' => $rfq->tenant_id,
+            'vendor_id' => Vendor::factory()->create(['tenant_id' => $rfq->tenant_id])->id,
         ]);
     }
 
@@ -70,6 +73,7 @@ final class VendorInvitationFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'vendor_id' => $vendor->id,
             'tenant_id' => $vendor->tenant_id,
+            'rfq_id' => Rfq::factory()->create(['tenant_id' => $vendor->tenant_id])->id,
         ]);
     }
 }

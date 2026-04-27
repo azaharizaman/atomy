@@ -35,8 +35,12 @@ final class RfqFactory extends Factory
             ]),
             'department' => fake()->randomElement(['Maintenance', 'Projects', 'Operations']),
             'status' => 'draft',
-            'owner_id' => User::factory(),
-            'project_id' => Project::factory(),
+            'owner_id' => function (array $attributes) {
+                return User::factory()->create(['tenant_id' => $attributes['tenant_id']])->id;
+            },
+            'project_id' => function (array $attributes) {
+                return Project::factory()->create(['tenant_id' => $attributes['tenant_id']])->id;
+            },
             'estimated_value' => fake()->randomFloat(2, 10000, 500000),
             'savings_percentage' => fake()->randomFloat(2, 2.5, 18.0),
             'submission_deadline' => $submissionDeadline,
@@ -63,20 +67,32 @@ final class RfqFactory extends Factory
 
     public function draft(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'status' => 'draft',
-            'submission_deadline' => fake()->dateTimeBetween('+1 week', '+4 weeks'),
-            'closing_date' => fake()->dateTimeBetween('+2 weeks', '+6 weeks'),
-        ]);
+        return $this->state(function (array $attributes) {
+            $submission = fake()->dateTimeBetween('+1 week', '+4 weeks');
+            return [
+                'status' => 'draft',
+                'submission_deadline' => $submission,
+                'closing_date' => fake()->dateTimeBetween(
+                    Carbon::parse($submission)->addWeek()->format('Y-m-d'),
+                    Carbon::parse($submission)->addWeeks(6)->format('Y-m-d')
+                ),
+            ];
+        });
     }
 
     public function published(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'status' => 'published',
-            'submission_deadline' => fake()->dateTimeBetween('+3 days', '+2 weeks'),
-            'closing_date' => fake()->dateTimeBetween('+1 week', '+3 weeks'),
-        ]);
+        return $this->state(function (array $attributes) {
+            $submission = fake()->dateTimeBetween('+3 days', '+2 weeks');
+            return [
+                'status' => 'published',
+                'submission_deadline' => $submission,
+                'closing_date' => fake()->dateTimeBetween(
+                    Carbon::parse($submission)->addWeek()->format('Y-m-d'),
+                    Carbon::parse($submission)->addWeeks(3)->format('Y-m-d')
+                ),
+            ];
+        });
     }
 
     public function closed(): static

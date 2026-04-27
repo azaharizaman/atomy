@@ -15,7 +15,7 @@ final class TenantFactory extends Factory
     {
         return [
             'code' => strtoupper(fake()->unique()->bothify('??????-###')),
-            'name' => fake()->company(),
+            'name' => fake()->unique()->company(),
             'email' => fake()->companyEmail(),
             'status' => 'pending',
             'timezone' => fake()->randomElement(['UTC', 'Europe/Oslo', 'America/New_York']),

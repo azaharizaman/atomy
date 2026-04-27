@@ -278,84 +278,34 @@ Your earlier spec becomes much stronger once tiered governance is added, because
 * enterprise buyers trust system more
 
 
---------------------------
+---
 
-Laravel-Way Opportunities for Atomy-Q API
-High-Impact Improvements (DX Priority)
-Recommendation
-1. Expand FormRequest Validation
-2. Add Tenant Global Scope
-3. Laravel Policies for Authorization
-4. Standardize API Resources & Collections
-5. Split Routes File
-Architectural Considerations
-Don't add these the "naive" way - integrate with existing Nexus architecture:
-Laravel Feature          →  Nexus Integration
-─────────────────────────────────────────────────
-FormRequest::authorize() →  Combine with NexusPermission middleware
-Laravel Policy           →  Wrap ProjectAclService, don't replace
-Global Tenant Scope      →  Use tenant context from existing TenantContext middleware
-API Resources            →  Keep transformers in Http/Resources, align with DTOs
-Specific Quick Wins
-1. Tenant Global Scope (prevents query leaks):
-// app/Scopes/TenantScope.php
-final class TenantScope implements Scope
-{
-    public function apply(Builder $builder, Model $model): void
-    {
-        if (auth()->check()) {
-            $builder->where('tenant_id', auth()->user()->tenant_id);
-        }
-    }
-}
-2. Standardize Response Trait:
-trait ApiResponse
-{
-    public function success(mixed $data, int $status = 200): JsonResponse
-    public function created(mixed $data): JsonResponse
-    public function error(string $message, int $status): JsonResponse
-}
-3. Route File Decomposition:
-// routes/api.php
-require __DIR__.'/api/v1/rfqs.php';
-require __DIR__.'/api/v1/projects.php';
-require __DIR__.'/api/v1/vendors.php';
-Recommendation
-Start with Tenant Global Scope + FormRequest expansion - these prevent bugs and standardize validation with minimal refactoring risk. Authorization (Policies) should wrap existing ProjectAclService rather than replace it.
-▣  Build · Big Pickle · 2m 35s
-how about Factories. I saw there is only one factories and seed data are being manually hand coded. Since atomy-q is still in active development do you think factories adoption can increase the code maintainability?
+## Laravel-Way Opportunities for Atomy-Q API
 
-Yes, factory adoption would significantly improve maintainability. The current PetrochemicalTenantSeeder.php is ~1200 lines of raw `DB::table()->insert()` calls that duplicate model field knowledge, making changes brittle.
+### High-Impact Improvements
 
-Current Problems
-- Model changes require updating seeder + all test calls
-- Test isolation requires full `migrate:fresh --seed`
-- State variants rely on copy-paste logic
-- Relationships need manual ID tracking
+1. **Expand FormRequest Validation**
+2. **Add Tenant Global Scope** — prevents query leaks by automatically scoping queries by `tenant_id`
+3. **Laravel Policies for Authorization** — wrap existing `ProjectAclService` rather than replace it
+4. **Standardize API Resources & Collections** — align transformers in `Http/Resources` with DTOs
+5. **Split Routes File** — decompose into modular files (`api/v1/rfqs.php`, `api/v1/projects.php`, `api/v1/vendors.php`)
 
-Factory Benefits for Atomy-Q
-- Test isolation: Tests create fresh, isolated records without the full seeder
-- TDD enablement: Factories allow writing tests first
-- DRY definitions: Factory lives with the model, not duplicated in seeder
-- State variants: Easy to create "draft rfq", "published rfq", "awarded rfq" states
-- Relationship handling: Laravel cascades relationships via `hasMany`, `belongsTo`
-- CI/CD: Quick DB setup for tests without running full seeder
+### Architectural Integration
 
-Recommended Approach
-Phase 1: Core Domain Models (highest test churn)
-- RfqFactory with states: draft, published, closed, awarded
-- QuoteSubmissionFactory with states: uploaded, extracting, ready, failed
-- ProjectFactory, VendorFactory, UserFactory (extend existing)
+Integrate Laravel features with existing Nexus architecture:
+- `FormRequest::authorize()` → Combine with NexusPermission middleware
+- Laravel Policy → Wrap ProjectAclService, don't replace
+- Global Tenant Scope → Use tenant context from existing TenantContext middleware
+- API Resources → Keep in Http/Resources, align with DTOs
 
-Phase 2: Supporting Entities
-- RfqLineItemFactory, VendorInvitationFactory
-- ComparisonRunFactory, ApprovalFactory
+### Implementation Suggestions
 
-Phase 3: The Seeder Refactor
-After factories exist, the seeder can be rewritten to use factories internally, reducing it to ~100 lines with relationships auto-handled.
+- **TenantScope**: Prevent query leaks with automatic tenant filtering via `app/Scopes/TenantScope.php`
+- **ApiResponse trait**: Standardize `success()`, `created()`, and `error()` methods for JSON responses
+- **Route decomposition**: Use `require` statements in `routes/api.php` to load modular route files
 
-Trade-off Consideration
-Cost: ~2-3 days to create 40+ factories
-Benefit: Immediate TDD enablement + reduced test suite runtime + DRY model definitions
+Start with Tenant Global Scope and FormRequest expansion to prevent bugs and standardize validation with minimal refactoring risk.
 
-For active development with 60+ tests, the payoff is weeks of cumulative time saved per year.
+### Factory Adoption Recommendation
+
+The current `PetrochemicalTenantSeeder.php` is hand-coded using raw `DB::table()->insert()` calls, making maintenance brittle. Adopting Laravel factories would improve maintainability through test isolation, TDD enablement, and DRY model definitions. Factories should be introduced in phases: core domain models first (RfqFactory, QuoteSubmissionFactory), then supporting entities (VendorInvitationFactory, ComparisonRunFactory), and finally a seeder refactor to use factories internally.

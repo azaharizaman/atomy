@@ -4,12 +4,22 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Models\Approval;
+use App\Models\Award;
+use App\Models\ComparisonRun;
+use App\Models\Project;
+use App\Models\ProjectAcl;
+use App\Models\QuoteSubmission;
+use App\Models\Rfq;
+use App\Models\RfqLineItem;
+use App\Models\Tenant;
+use App\Models\User;
+use App\Models\Vendor;
+use App\Models\VendorInvitation;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use RuntimeException;
 
 /**
  * Single-tenant demo dataset: petrochemical buyer, 10+ projects, 50+ RFQs, 100+ quotes,
@@ -27,8 +37,8 @@ final class PetrochemicalTenantSeeder extends Seeder
     /** @var list<string> */
     private array $projectIds = [];
 
-    /** @var list<array{id: string, name: string, risky: bool, status: string, category: string, capabilities: list<string>, regions: list<string>, email: string}> */
-    private array $vendorPool = [];
+    /** @var list<Vendor> */
+    private array $vendors = [];
 
     private string $tenantId = '';
 
@@ -36,59 +46,47 @@ final class PetrochemicalTenantSeeder extends Seeder
 
     private string $scoringPolicyId = '';
 
-    /**
-     * Returns a deterministic pseudo-random float in [0,1) from an integer index.
-     *
-     * Intended for reproducible seed-data variation. It computes sin($n * 9999) * 10000
-     * and extracts the fractional component via $x - floor($x).
-     */
-    private static function hash(int $n): float
-    {
-        $x = sin($n * 9999) * 10000;
-
-        return $x - floor($x);
-    }
-
     public function run(): void
     {
         $this->now = now();
         $envTenant = env('ATOMY_SEED_TENANT_ID');
         $this->tenantId = $envTenant !== null && $envTenant !== '' ? (string) $envTenant : self::DEFAULT_TENANT_ID;
-        $this->seedTenant();
 
+        // Check if tenant already seeded
         if (DB::table('rfqs')->where('tenant_id', $this->tenantId)->exists()) {
+            $this->command->info('Tenant already seeded, skipping.');
             return;
         }
 
+        $this->seedTenant();
         $this->seedUsers();
         $this->seedProjectsAndAcl();
         $this->seedScoringAndTemplates();
-        $this->buildVendorPool();
-        $this->seedVendorMasterAndGovernance();
-
-        /** @var list<array<string, mixed>> $rfqRows */
-        $rfqRows = [];
-        $rfqCount = 56;
-        for ($i = 0; $i < $rfqCount; $i++) {
-            $rfqRows[] = $this->insertRfqAndLines($this->buildRfqContext($i));
-        }
-
-        foreach ($rfqRows as &$ctx) {
-            $this->insertInvitationsAndQuotes($ctx);
-        }
-        unset($ctx);
-
-        foreach ($rfqRows as $ctx) {
-            $this->insertComparisonApprovalsAwards($ctx);
-        }
-
-        $this->seedDemoExtras($rfqRows);
-        $this->seedInfrastructureRows();
+        $this->seedVendors();
+        $this->seedRfqsAndQuotes();
     }
 
     private function seedTenant(): void
     {
-        $tenantData = [
+        // Check if tenant with this code already exists
+        $existing = Tenant::query()->where('code', 'NORDFJORD')->first();
+        if ($existing !== null) {
+            $this->tenantId = $existing->id;
+            $this->command->info('Tenant NORDFJORD already exists, using existing.');
+            return;
+        }
+
+        // Also check by our default ID
+        $existingById = Tenant::query()->find($this->tenantId);
+        if ($existingById !== null) {
+            $this->tenantId = $existingById->id;
+            $this->command->info('Tenant with default ID already exists, using existing.');
+            return;
+        }
+
+        // Create new tenant
+        $tenant = Tenant::query()->create([
+            'id' => $this->tenantId,
             'code' => 'NORDFJORD',
             'name' => 'Nordfjord Process Chemicals AS',
             'email' => 'procurement@nordfjord.example.com',
@@ -98,25 +96,15 @@ final class PetrochemicalTenantSeeder extends Seeder
             'currency' => 'NOK',
             'date_format' => 'Y-m-d',
             'time_format' => 'H:i',
+            'max_users' => 100,
+            'storage_quota' => 10737418240,
             'storage_used' => 0,
+            'rate_limit' => 60,
             'is_readonly' => false,
             'onboarding_progress' => 100,
-            'updated_at' => $this->now,
-        ];
-
-        $tenantExists = DB::table('tenants')->where('id', $this->tenantId)->exists();
-        if ($tenantExists) {
-            DB::table('tenants')
-                ->where('id', $this->tenantId)
-                ->update($tenantData);
-            return;
-        }
-
-        DB::table('tenants')->insert([
-            'id' => $this->tenantId,
-            ...$tenantData,
-            'created_at' => $this->now,
         ]);
+
+        $this->tenantId = $tenant->id;
     }
 
     private function seedUsers(): void
@@ -131,50 +119,48 @@ final class PetrochemicalTenantSeeder extends Seeder
             'Nora Dahl',
             'Henrik Moen',
         ];
+
         for ($i = 0; $i < 8; $i++) {
-            $userId = (string) Str::ulid();
-            $this->userIds[] = $userId;
-            DB::table('users')->insert([
-                'id' => $userId,
+            $user = User::query()->create([
+                'id' => (string) Str::ulid(),
                 'tenant_id' => $this->tenantId,
-                'email' => 'user' . ($i + 1) . '@example.com',
+                'email' => 'user' . ($i + 1) . '@nordfjord.example.com',
                 'name' => $names[$i],
-                'password_hash' => Hash::make('secret'),
+                'password_hash' => bcrypt('secret'),
                 'role' => $i === 0 ? 'admin' : 'user',
                 'status' => 'active',
                 'timezone' => 'Europe/Oslo',
                 'locale' => 'en',
                 'email_verified_at' => $this->now,
                 'last_login_at' => $this->now,
-                'created_at' => $this->now,
-                'updated_at' => $this->now,
             ]);
+
+            $this->userIds[] = $user->id;
         }
     }
 
     private function seedProjectsAndAcl(): void
     {
         $projects = [
-            ['name' => 'Steam Cracker TAR-2026 (Rafnes)', 'client' => 'NRF-RAFNES', 'status' => 'active', 'budget' => 'fixed_price', 'pct' => 38.0],
-            ['name' => 'Catalyst Regeneration Campaign Q2', 'client' => 'CAT-VENDOR-X', 'status' => 'planning', 'budget' => 'time_and_materials', 'pct' => 12.0],
-            ['name' => 'Stord Marine Terminal Expansion', 'client' => 'TERM-STORD', 'status' => 'active', 'budget' => 'fixed_price', 'pct' => 55.0],
-            ['name' => 'Hydrogen Plant Feed Purification', 'client' => 'H2-NOR', 'status' => 'planning', 'budget' => 'time_and_materials', 'pct' => 8.0],
-            ['name' => 'Lab Specialty Solvents — Frame 2024–27', 'client' => 'LAB-NFC', 'status' => 'completed', 'budget' => 'fixed_price', 'pct' => 100.0],
-            ['name' => 'Flare Tip Replacement Package', 'client' => 'SAFETY-NFC', 'status' => 'on_hold', 'budget' => 'fixed_price', 'pct' => 22.0],
-            ['name' => 'Rail Unloading Arms + VRU', 'client' => 'LOG-RAIL', 'status' => 'active', 'budget' => 'time_and_materials', 'pct' => 44.0],
-            ['name' => 'Sulfur Unit Pit Lining (deferred)', 'client' => 'SUL-LEG', 'status' => 'cancelled', 'budget' => 'fixed_price', 'pct' => 0.0],
-            ['name' => 'Cooling Water Chemical Program', 'client' => 'UTIL-CW', 'status' => 'active', 'budget' => 'fixed_price', 'pct' => 67.0],
-            ['name' => 'DCS Migration Phase 2', 'client' => 'AUTO-DCS', 'status' => 'planning', 'budget' => 'time_and_materials', 'pct' => 15.0],
-            ['name' => 'Berth 4 Loading Arm Renewal', 'client' => 'MARINE-JETTY', 'status' => 'active', 'budget' => 'fixed_price', 'pct' => 71.0],
-            ['name' => 'Packaged Boiler House Revamp', 'client' => 'UTIL-STM', 'status' => 'completed', 'budget' => 'fixed_price', 'pct' => 100.0],
+            ['name' => 'Steam Cracker TAR-2026 (Rafnes)', 'client' => 'NRF-RAFNES', 'status' => 'active', 'budget_type' => 'fixed_price', 'pct' => 38.0],
+            ['name' => 'Catalyst Regeneration Campaign Q2', 'client' => 'CAT-VENDOR-X', 'status' => 'planning', 'budget_type' => 'time_and_materials', 'pct' => 12.0],
+            ['name' => 'Stord Marine Terminal Expansion', 'client' => 'TERM-STORD', 'status' => 'active', 'budget_type' => 'fixed_price', 'pct' => 55.0],
+            ['name' => 'Hydrogen Plant Feed Purification', 'client' => 'H2-NOR', 'status' => 'planning', 'budget_type' => 'time_and_materials', 'pct' => 8.0],
+            ['name' => 'Lab Specialty Solvents — Frame 2024–27', 'client' => 'LAB-NFC', 'status' => 'completed', 'budget_type' => 'fixed_price', 'pct' => 100.0],
+            ['name' => 'Flare Tip Replacement Package', 'client' => 'SAFETY-NFC', 'status' => 'on_hold', 'budget_type' => 'fixed_price', 'pct' => 22.0],
+            ['name' => 'Rail Unloading Arms + VRU', 'client' => 'LOG-RAIL', 'status' => 'active', 'budget_type' => 'time_and_materials', 'pct' => 44.0],
+            ['name' => 'Sulfur Unit Pit Lining (deferred)', 'client' => 'SUL-LEG', 'status' => 'cancelled', 'budget_type' => 'fixed_price', 'pct' => 0.0],
+            ['name' => 'Cooling Water Chemical Program', 'client' => 'UTIL-CW', 'status' => 'active', 'budget_type' => 'fixed_price', 'pct' => 67.0],
+            ['name' => 'DCS Migration Phase 2', 'client' => 'AUTO-DCS', 'status' => 'planning', 'budget_type' => 'time_and_materials', 'pct' => 15.0],
+            ['name' => 'Berth 4 Loading Arm Renewal', 'client' => 'MARINE-JETTY', 'status' => 'active', 'budget_type' => 'fixed_price', 'pct' => 71.0],
+            ['name' => 'Packaged Boiler House Revamp', 'client' => 'UTIL-STM', 'status' => 'completed', 'budget_type' => 'fixed_price', 'pct' => 100.0],
         ];
 
-        $pm = $this->userIds[1];
+        $pm = $this->userIds[1] ?? null;
+
         foreach ($projects as $p) {
-            $pid = (string) Str::ulid();
-            $this->projectIds[] = $pid;
-            DB::table('projects')->insert([
-                'id' => $pid,
+            $project = Project::query()->create([
+                'id' => (string) Str::ulid(),
                 'tenant_id' => $this->tenantId,
                 'name' => $p['name'],
                 'client_id' => $p['client'],
@@ -182,14 +168,13 @@ final class PetrochemicalTenantSeeder extends Seeder
                 'end_date' => $this->now->copy()->addMonths(20)->toDateString(),
                 'project_manager_id' => $pm,
                 'status' => $p['status'],
-                'budget_type' => $p['budget'],
+                'budget_type' => $p['budget_type'],
                 'completion_percentage' => $p['pct'],
-                'created_at' => $this->now,
-                'updated_at' => $this->now,
             ]);
-        }
 
-        foreach ($this->projectIds as $projId) {
+            $this->projectIds[] = $project->id;
+
+            // Seed project ACL
             foreach ($this->userIds as $uIdx => $uid) {
                 $role = match (true) {
                     $uIdx === 0 => 'owner',
@@ -197,14 +182,12 @@ final class PetrochemicalTenantSeeder extends Seeder
                     $uIdx < 5 => 'editor',
                     default => 'viewer',
                 };
-                DB::table('project_acl')->insert([
+                ProjectAcl::query()->create([
                     'id' => (string) Str::ulid(),
                     'tenant_id' => $this->tenantId,
-                    'project_id' => $projId,
+                    'project_id' => $project->id,
                     'user_id' => $uid,
                     'role' => $role,
-                    'created_at' => $this->now,
-                    'updated_at' => $this->now,
                 ]);
             }
         }
@@ -255,213 +238,76 @@ final class PetrochemicalTenantSeeder extends Seeder
         }
     }
 
-    private function buildVendorPool(): void
+    private function seedVendors(): void
     {
-        $defs = [
-            ['FlowServe Nordics AS', false],
-            ['Emerson Fisher Norway', false],
-            ['Alfa Laval Aalborg', false],
-            ['Sulzer Chemtech', false],
-            ['John Zink Hamworthy Combustion', false],
-            ['Donaldson Process Filtration', false],
-            ['Grundfos Process Nordic', false],
-            ['Atlas Copco Compressors', false],
-            ['Linde Engineering', false],
-            ['Air Liquide Advanced Separations', false],
-            ['Technip Energies Norge', false],
-            ['Wood PLC Norway', false],
-            ['Worley Chemetics', false],
-            ['Hayward Tyler (IMO) Pumps', false],
-            ['SIHI Liquid Ring', false],
-            ['Burkert Fluid Control', false],
-            ['Swagelok Bergen', false],
-            ['Parker Hannifin Scandinavia', false],
-            ['Honeywell UOP', false],
-            ['BASF Catalysts', false],
-            ['Clariant Catalysts', false],
-            ['Johnson Matthey NORAM', false],
-            ['Baltic Surplus Valves OU', true],
-            ['QuickTurn Fabrication LLC', true],
-            ['Offshore Chemtrade Services Ltd', true],
-            ['Nordic Rebuild Works (NRW)', true],
-            ['Discount MRO Express', true],
-            ['Shell fictive Contractor Nordic A/S', false],
-        ];
-        $categories = ['Rotating equipment', 'Instrumentation', 'Valves & piping', 'Electrical & automation', 'Turnaround services', 'Chemicals & consumables'];
-        $capabilitySets = [
-            ['API 610 pumps', 'seal support systems', 'turnaround response'],
-            ['control valves', 'SIL verification', 'field calibration'],
-            ['heat transfer', 'process filtration', 'skid fabrication'],
-            ['combustion systems', 'burner management', 'ATEX field service'],
-            ['catalyst supply', 'reactor internals', 'technical service'],
-            ['inspection services', 'NDT', 'rope access'],
-        ];
-        $regionSets = [
-            ['NO', 'SE', 'DK'],
-            ['NO', 'GB', 'NL'],
-            ['NO', 'DE', 'BE'],
-            ['NO', 'MY', 'SG'],
+        $vendorNames = [
+            'FlowServe Nordics AS',
+            'Emerson Fisher Norway',
+            'Alfa Laval Aalborg',
+            'Sulzer Chemtech',
+            'John Zink Hamworthy Combustion',
+            'Donaldson Process Filtration',
+            'Grundfos Process Nordic',
+            'Atlas Copco Compressors',
+            'Linde Engineering',
+            'Air Liquide Advanced Separations',
+            'Technip Energies Norge',
+            'Wood PLC Norway',
+            'Worley Chemetics',
+            'Hayward Tyler (IMO) Pumps',
+            'SIHI Liquid Ring',
+            'Burkert Fluid Control',
+            'Swagelok Bergen',
+            'Parker Hannifin Scandinavia',
+            'Honeywell UOP',
+            'BASF Catalysts',
+            'Clariant Catalysts',
+            'Johnson Matthey NORAM',
+            'Baltic Surplus Valves OU',
+            'QuickTurn Fabrication LLC',
+            'Offshore Chemtrade Services Ltd',
+            'Nordic Rebuild Works (NRW)',
+            'Discount MRO Express',
+            'Shell fictive Contractor Nordic A/S',
         ];
 
-        foreach ($defs as $index => [$name, $risky]) {
+        $categories = ['Rotating equipment', 'Instrumentation', 'Valves & piping', 'Electrical & automation', 'Turnaround services', 'Chemicals & consumables'];
+        $regions = [['NO', 'SE', 'DK'], ['NO', 'GB', 'NL'], ['NO', 'DE', 'BE'], ['NO', 'MY', 'SG']];
+
+        foreach ($vendorNames as $index => $name) {
+            $risky = $index >= 22;
             $status = match (true) {
                 $risky && $index % 3 === 0 => 'restricted',
                 $risky && $index % 3 === 1 => 'under_review',
                 $risky => 'suspended',
                 default => 'approved',
             };
-            $emailLocalPart = strtolower((string) preg_replace('/[^a-z0-9]+/i', '.', $name));
-            $this->vendorPool[] = [
+
+            $vendor = Vendor::query()->create([
                 'id' => (string) Str::ulid(),
-                'name' => $name,
-                'risky' => $risky,
-                'status' => $status,
-                'category' => $categories[$index % count($categories)],
-                'capabilities' => $capabilitySets[$index % count($capabilitySets)],
-                'regions' => $regionSets[$index % count($regionSets)],
-                'email' => trim($emailLocalPart, '.') . '@vendor.test',
-            ];
-        }
-    }
-
-    private function seedVendorMasterAndGovernance(): void
-    {
-        foreach ($this->vendorPool as $index => $vendor) {
-            $isApproved = $vendor['status'] === 'approved';
-            $contactName = $this->vendorContactName($index);
-            $metadata = [
-                'primary_category' => $vendor['category'],
-                'secondary_categories' => array_values(array_unique([
-                    $vendor['category'],
-                    $index % 2 === 0 ? 'Reliability engineering' : 'Petrochemical services',
-                ])),
-                'capability_tags' => $vendor['capabilities'],
-                'operating_regions' => $vendor['regions'],
-                'strategic_tier' => $index % 5 === 0 ? 'strategic' : ($index % 3 === 0 ? 'preferred' : 'standard'),
-                'risk_tier' => $vendor['risky'] ? 'watchlist' : ($index % 4 === 0 ? 'medium' : 'low'),
-                'esg_maturity_band' => $vendor['risky'] ? 'developing' : ($index % 4 === 0 ? 'managed' : 'advanced'),
-                'preferred_vendor' => ! $vendor['risky'] && $index % 4 === 0,
-                'supported_delivery_modes' => $index % 2 === 0 ? ['onsite', 'regional'] : ['remote', 'onsite'],
-                'compliance_status' => $vendor['risky'] ? 'review_required' : 'compliant',
-                'kyc_verified' => ! $vendor['risky'],
-                'sanctions_screened' => true,
-                'compliance_last_checked_at' => $this->now->copy()->subDays($vendor['risky'] ? 210 : 30 + ($index % 45))->toAtomString(),
-                'performance_summary' => [
-                    'participation_rate' => round(0.58 + self::hash($index + 41) * 0.34, 2),
-                    'quote_response_rate' => round(0.62 + self::hash($index + 43) * 0.30, 2),
-                    'award_conversion_rate' => round(0.08 + self::hash($index + 47) * 0.24, 2),
-                    'last_active_at' => $this->now->copy()->subDays(8 + ($index * 11) % 140)->toAtomString(),
-                ],
-            ];
-
-            DB::table('vendors')->insert([
-                'id' => $vendor['id'],
                 'tenant_id' => $this->tenantId,
                 'registration_number' => 'NO-' . str_pad((string) (730000 + $index), 6, '0', STR_PAD_LEFT),
                 'tax_id' => 'MVA-' . str_pad((string) (930000 + $index), 6, '0', STR_PAD_LEFT),
-                'legal_name' => $vendor['name'],
-                'display_name' => $vendor['name'],
-                'country_of_registration' => $vendor['regions'][0],
-                'primary_contact_name' => $contactName,
-                'primary_contact_email' => $vendor['email'],
+                'legal_name' => $name,
+                'display_name' => $name,
+                'country_of_registration' => $regions[$index % count($regions)][0],
+                'primary_contact_name' => $this->vendorContactName($index),
+                'primary_contact_email' => strtolower(preg_replace('/[^a-z0-9]+/i', '.', $name)) . '@vendor.test',
                 'primary_contact_phone' => '+47 ' . (22000000 + $index * 137),
-                'status' => $vendor['status'],
+                'status' => $status,
                 'onboarded_at' => $this->now->copy()->subDays(420 - ($index % 240)),
-                'metadata' => json_encode($metadata, JSON_THROW_ON_ERROR),
-                'approved_by_user_id' => $isApproved ? $this->userIds[$index % count($this->userIds)] : null,
-                'approved_at' => $isApproved ? $this->now->copy()->subDays(180 - ($index % 90)) : null,
-                'approval_note' => $isApproved ? 'Seeded approval after petrochemical supplier qualification review.' : null,
-                'created_at' => $this->now,
-                'updated_at' => $this->now,
             ]);
 
-            $this->seedVendorEvidenceRows($vendor, $index);
-            if ($vendor['risky']) {
-                $this->seedVendorFindingRows($vendor, $index);
+            if ($status === 'approved') {
+                $vendor->update([
+                    'approved_by_user_id' => $this->userIds[$index % count($this->userIds)],
+                    'approved_at' => $this->now->copy()->subDays(180 - ($index % 90)),
+                    'approval_note' => 'Seeded approval after petrochemical supplier qualification review.',
+                ]);
             }
+
+            $this->vendors[] = $vendor;
         }
-    }
-
-    /**
-     * @param array{id: string, name: string, risky: bool, status: string, category: string, capabilities: list<string>, regions: list<string>, email: string} $vendor
-     */
-    private function seedVendorEvidenceRows(array $vendor, int $index): void
-    {
-        $baseRows = [
-            [
-                'domain' => 'compliance',
-                'type' => 'sanctions_screening',
-                'title' => 'Sanctions screening — ' . $vendor['name'],
-                'source' => 'Dow Jones manual export',
-                'observed_at' => $this->now->copy()->subDays($vendor['risky'] ? 210 : 35 + ($index % 35)),
-                'expires_at' => $this->now->copy()->addDays($vendor['risky'] ? -15 : 145),
-                'review_status' => $vendor['risky'] ? 'pending' : 'reviewed',
-                'reviewed_by' => $vendor['risky'] ? null : $this->userIds[$index % count($this->userIds)],
-                'notes' => $vendor['risky']
-                    ? 'Potential beneficial ownership similarity requires secondary compliance review.'
-                    : 'No sanctions or politically exposed person matches in latest manual screening.',
-            ],
-            [
-                'domain' => 'esg',
-                'type' => 'sustainability_disclosure',
-                'title' => 'Supplier sustainability disclosure — ' . $vendor['category'],
-                'source' => 'Supplier questionnaire',
-                'observed_at' => $this->now->copy()->subDays($vendor['risky'] ? 430 : 80 + ($index % 80)),
-                'expires_at' => $this->now->copy()->addDays($vendor['risky'] ? 30 : 260),
-                'review_status' => $vendor['risky'] ? 'pending' : 'reviewed',
-                'reviewed_by' => $vendor['risky'] ? null : $this->userIds[($index + 1) % count($this->userIds)],
-                'notes' => $vendor['risky']
-                    ? 'Disclosure is stale and misses Scope 3 emissions evidence for the petrochemical services category.'
-                    : 'Disclosure includes energy intensity, HSE incident rate, and waste-handling commitments.',
-            ],
-            [
-                'domain' => 'compliance',
-                'type' => 'due_diligence',
-                'title' => 'Beneficial ownership and anti-bribery due diligence',
-                'source' => 'Procurement compliance checklist',
-                'observed_at' => $this->now->copy()->subDays(25 + ($index % 60)),
-                'expires_at' => $this->now->copy()->addDays($vendor['risky'] ? 45 : 300),
-                'review_status' => $vendor['risky'] ? 'pending' : 'reviewed',
-                'reviewed_by' => $vendor['risky'] ? null : $this->userIds[($index + 2) % count($this->userIds)],
-                'notes' => $vendor['risky']
-                    ? 'Enhanced due diligence is in progress due to limited Nordic project references.'
-                    : 'Ownership, anti-bribery, and HSE policy evidence reviewed for petrochemical procurement.',
-            ],
-        ];
-
-        foreach ($baseRows as $row) {
-            DB::table('vendor_evidence')->insert([
-                'id' => (string) Str::ulid(),
-                'tenant_id' => $this->tenantId,
-                'vendor_id' => $vendor['id'],
-                ...$row,
-                'created_at' => $this->now,
-                'updated_at' => $this->now,
-            ]);
-        }
-    }
-
-    /**
-     * @param array{id: string, name: string, risky: bool, status: string, category: string, capabilities: list<string>, regions: list<string>, email: string} $vendor
-     */
-    private function seedVendorFindingRows(array $vendor, int $index): void
-    {
-        DB::table('vendor_findings')->insert([
-            'id' => (string) Str::ulid(),
-            'tenant_id' => $this->tenantId,
-            'vendor_id' => $vendor['id'],
-            'domain' => 'risk',
-            'issue_type' => $index % 2 === 0 ? 'financial_watch' : 'reference_gap',
-            'severity' => $index % 2 === 0 ? 'high' : 'medium',
-            'status' => 'open',
-            'opened_at' => $this->now->copy()->subDays(18 + ($index % 20)),
-            'opened_by' => $this->userIds[$index % count($this->userIds)],
-            'remediation_owner' => $this->userIds[($index + 1) % count($this->userIds)],
-            'remediation_due_at' => $this->now->copy()->addDays($index % 2 === 0 ? -3 : 21),
-            'resolution_summary' => null,
-            'created_at' => $this->now,
-            'updated_at' => $this->now,
-        ]);
     }
 
     private function vendorContactName(int $index): string
@@ -480,35 +326,12 @@ final class PetrochemicalTenantSeeder extends Seeder
         return $names[$index % count($names)];
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    private function buildRfqContext(int $i): array
+    private function seedRfqsAndQuotes(): void
     {
-        if ($this->projectIds === [] || $this->userIds === []) {
-            throw new RuntimeException('Seeder prerequisites not met: users and projects must be seeded first.');
-        }
-
-        $kind = $this->rfqKind($i);
-        $projectId = ($i % 11 === 0) ? null : $this->projectIds[$i % count($this->projectIds)];
-        $lineProfile = ['tiny', 'small', 'medium', 'large'][$i % 4];
-        $lineCount = $this->lineCountForProfile($i, $lineProfile);
-        $owner = $this->userIds[$i % count($this->userIds)];
-
-        $status = match ($kind) {
-            'draft' => 'draft',
-            'published_intake', 'published_stuck' => 'published',
-            'closed_pending' => 'closed',
-            'awarded' => 'awarded',
-            'cancelled' => 'cancelled',
-            default => 'draft',
-        };
-
-        $seq = $i + 1;
         $titles = [
             'HP control valves Class 900 — ethylene rundown',
             'Mechanical seal upgrade — cracked gas compressor',
-            'Sulfuric acid catalyst reload ( Claus tail gas )',
+            'Sulfuric acid catalyst reload (Claus tail gas)',
             'Demineralized water polisher resin',
             'Thermal oxidizer burner management system',
             'Stainless tank internals — agitator + baffles',
@@ -537,52 +360,90 @@ final class PetrochemicalTenantSeeder extends Seeder
             'Submersible sump pumps — containment sump',
             'Gasket kit ANSI 900 — RF joint set',
         ];
-        $title = $titles[$i % count($titles)] . ($seq > count($titles) ? " (lot {$seq})" : '');
 
         $categories = ['Rotating equipment', 'Instrumentation', 'Valves & piping', 'Electrical & automation', 'Civil/structural', 'Turnaround services', 'Chemicals & consumables'];
         $departments = ['Maintenance', 'Projects', 'Operations', 'HSE', 'Procurement'];
 
-        $deadline = match ($status) {
-            'draft' => $this->now->copy()->addDays(30),
-            'published' => $this->now->copy()->addDays(7 + ($i % 10)),
-            'cancelled' => $this->now->copy()->subDays(40),
-            default => $this->now->copy()->subDays(5 + ($i % 8)),
-        };
-        $closing = match ($status) {
-            'draft', 'published' => $deadline->copy()->addDays(14),
-            'cancelled' => $this->now->copy()->subDays(20),
-            default => $this->now->copy()->subDays(1 + ($i % 5)),
-        };
-        $technicalReviewDueAt = $closing->copy()->subDays(5 + ($i % 3));
-        $financialReviewDueAt = $closing->copy()->subDays(2 + ($i % 2));
-        $expectedAwardAt = $closing->copy()->addDays(4 + ($i % 6));
+        $rfqCount = 56;
+        for ($i = 0; $i < $rfqCount; $i++) {
+            $kind = $this->rfqKind($i);
+            $projectId = ($i % 11 === 0) ? null : $this->projectIds[$i % count($this->projectIds)];
+            $owner = $this->userIds[$i % count($this->userIds)];
 
-        $ev = 25000.0 + ($i * 17500) + self::hash($i + 3) * 420000;
-        $savings = 2.5 + self::hash($i + 5) * 16.0;
+            $status = match ($kind) {
+                'draft' => 'draft',
+                'published_intake', 'published_stuck' => 'published',
+                'closed_pending' => 'closed',
+                'awarded' => 'awarded',
+                'cancelled' => 'cancelled',
+                default => 'draft',
+            };
 
-        return [
-            'index' => $i,
-            'kind' => $kind,
-            'rfq_id' => (string) Str::ulid(),
-            'project_id' => $projectId,
-            'status' => $status,
-            'rfq_number' => sprintf('RFQ-NFC-2026-%04d', $seq),
-            'title' => $title,
-            'description' => 'Nordfjord Process Chemicals AS — seeded sourcing event (petrochemical maintenance & projects).',
-            'category' => $categories[$i % count($categories)],
-            'department' => $departments[$i % count($departments)],
-            'owner_id' => $owner,
-            'estimated_value' => round($ev, 2),
-            'savings_percentage' => round($savings, 2),
-            'submission_deadline' => $deadline,
-            'closing_date' => $closing,
-            'technical_review_due_at' => $technicalReviewDueAt,
-            'financial_review_due_at' => $financialReviewDueAt,
-            'expected_award_at' => $expectedAwardAt,
-            'line_profile' => $lineProfile,
-            'line_count' => $lineCount,
-            'scoring_spread' => $kind === 'closed_pending' ? (self::hash($i) > 0.35) : (self::hash($i + 7) > 0.55),
-        ];
+            $deadline = match ($status) {
+                'draft' => $this->now->copy()->addDays(30),
+                'published' => $this->now->copy()->addDays(7 + ($i % 10)),
+                'cancelled' => $this->now->copy()->subDays(40),
+                default => $this->now->copy()->subDays(5 + ($i % 8)),
+            };
+
+            $closing = match ($status) {
+                'draft', 'published' => $deadline->copy()->addDays(14),
+                'cancelled' => $this->now->copy()->subDays(20),
+                default => $this->now->copy()->subDays(1 + ($i % 5)),
+            };
+
+            $technicalReviewDueAt = $closing->copy()->subDays(5 + ($i % 3));
+            $financialReviewDueAt = $closing->copy()->subDays(2 + ($i % 2));
+            $expectedAwardAt = $closing->copy()->addDays(4 + ($i % 6));
+
+            $ev = 25000.0 + ($i * 17500) + (sin($i * 9999) * 10000 - floor(sin($i * 9999) * 10000)) * 420000;
+            $savings = 2.5 + (sin(($i + 5) * 9999) * 10000 - floor(sin(($i + 5) * 9999) * 10000)) * 16.0;
+
+            $rfq = Rfq::query()->create([
+                'id' => (string) Str::ulid(),
+                'tenant_id' => $this->tenantId,
+                'project_id' => $projectId,
+                'rfq_number' => sprintf('RFQ-NFC-2026-%04d', $i + 1),
+                'title' => $titles[$i % count($titles)] . ($i + 1 > count($titles) ? " (lot " . ($i + 1) . ")" : ''),
+                'description' => 'Nordfjord Process Chemicals AS — seeded sourcing event (petrochemical maintenance & projects).',
+                'category' => $categories[$i % count($categories)],
+                'department' => $departments[$i % count($departments)],
+                'status' => $status,
+                'owner_id' => $owner,
+                'estimated_value' => round($ev, 2),
+                'savings_percentage' => round($savings, 2),
+                'submission_deadline' => $deadline,
+                'closing_date' => $closing,
+                'technical_review_due_at' => $technicalReviewDueAt,
+                'financial_review_due_at' => $financialReviewDueAt,
+                'expected_award_at' => $expectedAwardAt,
+                'payment_terms' => ($i % 3 === 0) ? 'Net 45 EOM' : 'Net 30',
+                'evaluation_method' => 'weighted',
+            ]);
+
+            // Seed RFQ line items
+            $lineCount = $this->lineCountForProfile($i);
+            $uoms = ['ea', 'm', 'kg', 'kL', 'MT', 'set', 'lot'];
+            for ($j = 1; $j <= $lineCount; $j++) {
+                RfqLineItem::query()->create([
+                    'id' => (string) Str::ulid(),
+                    'tenant_id' => $this->tenantId,
+                    'rfq_id' => $rfq->id,
+                    'description' => sprintf('Line %d — tag NFC-%04d-%03d', $j, $i + 1, $j),
+                    'quantity' => (float) (1 + ($j % 17) * ($j % 4 + 1)),
+                    'uom' => $uoms[$j % count($uoms)],
+                    'unit_price' => round(120.0 + $j * 37.5 + (sin(($j + $i) * 9999) * 10000 - floor(sin(($j + $i) * 9999) * 10000)) * 800, 2),
+                    'currency' => 'USD',
+                    'specifications' => 'ASME / PED applicable; material cert 3.1 required.',
+                    'sort_order' => $j,
+                ]);
+            }
+
+            // Seed vendor invitations and quotes for non-draft RFQs
+            if ($status !== 'draft') {
+                $this->seedInvitationsAndQuotes($rfq, $i, $kind);
+            }
+        }
     }
 
     private function rfqKind(int $i): string
@@ -606,8 +467,10 @@ final class PetrochemicalTenantSeeder extends Seeder
         return 'cancelled';
     }
 
-    private function lineCountForProfile(int $i, string $profile): int
+    private function lineCountForProfile(int $i): int
     {
+        $profile = ['tiny', 'small', 'medium', 'large'][$i % 4];
+
         return match ($profile) {
             'tiny' => 1 + ($i % 2),
             'small' => 3 + ($i % 6),
@@ -617,221 +480,70 @@ final class PetrochemicalTenantSeeder extends Seeder
         };
     }
 
-    /**
-     * @param array<string, mixed> $ctx
-     * @return array<string, mixed>
-     */
-    private function insertRfqAndLines(array $ctx): array
+    private function seedInvitationsAndQuotes(Rfq $rfq, int $index, string $kind): void
     {
-        $rfqId = (string) $ctx['rfq_id'];
-        DB::table('rfqs')->insert([
-            'id' => $rfqId,
-            'tenant_id' => $this->tenantId,
-            'project_id' => $ctx['project_id'],
-            'rfq_number' => $ctx['rfq_number'],
-            'title' => $ctx['title'],
-            'description' => $ctx['description'],
-            'category' => $ctx['category'],
-            'department' => $ctx['department'],
-            'status' => $ctx['status'],
-            'owner_id' => $ctx['owner_id'],
-            'estimated_value' => $ctx['estimated_value'],
-            'savings_percentage' => $ctx['savings_percentage'],
-            'submission_deadline' => $ctx['submission_deadline'],
-            'closing_date' => $ctx['closing_date'],
-            'technical_review_due_at' => $ctx['technical_review_due_at'],
-            'financial_review_due_at' => $ctx['financial_review_due_at'],
-            'expected_award_at' => $ctx['expected_award_at'],
-            'payment_terms' => ($ctx['index'] % 3 === 0) ? 'Net 45 EOM' : 'Net 30',
-            'evaluation_method' => 'weighted',
-            'created_at' => $this->now,
-            'updated_at' => $this->now,
-        ]);
-
-        $uoms = ['ea', 'm', 'kg', 'kL', 'MT', 'set', 'lot'];
-        $lineIds = [];
-        $lineCount = (int) $ctx['line_count'];
-        for ($j = 1; $j <= $lineCount; $j++) {
-            $lid = (string) Str::ulid();
-            $lineIds[] = [
-                'id' => $lid,
-                'quantity' => (float) (1 + ($j % 17) * ($j % 4 + 1)),
-                'uom' => $uoms[$j % count($uoms)],
-                'unit_price' => round(120.0 + $j * 37.5 + self::hash($j + (int) $ctx['index']) * 800, 2),
-            ];
-            DB::table('rfq_line_items')->insert([
-                'id' => $lid,
-                'tenant_id' => $this->tenantId,
-                'rfq_id' => $rfqId,
-                'description' => sprintf('Line %d — tag NFC-%04d-%03d', $j, (int) $ctx['index'] + 1, $j),
-                'quantity' => $lineIds[$j - 1]['quantity'],
-                'uom' => $lineIds[$j - 1]['uom'],
-                'unit_price' => $lineIds[$j - 1]['unit_price'],
-                'currency' => 'USD',
-                'specifications' => 'ASME / PED applicable; material cert 3.1 required.',
-                'sort_order' => $j,
-                'created_at' => $this->now,
-                'updated_at' => $this->now,
-            ]);
-        }
-        $ctx['_line_ids'] = $lineIds;
-
-        return $ctx;
-    }
-
-    /**
-     * @param array<string, mixed> $ctx
-     */
-    private function insertInvitationsAndQuotes(array &$ctx): void
-    {
-        $rfqId = (string) $ctx['rfq_id'];
-        $kind = (string) $ctx['kind'];
-        /** @var list<array{id: string, quantity: float, uom: string, unit_price: float}> $lines */
-        $lines = $ctx['_line_ids'] ?? [];
-        $i = (int) $ctx['index'];
-
         $inviteTotal = match ($kind) {
-            'draft' => 2 + ($i % 4),
-            'cancelled' => 2 + ($i % 3),
-            default => 4 + ($i % 5),
+            'cancelled' => 2 + ($index % 3),
+            default => 4 + ($index % 5),
         };
 
         $quoteTarget = match ($kind) {
-            'draft' => 0,
-            'published_intake' => 1 + ($i % 4),
+            'published_intake' => 1 + ($index % 4),
             'published_stuck' => 3,
-            'closed_pending' => 3 + ($i % 2),
-            'awarded' => 3 + ($i % 3),
-            'cancelled' => $i % 3,
+            'closed_pending' => 3 + ($index % 2),
+            'awarded' => 3 + ($index % 3),
+            'cancelled' => $index % 3,
             default => 0,
         };
 
+        $approvedVendors = array_filter($this->vendors, fn ($v) => $v->status === 'approved');
+        $approvedVendors = array_values($approvedVendors);
+
         $invitationIds = [];
-        $invitationMeta = [];
         for ($v = 0; $v < $inviteTotal; $v++) {
-            $vend = $this->vendorPool[($v + $i * 7) % count($this->vendorPool)];
-            $invId = (string) Str::ulid();
-            $invitationIds[] = $invId;
+            $vend = $approvedVendors[($v + $index * 7) % count($approvedVendors)] ?? $approvedVendors[0];
             $hasQuote = $v < $quoteTarget;
-            $invitationMeta[$invId] = $vend;
-            if ($vend['status'] === 'approved') {
+
+            $invitation = VendorInvitation::query()->create([
+                'id' => (string) Str::ulid(),
+                'tenant_id' => $this->tenantId,
+                'rfq_id' => $rfq->id,
+                'vendor_id' => $vend->id,
+                'vendor_email' => $vend->primary_contact_email,
+                'vendor_name' => $vend->display_name,
+                'status' => $hasQuote ? 'accepted' : 'pending',
+                'invited_at' => $this->now,
+                'responded_at' => $hasQuote ? $this->now : null,
+                'channel' => 'email',
+            ]);
+
+            $invitationIds[] = $invitation->id;
+
+            // Seed selected vendor
+            if ($vend->status === 'approved') {
                 DB::table('requisition_selected_vendors')->insertOrIgnore([
                     'id' => (string) Str::ulid(),
                     'tenant_id' => $this->tenantId,
-                    'rfq_id' => $rfqId,
-                    'vendor_id' => $vend['id'],
-                    'selected_by_user_id' => $ctx['owner_id'],
+                    'rfq_id' => $rfq->id,
+                    'vendor_id' => $vend->id,
+                    'selected_by_user_id' => $rfq->owner_id,
                     'selected_at' => $this->now->copy()->subDays(1 + ($v % 4)),
                     'created_at' => $this->now,
                     'updated_at' => $this->now,
                 ]);
             }
-            DB::table('vendor_invitations')->insert([
-                'id' => $invId,
-                'tenant_id' => $this->tenantId,
-                'rfq_id' => $rfqId,
-                'vendor_id' => $vend['id'],
-                'vendor_email' => $vend['email'],
-                'vendor_name' => $vend['name'],
-                'status' => $hasQuote ? 'accepted' : 'pending',
-                'invited_at' => $this->now,
-                'responded_at' => $hasQuote ? $this->now : null,
-                'channel' => 'email',
-                'created_at' => $this->now,
-                'updated_at' => $this->now,
-            ]);
-        }
 
-        $quoteIds = [];
-        foreach (array_slice($invitationIds, 0, $quoteTarget) as $qIdx => $invId) {
-            $vend = $invitationMeta[$invId];
-            $quoteId = (string) Str::ulid();
-            $quoteIds[] = $quoteId;
-            $st = $this->quoteStatusFor($kind, $qIdx);
-            $warnings = match ($st) {
-                'needs_review' => 2 + ($qIdx % 3),
-                'failed' => 0,
-                default => (int) ($vend['risky'] ? 1 : 0),
-            };
-            $errors = $st === 'failed' ? 2 : 0;
-
-            $submittedAt = $this->now->copy()->subDays($qIdx % 6);
-            $processingStartedAt = null;
-            $processingCompletedAt = null;
-            $parsedAt = null;
-            $errorCode = null;
-            $errorMessage = null;
-            $retryCount = 0;
-
-            if ($st !== 'uploaded') {
-                $processingStartedAt = $submittedAt->copy()->addMinutes(2);
-            }
-
-            if (in_array($st, ['extracted', 'normalizing', 'ready', 'needs_review', 'failed'], true)) {
-                $parsedAt = $processingStartedAt?->copy()->addMinutes(5);
-            }
-
-            if (in_array($st, ['ready', 'needs_review', 'failed'], true)) {
-                $processingCompletedAt = $parsedAt?->copy()->addMinutes(1);
-            }
-
-            if ($st === 'failed') {
-                $errorCode = 'EXTRACTION_FAILED';
-                $errorMessage = 'Unable to parse document structure. Retry exhaustion.';
-                $retryCount = 3;
-            }
-
-            DB::table('quote_submissions')->insert([
-                'id' => $quoteId,
-                'tenant_id' => $this->tenantId,
-                'rfq_id' => $rfqId,
-                'vendor_id' => $vend['id'],
-                'vendor_name' => $vend['name'],
-                'uploaded_by' => $ctx['owner_id'],
-                'status' => $st,
-                'file_path' => '/uploads/quotes/' . $rfqId . '-' . $qIdx . '.pdf',
-                'file_type' => 'application/pdf',
-                'original_filename' => 'Quote_' . preg_replace('/\W+/', '_', $vend['name']) . '.pdf',
-                'submitted_at' => $submittedAt,
-                'confidence' => round(72.0 + self::hash($i + $qIdx) * 27.0, 2),
-                'line_items_count' => count($lines),
-                'warnings_count' => $warnings,
-                'errors_count' => $errors,
-                'error_code' => $errorCode,
-                'error_message' => $errorMessage,
-                'processing_started_at' => $processingStartedAt,
-                'processing_completed_at' => $processingCompletedAt,
-                'parsed_at' => $parsedAt,
-                'retry_count' => $retryCount,
-                'created_at' => $this->now,
-                'updated_at' => $this->now,
-            ]);
-
-            if (in_array($st, ['normalizing', 'ready', 'needs_review'], true)) {
-                $this->seedNormalizationForQuote($quoteId, $lines, $kind, $qIdx, $st === 'needs_review');
-            }
-
-            if ($vend['risky'] && $kind !== 'draft') {
-                DB::table('risk_items')->insert([
-                    'id' => (string) Str::ulid(),
-                    'tenant_id' => $this->tenantId,
-                    'rfq_id' => $rfqId,
-                    'severity' => $vend['risky'] && self::hash($i + $qIdx) > 0.6 ? 'high' : 'medium',
-                    'title' => 'Supplier diligence — ' . $vend['name'],
-                    'description' => 'Seeded risk: limited local reference installs / financial covenant watchlist (demo).',
-                    'source' => 'system',
-                    'status' => 'open',
-                    'resolved_at' => null,
-                    'resolved_by' => null,
-                    'created_at' => $this->now,
-                    'updated_at' => $this->now,
-                ]);
+            // Seed quote submission
+            if ($hasQuote) {
+                $st = $this->quoteStatusFor($kind, $v);
+                $this->seedQuote($rfq, $vend, $st, $index, $v);
             }
         }
 
-        $ctx['_invitation_ids'] = $invitationIds;
-        $ctx['_quote_ids'] = $quoteIds;
-        $ctx['_invitation_meta'] = $invitationMeta;
+        // Seed comparison, approval, award for closed/awarded RFQs
+        if (in_array($kind, ['closed_pending', 'awarded'], true)) {
+            $this->seedComparisonApprovalAward($rfq, $kind, $index);
+        }
     }
 
     private function quoteStatusFor(string $kind, int $qIdx): string
@@ -850,166 +562,168 @@ final class PetrochemicalTenantSeeder extends Seeder
         };
     }
 
-    /**
-     * @param list<array{id: string, quantity: float, uom: string, unit_price: float}> $lines
-     */
-    private function seedNormalizationForQuote(string $quoteId, array $lines, string $kind, int $qIdx, bool $withOpenConflict): void
+    private function seedQuote(Rfq $rfq, Vendor $vendor, string $status, int $rfqIndex, int $quoteIndex): void
     {
-        $lineCount = count($lines);
-        $skipLast = $withOpenConflict && $qIdx === 0 && $kind === 'published_stuck';
-        $max = $skipLast ? max(0, $lineCount - 1) : $lineCount;
+        $submittedAt = $this->now->copy()->subDays($quoteIndex % 6);
+        $processingStartedAt = null;
+        $processingCompletedAt = null;
+        $parsedAt = null;
+        $errorCode = null;
+        $errorMessage = null;
+        $retryCount = 0;
+        $confidence = null;
+        $lineItemsCount = 0;
+        $warningsCount = 0;
+        $errorsCount = 0;
 
-        for ($k = 0; $k < $max; $k++) {
-            $line = $lines[$k];
-            $nlId = (string) Str::ulid();
-            $priceDelta = 1.0 + (self::hash((int) crc32($quoteId) + $k) - 0.5) * 0.08;
-            DB::table('normalization_source_lines')->insert([
-                'id' => $nlId,
-                'tenant_id' => $this->tenantId,
-                'quote_submission_id' => $quoteId,
-                'rfq_line_item_id' => $line['id'],
-                'source_vendor' => 'PDF extract',
-                'source_description' => 'Mapped line ' . ($k + 1),
-                'source_quantity' => $line['quantity'],
-                'source_uom' => $line['uom'],
-                'source_unit_price' => round($line['unit_price'] * $priceDelta, 4),
-                'raw_data' => json_encode(['page' => 1 + ($k % 4)], JSON_THROW_ON_ERROR),
-                'sort_order' => $k + 1,
-                'ai_confidence' => round(85.0 + self::hash((int) crc32($quoteId) + $k) * 14.0, 2),
-                'taxonomy_code' => 'PETRO-CHEM-' . (1000 + ($k % 50)),
-                'mapping_version' => 'v2.1-stable',
-                'created_at' => $this->now,
-                'updated_at' => $this->now,
-            ]);
-
-            if ($withOpenConflict && $qIdx === 1 && $k === 0) {
-                DB::table('normalization_conflicts')->insert([
-                    'id' => (string) Str::ulid(),
-                    'tenant_id' => $this->tenantId,
-                    'normalization_source_line_id' => $nlId,
-                    'conflict_type' => 'uom_mismatch',
-                    'resolution' => null,
-                    'resolved_at' => null,
-                    'resolved_by' => null,
-                    'created_at' => $this->now,
-                    'updated_at' => $this->now,
-                ]);
-            }
+        if ($status !== 'uploaded') {
+            $processingStartedAt = $submittedAt->copy()->addMinutes(2);
         }
+
+        if (in_array($status, ['extracted', 'normalizing', 'ready', 'needs_review', 'failed'], true)) {
+            $parsedAt = $processingStartedAt?->copy()->addMinutes(5);
+        }
+
+        if (in_array($status, ['ready', 'needs_review', 'failed'], true)) {
+            $processingCompletedAt = $parsedAt?->copy()->addMinutes(1);
+        }
+
+        if ($status === 'ready') {
+            $confidence = round(72.0 + (sin(($rfqIndex + $quoteIndex) * 9999) * 10000 - floor(sin(($rfqIndex + $quoteIndex) * 9999) * 10000)) * 27.0, 2);
+            $lineItemsCount = rand(3, 25);
+            $warningsCount = rand(0, 2);
+        }
+
+        if ($status === 'needs_review') {
+            $warningsCount = 2 + ($quoteIndex % 3);
+        }
+
+        if ($status === 'failed') {
+            $errorCode = 'EXTRACTION_FAILED';
+            $errorMessage = 'Unable to parse document structure. Retry exhaustion.';
+            $retryCount = 3;
+            $errorsCount = 2;
+        }
+
+        QuoteSubmission::query()->create([
+            'id' => (string) Str::ulid(),
+            'tenant_id' => $this->tenantId,
+            'rfq_id' => $rfq->id,
+            'vendor_id' => $vendor->id,
+            'vendor_name' => $vendor->display_name,
+            'uploaded_by' => $rfq->owner_id,
+            'status' => $status,
+            'file_path' => '/uploads/quotes/' . $rfq->id . '-' . $quoteIndex . '.pdf',
+            'file_type' => 'application/pdf',
+            'original_filename' => 'Quote_' . preg_replace('/\W+/', '_', $vendor->legal_name) . '.pdf',
+            'submitted_at' => $submittedAt,
+            'confidence' => $confidence,
+            'line_items_count' => $lineItemsCount,
+            'warnings_count' => $warningsCount,
+            'errors_count' => $errorsCount,
+            'error_code' => $errorCode,
+            'error_message' => $errorMessage,
+            'processing_started_at' => $processingStartedAt,
+            'processing_completed_at' => $processingCompletedAt,
+            'parsed_at' => $parsedAt,
+            'retry_count' => $retryCount,
+        ]);
     }
 
-    /**
-     * @param array<string, mixed> $ctx
-     */
-    private function insertComparisonApprovalsAwards(array $ctx): void
+    private function seedComparisonApprovalAward(Rfq $rfq, string $kind, int $index): void
     {
-        $kind = (string) $ctx['kind'];
-        if (! in_array($kind, ['closed_pending', 'awarded'], true)) {
+        $quotes = QuoteSubmission::query()
+            ->where('rfq_id', $rfq->id)
+            ->where('tenant_id', $this->tenantId)
+            ->where('status', 'ready')
+            ->get();
+
+        if ($quotes->count() < 2) {
             return;
         }
 
-        $rfqId = (string) $ctx['rfq_id'];
-        $quotes = DB::table('quote_submissions')->where('rfq_id', $rfqId)->where('tenant_id', $this->tenantId)->get();
-        $ready = $quotes->filter(static fn ($q) => $q->status === 'ready');
-        if ($ready->count() < 2) {
-            return;
-        }
+        // Create preview comparison run
+        $runPreview = ComparisonRun::query()->create([
+            'id' => (string) Str::ulid(),
+            'tenant_id' => $this->tenantId,
+            'rfq_id' => $rfq->id,
+            'name' => 'Comparison preview',
+            'description' => 'What-if matrix (preview).',
+            'idempotency_key' => 'preview-' . $rfq->id,
+            'is_preview' => true,
+            'created_by' => $this->userIds[0],
+            'request_payload' => ['rfq_id' => $rfq->id, 'phase' => 'preview'],
+            'matrix_payload' => ['rows' => []],
+            'scoring_payload' => ['vendors' => []],
+            'approval_payload' => [],
+            'response_payload' => ['status' => 'preview'],
+            'readiness_payload' => ['ready_quotes' => $quotes->count()],
+            'status' => 'draft',
+            'version' => 1,
+            'expires_at' => $this->now->copy()->addDays(3),
+        ]);
 
-        $spread = (bool) $ctx['scoring_spread'];
-        $matrix = [];
+        // Create final comparison run
         $scores = [];
-        foreach ($ready->values() as $idx => $q) {
-            if ($spread) {
-                $total = 58 + ($idx * 11) % 35 + self::hash((int) $ctx['index'] + $idx) * 8;
-            } else {
-                $total = 86 + ($idx % 5) - (int) (self::hash((int) $ctx['index'] + $idx) * 4);
-            }
-            $matrix[] = ['quote_id' => $q->id, 'vendor' => $q->vendor_name, 'normalized_total' => round($total * 1200, 2)];
+        $matrix = [];
+        foreach ($quotes->values() as $idx => $q) {
+            $total = 58 + ($idx * 11) % 35 + (sin(($index + $idx) * 9999) * 10000 - floor(sin(($index + $idx) * 9999) * 10000)) * 8;
+            $total = min(99.5, $total);
             $scores[] = [
                 'vendor_id' => $q->vendor_id,
                 'vendor_name' => $q->vendor_name,
-                'total_score' => round(min(99.5, $total), 2),
+                'total_score' => round($total, 2),
                 'price_score' => round(min(99.0, $total - 5 + $idx), 2),
                 'delivery_score' => round(min(99.0, $total - 2), 2),
                 'technical_score' => round(min(99.0, $total + 3 - $idx), 2),
             ];
+            $matrix[] = ['quote_id' => $q->id, 'vendor' => $q->vendor_name, 'normalized_total' => round($total * 1200, 2)];
         }
 
-        $runPreview = (string) Str::ulid();
-        DB::table('comparison_runs')->insert([
-            'id' => $runPreview,
+        $runFinal = ComparisonRun::query()->create([
+            'id' => (string) Str::ulid(),
             'tenant_id' => $this->tenantId,
-            'rfq_id' => $rfqId,
-            'name' => 'Comparison preview',
-            'description' => 'What-if matrix (preview).',
-            'idempotency_key' => 'preview-' . $rfqId,
-            'is_preview' => true,
-            'created_by' => $this->userIds[0],
-            'request_payload' => json_encode(['rfq_id' => $rfqId, 'phase' => 'preview'], JSON_THROW_ON_ERROR),
-            'matrix_payload' => json_encode(['rows' => $matrix], JSON_THROW_ON_ERROR),
-            'scoring_payload' => json_encode(['vendors' => $scores], JSON_THROW_ON_ERROR),
-            'approval_payload' => json_encode([], JSON_THROW_ON_ERROR),
-            'response_payload' => json_encode(['status' => 'preview'], JSON_THROW_ON_ERROR),
-            'readiness_payload' => json_encode(['ready_quotes' => $ready->count()], JSON_THROW_ON_ERROR),
-            'status' => 'draft',
-            'version' => 1,
-            'expires_at' => $this->now->copy()->addDays(3),
-            'discarded_at' => null,
-            'discarded_by' => null,
-            'created_at' => $this->now,
-            'updated_at' => $this->now,
-        ]);
-
-        $runFinal = (string) Str::ulid();
-        DB::table('comparison_runs')->insert([
-            'id' => $runFinal,
-            'tenant_id' => $this->tenantId,
-            'rfq_id' => $rfqId,
+            'rfq_id' => $rfq->id,
             'name' => 'Final comparison',
             'description' => 'Locked matrix for approval / award.',
-            'idempotency_key' => 'final-' . $rfqId,
+            'idempotency_key' => 'final-' . $rfq->id,
             'is_preview' => false,
             'created_by' => $this->userIds[0],
-            'request_payload' => json_encode(['rfq_id' => $rfqId, 'phase' => 'final'], JSON_THROW_ON_ERROR),
-            'matrix_payload' => json_encode(['rows' => $matrix, 'locked' => true], JSON_THROW_ON_ERROR),
-            'scoring_payload' => json_encode(['vendors' => $scores, 'ranked' => true], JSON_THROW_ON_ERROR),
-            'approval_payload' => json_encode(['policy_id' => $this->scoringPolicyId], JSON_THROW_ON_ERROR),
-            'response_payload' => json_encode(['snapshot' => ['rfq_id' => $rfqId, 'quote_ids' => $ready->pluck('id')->all()]], JSON_THROW_ON_ERROR),
-            'readiness_payload' => json_encode(['all_ready' => true], JSON_THROW_ON_ERROR),
+            'request_payload' => ['rfq_id' => $rfq->id, 'phase' => 'final'],
+            'matrix_payload' => ['rows' => $matrix, 'locked' => true],
+            'scoring_payload' => ['vendors' => $scores, 'ranked' => true],
+            'approval_payload' => ['policy_id' => $this->scoringPolicyId],
+            'response_payload' => ['snapshot' => ['rfq_id' => $rfq->id, 'quote_ids' => $quotes->pluck('id')->all()]],
+            'readiness_payload' => ['all_ready' => true],
             'status' => 'final',
             'version' => 1,
             'expires_at' => null,
-            'discarded_at' => null,
-            'discarded_by' => null,
-            'created_at' => $this->now,
-            'updated_at' => $this->now,
         ]);
 
+        // Create approval
         $approved = $kind === 'awarded';
-        $approvalId = (string) Str::ulid();
-        DB::table('approvals')->insert([
-            'id' => $approvalId,
+        $approval = Approval::query()->create([
+            'id' => (string) Str::ulid(),
             'tenant_id' => $this->tenantId,
-            'rfq_id' => $rfqId,
-            'comparison_run_id' => $runFinal,
+            'rfq_id' => $rfq->id,
+            'comparison_run_id' => $runFinal->id,
             'type' => 'comparison_approval',
             'status' => $approved ? 'approved' : 'pending',
             'requested_by' => $this->userIds[0],
             'requested_at' => $this->now,
-            'amount' => $ctx['estimated_value'],
+            'amount' => $rfq->estimated_value,
             'currency' => 'USD',
             'level' => 1,
             'notes' => $approved ? 'Award committee sign-off (seed).' : 'Awaiting delegated approver (seed).',
             'approved_at' => $approved ? $this->now : null,
             'approved_by' => $approved ? $this->userIds[0] : null,
-            'snoozed_until' => null,
-            'created_at' => $this->now,
-            'updated_at' => $this->now,
         ]);
+
+        // Seed approval history
         DB::table('approval_history')->insert([
             'id' => (string) Str::ulid(),
             'tenant_id' => $this->tenantId,
-            'approval_id' => $approvalId,
+            'approval_id' => $approval->id,
             'action' => $approved ? 'approved' : 'requested',
             'actor_id' => $this->userIds[0],
             'reason' => null,
@@ -1017,207 +731,45 @@ final class PetrochemicalTenantSeeder extends Seeder
             'created_at' => $this->now,
         ]);
 
-        if (! $approved) {
-            return;
-        }
+        // Create award for awarded RFQs
+        if ($approved) {
+            usort($scores, static fn (array $a, array $b): int => $b['total_score'] <=> $a['total_score']);
+            $winner = $scores[0];
+            $winnerQuote = $quotes->first(fn ($q) => (string) $q->vendor_id === (string) $winner['vendor_id']);
 
-        usort(
-            $scores,
-            static fn (array $a, array $b): int => $b['total_score'] <=> $a['total_score'],
-        );
-        $winner = $scores[0];
-        $winnerRow = $ready->first(static fn ($q) => (string) $q->vendor_id === (string) $winner['vendor_id'])
-            ?? $ready->first();
-        if ($winnerRow === null) {
-            return;
-        }
+            if ($winnerQuote !== null) {
+                $amount = (float) round((float) $rfq->estimated_value * (1 - (float) $rfq->savings_percentage / 100), 2);
 
-        $amount = (float) round((float) $ctx['estimated_value'] * (1 - (float) $ctx['savings_percentage'] / 100), 2);
-        $awardId = (string) Str::ulid();
-        DB::table('awards')->insert([
-            'id' => $awardId,
-            'tenant_id' => $this->tenantId,
-            'rfq_id' => $rfqId,
-            'comparison_run_id' => $runFinal,
-            'vendor_id' => $winnerRow->vendor_id,
-            'status' => 'signed_off',
-            'amount' => $amount,
-            'currency' => 'USD',
-            'split_details' => json_encode([], JSON_THROW_ON_ERROR),
-            'protest_id' => null,
-            'signoff_at' => $this->now,
-            'signed_off_by' => $this->userIds[0],
-            'created_at' => $this->now,
-            'updated_at' => $this->now,
-        ]);
-        DB::table('handoffs')->insert([
-            'id' => (string) Str::ulid(),
-            'tenant_id' => $this->tenantId,
-            'award_id' => $awardId,
-            'destination_type' => 'erp',
-            'destination_id' => 'SAP-S4-NFC',
-            'status' => 'pending',
-            'sent_at' => null,
-            'retry_count' => 0,
-            'error_message' => null,
-            'created_at' => $this->now,
-            'updated_at' => $this->now,
-        ]);
-    }
-
-    /**
-     * @param list<array<string, mixed>> $rfqRows
-     */
-    private function seedDemoExtras(array $rfqRows): void
-    {
-        $awarded = array_values(array_filter($rfqRows, static fn ($c) => $c['status'] === 'awarded'));
-        $demo = array_slice($awarded, 0, min(4, count($awarded)));
-        foreach ($demo as $idx => $ctx) {
-            $rfqId = (string) $ctx['rfq_id'];
-            $runId = DB::table('comparison_runs')->where('rfq_id', $rfqId)->where('tenant_id', $this->tenantId)->where('status', 'final')->value('id');
-            if ($runId === null) {
-                continue;
-            }
-            DB::table('scenarios')->insert([
-                'id' => (string) Str::ulid(),
-                'tenant_id' => $this->tenantId,
-                'rfq_id' => $rfqId,
-                'comparison_run_id' => $runId,
-                'name' => 'Baseline scenario ' . ($idx + 1),
-                'description' => 'Seeded what-if scenario.',
-                'config' => json_encode(['option' => 'baseline', 'fx' => 'USD'], JSON_THROW_ON_ERROR),
-                'status' => 'draft',
-                'created_at' => $this->now,
-                'updated_at' => $this->now,
-            ]);
-            DB::table('negotiation_rounds')->insert([
-                'id' => (string) Str::ulid(),
-                'tenant_id' => $this->tenantId,
-                'rfq_id' => $rfqId,
-                'round_number' => $idx + 1,
-                'status' => 'open',
-                'started_at' => $this->now,
-                'closed_at' => null,
-                'created_at' => $this->now,
-                'updated_at' => $this->now,
-            ]);
-        }
-
-        $firstAwarded = $awarded[0] ?? null;
-        if ($firstAwarded !== null) {
-            $rfqId = (string) $firstAwarded['rfq_id'];
-            $runId = DB::table('comparison_runs')->where('rfq_id', $rfqId)->where('tenant_id', $this->tenantId)->where('status', 'final')->value('id');
-            $approvalId = DB::table('approvals')->where('rfq_id', $rfqId)->where('tenant_id', $this->tenantId)->value('id');
-            if ($runId !== null) {
-                $payloadHash = hash('sha256', 'nfc-payload');
-                $prevHash = hash('sha256', 'nfc-prev');
-                foreach ([1, 2] as $seq) {
-                    DB::table('decision_trail_entries')->insert([
-                        'id' => (string) Str::ulid(),
-                        'tenant_id' => $this->tenantId,
-                        'comparison_run_id' => $runId,
-                        'rfq_id' => $rfqId,
-                        'sequence' => $seq,
-                        'event_type' => 'comparison_run',
-                        'payload_hash' => $payloadHash,
-                        'previous_hash' => $prevHash,
-                        'entry_hash' => hash('sha256', "nfc-entry-{$seq}"),
-                        'occurred_at' => $this->now,
-                        'created_at' => $this->now,
-                        'updated_at' => $this->now,
-                    ]);
-                }
-            }
-            if ($approvalId !== null) {
-                DB::table('evidence_bundles')->insert([
+                $award = Award::query()->create([
                     'id' => (string) Str::ulid(),
                     'tenant_id' => $this->tenantId,
-                    'approval_id' => $approvalId,
-                    'type' => 'quote_evidence',
-                    'storage_path' => '/evidence/nfc-bundle.zip',
-                    'checksum' => hash('sha256', 'nfc-bundle'),
-                    'created_by' => $this->userIds[0],
+                    'rfq_id' => $rfq->id,
+                    'comparison_run_id' => $runFinal->id,
+                    'vendor_id' => $winnerQuote->vendor_id,
+                    'status' => 'signed_off',
+                    'amount' => $amount,
+                    'currency' => 'USD',
+                    'split_details' => [],
+                    'protest_id' => null,
+                    'signoff_at' => $this->now,
+                    'signed_off_by' => $this->userIds[0],
+                ]);
+
+                // Seed handoff
+                DB::table('handoffs')->insert([
+                    'id' => (string) Str::ulid(),
+                    'tenant_id' => $this->tenantId,
+                    'award_id' => $award->id,
+                    'destination_type' => 'erp',
+                    'destination_id' => 'SAP-S4-NFC',
+                    'status' => 'pending',
+                    'sent_at' => null,
+                    'retry_count' => 0,
+                    'error_message' => null,
                     'created_at' => $this->now,
                     'updated_at' => $this->now,
                 ]);
             }
-        }
-    }
-
-    private function seedInfrastructureRows(): void
-    {
-        for ($i = 1; $i <= 2; $i++) {
-            $scheduleId = (string) Str::ulid();
-            DB::table('report_schedules')->insert([
-                'id' => $scheduleId,
-                'tenant_id' => $this->tenantId,
-                'report_type' => 'spend_summary',
-                'frequency' => $i === 1 ? 'daily' : 'weekly',
-                'config' => json_encode(['filters' => ['org' => 'NFC']], JSON_THROW_ON_ERROR),
-                'last_run_at' => null,
-                'next_run_at' => $this->now->copy()->addDays($i),
-                'status' => 'active',
-                'created_at' => $this->now,
-                'updated_at' => $this->now,
-            ]);
-            DB::table('report_runs')->insert([
-                'id' => (string) Str::ulid(),
-                'tenant_id' => $this->tenantId,
-                'schedule_id' => $scheduleId,
-                'report_type' => 'spend_summary',
-                'status' => 'completed',
-                'started_at' => $this->now->copy()->subHours(3),
-                'completed_at' => $this->now->copy()->subHours(2),
-                'file_path' => "/reports/nfc-run-{$i}.csv",
-                'parameters' => json_encode(['filters' => []], JSON_THROW_ON_ERROR),
-                'error_message' => null,
-                'created_at' => $this->now,
-                'updated_at' => $this->now,
-            ]);
-        }
-
-        for ($i = 1; $i <= 2; $i++) {
-            $integrationId = (string) Str::ulid();
-            DB::table('integrations')->insert([
-                'id' => $integrationId,
-                'tenant_id' => $this->tenantId,
-                'type' => 'erp',
-                'name' => 'SAP S/4HANA NFC ' . $i,
-                'config' => json_encode(['endpoint' => 'https://erp.nfc.example'], JSON_THROW_ON_ERROR),
-                'status' => 'active',
-                'last_sync_at' => null,
-                'created_at' => $this->now,
-                'updated_at' => $this->now,
-            ]);
-            DB::table('integration_jobs')->insert([
-                'id' => (string) Str::ulid(),
-                'tenant_id' => $this->tenantId,
-                'integration_id' => $integrationId,
-                'type' => 'sync',
-                'status' => 'pending',
-                'payload' => json_encode(['job' => $i], JSON_THROW_ON_ERROR),
-                'started_at' => null,
-                'completed_at' => null,
-                'error_message' => null,
-                'retry_count' => 0,
-                'created_at' => $this->now,
-                'updated_at' => $this->now,
-            ]);
-        }
-
-        foreach ($this->userIds as $index => $userId) {
-            DB::table('notifications')->insert([
-                'id' => (string) Str::ulid(),
-                'tenant_id' => $this->tenantId,
-                'user_id' => $userId,
-                'title' => 'NFC procurement — ' . ($index + 1),
-                'message' => 'Seeded in-app notification.',
-                'type' => 'info',
-                'read_at' => null,
-                'data' => json_encode(['seed' => true], JSON_THROW_ON_ERROR),
-                'created_at' => $this->now,
-                'updated_at' => $this->now,
-            ]);
         }
     }
 }
