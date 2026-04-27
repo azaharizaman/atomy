@@ -13,7 +13,6 @@ vi.mock('@/lib/api', () => ({
 describe('useComparisonRunReadiness', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.NEXT_PUBLIC_USE_MOCKS = 'false';
   });
 
   it('normalizes readiness flags and messages', async () => {
@@ -74,7 +73,7 @@ describe('useComparisonRunReadiness', () => {
     expect(result.current.error?.message).toMatch(/message/i);
   });
 
-  it('still fetches readiness when the flag is set', async () => {
+  it('fetches readiness for ready runs', async () => {
     mockGet.mockResolvedValueOnce({
       data: {
         data: {
@@ -97,5 +96,7 @@ describe('useComparisonRunReadiness', () => {
 
     expect(mockGet).toHaveBeenCalledTimes(1);
     expect(result.current.data?.id).toBe('run-42');
+    expect(result.current.data?.isReady).toBe(true);
+    expect(result.current.data?.blockers).toHaveLength(0);
   });
 });

@@ -15,6 +15,7 @@ import { OverviewNextStep } from '@/components/workspace/overview-next-step';
 import { useRfqAiSummary } from '@/hooks/use-rfq-ai-summary';
 import { useRfqOverview, type RfqOverviewActivityItem } from '@/hooks/use-rfq-overview';
 import { RfqScheduleTimeline } from '@/components/workspace/rfq-schedule-timeline';
+import { getRfqOverviewErrorMessage } from '@/lib/rfq-error-copy';
 
 function formatRelativeTime(iso: string): string {
   const date = new Date(iso);
@@ -75,7 +76,7 @@ export default function RfqOverviewPage({ params }: { params: Promise<{ rfqId: s
       technical_review_due_at: rfq?.technical_review_due_at,
       financial_review_due_at: rfq?.financial_review_due_at,
       needs_review_count: overview?.normalization?.needs_review_count,
-      comparison_is_preview: comparison != null ? Boolean(comparison.is_preview) : null,
+      comparison_is_preview: comparison?.is_preview ?? null,
       approval_overall: approvals?.overall ?? 'none',
     }),
     [
@@ -86,7 +87,7 @@ export default function RfqOverviewPage({ params }: { params: Promise<{ rfqId: s
       rfq?.technical_review_due_at,
       rfq?.financial_review_due_at,
       overview?.normalization?.needs_review_count,
-      comparison?.is_preview,
+      comparison,
       approvals?.overall,
     ],
   );
@@ -105,15 +106,15 @@ export default function RfqOverviewPage({ params }: { params: Promise<{ rfqId: s
   }
 
   if (isError || !overview) {
-    const errorMessage = error instanceof Error ? error.message : `RFQ overview unavailable for "${rfqId}".`;
+    const errorMessage = getRfqOverviewErrorMessage(error);
 
     return (
       <div className="space-y-5">
-        <PageHeader title="Overview" subtitle="RFQ overview unavailable" />
-        <SectionCard title="Overview unavailable" subtitle="The overview screen could not load the live RFQ payload.">
+        <PageHeader title="Overview" subtitle="Unable to load overview" />
+        <SectionCard title="Unable to load overview" subtitle="We could not load this RFQ's overview from the live API.">
           <EmptyState
             icon={<AlertTriangle size={20} />}
-            title="Could not load RFQ overview"
+            title="Could not load overview"
             description={errorMessage}
           />
         </SectionCard>

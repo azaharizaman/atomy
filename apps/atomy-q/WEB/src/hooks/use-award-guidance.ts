@@ -51,10 +51,6 @@ export function useAwardGuidance(awardId: string, options?: { enabled?: boolean 
     enabled: Boolean(awardId) && options?.enabled !== false,
     queryFn: async (): Promise<AwardAiGuidance> => {
       const data = await fetchLiveOrFail(`/awards/${encodeURIComponent(awardId)}/guidance`);
-      if (data === undefined) {
-        throw new Error(`Award guidance "${awardId}" is unavailable from the live API.`);
-      }
-
       return normalizeAwardAiGuidance(data);
     },
   });

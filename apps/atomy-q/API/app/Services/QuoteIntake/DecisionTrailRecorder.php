@@ -91,6 +91,8 @@ final readonly class DecisionTrailRecorder implements DecisionTrailRecorderInter
         string $tenantId,
         string $rfqId,
         array $summary,
+        string $origin = 'ai_generated',
+        string $featureKey = 'vendor_recommendation',
     ): void {
         $this->recordAiArtifactGenerated(
             tenantId: $tenantId,
@@ -99,8 +101,8 @@ final readonly class DecisionTrailRecorder implements DecisionTrailRecorderInter
             eventType: 'vendor_recommendation_generated',
             summary: array_replace([
                 'artifact_kind' => 'vendor_recommendation',
-                'artifact_origin' => 'ai_generated',
-                'feature_key' => 'vendor_recommendation',
+                'artifact_origin' => $origin,
+                'feature_key' => $featureKey,
                 'available' => true,
             ], $summary),
         );

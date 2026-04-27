@@ -83,7 +83,7 @@ function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
     submissions.find((row) => row.extraction_origin === 'provider' && row.provider_name != null)?.provider_name ??
     aiStatus.status.providerName ??
     null;
-  const normalizationReviewErrorMessage = 'Review data could not be loaded.';
+  const normalizationReviewErrorMessage = (norm.error as any)?.message ?? 'Review data could not be loaded.';
 
   const columns: ColumnDef<QuoteSubmissionRow>[] = [
     {

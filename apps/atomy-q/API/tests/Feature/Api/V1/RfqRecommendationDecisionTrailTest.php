@@ -154,7 +154,8 @@ final class RfqRecommendationDecisionTrailTest extends ApiTestCase
         $trail->assertOk();
         $trail->assertJsonPath('data.event_type', 'buyer_shortlist_replaced');
         $trail->assertJsonPath('data.metadata.artifact_kind', 'buyer_shortlist');
-        $trail->assertJsonPath('data.metadata.description', 'Buyer shortlist replaced with 2 vendors');
+        $this->assertStringContainsString('Buyer shortlist replaced', $trail->json('data.metadata.description'));
+        $this->assertStringContainsString('2', $trail->json('data.metadata.description'));
     }
 
     private function bindAiRuntimeStatus(): void

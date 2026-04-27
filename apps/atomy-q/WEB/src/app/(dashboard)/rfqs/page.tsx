@@ -65,7 +65,11 @@ export default function RfqsPage() {
   const totalItems = data?.meta?.total ?? visibleRows.length;
   const bulkActions = getRfqBulkActionLabels().map((label) => ({
     label,
-    onClick: (_ids: Array<string | number>) => { /* TODO: wire live bulk mutations */ },
+    onClick: (_ids: Array<string | number>) => {
+      import('sonner').then(({ toast }) => {
+        toast.info(`${label} coming soon`);
+      });
+    },
   }));
 
   const activeFilters = [

@@ -251,11 +251,6 @@ export function useComparisonRun(runId: string, options?: { rfqId?: string }) {
     queryKey: ['comparison-run', options?.rfqId ?? runId, runId],
     queryFn: async (): Promise<ComparisonRunDetail> => {
       const data = await fetchLiveOrFail<{ data: ComparisonRunDetail }>(`/comparison-runs/${encodeURIComponent(runId)}`);
-
-      if (data === undefined) {
-        throw new Error(`Comparison run "${runId}" is unavailable from the live API.`);
-      }
-
       return normalizeAndValidateComparisonRun(data, options?.rfqId);
     },
     enabled: Boolean(runId),

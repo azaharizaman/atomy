@@ -61,8 +61,8 @@ export default function ProjectDetailPage() {
   const { data: aclData, isLoading: aclLoading, isError: aclIsError, error: aclError } = useProjectAcl(projectId, {
     enabled: projectsQueryEnabled,
   });
-  const { data: usersData } = useUsers();
-  const userOptions = usersData?.items ?? [];
+  const { data: usersData, isLoading: usersLoading } = useUsers();
+  const userOptions = React.useMemo(() => usersData?.items ?? [], [usersData?.items]);
   const acl = aclData ?? EMPTY_PROJECT_ACL;
   const updateProject = useUpdateProject(projectId);
   const updateStatus = useUpdateProjectStatus(projectId);
@@ -81,22 +81,18 @@ export default function ProjectDetailPage() {
   }, [project, editMode]);
 
   React.useEffect(() => {
-    if (!editMode) {
+    if (!editMode || usersLoading || userOptions.length === 0) {
       return;
     }
 
-    const currentSelectionExists = editPmId !== '' && userOptions.some((user) => user.id === editPmId);
-    if (currentSelectionExists) {
-      return;
+    // Only auto-set if currently empty and we have a valid auth user in options
+    if (editPmId === '') {
+      const currentUserId = authUser?.id ?? '';
+      if (currentUserId !== '' && userOptions.some((user) => user.id === currentUserId)) {
+        setEditPmId(currentUserId);
+      }
     }
-
-    const currentUserId = authUser?.id ?? '';
-    if (currentUserId !== '' && userOptions.some((user) => user.id === currentUserId)) {
-      setEditPmId(currentUserId);
-      return;
-    }
-    setEditPmId('');
-  }, [authUser?.id, editMode, editPmId, userOptions]);
+  }, [authUser?.id, editMode, editPmId, userOptions, usersLoading]);
 
   const aclSyncKey = React.useMemo(
     () => acl.map((e) => `${e.userId}:${e.role}`).join('|'),
@@ -271,6 +267,11 @@ export default function ProjectDetailPage() {
                     {user.name ?? user.email} ({user.email})
                   </option>
                 ))}
+                {editPmId !== '' && !userOptions.some((u) => u.id === editPmId) && (
+                  <option value={editPmId}>
+                    {project.projectManagerId === editPmId ? (project as any).projectManagerName || 'Current Manager' : 'Unknown User'} ({editPmId})
+                  </option>
+                )}
               </select>
             </div>
             <div className="flex gap-2">

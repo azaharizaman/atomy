@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { fetchLiveOrFail } from '@/lib/api-live';
 
 export const RFQ_STATUSES = {
   ACTIVE: 'active',
@@ -154,12 +154,11 @@ function normalizeRfqsPayload(payload: unknown): RfqListItem[] {
 export function useRfqs(params: UseRfqsParams) {
   return useQuery({
     queryKey: ['rfqs', params],
-    enabled: true,
     queryFn: async (): Promise<RfqsListResult> => {
       const { projectId, ...restParams } = params;
       const apiParams: Record<string, string | number | undefined> = { ...restParams };
       if (projectId) apiParams.project_id = projectId;
-      const { data } = await api.get('/rfqs', { params: apiParams });
+      const data = await fetchLiveOrFail('/rfqs', { params: apiParams });
       const items = normalizeRfqsPayload(data).filter((x) => x.id);
       const metaFromApi = parseRfqsMeta(data);
       if (metaFromApi === null) {

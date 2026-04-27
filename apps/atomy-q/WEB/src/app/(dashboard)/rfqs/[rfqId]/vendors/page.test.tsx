@@ -146,7 +146,7 @@ describe('RfqVendorsPage', () => {
     expect(await screen.findByText(/could not load invited vendors/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Vendor roster unavailable' })).toBeInTheDocument();
     expect(screen.queryByText(/no vendors invited yet/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/live vendor roster unavailable/i)).toBeInTheDocument();
+    expect(screen.getByText(/we could not load this rfq right now/i)).toBeInTheDocument();
   });
 
   it('keeps the invite action disabled until approved vendors are selected and separates the two vendor lists', async () => {

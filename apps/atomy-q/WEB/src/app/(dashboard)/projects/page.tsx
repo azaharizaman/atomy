@@ -72,20 +72,21 @@ export default function ProjectsPage() {
   const { data: projects = [], isLoading, isError, error } = useProjects({
     enabled: !flagsLoading && projectsEnabled,
   });
-  const { data: usersData } = useUsers();
-  const userOptions = usersData?.items ?? [];
+  const { data: usersData, isLoading: usersLoading } = useUsers();
+  const userOptions = React.useMemo(() => usersData?.items ?? [], [usersData?.items]);
   const createProject = useCreateProject();
 
   React.useEffect(() => {
-    if (createPmId !== '') {
+    if (createPmId !== '' || usersLoading || userOptions.length === 0) {
       return;
     }
 
     const currentUserId = authUser?.id ?? '';
-    if (currentUserId !== '' && userOptions.some((user) => user.id === currentUserId)) {
+    if (currentUserId !== '' && (userOptions.some((user) => user.id === currentUserId) || true)) {
+      // If user not in first page, we still want to default to them if they are the auth user
       setCreatePmId(currentUserId);
     }
-  }, [authUser?.id, createPmId, userOptions]);
+  }, [authUser?.id, createPmId, userOptions, usersLoading]);
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -227,6 +228,11 @@ export default function ProjectsPage() {
                     {user.name ?? user.email} ({user.email})
                   </option>
                 ))}
+                {authUser?.id && !userOptions.some((u) => u.id === authUser.id) && (
+                  <option value={authUser.id}>
+                    {authUser.name || 'Current User'} ({authUser.id})
+                  </option>
+                )}
               </select>
             </div>
             <div className="flex gap-2">

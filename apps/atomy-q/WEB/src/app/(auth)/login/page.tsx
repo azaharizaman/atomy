@@ -188,6 +188,7 @@ function LoginPageContent() {
           fullWidth
           size="md"
           onClick={async () => {
+            setAuthError(null);
             try {
               const response = await fetch(`${API_URL}/auth/sso`, {
                 method: 'POST',
@@ -196,12 +197,30 @@ function LoginPageContent() {
                 },
                 credentials: 'include',
               });
-              if (!response.ok) {
-                throw new Error('SSO is not enabled yet');
+
+              if (response.status === 404 || response.status === 501) {
+                setAuthError('SSO is not enabled for this workspace.');
+                return;
               }
-              toast.success('SSO flow started');
-            } catch {
-              toast.error('SSO is not enabled yet');
+
+              if (!response.ok) {
+                const errorData = await readJsonResponse(response) as Record<string, unknown>;
+                throw new Error(String(errorData?.message || 'SSO flow could not be started.'));
+              }
+
+              const data = await readJsonResponse(response) as { redirect_url?: string; url?: string };
+              const redirectUrl = data?.redirect_url || data?.url;
+
+              if (redirectUrl) {
+                window.location.assign(redirectUrl);
+              } else {
+                // Fallback to GET /auth/sso if no URL returned
+                window.location.assign(`${API_URL}/auth/sso`);
+              }
+            } catch (error: unknown) {
+              const message = error instanceof Error ? error.message : 'Failed to connect to SSO provider.';
+              setAuthError(message);
+              toast.error(message);
             }
           }}
         >

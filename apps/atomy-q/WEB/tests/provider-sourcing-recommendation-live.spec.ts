@@ -43,7 +43,10 @@ test.describe('provider-backed sourcing recommendation e2e with live backend', (
     expect(token).not.toBe('');
 
     if (!loginPayload.user || typeof loginPayload.user !== 'object' || !loginPayload.user.id) {
-      throw new Error(`Login response missing valid user data: ${JSON.stringify(loginPayload)}`);
+      const hasUser = !!loginPayload.user;
+      const hasUserId = !!loginPayload.user?.id;
+      const hasAccessToken = !!(loginPayload.access_token ?? loginPayload.token);
+      throw new Error(`Login response invalid: user=${hasUser}, id=${hasUserId}, token=${hasAccessToken}`);
     }
 
     const user = loginPayload.user as {
@@ -85,7 +88,12 @@ test.describe('provider-backed sourcing recommendation e2e with live backend', (
     }
 
     await page.getByRole('checkbox', { name: new RegExp(`select ${escapeRegExp(manualVendorName)}`, 'i') }).check();
+    
+    const savePromise = page.waitForResponse(resp => 
+      resp.url().includes('/selected-vendors') && resp.request().method() === 'PUT'
+    );
     await page.getByRole('button', { name: /save selection/i }).click();
+    await savePromise;
 
     await page.reload();
     await expect(page.getByText(new RegExp(escapeRegExp(manualVendorName), 'i'))).toBeVisible();

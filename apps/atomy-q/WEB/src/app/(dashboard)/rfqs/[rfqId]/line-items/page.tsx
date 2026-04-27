@@ -10,6 +10,7 @@ import { Card, EmptyState, SectionCard } from '@/components/ds/Card';
 import { DataTable, type ColumnDef } from '@/components/ds/DataTable';
 import { useRfq } from '@/hooks/use-rfq';
 import { useRfqLineItems, type RfqLineItemRow } from '@/hooks/use-rfq-line-items';
+import { getRfqRecordErrorMessage } from '@/lib/rfq-error-copy';
 
 import { LineItemDrawer } from './line-item-drawer';
 
@@ -35,7 +36,6 @@ function RfqLineItemsPageContent({ rfqId }: { rfqId: string }) {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
 
   const isWritable = rfq?.status === 'draft';
-  const canPersist = isWritable;
 
   const handleCreated = React.useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ['rfqs', rfqId, 'line-items'] });
@@ -114,14 +114,14 @@ function RfqLineItemsPageContent({ rfqId }: { rfqId: string }) {
   ];
 
   if (rfqIsError) {
-    const errorMessage = rfqError instanceof Error ? rfqError.message : 'RFQ data is unavailable.';
+    const errorMessage = getRfqRecordErrorMessage(rfqError);
     return (
       <div className="space-y-5">
-        <PageHeader title="Line items" subtitle="RFQ unavailable" />
-        <SectionCard title="RFQ unavailable">
+        <PageHeader title="Line items" subtitle="Unable to load this RFQ" />
+        <SectionCard title="Unable to load this RFQ">
           <EmptyState
             icon={<AlertTriangle size={20} />}
-            title="Could not load RFQ context"
+            title="Could not load this RFQ"
             description={errorMessage}
           />
         </SectionCard>
@@ -266,7 +266,7 @@ function RfqLineItemsPageContent({ rfqId }: { rfqId: string }) {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         onCreated={handleCreated}
-        isWritable={canPersist}
+        isWritable={isWritable}
       />
     </div>
   );

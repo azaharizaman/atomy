@@ -86,4 +86,22 @@ describe('useRfq (live mode)', () => {
     expect(result.current.error).toBeInstanceOf(Error);
     expect((result.current.error as Error).message).toContain('id');
   });
+
+  it('uses plain-language copy when the live RFQ has an invalid status', async () => {
+    getMock.mockResolvedValueOnce({
+      data: {
+        id: 'rfq-1',
+        title: 'Malformed RFQ',
+        status: 'bogus',
+      },
+    });
+    const { useRfq } = await import('@/hooks/use-rfq');
+    const { Wrapper } = createTestWrapper();
+
+    const { result } = renderHook(() => useRfq('rfq-1'), { wrapper: Wrapper });
+
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.error).toBeInstanceOf(Error);
+    expect((result.current.error as Error).message).toBe('We found this RFQ, but its status data is incomplete.');
+  });
 });

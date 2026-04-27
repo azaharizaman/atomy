@@ -8,6 +8,7 @@ import { AiNarrativePanel } from '@/components/ai/ai-narrative-panel';
 import { useRfq } from '@/hooks/use-rfq';
 import { useRfqAiSummary } from '@/hooks/use-rfq-ai-summary';
 import { useRfqOverview } from '@/hooks/use-rfq-overview';
+import { getRfqInsightsErrorMessage } from '@/lib/rfq-error-copy';
 import Link from 'next/link';
 
 interface RfqInsightsSidebarProps {
@@ -92,7 +93,7 @@ export function RfqInsightsSidebar({ rfqId, isNewRfq: explicitIsNewRfq }: RfqIns
             <PlaceholderCard
               icon={<AlertTriangle size={16} />}
               title="Insights unavailable"
-              message={sidebarError instanceof Error ? sidebarError.message : 'The insights sidebar could not load live RFQ context.'}
+              message={getRfqInsightsErrorMessage(sidebarError)}
             />
           ) : null}
 

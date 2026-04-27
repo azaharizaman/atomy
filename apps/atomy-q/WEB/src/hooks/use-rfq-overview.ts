@@ -185,11 +185,6 @@ export function useRfqOverview(rfqId: string) {
     queryKey: ['rfqs', rfqId, 'overview'],
     queryFn: async (): Promise<RfqOverviewData> => {
       const data = await fetchLiveOrFail<RfqOverviewData>(`/rfqs/${encodeURIComponent(rfqId)}/overview`);
-
-      if (data === undefined) {
-        throw new Error(`RFQ overview unavailable for "${rfqId}".`);
-      }
-
       const normalized = normalizeOverviewPayload(data);
       const activityRes = await fetchLiveOrFail<{ data: unknown[] }>(`/rfqs/${encodeURIComponent(rfqId)}/activity`, { params: { limit: 50 } });
       const activityData = activityRes?.data;

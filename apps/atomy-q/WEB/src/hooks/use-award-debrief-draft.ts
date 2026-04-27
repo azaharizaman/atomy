@@ -67,9 +67,6 @@ export function useAwardDebriefDraft(
       const data = await fetchLiveOrFail(
         `/awards/${encodeURIComponent(awardId)}/debrief-draft/${encodeURIComponent(vendorId)}`,
       );
-      if (data === undefined) {
-        throw new Error(`Award debrief draft "${awardId}/${vendorId}" is unavailable from the live API.`);
-      }
 
       return normalizeAwardDebriefDraft(data);
     },

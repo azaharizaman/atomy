@@ -16,6 +16,7 @@ import { useAiStatus } from '@/hooks/use-ai-status';
 import { formatVendorGovernanceWarning, useVendorGovernanceMap } from '@/hooks/use-vendor-governance';
 import { useVendorRecommendations, type VendorRecommendationCandidate } from '@/hooks/use-vendor-recommendations';
 import { useVendors, type VendorRow } from '@/hooks/use-vendors';
+import { getRfqRecordErrorMessage } from '@/lib/rfq-error-copy';
 
 function vendorLabel(vendor: VendorRow): string {
   return vendor.displayName || vendor.legalName || vendor.name || 'Unknown vendor';
@@ -284,7 +285,6 @@ function RfqVendorsPageContent({ rfqId }: { rfqId: string }) {
   const vendorsQuery = useRfqVendors(rfqId);
   const selectedQuery = useRequisitionVendorSelection(rfqId);
   const inviteSelected = useInviteSelectedVendors(rfqId);
-  const rfq = rfqQuery.data;
   const vendors = React.useMemo(() => vendorsQuery.data ?? [], [vendorsQuery.data]);
   const selectedVendors = React.useMemo(() => selectedQuery.data ?? [], [selectedQuery.data]);
   const isLoading = vendorsQuery.isLoading;
@@ -311,20 +311,19 @@ function RfqVendorsPageContent({ rfqId }: { rfqId: string }) {
   };
 
   if (rfqQuery.isError) {
-    const errorMessage = rfqQuery.error instanceof Error ? rfqQuery.error.message : 'RFQ data is unavailable.';
+    const errorMessage = getRfqRecordErrorMessage(rfqQuery.error);
     return (
       <div className="space-y-5">
-        <PageHeader title="Invited vendors" subtitle="RFQ unavailable" />
-        <SectionCard title="RFQ unavailable">
-          <EmptyState icon={<AlertTriangle size={20} />} title="Could not load RFQ context" description={errorMessage} />
+        <PageHeader title="Invited vendors" subtitle="Unable to load this RFQ" />
+        <SectionCard title="Unable to load this RFQ">
+          <EmptyState icon={<AlertTriangle size={20} />} title="Could not load this RFQ" description={errorMessage} />
         </SectionCard>
       </div>
     );
   }
 
   if (vendorsQuery.isError) {
-    const errorMessage =
-      vendorsQuery.error instanceof Error ? vendorsQuery.error.message : 'The live vendor roster could not be loaded.';
+    const errorMessage = getRfqRecordErrorMessage(vendorsQuery.error);
     return (
       <div className="space-y-5">
         <PageHeader

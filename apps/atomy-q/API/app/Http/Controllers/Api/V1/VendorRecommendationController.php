@@ -35,9 +35,8 @@ final class VendorRecommendationController extends Controller
         VendorRecommendationCoordinatorInterface $coordinator,
         DecisionTrailRecorderInterface $decisionTrailRecorder,
     ): JsonResponse {
-        $tenantId = $this->tenantId($request);
-        $normalizedTenantId = $this->normalizeIdentifier($tenantId);
-        $rfq = $this->findRfq($tenantId, $rfqId);
+        $normalizedTenantId = $this->normalizeIdentifier($this->tenantId($request));
+        $rfq = $this->findRfq($normalizedTenantId, $rfqId);
 
         if ($rfq === null) {
             return response()->json(['message' => 'RFQ not found'], 404);
@@ -140,17 +139,11 @@ final class VendorRecommendationController extends Controller
                 $normalizedTenantId,
                 (string) $rfq->id,
                 [
-                    'artifact_kind' => 'vendor_recommendation',
-                    'artifact_origin' => 'provider_drafted',
-                    'feature_key' => 'vendor_ai_ranking',
-                    'available' => true,
-                    'artifact' => [
-                        'feature_key' => 'vendor_ai_ranking',
-                        'available' => true,
-                        'payload' => $canonicalPayload,
-                        'provenance' => $provenance,
-                    ],
+                    'payload' => $canonicalPayload,
+                    'provenance' => $provenance,
                 ],
+                origin: 'provider_drafted',
+                featureKey: 'vendor_ai_ranking',
             );
         });
 
@@ -187,10 +180,10 @@ final class VendorRecommendationController extends Controller
         return $candidateStatusById[$vendorId] ?? 'unknown_vendor';
     }
 
-    private function findRfq(string $tenantId, string $rfqId): ?Rfq
+    private function findRfq(string $normalizedTenantId, string $rfqId): ?Rfq
     {
         return Rfq::query()
-            ->whereRaw('lower(tenant_id) = ?', [$this->normalizeIdentifier($tenantId)])
+            ->whereRaw('lower(tenant_id) = ?', [$normalizedTenantId])
             ->where(static function ($builder) use ($rfqId): void {
                 $normalizedRfqId = strtolower(trim($rfqId));
                 $builder

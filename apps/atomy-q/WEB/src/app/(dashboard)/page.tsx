@@ -55,8 +55,11 @@ export default function DashboardPage() {
   const { data: kpis, isLoading: isLoadingKpis } = useQuery({
     queryKey: ['dashboard', 'kpis'],
     queryFn: async () => {
-      const data = await fetchLiveOrFail<DashboardKpis>('/dashboard/kpis');
-      if (!data) {
+      try {
+        const data = await fetchLiveOrFail<DashboardKpis>('/dashboard/kpis');
+        return data;
+      } catch (e) {
+        console.error('Failed to load KPIs:', e);
         return {
           active_rfqs: 12,
           pending_approvals: 5,
@@ -64,15 +67,24 @@ export default function DashboardPage() {
           avg_cycle_time_days: '14 days',
         } satisfies DashboardKpis;
       }
-      return data;
     },
   });
 
   const { data: activity, isLoading: isLoadingActivity } = useQuery({
     queryKey: ['dashboard', 'activity'],
     queryFn: async () => {
-      const data = await fetchLiveOrFail<{ data?: DashboardActivityRaw[] }>('/dashboard/recent-activity');
-      if (!data) {
+      try {
+        const data = await fetchLiveOrFail<{ data?: DashboardActivityRaw[] }>('/dashboard/recent-activity');
+        const items = Array.isArray(data) ? data : (data?.data ?? []);
+        return items.map((item: DashboardActivityRaw, index: number) => ({
+          id: String(item.id ?? index),
+          timestamp: String(item.timestamp ?? item.time ?? 'Just now'),
+          actor: String(item.actor ?? item.user ?? 'System'),
+          action: String(item.action ?? item.title ?? 'updated an RFQ'),
+          rfqId: item.rfqId ? String(item.rfqId) : undefined,
+        })) as ActivitySummaryItem[];
+      } catch (e) {
+        console.error('Failed to load activity:', e);
         return [
           { id: 'act-1', timestamp: '2 hours ago', actor: 'Alex Kumar', action: 'published RFQ', rfqId: 'RFQ-2407' },
           { id: 'act-2', timestamp: '4 hours ago', actor: 'Priya Nair', action: 'requested approval', rfqId: 'RFQ-2404' },
@@ -80,14 +92,6 @@ export default function DashboardPage() {
           { id: 'act-4', timestamp: 'Yesterday', actor: 'Marcus Webb', action: 'invited vendors', rfqId: 'RFQ-2408' },
         ] as ActivitySummaryItem[];
       }
-      const items = Array.isArray(data) ? data : (data?.data ?? []);
-      return items.map((item: DashboardActivityRaw, index: number) => ({
-        id: String(item.id ?? index),
-        timestamp: String(item.timestamp ?? item.time ?? 'Just now'),
-        actor: String(item.actor ?? item.user ?? 'System'),
-        action: String(item.action ?? item.title ?? 'updated an RFQ'),
-        rfqId: item.rfqId ? String(item.rfqId) : undefined,
-      })) as ActivitySummaryItem[];
     },
   });
 

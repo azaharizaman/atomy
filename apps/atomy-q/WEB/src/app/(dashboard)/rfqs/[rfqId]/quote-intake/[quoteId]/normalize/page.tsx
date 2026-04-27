@@ -88,6 +88,10 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
 
   React.useEffect(() => {
     setCurrentTimeMs(Date.now());
+    const timer = setInterval(() => {
+      setCurrentTimeMs(Date.now());
+    }, 10000);
+    return () => clearInterval(timer);
   }, [rfqId]);
 
   if (rfqQuery.isError) {

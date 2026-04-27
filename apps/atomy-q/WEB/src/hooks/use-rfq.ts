@@ -70,7 +70,7 @@ function normalizeRfq(payload: unknown): RfqDetail {
 
   const rawStatus = raw.status;
   if (!isValidRfqStatus(rawStatus)) {
-    throw new Error(`RFQ "${id}" has invalid status.`);
+    throw new Error('We found this RFQ, but its status data is incomplete.');
   }
 
   const est = raw.estValue ?? raw.estimated_value ?? raw.estimatedValue;
@@ -109,7 +109,7 @@ export function useRfq(rfqId: string, options?: { enabled?: boolean }) {
       const data = await fetchLiveOrFail<{ data: RfqDetail }>(`/rfqs/${encodeURIComponent(rfqId)}`);
 
       if (data === undefined) {
-        throw new Error(`RFQ "${rfqId}" is unavailable from the live API.`);
+        throw new Error('We found this RFQ, but its record data could not be loaded.');
       }
 
       return normalizeRfq(data);

@@ -46,27 +46,33 @@ function normalizeQuoteSubmissionRows(payload: unknown): QuoteSubmissionRow[] {
     const blockingIssueCount = normalizeFiniteNumber(row.blocking_issue_count, 'blocking_issue_count', index);
     const uploadedAt = normalizeRequiredString(row.submitted_at, 'submitted_at', index);
 
-    const fileNameSource = row.original_filename ?? row.file_name ?? row.file_path;
+    const fileNameSource = [row.original_filename, row.file_name, row.file_path].find(
+      (s) => s != null && String(s).trim() !== '',
+    );
     const statusSource = row.status;
-    if (fileNameSource === undefined || fileNameSource === null || String(fileNameSource).trim() === '') {
+
+    if (fileNameSource === undefined || fileNameSource === null) {
       throw new Error(`Invalid quote submission row at index ${index}: missing file_name, original_filename, or file_path`);
     }
+    const trimmedFileName = String(fileNameSource).trim();
+
     if (statusSource === undefined || statusSource === null || String(statusSource).trim() === '') {
       throw new Error(`Invalid quote submission row at index ${index}: missing status`);
     }
+    const trimmedStatus = String(statusSource).trim();
 
     return {
       id,
       rfq_id: rfqId,
       vendor_id: vendorId,
       vendor_name: vendorName,
-      file_name: String(fileNameSource),
-      status: String(statusSource),
+      file_name: trimmedFileName,
+      status: trimmedStatus,
       confidence,
       uploaded_at: uploadedAt,
       blocking_issue_count: blockingIssueCount,
       original_filename:
-        row.original_filename !== undefined && row.original_filename !== null ? String(row.original_filename) : null,
+        row.original_filename !== undefined && row.original_filename !== null ? String(row.original_filename).trim() : null,
       extraction_origin:
         row.extraction_origin !== undefined && row.extraction_origin !== null ? String(row.extraction_origin) : null,
       provider_name: row.provider_name !== undefined && row.provider_name !== null ? String(row.provider_name) : null,
@@ -130,10 +136,6 @@ export function useQuoteSubmissions(rfqId: string) {
       const data = await fetchLiveOrFail<{ data: QuoteSubmissionRow[] }>('/quote-submissions', {
         params: { rfq_id: rfqId },
       });
-
-      if (data === undefined) {
-        throw new Error(`Quote submissions unavailable for RFQ "${rfqId}".`);
-      }
 
       return normalizeQuoteSubmissionRows(data);
     },

@@ -28,15 +28,15 @@ final class RequisitionVendorSelectionController extends Controller
 
     public function index(Request $request, string $rfqId): JsonResponse
     {
-        $tenantId = $this->tenantId($request);
-        $rfq = $this->findRfq($tenantId, $rfqId);
+        $normalizedTenantId = $this->normalizeIdentifier($this->tenantId($request));
+        $rfq = $this->findRfq($normalizedTenantId, $rfqId);
 
         if ($rfq === null) {
             return response()->json(['message' => 'RFQ not found'], 404);
         }
 
         $selections = RequisitionSelectedVendor::query()
-            ->where('tenant_id', $tenantId)
+            ->whereRaw('lower(tenant_id) = ?', [$normalizedTenantId])
             ->where('rfq_id', $rfq->id)
             ->with(['vendor'])
             ->orderBy('selected_at')
@@ -50,8 +50,8 @@ final class RequisitionVendorSelectionController extends Controller
 
     public function update(Request $request, string $rfqId): JsonResponse
     {
-        $tenantId = $this->tenantId($request);
-        $rfq = $this->findRfq($tenantId, $rfqId);
+        $normalizedTenantId = $this->normalizeIdentifier($this->tenantId($request));
+        $rfq = $this->findRfq($normalizedTenantId, $rfqId);
 
         if ($rfq === null) {
             return response()->json(['message' => 'RFQ not found'], 404);
@@ -66,7 +66,7 @@ final class RequisitionVendorSelectionController extends Controller
         $vendorIds = array_values(array_map('strval', $validated['vendor_ids']));
 
         $vendors = Vendor::query()
-            ->whereRaw('lower(tenant_id) = ?', [$this->normalizeIdentifier($tenantId)])
+            ->whereRaw('lower(tenant_id) = ?', [$normalizedTenantId])
             ->whereIn('id', $vendorIds)
             ->get()
             ->keyBy(fn (Vendor $vendor): string => (string) $vendor->id);
@@ -85,9 +85,9 @@ final class RequisitionVendorSelectionController extends Controller
             ], 422);
         }
 
-        $rows = DB::transaction(function () use ($rfq, $tenantId, $vendorIds, $request, $vendors): Collection {
+        $rows = DB::transaction(function () use ($rfq, $normalizedTenantId, $vendorIds, $request, $vendors): Collection {
             RequisitionSelectedVendor::query()
-                ->where('tenant_id', $tenantId)
+                ->whereRaw('lower(tenant_id) = ?', [$normalizedTenantId])
                 ->where('rfq_id', $rfq->id)
                 ->delete();
 
@@ -96,7 +96,7 @@ final class RequisitionVendorSelectionController extends Controller
             $payload = array_map(
                 static fn (string $vendorId): array => [
                     'id' => (string) Str::ulid(),
-                    'tenant_id' => $tenantId,
+                    'tenant_id' => $normalizedTenantId,
                     'rfq_id' => $rfq->id,
                     'vendor_id' => $vendorId,
                     'selected_by_user_id' => $userId,
@@ -117,7 +117,7 @@ final class RequisitionVendorSelectionController extends Controller
 
             $selectedVendorIds = $selections->map(static fn (RequisitionSelectedVendor $selection): string => (string) $selection->vendor_id)->values()->all();
             $this->decisionTrailRecorder->recordBuyerShortlistReplaced(
-                $tenantId,
+                $normalizedTenantId,
                 (string) $rfq->id,
                 [
                     'selection_count' => $selections->count(),
@@ -147,10 +147,10 @@ final class RequisitionVendorSelectionController extends Controller
         ]);
     }
 
-    private function findRfq(string $tenantId, string $rfqId): ?Rfq
+    private function findRfq(string $normalizedTenantId, string $rfqId): ?Rfq
     {
         return Rfq::query()
-            ->whereRaw('lower(tenant_id) = ?', [$this->normalizeIdentifier($tenantId)])
+            ->whereRaw('lower(tenant_id) = ?', [$normalizedTenantId])
             ->where(function ($builder) use ($rfqId): void {
                 $builder
                     ->whereRaw('lower(id) = ?', [$this->normalizeIdentifier($rfqId)])
