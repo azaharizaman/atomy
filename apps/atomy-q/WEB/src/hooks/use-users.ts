@@ -205,11 +205,8 @@ async function invokeUserInvite(payload: InviteUserPayload) {
 }
 
 export function useUsers() {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
   return useQuery({
     queryKey: settingsUsersQueryKey,
-    enabled: !useMocks,
     queryFn: async (): Promise<SettingsUsersResult> => {
       const response = requireSuccessfulResponse(await userIndex(), 'Invalid users payload: missing response.');
       return normalizeUsersResponse(response.data);
@@ -218,11 +215,8 @@ export function useUsers() {
 }
 
 export function useUserRoles() {
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
   return useQuery({
     queryKey: settingsUserRolesQueryKey,
-    enabled: !useMocks,
     queryFn: async (): Promise<SettingsUserRole[]> => {
       const response = requireSuccessfulResponse(await userRoles(), 'Invalid user roles payload: missing response.');
       return normalizeRolesResponse(response.data);

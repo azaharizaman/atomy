@@ -2,7 +2,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { fetchLiveOrFail } from '@/lib/api-live';
-import { getSeedProjects } from '@/data/seed';
 
 export interface ProjectListItem {
   id: string;
@@ -48,14 +47,8 @@ export function useProjects(options?: { enabled?: boolean }) {
     queryKey: ['projects'],
     queryFn: async (): Promise<ProjectListItem[]> => {
       const data = await fetchLiveOrFail<{ data: ProjectListItem[] }>('/projects');
-
-      if (data === undefined) {
-        return normalizeProjectsPayload(getSeedProjects());
-      }
-
       return normalizeProjectsPayload(data);
     },
     enabled,
   });
 }
-

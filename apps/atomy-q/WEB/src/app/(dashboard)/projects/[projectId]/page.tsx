@@ -44,7 +44,6 @@ export default function ProjectDetailPage() {
   const [editEndDate, setEditEndDate] = React.useState('');
   const [editPmId, setEditPmId] = React.useState('');
   const authUser = useAuthStore((state) => state.user);
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
   const { data: project, isLoading: projectLoading, error: projectError } = useProject(projectId, {
     enabled: projectsQueryEnabled,
@@ -64,21 +63,7 @@ export default function ProjectDetailPage() {
   });
   const { data: usersData } = useUsers();
   const userOptions = React.useMemo(() => usersData?.items ?? [], [usersData?.items]);
-  const managerOptions = React.useMemo(() => {
-    if (userOptions.length > 0) return userOptions;
-    if (!useMocks || authUser == null) return [];
-    return [
-      {
-        id: authUser.id,
-        name: authUser.name,
-        email: authUser.email,
-        status: 'active',
-        role: authUser.role,
-        createdAt: null,
-        lastLoginAt: null,
-      },
-    ];
-  }, [authUser, userOptions, useMocks]);
+  const managerOptions = React.useMemo(() => userOptions, [userOptions]);
   const acl = aclData ?? EMPTY_PROJECT_ACL;
   const updateProject = useUpdateProject(projectId);
   const updateStatus = useUpdateProjectStatus(projectId);

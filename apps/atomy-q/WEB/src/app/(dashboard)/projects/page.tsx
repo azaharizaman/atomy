@@ -62,7 +62,6 @@ export default function ProjectsPage() {
   const [createEndDate, setCreateEndDate] = React.useState('');
   const [createPmId, setCreatePmId] = React.useState('');
   const authUser = useAuthStore((state) => state.user);
-  const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
   const {
     data: flags,
     isLoading: flagsLoading,
@@ -74,22 +73,7 @@ export default function ProjectsPage() {
     enabled: !flagsLoading && projectsEnabled,
   });
   const { data: usersData } = useUsers();
-  const userOptions = React.useMemo(() => usersData?.items ?? [], [usersData?.items]);
-  const managerOptions = React.useMemo(() => {
-    if (userOptions.length > 0) return userOptions;
-    if (!useMocks || authUser == null) return [];
-    return [
-      {
-        id: authUser.id,
-        name: authUser.name,
-        email: authUser.email,
-        status: 'active',
-        role: authUser.role,
-        createdAt: null,
-        lastLoginAt: null,
-      },
-    ];
-  }, [authUser, userOptions, useMocks]);
+  const userOptions = usersData?.items ?? [];
   const createProject = useCreateProject();
 
   React.useEffect(() => {
@@ -98,15 +82,10 @@ export default function ProjectsPage() {
     }
 
     const currentUserId = authUser?.id ?? '';
-    if (currentUserId !== '' && managerOptions.some((user) => user.id === currentUserId)) {
+    if (currentUserId !== '' && userOptions.some((user) => user.id === currentUserId)) {
       setCreatePmId(currentUserId);
-      return;
     }
-
-    if (managerOptions.length > 0) {
-      setCreatePmId(managerOptions[0].id);
-    }
-  }, [authUser?.id, createPmId, managerOptions]);
+  }, [authUser?.id, createPmId, userOptions]);
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -243,7 +222,7 @@ export default function ProjectsPage() {
                 <option value="" disabled>
                   Select a user
                 </option>
-                {managerOptions.map((user) => (
+                {userOptions.map((user) => (
                   <option key={user.id} value={user.id}>
                     {user.name ?? user.email} ({user.email})
                   </option>

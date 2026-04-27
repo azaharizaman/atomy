@@ -319,9 +319,5 @@ export function resolveAiStatusPath(): string {
 }
 
 export function isAiQueryEnabled(): boolean {
-  if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true') {
-    return false;
-  }
-
   return normalizeMode(process.env.NEXT_PUBLIC_AI_MODE) === 'provider';
 }

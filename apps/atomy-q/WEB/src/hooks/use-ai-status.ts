@@ -7,7 +7,6 @@ import { api } from '@/lib/api';
 import {
   createAiStatusFallback,
   createDeterministicAiStatusSnapshot,
-  createMockAiStatusSnapshot,
   isAiQueryEnabled,
   normalizeAiStatusPayload,
   resolveAiStatusPath,
@@ -43,10 +42,6 @@ async function fetchAiStatus(): Promise<AiStatusSnapshot> {
 }
 
 function getDisabledAiStatusSnapshot(): AiStatusSnapshot {
-  if (process.env.NEXT_PUBLIC_USE_MOCKS === 'true') {
-    return createMockAiStatusSnapshot();
-  }
-
   if (process.env.NEXT_PUBLIC_AI_MODE === 'deterministic') {
     return createDeterministicAiStatusSnapshot();
   }
