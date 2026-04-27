@@ -48,4 +48,26 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    public function active(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'active',
+        ]);
+    }
+
+    public function locked(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'locked',
+        ]);
+    }
+
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
+    }
 }

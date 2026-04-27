@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RfqLineItem extends Model
 {
-    use HasUlids;
+    use HasUlids, HasFactory;
 
     protected $keyType = 'string';
 
@@ -33,6 +34,7 @@ class RfqLineItem extends Model
     protected $casts = [
         'quantity' => 'decimal:4',
         'unit_price' => 'decimal:2',
+        'specifications' => 'json',
         'sort_order' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

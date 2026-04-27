@@ -277,3 +277,35 @@ Your earlier spec becomes much stronger once tiered governance is added, because
 * audit effort is proportional
 * enterprise buyers trust system more
 
+
+---
+
+## Laravel-Way Opportunities for Atomy-Q API
+
+### High-Impact Improvements
+
+1. **Expand FormRequest Validation**
+2. **Add Tenant Global Scope** — prevents query leaks by automatically scoping queries by `tenant_id`
+3. **Laravel Policies for Authorization** — wrap existing `ProjectAclService` rather than replace it
+4. **Standardize API Resources & Collections** — align transformers in `Http/Resources` with DTOs
+5. **Split Routes File** — decompose into modular files (`api/v1/rfqs.php`, `api/v1/projects.php`, `api/v1/vendors.php`)
+
+### Architectural Integration
+
+Integrate Laravel features with existing Nexus architecture:
+- `FormRequest::authorize()` → Combine with NexusPermission middleware
+- Laravel Policy → Wrap ProjectAclService, don't replace
+- Global Tenant Scope → Use tenant context from existing TenantContext middleware
+- API Resources → Keep in Http/Resources, align with DTOs
+
+### Implementation Suggestions
+
+- **TenantScope**: Prevent query leaks with automatic tenant filtering via `app/Scopes/TenantScope.php`
+- **ApiResponse trait**: Standardize `success()`, `created()`, and `error()` methods for JSON responses
+- **Route decomposition**: Use `require` statements in `routes/api.php` to load modular route files
+
+Start with Tenant Global Scope and FormRequest expansion to prevent bugs and standardize validation with minimal refactoring risk.
+
+### Factory Adoption Recommendation
+
+The current `PetrochemicalTenantSeeder.php` is hand-coded using raw `DB::table()->insert()` calls, making maintenance brittle. Adopting Laravel factories would improve maintainability through test isolation, TDD enablement, and DRY model definitions. Factories should be introduced in phases: core domain models first (RfqFactory, QuoteSubmissionFactory), then supporting entities (VendorInvitationFactory, ComparisonRunFactory), and finally a seeder refactor to use factories internally.
