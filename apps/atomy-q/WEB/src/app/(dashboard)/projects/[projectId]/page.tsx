@@ -62,8 +62,7 @@ export default function ProjectDetailPage() {
     enabled: projectsQueryEnabled,
   });
   const { data: usersData } = useUsers();
-  const userOptions = React.useMemo(() => usersData?.items ?? [], [usersData?.items]);
-  const managerOptions = React.useMemo(() => userOptions, [userOptions]);
+  const userOptions = usersData?.items ?? [];
   const acl = aclData ?? EMPTY_PROJECT_ACL;
   const updateProject = useUpdateProject(projectId);
   const updateStatus = useUpdateProjectStatus(projectId);
@@ -86,24 +85,18 @@ export default function ProjectDetailPage() {
       return;
     }
 
-    const currentSelectionExists = editPmId !== '' && managerOptions.some((user) => user.id === editPmId);
+    const currentSelectionExists = editPmId !== '' && userOptions.some((user) => user.id === editPmId);
     if (currentSelectionExists) {
       return;
     }
 
     const currentUserId = authUser?.id ?? '';
-    if (currentUserId !== '' && managerOptions.some((user) => user.id === currentUserId)) {
+    if (currentUserId !== '' && userOptions.some((user) => user.id === currentUserId)) {
       setEditPmId(currentUserId);
       return;
     }
-
-    if (managerOptions.length > 0) {
-      setEditPmId(managerOptions[0].id);
-      return;
-    }
-
     setEditPmId('');
-  }, [authUser?.id, editMode, editPmId, managerOptions]);
+  }, [authUser?.id, editMode, editPmId, userOptions]);
 
   const aclSyncKey = React.useMemo(
     () => acl.map((e) => `${e.userId}:${e.role}`).join('|'),
@@ -273,7 +266,7 @@ export default function ProjectDetailPage() {
                 <option value="" disabled>
                   Select a user
                 </option>
-                {managerOptions.map((user) => (
+                {userOptions.map((user) => (
                   <option key={user.id} value={user.id}>
                     {user.name ?? user.email} ({user.email})
                   </option>

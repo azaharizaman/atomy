@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { alphaMockUser, seedAuthSession } from './playwright-auth-bootstrap';
+import { seedAuthSession } from './playwright-auth-bootstrap';
+import { alphaMockUser } from './alpha-playwright-bootstrap';
 import { buildCorsHeaders, fulfillJsonRoute, getRequestOrigin } from './playwright-cors-helpers';
 
 const RFQ_ID = 'RFQ-SOURCING-RECO-001';

@@ -6,7 +6,6 @@ import { AlertTriangle } from 'lucide-react';
 const MESSAGE_COPY: Record<string, string> = {
   'ai.status.off': 'AI features are disabled for this environment.',
   'ai.status.degraded': 'AI features are temporarily degraded. Continue with the manual path where needed.',
-  'ai.status.mock_mode': 'AI is running in deterministic mock mode. Use the manual path for AI-assisted workflows.',
   'ai.status.unavailable': 'AI status could not be loaded. Continue without AI or retry when the service recovers.',
   'ai.status.provider_unavailable': 'The configured AI provider is temporarily unavailable.',
   'ai.feature.unavailable': 'This AI feature is not available right now.',

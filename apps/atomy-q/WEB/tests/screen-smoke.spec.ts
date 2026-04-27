@@ -87,5 +87,4 @@ test('screen smoke: users and roles page renders heading', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /^Users & Roles$/ })).toBeVisible({ timeout: 20000 });
 });
 
-// Note: RFQ workspace routes require auth. The "Use mock account" shortcut is not persisted across full reloads,
-// so we keep the smoke suite to client-side navigations that don't reload.
+// Note: RFQ workspace routes require auth. We keep the smoke suite to client-side navigations that don't reload.

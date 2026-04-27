@@ -86,12 +86,7 @@ export function useQuoteSubmission(quoteId: string, options?: { enabled?: boolea
       const data = await fetchLiveOrFail<{ data: QuoteSubmissionSummary }>(`/quote-submissions/${encodeURIComponent(quoteId)}`);
 
       if (data === undefined) {
-        return {
-          id: quoteId,
-          status: 'ready',
-          blocking_issue_count: 0,
-          vendor_name: 'Vendor',
-        };
+        throw new Error(`Quote submission unavailable for "${quoteId}".`);
       }
       return normalizeQuoteSubmission(data);
     },

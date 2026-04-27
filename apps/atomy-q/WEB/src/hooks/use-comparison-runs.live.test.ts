@@ -8,10 +8,6 @@ vi.mock('@/lib/api', () => ({
   api: { get: getMock },
 }));
 
-vi.mock('@/data/seed', () => ({
-  getSeedComparisonRunsByRfqId: vi.fn(() => []),
-}));
-
 describe('useComparisonRuns (live mode)', () => {
   const originalMocks = process.env.NEXT_PUBLIC_USE_MOCKS;
 

@@ -52,13 +52,13 @@ test.describe('provider quote e2e with mocked API responses', () => {
         rfq_line_item_id: rfqLineId,
         quantity: '1.0000',
         uom: fixture.rfqLineItems[0]?.uom ?? 'JOB',
-        unit_price: null,
+        unit_price: null as string | null,
       },
       effective_values: {
         rfq_line_item_id: rfqLineId,
         quantity: '1.0000',
         uom: fixture.rfqLineItems[0]?.uom ?? 'JOB',
-        unit_price: null,
+        unit_price: null as string | null,
       },
       is_buyer_overridden: false,
       latest_override: null as null | {

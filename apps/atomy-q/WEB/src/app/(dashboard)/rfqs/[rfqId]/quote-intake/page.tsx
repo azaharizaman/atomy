@@ -16,8 +16,6 @@ import { useNormalizationReview } from '@/hooks/use-normalization-review';
 import { useQuoteSubmissions, type QuoteSubmissionRow } from '@/hooks/use-quote-submissions';
 import { Plus, Mail, FileText } from 'lucide-react';
 
-const useMocks = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
-
 function mapQuoteStatus(status: string | undefined): { badge: StatusVariant; label: string } {
   const normalized = (status ?? '').toLowerCase();
   if (normalized === 'ready' || normalized === 'accepted') {
@@ -53,8 +51,7 @@ const STATUS_FILTER_OPTIONS = [
 function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
   const router = useRouter();
   const rfqQuery = useRfq(rfqId);
-  const rfq = rfqQuery.data;
-  const norm = useNormalizationReview(rfqId, { enabled: !useMocks });
+  const norm = useNormalizationReview(rfqId);
   const submissionsQuery = useQuoteSubmissions(rfqId);
   const aiStatus = useAiStatus();
   const submissions = submissionsQuery.data ?? [];
@@ -81,8 +78,7 @@ function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
     return true;
   });
   const extractionAvailable = aiStatus.isFeatureAvailable('quote_document_extraction');
-  const showExtractionUnavailable =
-    !useMocks && aiStatus.shouldShowUnavailableMessage('quote_document_extraction');
+  const showExtractionUnavailable = aiStatus.shouldShowUnavailableMessage('quote_document_extraction');
   const providerName =
     submissions.find((row) => row.extraction_origin === 'provider' && row.provider_name != null)?.provider_name ??
     aiStatus.status.providerName ??
@@ -121,7 +117,7 @@ function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
 
   return (
     <div className="space-y-5">
-      {!useMocks && extractionAvailable && (
+      {extractionAvailable && (
         <Card className="border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-950">
           <span className="font-semibold">AI-assisted quote extraction</span> — provider extraction active
           {providerName ? ` via ${providerName}` : ''}.
@@ -132,13 +128,13 @@ function QuoteIntakeListContent({ rfqId }: { rfqId: string }) {
           <span className="font-semibold">AI extraction is unavailable.</span> Upload succeeded. Continue by entering source lines manually in the normalize workspace.
         </Card>
       )}
-      {!useMocks && norm.hasBlockingIssues && (
+      {norm.hasBlockingIssues && (
         <Card className="border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
           <span className="font-semibold">Blocking issues</span> — {norm.blockingIssueCount} open issue(s) in normalization.
           Review the normalize workspace before freezing comparison.
         </Card>
       )}
-      {!useMocks && norm.isError && (
+      {norm.isError && (
         <Card className="border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
           <span className="font-semibold">Normalization review data unavailable</span> — source quotes remain available.
           <span className="ml-1">{normalizationReviewErrorMessage}</span>

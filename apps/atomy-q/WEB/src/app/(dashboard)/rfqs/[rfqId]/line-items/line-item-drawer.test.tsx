@@ -45,7 +45,7 @@ describe('LineItemDrawer', () => {
     });
   });
 
-  it('blocks submission in mock mode', async () => {
+  it('blocks submission when read-only', async () => {
     const onClose = vi.fn();
 
     renderWithProviders(<LineItemDrawer rfqId="rfq-1" onClose={onClose} isWritable={false} open />);
@@ -56,7 +56,7 @@ describe('LineItemDrawer', () => {
     });
 
     await vi.waitFor(() => expect(mockMutateAsync).not.toHaveBeenCalled());
-    expect(screen.getByText(/mock mode is read-only/i)).toBeInTheDocument();
+    expect(screen.getByText(/read-only unless the rfq is in draft/i)).toBeInTheDocument();
   });
 
   it('rejects blank numeric fields before submit', async () => {

@@ -38,7 +38,7 @@ function syntheticCapability(
       status: 'deterministic',
       available: false,
       fallbackUiMode: 'message',
-      messageKey: snapshot.reasonCodes.includes('AI_STATUS_MOCK_MODE') ? 'ai.status.mock_mode' : 'ai.status.degraded',
+      messageKey: 'ai.status.degraded',
       operatorCritical: false,
       reasonCodes: snapshot.reasonCodes,
       diagnostics: null,
