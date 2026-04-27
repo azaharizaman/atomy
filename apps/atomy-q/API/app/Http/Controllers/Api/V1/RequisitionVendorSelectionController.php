@@ -9,7 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\RequisitionSelectedVendor;
 use App\Models\Rfq;
 use App\Models\Vendor;
-use App\Services\QuoteIntake\DecisionTrailRecorder;
+use App\Services\QuoteIntake\DecisionTrailRecorderInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,7 +23,7 @@ final class RequisitionVendorSelectionController extends Controller
     use ExtractsAuthContext;
 
     public function __construct(
-        private readonly DecisionTrailRecorder $decisionTrailRecorder,
+        private readonly DecisionTrailRecorderInterface $decisionTrailRecorder,
     ) {}
 
     public function index(Request $request, string $rfqId): JsonResponse

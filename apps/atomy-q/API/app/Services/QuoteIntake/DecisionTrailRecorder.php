@@ -97,7 +97,12 @@ final readonly class DecisionTrailRecorder implements DecisionTrailRecorderInter
             rfqId: $rfqId,
             comparisonRunId: $rfqId,
             eventType: 'vendor_recommendation_generated',
-            summary: $summary,
+            summary: array_replace([
+                'artifact_kind' => 'vendor_recommendation',
+                'artifact_origin' => 'ai_generated',
+                'feature_key' => 'vendor_recommendation',
+                'available' => true,
+            ], $summary),
         );
     }
 
@@ -234,14 +239,27 @@ final readonly class DecisionTrailRecorder implements DecisionTrailRecorderInter
 
     private function isAllowedAiArtifactEventType(string $eventType): bool
     {
-        if ($eventType === 'comparison_ai_overlay_generated' || $eventType === 'award_ai_debrief_draft_generated' || $eventType === 'vendor_recommendation_generated') {
+        $exactNames = [
+            'comparison_ai_overlay_generated',
+            'award_ai_debrief_draft_generated',
+            'vendor_recommendation_generated',
+        ];
+
+        if (in_array($eventType, $exactNames, true)) {
             return true;
         }
 
-        if (preg_match('/^award_ai_guidance_generated:[^:]+$/', $eventType) === 1) {
-            return true;
+        $patterns = [
+            '/^award_ai_guidance_generated:[^:]+$/',
+            '/^approval_ai_summary_generated:[^:]+$/',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $eventType) === 1) {
+                return true;
+            }
         }
 
-        return preg_match('/^approval_ai_summary_generated:[^:]+$/', $eventType) === 1;
+        return false;
     }
 }

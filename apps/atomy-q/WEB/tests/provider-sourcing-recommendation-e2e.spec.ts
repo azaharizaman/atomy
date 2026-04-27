@@ -362,6 +362,7 @@ async function routeSourcingRecommendationApi(page: Page, options: Recommendatio
 
     await route.fulfill({
       status: 501,
+      headers: buildCorsHeaders(getRequestOrigin(route)),
       contentType: 'application/json',
       body: JSON.stringify({
         error: 'Not Implemented',

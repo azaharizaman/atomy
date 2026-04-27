@@ -7,6 +7,10 @@ const rfqId = process.env.SOURCING_RECOMMENDATION_RFQ_ID?.trim() ?? '';
 const recommendedVendorName = process.env.SOURCING_RECOMMENDATION_RECOMMENDED_VENDOR?.trim() ?? '';
 const manualVendorName = process.env.SOURCING_RECOMMENDATION_MANUAL_VENDOR?.trim() ?? '';
 
+function escapeRegExp(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 test.describe('provider-backed sourcing recommendation e2e with live backend', () => {
   test.describe.configure({ mode: 'serial' });
   test.setTimeout(300_000);
@@ -70,20 +74,20 @@ test.describe('provider-backed sourcing recommendation e2e with live backend', (
 
     await expect(page.getByText('Selected approved vendors')).toBeVisible();
     await expect(page.getByText('AI recommendation summary')).toBeVisible();
-    await expect(page.getByRole('checkbox', { name: new RegExp(`select ${recommendedVendorName}`, 'i') })).not.toBeChecked();
+    await expect(page.getByRole('checkbox', { name: new RegExp(`select ${escapeRegExp(recommendedVendorName)}`, 'i') })).not.toBeChecked();
 
     const recommendedButton = page.getByRole('button', {
-      name: new RegExp(`why ${recommendedVendorName} is recommended`, 'i'),
+      name: new RegExp(`why ${escapeRegExp(recommendedVendorName)} is recommended`, 'i'),
     });
 
     if (await recommendedButton.count()) {
       await recommendedButton.first().click();
     }
 
-    await page.getByRole('checkbox', { name: new RegExp(`select ${manualVendorName}`, 'i') }).check();
+    await page.getByRole('checkbox', { name: new RegExp(`select ${escapeRegExp(manualVendorName)}`, 'i') }).check();
     await page.getByRole('button', { name: /save selection/i }).click();
 
     await page.reload();
-    await expect(page.getByText(new RegExp(manualVendorName, 'i'))).toBeVisible();
+    await expect(page.getByText(new RegExp(escapeRegExp(manualVendorName), 'i'))).toBeVisible();
   });
 });

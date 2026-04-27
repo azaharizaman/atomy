@@ -4,13 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Api\V1;
 
-use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
-use App\Models\DecisionTrailEntry;
-use App\Models\Rfq;
-use App\Models\RfqRecommendationArtifact;
-use App\Models\Tenant;
-use App\Models\User;
-use App\Models\Vendor;
 use DateTimeImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +15,13 @@ use Nexus\IntelligenceOperations\DTOs\AiStatusSnapshot;
 use Nexus\ProcurementOperations\Contracts\VendorRecommendationLlmInterface;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationRequest;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationScoredCandidate;
+use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use App\Models\DecisionTrailEntry;
+use App\Models\Rfq;
+use App\Models\RfqRecommendationArtifact;
+use App\Models\Tenant;
+use App\Models\User;
+use App\Models\Vendor;
 use Tests\Feature\Api\ApiTestCase;
 
 final class RfqRecommendationDecisionTrailTest extends ApiTestCase
@@ -134,6 +134,7 @@ final class RfqRecommendationDecisionTrailTest extends ApiTestCase
         );
 
         $response->assertOk();
+        self::assertSame(2, $this->selectedVendorCount($tenantId, (string) $rfq->id));
 
         $entry = DecisionTrailEntry::query()
             ->where('tenant_id', $tenantId)

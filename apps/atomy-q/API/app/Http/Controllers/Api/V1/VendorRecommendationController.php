@@ -332,7 +332,7 @@ final class VendorRecommendationController extends Controller
 
     /**
      * @param list<VendorRecommendationEligibleCandidate> $eligibleCandidates
-     * @param list<array{vendor_id: string, vendor_name: string, reason: string, status: string}> $excludedCandidates
+     * @param list<array<string, mixed>> $excludedCandidates
      * @param list<string> $deterministicReasonSet
      * @return array<string, mixed>
      */

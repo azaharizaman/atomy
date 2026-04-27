@@ -12,34 +12,36 @@ declare(strict_types=1);
 |
 | Section Index:
 |   §1  - Authentication & Session          (auth)                 → 9 endpoints
-|   §2  - Dashboard                       (dashboard)            → 5 endpoints
-|   §3  - RFQ Management                   (rfqs)                → 12 endpoints
+|   §2  - Dashboard                       (dashboard)            → 6 endpoints
+|   §3  - RFQ Management                   (rfqs)                → 15 endpoints
 |   §4  - RFQ Templates                    (rfq-templates)       → 7 endpoints
-|   §5  - Vendor Management                (vendors)             → 8 endpoints
+|   §5  - Vendor Management                (vendors)             → 10 endpoints
 |   §6  - Vendor Invitations               (rfqs.*\/invitations)  → 3 endpoints
-|   §7  - Quote Intake                     (quote-submissions)  → 7 endpoints
+|   §7  - Quote Intake                     (quote-submissions)  → 10 endpoints
 |   §8  - Quote Normalization              (normalization)       → 10 endpoints
-|   §9  - Comparison Matrix                (comparison-runs)     → 9 endpoints
+|   §9  - Comparison Matrix                (comparison-runs)     → 10 endpoints
 |   §10 - Scoring Models                   (scoring-models)      → 8 endpoints
 |   §11 - Scoring Policies                 (scoring-policies)   → 8 endpoints
 |   §12 - Scenarios                        (scenarios)           → 5 endpoints
-|   §13 - Risk & Compliance                (risk-items)          → 3 endpoints (+ 4 vendor sub-routes)
-|   §14 - Approvals                        (approvals)           → 12 endpoints
+|   §13 - Risk & Compliance                (risk-items)          → 4 endpoints
+|   §14 - Approvals                        (approvals)           → 14 endpoints
 |   §15 - Operational Approvals           (operational-approvals) → 4 endpoints
 |   §16 - Negotiations                     (negotiations)        → 5 endpoints
-|   §17 - Award Decision                   (awards)              → 7 endpoints
+|   §17 - Award Decision                   (awards)              → 12 endpoints
 |   §18 - PO/Contract Handoff              (handoffs)            → 6 endpoints
-|   §19 - Documents                        (documents)          → 6 endpoints
-|   §20 - Search                           (search)              → 3 endpoints
-|   §21 - Reports                          (reports)             → 4 endpoints
-|   §22 - Settings                         (settings)            → 5 endpoints
-|   §23 - Users & Access                   (users)               → 6 endpoints
-|   §24 - Projects                         (projects)            → 5 endpoints
-|   §25 - Tasks                            (tasks)               → 5 endpoints
-|   §26 - Integrations                     (integrations)        → 6 endpoints
-|   §27 - Decision Trail                   (decision-trail)     → 3 endpoints
+|   §19 - Decision Trail                   (decision-trail)     → 4 endpoints
+|   §20 - Documents & Evidence Vault       (documents)          → 10 endpoints
+|   §21 - Reports & Analytics              (reports)             → 14 endpoints
+|   §22 - Integrations & API Monitor       (integrations)       → 11 endpoints
+|   §23 - Users & Access Management       (users)               → 10 endpoints
+|   §24 - Admin Settings                   (settings)            → 6 endpoints
+|   §25 - Notifications                    (notifications)       → 5 endpoints
+|   §26 - Search                           (search)              → 1 endpoint
+|   §27 - User Settings / Account          (account)             → 14 endpoints
+|   §28 - Projects                         (projects)            → 11 endpoints
+|   §29 - Tasks                            (tasks)               → 8 endpoints
 |
-| Total: ~180 endpoints
+| Total: ~240 endpoints
 |
 */
 
@@ -82,7 +84,7 @@ use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Section 1: Authentication & Session (7 endpoints)
+| Section 1: Authentication & Session (9 endpoints)
 |--------------------------------------------------------------------------
 */
 Route::prefix('auth')->group(function (): void {
@@ -106,7 +108,7 @@ Route::get('ai/status', [AiStatusController::class, 'show']);
 */
 Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
 
-    // --- Section 2: Dashboard (5 endpoints) ---
+    // --- Section 2: Dashboard (6 endpoints) ---
     Route::prefix('dashboard')->group(function (): void {
         Route::get('kpis', [DashboardController::class, 'kpis']);
         Route::post('kpis/generate', [DashboardController::class, 'generateKpisSummary']);
@@ -116,7 +118,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::get('risk-alerts', [DashboardController::class, 'riskAlerts']);
     });
 
-    // --- Section 3: RFQ Management (12 endpoints) ---
+    // --- Section 3: RFQ Management (15 endpoints) ---
     Route::prefix('rfqs')->group(function (): void {
         Route::get('/', [RfqController::class, 'index']);
         Route::get('counts', [RfqController::class, 'counts']);
@@ -178,7 +180,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
             ->name('v1.rfq-templates.apply');
     });
 
-    // --- Section 5: Vendor Management (8 endpoints) ---
+    // --- Section 5: Vendor Management (10 endpoints) ---
     Route::prefix('vendors')->group(function (): void {
         Route::get('/', [VendorController::class, 'index']);
         Route::post('/', [VendorController::class, 'store'])
@@ -202,7 +204,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::patch('{id}/due-diligence/{itemId}', [VendorGovernanceController::class, 'updateDueDiligence']);
     });
 
-    // --- Section 7: Quote Intake (7 endpoints) ---
+    // --- Section 7: Quote Intake (10 endpoints) ---
     Route::prefix('quote-submissions')->group(function (): void {
         Route::get('/', [QuoteSubmissionController::class, 'index']);
         Route::post('upload', [QuoteSubmissionController::class, 'upload']);
@@ -232,7 +234,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::post('{rfqId}/unlock', [NormalizationController::class, 'unlock']);
     });
 
-    // --- Section 9: Comparison Matrix (9 endpoints) ---
+    // --- Section 9: Comparison Matrix (10 endpoints) ---
     Route::prefix('comparison-runs')->group(function (): void {
         Route::get('/', [ComparisonRunController::class, 'index']);
         Route::post('preview', [ComparisonRunController::class, 'preview']);
@@ -279,7 +281,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::delete('{id}', [ScenarioController::class, 'destroy']);
     });
 
-    // --- Section 13: Risk & Compliance (3 top-level + 4 vendor sub-routes above) ---
+    // --- Section 13: Risk & Compliance (4 endpoints) ---
     Route::prefix('risk-items')->group(function (): void {
         Route::get('/', [RiskComplianceController::class, 'index']);
         Route::post('generate', [RiskComplianceController::class, 'generate']);
@@ -287,7 +289,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::post('{id}/exception', [RiskComplianceController::class, 'exception']);
     });
 
-    // --- Section 14: Approvals (12 endpoints) ---
+    // --- Section 14: Approvals (14 endpoints) ---
     Route::prefix('approvals')->group(function (): void {
         Route::get('/', [ApprovalController::class, 'index']);
         Route::post('bulk-approve', [ApprovalController::class, 'bulkApprove']);
@@ -305,6 +307,20 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::get('{id}/history', [ApprovalController::class, 'history']);
     });
 
+    // --- Section 15: Operational Approvals (4 endpoints) ---
+    Route::prefix('operational-approvals')->group(function (): void {
+        Route::get('instances', [OperationalApprovalController::class, 'index'])
+            ->name('v1.operational-approvals.instances.index');
+        Route::post('instances', [OperationalApprovalController::class, 'store'])
+            ->middleware('idempotency')
+            ->name('v1.operational-approvals.instances.store');
+        Route::get('instances/{instanceId}', [OperationalApprovalController::class, 'show'])
+            ->name('v1.operational-approvals.instances.show');
+        Route::post('instances/{instanceId}/decisions', [OperationalApprovalController::class, 'storeDecision'])
+            ->middleware('idempotency')
+            ->name('v1.operational-approvals.instances.decisions.store');
+    });
+
     // --- Section 16: Negotiations (5 endpoints) ---
     Route::prefix('negotiations')->group(function (): void {
         Route::get('/', [NegotiationController::class, 'index']);
@@ -314,7 +330,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::post('{rfqId}/close', [NegotiationController::class, 'close']);
     });
 
-    // --- Section 17: Award Decision (7 endpoints) ---
+    // --- Section 17: Award Decision (12 endpoints) ---
     Route::prefix('awards')->group(function (): void {
         Route::get('/', [AwardController::class, 'index']);
         Route::post('/', [AwardController::class, 'store']);
@@ -364,7 +380,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::get('{id}/export', [DocumentController::class, 'exportBundle']);
     });
 
-    // --- Section 21: Reports & Analytics (11 endpoints) ---
+    // --- Section 21: Reports & Analytics (14 endpoints) ---
     Route::prefix('reports')->group(function (): void {
         Route::get('kpis', [ReportController::class, 'kpis']);
         Route::post('kpis/generate', [ReportController::class, 'generateKpisSummary']);
@@ -459,7 +475,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::patch('payment-methods/{id}/default', [AccountController::class, 'setDefaultPaymentMethod']);
     });
 
-    // --- Section 28: Projects (planned) ---
+    // --- Section 28: Projects (11 endpoints) ---
     Route::prefix('projects')->group(function (): void {
         Route::get('/', [ProjectController::class, 'index']);
         Route::post('/', [ProjectController::class, 'store'])
@@ -476,7 +492,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::put('{id}/acl', [ProjectController::class, 'updateAcl']);
     });
 
-    // --- Section 29: Tasks (planned) ---
+    // --- Section 29: Tasks (8 endpoints) ---
     Route::prefix('tasks')->group(function (): void {
         Route::get('/', [TaskController::class, 'index']);
         Route::post('/', [TaskController::class, 'store'])
@@ -488,19 +504,5 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::patch('{id}/status', [TaskController::class, 'updateStatus']);
         Route::get('{id}/dependencies', [TaskController::class, 'getDependencies']);
         Route::put('{id}/dependencies', [TaskController::class, 'updateDependencies']);
-    });
-
-    // --- Operational approvals (Nexus\ApprovalOperations; distinct from RFQ quote flows) ---
-    Route::prefix('operational-approvals')->group(function (): void {
-        Route::get('instances', [OperationalApprovalController::class, 'index'])
-            ->name('v1.operational-approvals.instances.index');
-        Route::post('instances', [OperationalApprovalController::class, 'store'])
-            ->middleware('idempotency')
-            ->name('v1.operational-approvals.instances.store');
-        Route::get('instances/{instanceId}', [OperationalApprovalController::class, 'show'])
-            ->name('v1.operational-approvals.instances.show');
-        Route::post('instances/{instanceId}/decisions', [OperationalApprovalController::class, 'storeDecision'])
-            ->middleware('idempotency')
-            ->name('v1.operational-approvals.instances.decisions.store');
     });
 });
