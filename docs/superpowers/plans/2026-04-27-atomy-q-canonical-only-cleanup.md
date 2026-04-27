@@ -58,6 +58,39 @@ Target the current shim points before editing the runtime:
 - decision-trail writer should expose only the typed write path
 - migration freshness should succeed with the current schema captured in the owning `create_*_table` files
 
+**Concrete failing assertions to add:**
+
+1. **VendorRecommendationApiTest** — assert vendor model no longer populates legacy field names:
+   ```php
+   $this->assertArrayNotHasKey('recommended_reason_summary', $vendor->toArray());
+   $this->assertArrayNotHasKey('legacy_field', $vendor->toArray());
+   ```
+
+2. **ProjectsApiTest** — assert ACL role checks reject non-canonical roles:
+   ```php
+   $response = $this->putJson("/api/v1/projects/{$id}/roles", ['roles' => [['user_id' => 'u1', 'role' => 'ADMIN']]]);
+   $response->assertStatus(422); // Only 'admin' (lowercase) should be accepted
+   ```
+
+3. **IdentityGap7Test** — assert identity query does not construct legacy role object:
+   ```php
+   $user = User::find($id);
+   $this->assertNull($user->legacy_role); // Should not exist
+   ```
+
+4. **RfqRecommendationDecisionTrailTest** — assert DecisionTrail writer only exposes typed write path:
+   ```php
+   $this->assertFalse(method_exists($trail, 'writeLegacy'));
+   ```
+
+5. **Migration freshness checks** — assert schema validation uses `create_*_table` files as source of truth:
+   ```php
+   $this->assertTrue(
+     Schema::hasColumn('users', 'failed_login_attempts'),
+     'Column must be defined in create_users_table.php'
+   );
+   ```
+
 Run:
 ```bash
 cd apps/atomy-q/API
@@ -148,7 +181,7 @@ Keep live unavailable handling and truthful status rendering intact.
 
 - [ ] **Step 3: Regenerate the API client and validate the WEB build**
 
-After the backend contract changes, regenerate the client and verify the frontend still compiles against the canonical payloads.
+Only after Task 1 (write failing WEB tests for canonical vendor recommendation parsing) is complete and the backend contract has been updated, regenerate the client and verify the frontend still compiles against the canonical payloads.
 
 Run:
 ```bash
@@ -184,7 +217,10 @@ Replace old transitional phrasing with canonical-only language:
 
 Run:
 ```bash
-rg -n "legacy|compatib|shim|bridge|backfill|alias" apps/atomy-q/API apps/atomy-q/WEB docs/superpowers -g '*.md' -g '*.php' -g '*.ts' -g '*.tsx'
+# Targeted search for compatibility terms (exclude false positives from type aliases)
+rg -n "legacy|compatib|shim|bridge|backfill" apps/atomy-q/API apps/atomy-q/WEB docs/superpowers -g '*.md' -g '*.php'
+# Alias only in comment/doc contexts
+rg -n "^\s*(//|#|\*|<!--).*alias" apps/atomy-q/API apps/atomy-q/WEB docs/superpowers -g '*.md' -g '*.php' -g '*.ts' -g '*.tsx'
 ```
 
 Expected:

@@ -17,8 +17,8 @@ return new class extends Migration
             $table->ulid('rfq_id');
             $table->integer('sequence');
             $table->string('event_type', 64);
-            $table->json('summary_payload')->nullable();
-            $table->string('payload_hash', 64);
+            $table->json('summary_payload')->nullable(); // Derived/cached from payload; recomputed from payload when validating integrity
+            $table->string('payload_hash', 64); // Includes summary_payload when present for audit integrity
             $table->string('previous_hash', 64);
             $table->string('entry_hash', 64);
             $table->timestamp('occurred_at')->nullable();

@@ -26,6 +26,7 @@ return new class extends Migration
 
             $table->index(['tenant_id', 'rfq_id']);
             $table->index(['tenant_id', 'status']);
+            $table->index(['tenant_id', 'reminded_at']);
         });
     }
 

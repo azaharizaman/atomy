@@ -101,7 +101,7 @@ describe('normalizeVendorRecommendationPayload', () => {
               vendor_name: 'Alpha Procurement',
               fit_score: 93,
               confidence_band: 'high',
-              recommended_reason_summary: 'Strong category fit.',
+              recommended_reason_summary: 'Strong category fit.', // Deprecated alias - should be rejected
               deterministic_reasons: ['Category overlap: facilities.'],
               llm_insights: [],
               warning_flags: [],
@@ -114,7 +114,7 @@ describe('normalizeVendorRecommendationPayload', () => {
           provenance: null,
         },
       }),
-    ).toThrow(/missing provider_explanation/);
+    ).toThrow(/recommended_reason_summary|deprecated alias/);
   });
 
   it('parses structured unavailable payloads without treating them as errors', () => {

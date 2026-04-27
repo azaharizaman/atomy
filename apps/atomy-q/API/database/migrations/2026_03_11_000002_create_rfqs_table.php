@@ -34,6 +34,9 @@ return new class extends Migration
 
             $table->index(['tenant_id', 'status']);
             $table->index(['tenant_id', 'owner_id']);
+            $table->index(['tenant_id', 'expected_award_at']);
+            $table->index(['tenant_id', 'technical_review_due_at']);
+            $table->index(['tenant_id', 'financial_review_due_at']);
             $table->unique(['tenant_id', 'rfq_number']);
         });
     }

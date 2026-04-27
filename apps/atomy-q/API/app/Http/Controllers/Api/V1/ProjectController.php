@@ -438,7 +438,7 @@ final class ProjectController extends Controller
                 ProjectAcl::query()->create([
                     'project_id' => $id,
                     'user_id' => $entry['user_id'],
-                    'role' => strtolower(trim((string) $entry['role'])),
+                    'role' => (string) $entry['role'],
                     'tenant_id' => $tenantId,
                 ]);
             }
