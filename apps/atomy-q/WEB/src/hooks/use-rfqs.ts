@@ -10,6 +10,8 @@ export const RFQ_STATUSES = {
   ARCHIVED: 'archived',
   DRAFT: 'draft',
   PENDING: 'pending',
+  CANCELLED: 'cancelled',
+  PUBLISHED: 'published',
 } as const;
 
 export type RfqStatus = (typeof RFQ_STATUSES)[keyof typeof RFQ_STATUSES];

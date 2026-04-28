@@ -99,7 +99,8 @@ export type StatusVariant =
   | 'active' | 'closed' | 'awarded' | 'archived' | 'draft' | 'pending'
   | 'approved' | 'rejected' | 'processing' | 'locked' | 'stale'
   | 'error' | 'paid' | 'due' | 'overdue' | 'unpaid' | 'preview'
-  | 'final' | 'generated' | 'publishing' | 'new';
+  | 'final' | 'generated' | 'publishing' | 'new'
+  | 'cancelled' | 'published';
 
 export type SLAVariant = 'safe' | 'warning' | 'overdue';
 export type ConfidenceVariant = 'high' | 'medium' | 'low';
