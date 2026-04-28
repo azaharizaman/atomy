@@ -36,6 +36,8 @@ const STATUS_MAP: Record<StatusVariant, StatusConfig> = {
   unpaid:     { label: 'Unpaid',      className: 'bg-slate-100 text-slate-600 border border-slate-200',  icon: <Minus size={11} />,                         dot: false },
   draft:      { label: 'Draft',       className: 'bg-slate-100 text-slate-500 border border-slate-200',  icon: undefined,                                   dot: true  },
   new:        { label: 'New',         className: 'bg-slate-100 text-slate-500 border border-slate-200',  icon: undefined,                                   dot: false },
+  cancelled:  { label: 'Cancelled',  className: 'bg-red-50 text-red-700 border border-red-200',         icon: <XCircle size={11} />,                  dot: false },
+  published:  { label: 'Published',  className: 'bg-blue-50 text-blue-700 border border-blue-200',      icon: undefined,                                   dot: true  },
 };
 
 interface StatusBadgeProps {
@@ -82,6 +84,8 @@ function getDotColor(status: StatusVariant): string {
     closed:    'bg-slate-400',
     archived:  'bg-slate-400',
     draft:     'bg-slate-300',
+    published: 'bg-blue-500',
+    cancelled: 'bg-red-500',
   };
   return map[status] ?? 'bg-slate-400';
 }

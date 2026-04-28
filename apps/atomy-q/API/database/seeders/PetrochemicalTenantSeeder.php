@@ -16,6 +16,10 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorInvitation;
+use Database\Factories\ProjectFactory;
+use Database\Factories\QuoteSubmissionFactory;
+use Database\Factories\UserFactory;
+use Database\Factories\VendorFactory;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -120,23 +124,23 @@ final class PetrochemicalTenantSeeder extends Seeder
             'Henrik Moen',
         ];
 
-        for ($i = 0; $i < 8; $i++) {
-            $user = User::query()->create([
-                'id' => (string) Str::ulid(),
+        $this->userIds = UserFactory::new()
+            ->count(8)
+            ->sequence(fn ($sequence) => [
                 'tenant_id' => $this->tenantId,
-                'email' => 'user' . ($i + 1) . '@nordfjord.example.com',
-                'name' => $names[$i],
+                'email' => 'user' . ($sequence->index + 1) . '@nordfjord.example.com',
+                'name' => $names[$sequence->index],
                 'password_hash' => bcrypt('secret'),
-                'role' => $i === 0 ? 'admin' : 'user',
+                'role' => $sequence->index === 0 ? 'admin' : 'user',
                 'status' => 'active',
                 'timezone' => 'Europe/Oslo',
                 'locale' => 'en',
                 'email_verified_at' => $this->now,
                 'last_login_at' => $this->now,
-            ]);
-
-            $this->userIds[] = $user->id;
-        }
+            ])
+            ->create()
+            ->pluck('id')
+            ->all();
     }
 
     private function seedProjectsAndAcl(): void
@@ -158,23 +162,24 @@ final class PetrochemicalTenantSeeder extends Seeder
 
         $pm = $this->userIds[1] ?? null;
 
-        foreach ($projects as $p) {
-            $project = Project::query()->create([
-                'id' => (string) Str::ulid(),
+        $this->projectIds = ProjectFactory::new()
+            ->count(count($projects))
+            ->sequence(fn ($sequence) => [
                 'tenant_id' => $this->tenantId,
-                'name' => $p['name'],
-                'client_id' => $p['client'],
+                'name' => $projects[$sequence->index]['name'],
+                'client_id' => $projects[$sequence->index]['client'],
                 'start_date' => $this->now->copy()->subMonths(14)->toDateString(),
                 'end_date' => $this->now->copy()->addMonths(20)->toDateString(),
                 'project_manager_id' => $pm,
-                'status' => $p['status'],
-                'budget_type' => $p['budget_type'],
-                'completion_percentage' => $p['pct'],
-            ]);
+                'status' => $projects[$sequence->index]['status'],
+                'budget_type' => $projects[$sequence->index]['budget_type'],
+                'completion_percentage' => $projects[$sequence->index]['pct'],
+            ])
+            ->create()
+            ->pluck('id')
+            ->all();
 
-            $this->projectIds[] = $project->id;
-
-            // Seed project ACL
+        foreach ($this->projectIds as $projectId) {
             foreach ($this->userIds as $uIdx => $uid) {
                 $role = match (true) {
                     $uIdx === 0 => 'owner',
@@ -185,7 +190,7 @@ final class PetrochemicalTenantSeeder extends Seeder
                 ProjectAcl::query()->create([
                     'id' => (string) Str::ulid(),
                     'tenant_id' => $this->tenantId,
-                    'project_id' => $project->id,
+                    'project_id' => $projectId,
                     'user_id' => $uid,
                     'role' => $role,
                 ]);
@@ -273,8 +278,25 @@ final class PetrochemicalTenantSeeder extends Seeder
 
         $categories = ['Rotating equipment', 'Instrumentation', 'Valves & piping', 'Electrical & automation', 'Turnaround services', 'Chemicals & consumables'];
         $regions = [['NO', 'SE', 'DK'], ['NO', 'GB', 'NL'], ['NO', 'DE', 'BE'], ['NO', 'MY', 'SG']];
+        $allCountries = ['NO', 'SE', 'DK', 'GB', 'NL', 'DE', 'BE', 'US', 'SG', 'MY'];
 
-        foreach ($vendorNames as $index => $name) {
+        $vendorObjects = VendorFactory::new()
+            ->count(count($vendorNames))
+            ->sequence(fn ($sequence) => [
+                'tenant_id' => $this->tenantId,
+                'registration_number' => 'NO-' . str_pad((string) (730000 + $sequence->index), 6, '0', STR_PAD_LEFT),
+                'tax_id' => 'MVA-' . str_pad((string) (930000 + $sequence->index), 6, '0', STR_PAD_LEFT),
+                'legal_name' => $vendorNames[$sequence->index],
+                'display_name' => $vendorNames[$sequence->index],
+                'country_of_registration' => $allCountries[$sequence->index % count($allCountries)],
+                'primary_contact_name' => $this->vendorContactName($sequence->index),
+                'primary_contact_email' => strtolower(preg_replace('/[^a-z0-9]+/i', '.', $vendorNames[$sequence->index])) . '@vendor.test',
+                'primary_contact_phone' => '+47 ' . (22000000 + $sequence->index * 137),
+                'onboarded_at' => $this->now->copy()->subDays(420 - ($sequence->index % 240)),
+            ])
+            ->create();
+
+        foreach ($vendorObjects as $index => $vendor) {
             $risky = $index >= 22;
             $status = match (true) {
                 $risky && $index % 3 === 0 => 'restricted',
@@ -283,20 +305,7 @@ final class PetrochemicalTenantSeeder extends Seeder
                 default => 'approved',
             };
 
-            $vendor = Vendor::query()->create([
-                'id' => (string) Str::ulid(),
-                'tenant_id' => $this->tenantId,
-                'registration_number' => 'NO-' . str_pad((string) (730000 + $index), 6, '0', STR_PAD_LEFT),
-                'tax_id' => 'MVA-' . str_pad((string) (930000 + $index), 6, '0', STR_PAD_LEFT),
-                'legal_name' => $name,
-                'display_name' => $name,
-                'country_of_registration' => $regions[$index % count($regions)][0],
-                'primary_contact_name' => $this->vendorContactName($index),
-                'primary_contact_email' => strtolower(preg_replace('/[^a-z0-9]+/i', '.', $name)) . '@vendor.test',
-                'primary_contact_phone' => '+47 ' . (22000000 + $index * 137),
-                'status' => $status,
-                'onboarded_at' => $this->now->copy()->subDays(420 - ($index % 240)),
-            ]);
+            $vendor->update(['status' => $status]);
 
             if ($status === 'approved') {
                 $vendor->update([
