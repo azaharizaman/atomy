@@ -1,0 +1,94 @@
+<h2>Section 3: InsightOperations Orchestrator Changes</h2>
+<p class="subtitle">Four per-surface coordinators with cache, invalidation, and provider routing</p>
+
+<h3>New Contracts in <code>orchestrators/InsightOperations/src/Contracts/</code></h3>
+
+<div class="cards">
+  <div class="card" style="cursor:default;">
+    <div class="card-body">
+      <h3>DashboardInsightCoordinatorInterface</h3>
+      <ul style="font-size:0.85rem;">
+        <li><code>generateSummary(DashboardSummaryRequest): DashboardSummaryResult</code></li>
+        <li><code>getCachedSummary(tenantId): ?DashboardSummaryDto</code></li>
+        <li><code>invalidateCache(tenantId): void</code></li>
+      </ul>
+    </div>
+  </div>
+  <div class="card" style="cursor:default;">
+    <div class="card-body">
+      <h3>RfqInsightCoordinatorInterface</h3>
+      <ul style="font-size:0.85rem;">
+        <li><code>generateInsights(RfqInsightRequest): RfqInsightResult</code></li>
+        <li><code>getCachedInsights(rfqId): ?RfqInsightDto</code></li>
+        <li><code>invalidateCache(rfqId): void</code></li>
+      </ul>
+    </div>
+  </div>
+  <div class="card" style="cursor:default;">
+    <div class="card-body">
+      <h3>GovernanceNarrativeCoordinatorInterface</h3>
+      <ul style="font-size:0.85rem;">
+        <li><code>generateNarrative(GovernanceNarrativeRequest): GovernanceNarrativeResult</code></li>
+        <li><code>getCachedNarrative(vendorId): ?GovernanceNarrativeDto</code></li>
+        <li><code>invalidateCache(vendorId): void</code></li>
+      </ul>
+    </div>
+  </div>
+  <div class="card" style="cursor:default;">
+    <div class="card-body">
+      <h3>ReportingSummaryCoordinatorInterface</h3>
+      <ul style="font-size:0.85rem;">
+        <li><code>generateSummary(ReportingSummaryRequest): ReportingSummaryResult</code></li>
+        <li><code>getCachedSummary(reportId): ?ReportingSummaryDto</code></li>
+        <li><code>invalidateCache(reportId): void</code></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h3>Cache Strategy (InsightStoragePort)</h3>
+<div class="mockup">
+  <div class="mockup-header">Cache Key Pattern & TTL</div>
+  <div class="mockup-body" style="font-family:monospace; font-size:0.85rem; line-height:1.6;">
+    <div>Cache key format: <code>insight:{type}:{tenantId|entityId}</code></div>
+    <div style="margin-top:0.5rem;"><strong>TTL by surface:</strong></div>
+    <div> • Dashboard summary: <code>3600s (1hr)</code></div>
+    <div> • RFQ insights: <code>1800s (30min)</code> or until RFQ status changes</div>
+    <div> • Governance narrative: <code>1800s (30min)</code> or until vendor facts change</div>
+    <div> • Reporting summary: <code>3600s (1hr)</code> or until report data changes</div>
+    <div style="margin-top:0.5rem;"><strong>Manual refresh:</strong> DELETE cache key via API endpoint <code>/api/v1/insights/{type}/{id}/refresh</code></div>
+  </div>
+</div>
+
+<h3>Event-Driven Cache Invalidation</h3>
+<p>New listeners in InsightOperations that invalidate cache when underlying facts change:</p>
+<ul style="font-size:0.85rem;">
+  <li><code>RfqStatusChangedListener</code> → invalidates RFQ insights cache for that rfqId</li>
+  <li><code>VendorSanctionUpdatedListener</code> → invalidates governance narrative for that vendorId</li>
+  <li><code>ComplianceFlagChangedListener</code> → invalidates governance narrative for affected vendorId</li>
+  <li><code>ReportDataChangedListener</code> → invalidates reporting summary for that reportId</li>
+  <li><code>TenantDashboardDataChangedListener</code> → invalidates dashboard summary for that tenantId</li>
+</ul>
+
+<h3>Provider Call Path (Layer 2 → Layer 3)</h3>
+<div class="mockup">
+  <div class="mockup-header">How coordinators reach the provider</div>
+  <div class="mockup-body" style="font-family:monospace; font-size:0.85rem; line-height:1.6;">
+    <div><strong>Important:</strong> InsightOperations (L2) does NOT call providers directly.</div>
+    <div style="margin-top:0.5rem;">1. Coordinator receives request</div>
+    <div>2. Checks cache via <code>InsightStoragePort</code></div>
+    <div>3. On cache MISS → calls its own contract interface (e.g., <code>DashboardInsightCoordinatorInterface</code>)</div>
+    <div>4. <strong>API adapter</strong> (L3) implements that interface, calls <code>ProviderInsightClient</code></div>
+    <div>5. Provider client uses Plan-1 runtime contract (capability group, feature key)</div>
+    <div>6. Response validated → mapped to DTO → cached via <code>InsightStoragePort</code></div>
+  </div>
+</div>
+
+<h3>Existing Files to Extend</h3>
+<ul style="font-size:0.85rem;">
+  <li><code>src/Contracts/DashboardSnapshotPortInterface.php</code> — pattern to follow for new contracts</li>
+  <li><code>src/Workflows/DashboardSnapshotWorkflow.php</code> — pattern for coordinator workflow logic</li>
+  <li><code>src/Coordinators/ReportingCoordinator.php</code> — existing coordinator to extend, not replace</li>
+</ul>
+
+<p><strong>Does Section 3 look correct?</strong> Next: Section 4 covers Layer 3 (API adapters, controllers, routes).</p>

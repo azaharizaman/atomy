@@ -1,0 +1,131 @@
+<h2>Section 4: Layer 3 — API Adapters, Controllers, Routes</h2>
+<p class="subtitle">Provider clients, API endpoints, and WEB integration</p>
+
+<h3>Provider Clients (apps/atomy-q/API/app/Adapters/Ai/)</h3>
+
+<div class="cards">
+  <div class="card" style="cursor:default;">
+    <div class="card-body">
+      <h3>ProviderInsightClient</h3>
+      <ul style="font-size:0.85rem;">
+        <li>Implements <code>InsightOperations</code> coordinator interfaces</li>
+        <li>Uses Plan-1 runtime contract for capability group routing</li>
+        <li>Calls provider (OpenRouter/Hugging Face) with narrative prompt</li>
+        <li>Validates response, maps to DTO, returns <code>NarrativeResult</code></li>
+        <li>Handles timeout, auth failure, quota exhaustion → returns truthful unavailable</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card" style="cursor:default;">
+    <div class="card-body">
+      <h3>ProviderGovernanceClient</h3>
+      <ul style="font-size:0.85rem;">
+        <li>Implements <code>GovernanceNarrativeCoordinatorInterface</code></li>
+        <li>Builds governance prompt from sanctions, compliance, ESG facts</li>
+        <li>Never lets response mutate authoritative governance state</li>
+        <li>Returns narrative + provenance metadata</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<h3>Controllers & Routes</h3>
+
+<table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+  <tr style="background:#f3f4f6;">
+    <th style="padding:8px; border:1px solid #d1d5db;">Endpoint</th>
+    <th style="padding:8px; border:1px solid #d1d5db;">Controller</th>
+    <th style="padding:8px; border:1px solid #d1d5db;">Capability Group</th>
+  </tr>
+  <tr>
+    <td style="padding:8px; border:1px solid #d1d5db;"><code>GET /api/v1/dashboard/insights</code></td>
+    <td style="padding:8px; border:1px solid #d1d5db;">DashboardController</td>
+    <td style="padding:8px; border:1px solid #d1d5db;"><code>insight_intelligence</code></td>
+  </tr>
+  <tr>
+    <td style="padding:8px; border:1px solid #d1d5db;"><code>GET /api/v1/rfqs/{id}/insights</code></td>
+    <td style="padding:8px; border:1px solid #d1d5db;">RfqInsightsController (new)</td>
+    <td style="padding:8px; border:1px solid #d1d5db;"><code>insight_intelligence</code></td>
+  </tr>
+  <tr>
+    <td style="padding:8px; border:1px solid #d1d5db;"><code>GET /api/v1/vendors/{id}/governance-narrative</code></td>
+    <td style="padding:8px; border:1px solid #d1d5db;">VendorGovernanceController</td>
+    <td style="padding:8px; border:1px solid #d1d5db;"><code>governance_intelligence</code></td>
+  </tr>
+  <tr>
+    <td style="padding:8px; border:1px solid #d1d5db;"><code>GET /api/v1/reports/{id}/summary</code></td>
+    <td style="padding:8px; border:1px solid #d1d5db;">ReportController</td>
+    <td style="padding:8px; border:1px solid #d1d5db;"><code>insight_intelligence</code></td>
+  </tr>
+  <tr>
+    <td style="padding:8px; border:1px solid #d1d5db;"><code>POST /api/v1/insights/{type}/{id}/refresh</code></td>
+    <td style="padding:8px; border:1px solid #d1d5db;">InsightRefreshController (new)</td>
+    <td style="padding:8px; border:1px solid #d1d5db;">(manual cache invalidation)</td>
+  </tr>
+</table>
+
+<h3>Feature-Level Policies (Plan 1 runtime contract)</h3>
+<ul style="font-size:0.85rem;">
+  <li><code>dashboard_ai_summary</code> → feature key for dashboard insights</li>
+  <li><code>rfq_ai_insights</code> → feature key for RFQ insights sidebar</li>
+  <li><code>governance_ai_narrative</code> → feature key for governance narrative panel</li>
+  <li><code>reporting_ai_summary</code> → feature key for reporting summary</li>
+</ul>
+
+<h3>WEB Integration</h3>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Dashboard Page</div>
+    <div class="mockup-body" style="font-size:0.85rem;">
+      <div style="border:1px solid #e5e7eb; padding:8px; margin-bottom:8px;">Deterministic KPI cards (unchanged)</div>
+      <div style="border:1px solid #3b82f6; padding:8px; background:#eff6ff;">
+        AI Summary Panel (ai-narrative-panel)<br/>
+        <span style="font-size:0.8rem; color:#6b7280;">"3 RFQs pending, vendor spread widening, $47K savings opportunity"</span>
+      </div>
+    </div>
+  </div>
+  <div class="mockup">
+    <div class="mockup-header">RFQ Overview Page</div>
+    <div class="mockup-body" style="font-size:0.85rem;">
+      <div style="border:1px solid #e5e7eb; padding:8px; margin-bottom:8px;">Facts: status, vendors, quotes (unchanged)</div>
+      <div style="border:1px solid #3b82f6; padding:8px; background:#eff6ff;">
+        Insights Sidebar (ai-narrative-panel)<br/>
+        <span style="font-size:0.8rem; color:#6b7280;">"Timing risk: 5 days left, vendor A 12% above market"</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="split" style="margin-top:1rem;">
+  <div class="mockup">
+    <div class="mockup-header">Risk/Governance Page</div>
+    <div class="mockup-body" style="font-size:0.85rem;">
+      <div style="border:1px solid #e5e7eb; padding:8px; margin-bottom:8px;">Sanctions flags, compliance gaps, ESG scores (facts)</div>
+      <div style="border:1px solid #3b82f6; padding:8px; background:#eff6ff;">
+        Governance Narrative (ai-narrative-panel)<br/>
+        <span style="font-size:0.8rem; color:#6b7280;">"Vendor B has 2 active sanctions flags, compliance gap in ISO cert"</span>
+      </div>
+    </div>
+  </div>
+  <div class="mockup">
+    <div class="mockup-header">Report Page</div>
+    <div class="mockup-body" style="font-size:0.85rem;">
+      <div style="border:1px solid #e5e7eb; padding:8px; margin-bottom:8px;">Deterministic report data (unchanged)</div>
+      <div style="border:1px solid #3b82f6; padding:8px; background:#eff6ff;">
+        AI Summary (ai-narrative-panel)<br/>
+        <span style="font-size:0.8rem; color:#6b7280;">"Spend up 12% QoQ, 3 vendors >$50K, renegotiate contracts A,B"</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h3>Unavailable Behavior (Truthful Degradation)</h3>
+<ul style="font-size:0.85rem;">
+  <li>When AI_MODE=off or capability group degraded: panels collapse to <code>ai-unavailable-callout</code></li>
+  <li>Factual data (KPIs, RFQ facts, governance flags, report data) always visible</li>
+  <li><code>ai-status-chip</code> shows capability group health on each page</li>
+  <li>No synthetic success payloads — controllers return <code>ai_disabled</code> or <code>ai_unavailable</code> with 200 status</li>
+</ul>
+
+<p><strong>Does Section 4 look correct?</strong> Next: Section 5 covers testing, verification, and the alpha release gate.</p>
