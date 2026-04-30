@@ -26,7 +26,6 @@ final readonly class ProviderInsightNarrativeAdapter implements InsightNarrative
             featureKey: $featureKey,
             tenantId: $tenantId,
             subjectType: $subjectType,
-            actorId: $actorId,
             facts: $facts,
         ));
         $payload = $this->unwrapPayload($response);

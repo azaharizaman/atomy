@@ -154,6 +154,25 @@ final class RiskComplianceAiInsightsApiTest extends ApiTestCase
             'submission_deadline' => now()->subDay(),
             'closing_date' => now()->subDay(),
         ]);
+        $vendor = $this->createVendor($this->tenantId);
+        VendorInvitation::query()->create([
+            'tenant_id' => $this->tenantId,
+            'rfq_id' => (string) $rfq->id,
+            'vendor_id' => (string) $vendor->id,
+            'vendor_email' => 'risk-generate@example.test',
+            'vendor_name' => 'Risk Generate Vendor',
+            'status' => 'pending',
+            'invited_at' => now(),
+        ]);
+        VendorFinding::query()->create([
+            'tenant_id' => $this->tenantId,
+            'vendor_id' => (string) $vendor->id,
+            'domain' => 'risk',
+            'issue_type' => 'financial_watch',
+            'severity' => 'high',
+            'status' => 'open',
+            'opened_at' => now()->subDays(2),
+        ]);
         $spy = new RiskInsightClientSpy(['headline' => 'RFQ risk requires attention.']);
         $this->app->instance(ProviderInsightClientInterface::class, $spy);
 
