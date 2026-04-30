@@ -11,7 +11,7 @@ The current release has completed the execution work for Section 9 Tasks 1 to 8 
 - `Section 9 Task 9: Final Alpha Release Gate`
 
 Canonical active release docs:
-- [`02-release-management/current-release/alpha-launch-readiness-superseding-spec-2026-04-30.md`](./02-release-management/current-release/alpha-launch-readiness-superseding-spec-2026-04-30.md)
+- [`2026-04-30-atomy-q-alpha-launch-readiness-design.md`](../../../docs/superpowers/specs/2026-04-30-atomy-q-alpha-launch-readiness-design.md)
 - [`02-release-management/current-release/release-overview.md`](./02-release-management/current-release/release-overview.md)
 - [`02-release-management/current-release/release-plan.md`](./02-release-management/current-release/release-plan.md)
 - [`02-release-management/current-release/release-checklist.md`](./02-release-management/current-release/release-checklist.md)

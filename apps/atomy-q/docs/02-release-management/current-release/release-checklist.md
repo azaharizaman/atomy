@@ -2,13 +2,13 @@
 
 **Date:** 2026-04-15  
 **Plan:** `apps/atomy-q/docs/02-release-management/current-release/release-plan.md`  
-**Superseding readiness contract:** `apps/atomy-q/docs/02-release-management/current-release/alpha-launch-readiness-superseding-spec-2026-04-30.md`  
+**Superseding readiness contract:** `docs/superpowers/specs/2026-04-30-atomy-q-alpha-launch-readiness-design.md`  
 **Scope:** Current alpha release evidence ledger for Atomy-Q API, WEB, staging readiness, and final Task 9 release gate.  
 **Environment:** Local workspace with project dependencies already installed; PostgreSQL, Redis, and MinIO containers were available per operator note. API tests used the project PHPUnit configuration.
 
 ## Executive Status
 
-As of 2026-04-30, the superseding launch readiness spec is the controlling go/no-go contract. Older green evidence remains historical until revalidated on the current branch under that contract.
+As of 2026-04-30, the superseding launch readiness design is the controlling go/no-go contract. Older green evidence remains historical until revalidated on the current branch under that contract.
 
 Task 1 rectification is **green locally as of 2026-04-15**. The WEB lint/build/unit gates, API alpha matrix, and API full suite now pass after the rectification pass documented below.
 
@@ -18,7 +18,7 @@ The strongest rectification signal is that the alpha-critical backend flows pass
 
 ## Superseding Readiness Assessment - 2026-04-30
 
-This assessment was captured while drafting the superseding alpha launch readiness spec. It does not replace a final Task 9 evidence run, but it identifies current no-go signals that must be closed or superseded by newer evidence.
+This assessment was captured while drafting the superseding alpha launch readiness design. It does not replace a final Task 9 evidence run, but it identifies current no-go signals that must be closed or superseded by newer evidence.
 
 - `cd apps/atomy-q/WEB && npm run lint`: FAIL. Three lint errors were observed: `no-explicit-any` in the project detail page, React compiler memoization preservation failure in the award page, and `no-explicit-any` in quote intake. Eleven warnings were also observed.
 - `cd apps/atomy-q/WEB && npm run build`: FAIL. TypeScript rejected `generateGovernanceMutation.mutate()` in `src/app/(dashboard)/vendors/[vendorId]/esg-compliance/page.tsx` because required mutation arguments were missing.

@@ -10,7 +10,7 @@ Goal:
 - consolidate blocker status, verification evidence, staging smoke results, and accepted deferments into one release decision
 
 Required completion criteria:
-- the superseding launch readiness spec is applied as the controlling go/no-go contract
+- the superseding launch readiness design is applied as the controlling go/no-go contract
 - blocker ledger reflects current reality
 - WEB lint/build/unit gates are in a releasable state
 - API alpha matrix passes against a clean test database
@@ -23,7 +23,7 @@ Required completion criteria:
 - alpha-supported flow is stated explicitly and cannot be inferred from broader route surface
 
 Controlling readiness contract:
-- [`alpha-launch-readiness-superseding-spec-2026-04-30.md`](./alpha-launch-readiness-superseding-spec-2026-04-30.md)
+- [`2026-04-30-atomy-q-alpha-launch-readiness-design.md`](../../../../../docs/superpowers/specs/2026-04-30-atomy-q-alpha-launch-readiness-design.md)
 
 ## Completed Tasks
 

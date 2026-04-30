@@ -1,41 +1,52 @@
-# Atomy-Q Alpha Launch Readiness Superseding Spec
+# Atomy-Q Alpha Launch Readiness Design
 
-**Date:** 2026-04-30  
-**Status:** Superseding design spec for final alpha readiness  
-**Audience:** Product owner, engineering lead, release coordinator, operator, QA lead  
+**Date:** 2026-04-30
+**Status:** Approved superseding design for final alpha readiness
 **Scope:** Atomy-Q API, Atomy-Q WEB, current release docs, AI operating posture, manual-continuity launch posture, and final alpha go/no-go rules.
 
-## 1. Authority
+## Purpose
 
-This document is the controlling alpha launch readiness specification for Atomy-Q.
+This design is the controlling alpha launch readiness contract for Atomy-Q.
 
-It supersedes prior alpha launch design specs, implementation plans, archived task specs, AI launch-readiness handoff docs, and release checklist interpretations where they conflict with this document. Older documents remain valid as historical evidence and implementation detail only when they do not conflict with this spec.
+It supersedes prior alpha launch design specs, implementation plans, archived task specs, AI launch-readiness handoff docs, and release checklist interpretations where they conflict with this document. Older documents remain valid as historical evidence and implementation detail only when they do not conflict with this design.
 
-This spec does not delete or invalidate completed implementation work. It defines the final contract that determines whether the current application can be released to design-partner alpha.
+This design does not delete or invalidate completed implementation work. It defines the final contract for deciding whether the current application can be released to design-partner alpha.
 
-## 2. Launch Decision Summary
+## Decision
 
-Atomy-Q is not launch-ready until one of the valid release postures below is explicitly selected, verified, disclosed, and signed off.
-
-### 2.1 Valid Release Postures
+Atomy-Q is not launch-ready until one valid release posture is explicitly selected, verified, disclosed, and signed off.
 
 | Posture | Meaning | Launch Decision |
 |---|---|---|
 | AI-enabled alpha | Provider-backed AI capability gates pass and manual continuity also passes. | Go when all gates are green. |
-| Manual-continuity alpha | AI gates are red, incomplete, or deliberately disabled, but the statutory human-operated workflow passes end-to-end and customers are clearly informed that AI-assisted paid features are unavailable. | Conditional go with explicit disclosure and owner sign-off. |
+| Manual-continuity alpha | AI gates are red, incomplete, or deliberately disabled, but the human-operated workflow passes end-to-end and customers are clearly informed that AI-assisted paid features are unavailable. | Conditional go with explicit disclosure and owner sign-off. |
 | Internal alpha only | Local gates, staging smoke, manual continuity, disclosure, or sign-off are incomplete. | No external design-partner launch. |
 
-### 2.2 Non-Negotiable Rule
+Manual continuity is a permanent product and compliance requirement. It is not an alpha fallback and must not be removed post-alpha.
 
-Manual continuity is a permanent product and compliance requirement. It is not an alpha fallback and it must not be removed post-alpha.
+Human review, manual evidence handling, manual override, deterministic comparison, vendor selection, approval, award signoff, and audit review are required for every Atomy-Q workflow where AI is used as decision support or decision-making assistance.
 
-Human review, manual evidence handling, manual override, deterministic comparison, vendor selection, approval, award signoff, and audit review are statutory requirements for every Atomy-Q workflow where AI is used as decision support or decision-making assistance.
+## Authority Model
 
-## 3. Governing Doctrines
+This design owns go/no-go interpretation. The current release checklist remains the evidence ledger, and the current release plan remains the execution tracker.
 
-### 3.1 Human Authority And Manual Continuity Doctrine
+When documents conflict, precedence is:
 
-Atomy-Q AI is decision-support unless a future approved legal basis explicitly permits a different posture.
+1. This launch readiness design.
+2. Current release checklist evidence captured against this design.
+3. Current release plan and blockers.
+4. Earlier superpowers specs and implementation plans.
+5. Archived alpha plans and historical task specs.
+
+Any release claim must cite current evidence: exact command or manual step, date, executor, commit SHA, environment posture, result, and artifact or log location when applicable.
+
+Chat history, old checklist entries, and prior passing commands are not sufficient when code, environment, generated client, route surface, migrations, provider config, or release branch has changed.
+
+## Governing Doctrines
+
+### Human Authority And Manual Continuity
+
+Atomy-Q AI is decision support unless a future approved legal basis explicitly permits a different posture.
 
 The SaaS must always preserve:
 
@@ -53,7 +64,7 @@ The SaaS must always preserve:
 
 No future beta or general-availability work may remove these paths without a separately approved statutory, legal, and product design change.
 
-### 3.2 AI Availability And Truthful Degradation Doctrine
+### AI Availability And Truthful Degradation
 
 AI capabilities are a paid product obligation. Atomy-Q must pursue high-availability AI capability after alpha, and beta readiness should focus heavily on provider availability, failure isolation, observability, quota resilience, response validation, and support operations.
 
@@ -63,26 +74,15 @@ When AI is unavailable, degraded, disabled, or not provisioned:
 
 - the product must disclose the state to users clearly,
 - AI surfaces must not fabricate success,
-- API responses must return truthful unavailable/degraded states,
+- API responses must return truthful unavailable or degraded states,
 - WEB surfaces must show scoped unavailable/error UX instead of page-wide crashes,
 - manual continuity must remain usable,
 - support and release evidence must record the outage or unavailable posture,
-- customer-facing release notes and in-app messaging must not imply that unavailable AI is working.
+- customer-facing release notes and in-app messaging must not imply unavailable AI is working.
 
-### 3.3 AI Decision-Support Boundary
+### AI Decision-Support Boundary
 
-AI may:
-
-- extract,
-- normalize,
-- summarize,
-- draft,
-- recommend,
-- classify,
-- explain,
-- identify risks,
-- prefill evidence,
-- produce narrative decision-support artifacts.
+AI may extract, normalize, summarize, draft, recommend, classify, explain, identify risks, prefill evidence, and produce narrative decision-support artifacts.
 
 AI must not independently:
 
@@ -97,25 +97,27 @@ AI must not independently:
 - hide statutory review requirements,
 - convert an unavailable AI result into fake success.
 
-### 3.4 Evidence Over Intention Doctrine
+### Evidence Over Intention
 
 Launch readiness is earned only through current evidence.
 
-Chat history, old checklist entries, or prior passing commands are not sufficient when the code, environment, generated client, route surface, migrations, provider config, or release branch has changed.
+Every evidence row must include:
 
-Every launch claim must be tied to:
-
-- exact command,
-- date,
+- command or manual step,
 - executor,
+- date,
+- environment,
 - commit SHA,
-- environment posture,
 - result,
-- artifact or log location when applicable.
+- artifact or screenshot reference when applicable,
+- owner,
+- whether the evidence supports AI-enabled alpha or manual-continuity alpha.
 
-## 4. Supported Alpha Journey
+Evidence expires when affected API, WEB, package, or orchestrator files change; OpenAPI or generated clients change; migrations change; provider config changes; staging env changes; route surface changes; or release posture changes between AI-enabled and manual-continuity alpha.
 
-The supported alpha journey is narrow and explicit.
+## Supported Alpha Journey
+
+The supported alpha journey is narrow and explicit:
 
 1. Register a tenant/company or log in.
 2. Create an RFQ.
@@ -134,9 +136,9 @@ The supported alpha journey is narrow and explicit.
 
 Every alpha launch posture must prove this journey through live API-backed WEB behavior with `NEXT_PUBLIC_USE_MOCKS=false`.
 
-## 5. Scope Boundaries
+## Scope Boundaries
 
-### 5.1 In Scope For Alpha Launch
+### In Scope For Alpha Launch
 
 - Tenant registration and login.
 - RFQ lifecycle for the supported journey.
@@ -151,9 +153,9 @@ Every alpha launch posture must prove this journey through live API-backed WEB b
 - AI-assisted features only when they pass provider, truthful degradation, provenance, and manual-continuity gates.
 - Explicit unavailable UX and customer disclosure for unavailable AI capability.
 
-### 5.2 Out Of Scope Unless Explicitly Enabled
+### Out Of Scope Unless Explicitly Enabled
 
-These surfaces may exist in code, but they are not launch-supported unless they satisfy this spec:
+These surfaces may exist in code, but they are not launch-supported unless they satisfy this design:
 
 - negotiation workflows,
 - advanced scoring-model authoring,
@@ -173,11 +175,11 @@ These surfaces may exist in code, but they are not launch-supported unless they 
 
 Out-of-scope exposed routes must be hidden, explicitly deferred, or documented with operator-facing behavior and owner.
 
-## 6. Current Readiness Findings To Close
+## Current Readiness Findings To Close
 
-This section records the readiness gaps observed during the 2026-04-30 analysis pass. It is not a permanent bug tracker, but these findings must be closed, deferred under this spec, or superseded by newer evidence before launch.
+This section records readiness gaps observed during the 2026-04-30 analysis pass. These findings must be closed, explicitly deferred under this design, or superseded by newer evidence before launch.
 
-### 6.1 WEB Gate Failures
+### WEB Gate Failures
 
 The WEB app is no-go while lint or production build fails.
 
@@ -192,7 +194,7 @@ Required outcome:
 - `cd apps/atomy-q/WEB && npm run build` exits 0.
 - Any remaining warnings are either fixed or recorded as non-blocking with owner and rationale.
 
-### 6.2 API Golden-Path Failures
+### API Golden-Path Failures
 
 The API is no-go while supported alpha journey tests fail.
 
@@ -211,7 +213,7 @@ Required outcome:
 - Final comparison can be created from valid persisted normalized data.
 - Decision-trail evidence is written for final comparison and award signoff.
 
-### 6.3 AI Truthfulness And Artifact Failures
+### AI Truthfulness And Artifact Failures
 
 AI provider availability does not close launch readiness unless API and WEB behavior remain truthful under failure.
 
@@ -227,17 +229,17 @@ Required outcome:
 - AI-assisted features preserve deterministic facts and manual workflow state when AI fails.
 - Required AI artifacts are persisted with feature key, capability group, provenance, source facts, and reason codes.
 
-### 6.4 Environment Evidence Gaps
+### Environment Evidence Gaps
 
 The local default API test run attempted PostgreSQL on `127.0.0.1:5433` and failed because the service was unavailable.
 
 Required outcome:
 
-- Final release evidence must state whether tests were run on PostgreSQL or SQLite.
-- Staging release evidence must use the deployed database posture, not only SQLite.
-- If SQLite is used for contract/export convenience, the evidence must say so explicitly and cannot replace staging smoke.
+- Final release evidence states whether tests were run on PostgreSQL or SQLite.
+- Staging release evidence uses the deployed database posture, not only SQLite.
+- SQLite evidence, if used for contract/export convenience, is disclosed and cannot replace staging smoke.
 
-### 6.5 Operational Evidence Gaps
+### Operational Evidence Gaps
 
 Current release docs still require:
 
@@ -252,11 +254,11 @@ Current release docs still require:
 
 No design-partner alpha decision is valid until these are filled.
 
-## 7. Alpha Release Gates
+## Release Gates
 
-### 7.1 Local Engineering Gates
+### Local Engineering Gates
 
-All must pass before staging release verification:
+All must pass before staging release verification.
 
 | Gate | Required Command |
 |---|---|
@@ -269,34 +271,34 @@ All must pass before staging release verification:
 | OpenAPI validity | `cd apps/atomy-q/API && php artisan scramble:export --path=../openapi/openapi.json` plus JSON validation |
 | Generated client | `cd apps/atomy-q/WEB && npm run generate:api` and rerun affected WEB build/tests |
 
-### 7.2 Staging Gates
+### Staging Gates
 
 All must pass before any external design-partner alpha:
 
-- Deployed WEB origin recorded.
-- Deployed API origin recorded.
-- `NEXT_PUBLIC_USE_MOCKS=false` confirmed in the deployed WEB build.
-- API migrations applied.
-- Storage disk write/read/delete verified.
-- Queue posture recorded.
-- Staging smoke runs from tenant registration through award signoff.
-- Users and roles pending activation row is verified.
-- Logs and screenshots are captured.
+- deployed WEB origin recorded,
+- deployed API origin recorded,
+- `NEXT_PUBLIC_USE_MOCKS=false` confirmed in the deployed WEB build,
+- API migrations applied,
+- storage disk write/read/delete verified,
+- queue posture recorded,
+- staging smoke runs from tenant registration through award signoff,
+- users and roles pending activation row verified,
+- logs and screenshots captured.
 
-### 7.3 Manual Continuity Gates
+### Manual Continuity Gates
 
 These gates apply to both AI-enabled alpha and manual-continuity alpha:
 
-- Quote upload remains possible.
-- Manual source-line work remains possible.
-- Manual normalization mapping and override remain possible.
-- Deterministic comparison remains possible.
-- Manual vendor selection remains possible.
-- Manual award creation and signoff remain possible.
-- Approval progression remains possible.
-- Decision-trail review remains possible.
+- quote upload remains possible,
+- manual source-line work remains possible,
+- manual normalization mapping and override remains possible,
+- deterministic comparison remains possible,
+- manual vendor selection remains possible,
+- manual award creation and signoff remains possible,
+- approval progression remains possible,
+- decision-trail review remains possible.
 
-### 7.4 AI-Enabled Alpha Gates
+### AI-Enabled Alpha Gates
 
 These gates apply only when launching as AI-enabled alpha:
 
@@ -308,18 +310,18 @@ These gates apply only when launching as AI-enabled alpha:
 - AI unavailable/degraded states render truthfully in API and WEB.
 - `AI_MODE=off` rollback is verified after provider-mode proof.
 
-### 7.5 Manual-Continuity Alpha Gates
+### Manual-Continuity Alpha Gates
 
 These gates apply when launching with AI disabled, unavailable, or deferred:
 
 - `AI_MODE=off` or equivalent manual-continuity posture is recorded.
-- Every AI-enabled or paid AI-assist surface clearly informs users that the AI feature is unavailable.
-- Commercial/customer messaging states that AI-assisted capability is temporarily unavailable in this launch posture.
+- Every AI-enabled or paid AI-assist surface clearly informs users the AI feature is unavailable.
+- Commercial/customer messaging states AI-assisted capability is temporarily unavailable in this launch posture.
 - Support and operator runbooks explain what users can still do manually.
 - No in-app route or API endpoint claims AI success while AI is disabled.
 - Manual workflow can complete the supported alpha journey end-to-end.
 
-## 8. Customer Disclosure Requirements
+## Customer Disclosure Requirements
 
 User disclosure is mandatory whenever the product posture differs from AI-enabled alpha.
 
@@ -331,44 +333,11 @@ Minimum disclosure surfaces:
 - customer-facing statement for paid AI-assisted features,
 - operator evidence in the release checklist.
 
-The disclosure must state:
+The disclosure must state which AI-assisted features are unavailable, whether the unavailability is temporary/degraded/disabled/not yet launched, what manual workflow remains available, whether any user action is required, and where support can be contacted.
 
-- which AI-assisted features are unavailable,
-- whether the unavailability is temporary, degraded, disabled, or not yet launched,
-- what manual workflow remains available,
-- whether any user action is required,
-- where support can be contacted.
+The disclosure must not imply AI is working when disabled, hide paid-feature unavailability behind generic copy, present deterministic/manual output as provider-backed AI, or promise absolute AI availability.
 
-The disclosure must not:
-
-- imply AI is working when it is disabled,
-- hide paid-feature unavailability behind generic copy,
-- present deterministic/manual output as provider-backed AI,
-- promise absolute AI availability.
-
-## 9. AI High-Availability Path To Beta
-
-Post-alpha, high-availability AI capability is the main beta focus.
-
-Beta-readiness work should prioritize:
-
-- provider contract automation for each capability group,
-- capability-specific availability dashboards,
-- alert routing by capability group,
-- quota and cost threshold alerts,
-- timeout and retry budgets,
-- circuit-breaker behavior,
-- provider authentication failure drills,
-- degraded single-capability drills,
-- provider response validation,
-- artifact replay and provenance review,
-- customer-visible AI status history,
-- support workflow for paid AI unavailability,
-- operational ownership for provider accounts, credentials, models, quota, and incident escalation.
-
-Beta high-availability work must preserve the Human Authority And Manual Continuity Doctrine.
-
-## 10. Route And Surface Control
+## Route And Surface Control
 
 Every exposed API route and WEB page must be classified before release.
 
@@ -382,14 +351,9 @@ Every exposed API route and WEB page must be classified before release.
 
 Stub IDs, fake success payloads, and "not implemented yet" responses are not acceptable on alpha-supported paths.
 
-They may exist only on deferred or hidden paths when:
+They may exist only on deferred or hidden paths when the route is unreachable from the supported journey, the behavior is documented, user-facing UX is not misleading, and an owner plus post-alpha disposition are recorded.
 
-- the route is unreachable from the supported journey,
-- the behavior is documented,
-- the user-facing UX is not misleading,
-- an owner and post-alpha disposition are recorded.
-
-## 11. Data, Audit, And Provenance Requirements
+## Data, Audit, And Provenance Requirements
 
 Every AI-assisted decision-support artifact must include:
 
@@ -415,7 +379,7 @@ Every human override or review action must include:
 - tenant scope,
 - decision-trail or audit-log entry when the action affects procurement decisions.
 
-## 12. Security And Tenant Isolation Requirements
+## Security And Tenant Isolation Requirements
 
 All alpha-supported routes must preserve:
 
@@ -430,61 +394,27 @@ All alpha-supported routes must preserve:
 
 The missing-file comparison failures observed during readiness analysis are launch blockers because file/path safety is part of this requirement.
 
-## 13. Release Evidence Ledger
+## AI High-Availability Path To Beta
 
-The release checklist remains the evidence ledger, but it must defer to this spec for gate interpretation.
+Post-alpha, high-availability AI capability is the main beta focus.
 
-Every evidence row must include:
+Beta-readiness work should prioritize provider contract automation, capability-specific availability dashboards, alert routing by capability group, quota and cost threshold alerts, timeout and retry budgets, circuit-breaker behavior, provider authentication failure drills, degraded single-capability drills, provider response validation, artifact replay and provenance review, customer-visible AI status history, support workflow for paid AI unavailability, and operational ownership for provider accounts, credentials, models, quota, and incident escalation.
 
-- command or manual step,
-- executor,
-- date,
-- environment,
-- commit SHA,
-- result,
-- artifact or screenshot reference when applicable,
-- owner,
-- whether the evidence supports AI-enabled alpha or manual-continuity alpha.
+Beta high-availability work must preserve the Human Authority And Manual Continuity doctrine.
 
-Evidence expires when:
+## Go, Conditional Go, And No-Go Rules
 
-- code changes in affected API/WEB/package/orchestrator files,
-- OpenAPI or generated client changes,
-- migrations change,
-- provider config changes,
-- staging env changes,
-- route surface changes,
-- release posture changes between AI-enabled and manual-continuity alpha.
+### Go: AI-Enabled Alpha
 
-## 14. Go, Conditional Go, And No-Go Rules
+Allowed only when local engineering gates pass, staging gates pass, manual continuity gates pass, AI-enabled gates pass, customer disclosure accurately states AI-enabled posture, and sign-offs are complete.
 
-### 14.1 Go: AI-Enabled Alpha
+### Conditional Go: Manual-Continuity Alpha
 
-Allowed only when:
-
-- local engineering gates pass,
-- staging gates pass,
-- manual continuity gates pass,
-- AI-enabled gates pass,
-- customer disclosure accurately states AI-enabled posture,
-- sign-offs are complete.
-
-### 14.2 Conditional Go: Manual-Continuity Alpha
-
-Allowed only when:
-
-- local engineering gates pass for manual-supported flow,
-- staging gates pass,
-- manual continuity gates pass,
-- AI-disabled/unavailable disclosure is complete,
-- AI surfaces do not fabricate success,
-- paid-feature unavailability is clearly disclosed,
-- support and operator runbooks match the posture,
-- sign-offs explicitly approve manual-continuity alpha.
+Allowed only when local engineering gates pass for the manual-supported flow, staging gates pass, manual continuity gates pass, AI-disabled/unavailable disclosure is complete, AI surfaces do not fabricate success, paid-feature unavailability is clearly disclosed, support and operator runbooks match the posture, and sign-offs explicitly approve manual-continuity alpha.
 
 This posture is not a failure if it is deliberate, disclosed, and evidence-backed.
 
-### 14.3 No-Go
+### No-Go
 
 No external alpha launch is allowed when any of the following is true:
 
@@ -499,9 +429,9 @@ No external alpha launch is allowed when any of the following is true:
 - Required sign-offs are missing.
 - Release posture is ambiguous.
 
-## 15. Required Spec Backlinks
+## Required Backlinks
 
-This spec must be linked from:
+This design must be linked from:
 
 - `apps/atomy-q/docs/CURRENT_STATE.md`,
 - `apps/atomy-q/docs/INDEX.md`,
@@ -510,9 +440,11 @@ This spec must be linked from:
 - `apps/atomy-q/docs/02-release-management/current-release/release-checklist.md`,
 - `apps/atomy-q/docs/02-release-management/current-release/blockers.md`.
 
-## 16. Implementation Planning Boundary
+The previous current-release duplicate spec at `apps/atomy-q/docs/02-release-management/current-release/alpha-launch-readiness-superseding-spec-2026-04-30.md` must not be restored. Current-release docs should contain execution state and evidence; superpowers specs should contain design authority.
 
-This spec is a design and launch-readiness contract. It is not an implementation plan.
+## Implementation Planning Boundary
+
+This document is a design and launch-readiness contract. It is not an implementation plan.
 
 The next implementation plan should decompose work into at least these slices:
 
@@ -523,4 +455,4 @@ The next implementation plan should decompose work into at least these slices:
 5. Staging evidence and disclosure package.
 6. Beta high-availability AI backlog seed.
 
-No implementation slice may weaken the Human Authority And Manual Continuity Doctrine.
+No implementation slice may weaken the Human Authority And Manual Continuity doctrine.

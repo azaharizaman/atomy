@@ -2,7 +2,7 @@
 
 ## Controlling Contract
 
-Use [`alpha-launch-readiness-superseding-spec-2026-04-30.md`](./alpha-launch-readiness-superseding-spec-2026-04-30.md) for final go/no-go interpretation. Older blocker labels remain useful history, but they do not override the superseding spec.
+Use [`2026-04-30-atomy-q-alpha-launch-readiness-design.md`](../../../../../docs/superpowers/specs/2026-04-30-atomy-q-alpha-launch-readiness-design.md) for final go/no-go interpretation. Older blocker labels remain useful history, but they do not override the superseding design.
 
 ## Closed Locally
 
