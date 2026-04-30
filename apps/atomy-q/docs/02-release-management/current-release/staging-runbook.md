@@ -10,6 +10,10 @@ Use this document when you need to:
 - run the alpha smoke flow with `NEXT_PUBLIC_USE_MOCKS=false`
 - capture release evidence for staging readiness
 
+## Current execution status
+
+As of 2026-05-01, this runbook has not been executed against a deployed WEB/API staging environment for the `alpha/launch-readiness` branch. Treat the current release posture as internal alpha only until `release-checklist.md` records deployed staging URLs, mocks-off smoke evidence, and required sign-offs.
+
 ## Supported staging posture
 
 The supported design-partner alpha posture is intentionally narrow and deterministic:

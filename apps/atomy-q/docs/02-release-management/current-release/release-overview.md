@@ -9,6 +9,7 @@ Design-partner alpha release for Atomy-Q.
 - Historical execution work from the April 2026 alpha plan is complete for Tasks 1 to 8.
 - The only active release task is `Task 9: Final Alpha Release Gate`.
 - Design-partner readiness is not yet earned until a true staging mocks-off smoke is recorded.
+- As of 2026-05-01 on `alpha/launch-readiness`, the release posture is **internal alpha only**. PostgreSQL matrix evidence, deployed staging facts, mocks-off staging smoke, customer/operator disclosure, and required sign-offs are still pending.
 
 ## Active References
 

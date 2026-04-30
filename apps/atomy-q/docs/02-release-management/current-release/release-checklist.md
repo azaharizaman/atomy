@@ -54,6 +54,24 @@ Current status from this assessment: **internal alpha only / no external design-
 - Verification: `cd apps/atomy-q/WEB && NEXT_PUBLIC_ALPHA_MODE=true npx playwright test tests/dashboard-nav.spec.ts tests/screen-smoke.spec.ts`: PASS. 3 tests passed.
 - Release impact: A4 surface classification remains closed locally under the superseding spec. This does not close staging evidence or PostgreSQL API matrix gates.
 
+## Latest Superseding Task 7 Staging Evidence And Disclosure - 2026-05-01
+
+- Operator: Codex.
+- Branch: `alpha/launch-readiness`.
+- Commit under review: `dbf8c4e0`.
+- Staging WEB URL: not provided.
+- Staging API URL: not provided.
+- Deployed database posture: not provided.
+- Storage disk: not provided.
+- Queue posture: not provided.
+- `NEXT_PUBLIC_USE_MOCKS=false`: not verified on a deployed WEB environment.
+- AI posture: not verified on a deployed API environment.
+- Mocks-off staging smoke: NOT RUN. The required deployed WEB/API origins and operator-accessible staging environment facts are unavailable in this workspace.
+- Release posture selected from the superseding spec options: **internal alpha only** until the PostgreSQL API matrix, deployed mocks-off staging smoke, release disclosure, and required sign-offs are recorded.
+- Customer/operator disclosure status: not publishable for design partners yet. Current disclosure is internal only: Atomy-Q remains in internal alpha; AI-assisted availability and manual-continuity claims must not be represented externally until staging evidence and sign-offs are complete.
+- Required sign-offs: Engineering pending; Product pending; Operator/Staging pending.
+- Release impact: no external design-partner launch is valid from the evidence currently present.
+
 ## Latest Rectification Evidence - 2026-04-15
 
 - `cd apps/atomy-q/WEB && npm run lint`: PASS. Exit 0 with 7 existing warnings:
