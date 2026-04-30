@@ -8,9 +8,12 @@ import { PageHeader } from '@/components/ds/FilterBar';
 import { SectionCard } from '@/components/ds/Card';
 import { StatusBadge } from '@/components/ds/Badge';
 import { TextInput } from '@/components/ds/Input';
-import { useAiStatus } from '@/hooks/use-ai-status';
 import { useVendor } from '@/hooks/use-vendor';
-import { formatVendorGovernanceWarning, useVendorGovernance } from '@/hooks/use-vendor-governance';
+import {
+  formatVendorGovernanceWarning,
+  useGenerateVendorGovernanceNarrative,
+  useVendorGovernance,
+} from '@/hooks/use-vendor-governance';
 import { useUpdateVendor } from '@/hooks/use-update-vendor';
 import { useUpdateVendorStatus } from '@/hooks/use-update-vendor-status';
 import type { VendorStatusValue } from '@/hooks/use-vendors';
@@ -56,9 +59,9 @@ function getBadgeVariant(status: VendorStatusValue) {
 }
 
 function VendorDetailPageContent({ vendorId }: { vendorId: string }) {
-  const aiStatus = useAiStatus();
   const vendorQuery = useVendor(vendorId);
   const governanceQuery = useVendorGovernance(vendorId);
+  const generateGovernanceMutation = useGenerateVendorGovernanceNarrative(vendorId);
   const updateVendorMutation = useUpdateVendor(vendorId);
   const statusMutation = useUpdateVendorStatus(vendorId);
 
@@ -97,8 +100,6 @@ function VendorDetailPageContent({ vendorId }: { vendorId: string }) {
     primaryContactEmail: vendor.primaryContactEmail,
     primaryContactPhone: vendor.primaryContactPhone ?? '',
   };
-  const shouldShowGovernanceNarrative = governanceQuery.data?.narrative != null
-    && !aiStatus.shouldHideAiControls('governance_ai_narrative');
 
   const updateEditField = (field: keyof VendorEditForm, value: string) => {
     setEditForm((current) => ({
@@ -177,15 +178,16 @@ function VendorDetailPageContent({ vendorId }: { vendorId: string }) {
         </div>
       </SectionCard>
 
-      {shouldShowGovernanceNarrative ? (
-        <AiNarrativePanel
-          featureKey="governance_ai_narrative"
-          title="AI Governance Narrative"
-          subtitle="Assistive interpretation of the deterministic governance record."
-          summary={governanceQuery.data?.narrative ?? null}
-          fallbackCopy="Governance narrative is unavailable. Continue with the factual governance record."
-        />
-      ) : null}
+      <AiNarrativePanel
+        featureKey="governance_ai_narrative"
+        title="AI Governance Narrative"
+        subtitle="Assistive interpretation of the deterministic governance record."
+        summary={governanceQuery.data?.narrative ?? null}
+        fallbackCopy="Governance narrative is unavailable. Continue with the factual governance record."
+        onGenerate={() => generateGovernanceMutation.mutate()}
+        isGenerating={generateGovernanceMutation.isPending}
+        canGenerate={!generateGovernanceMutation.isPending}
+      />
 
       <SectionCard
         title="Governance monitoring"

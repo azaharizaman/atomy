@@ -147,6 +147,9 @@ export default function DashboardPage() {
         isError={dashboardAiSummary.isError}
         error={dashboardAiSummary.error}
         fallbackCopy="Dashboard insights are unavailable. Deterministic dashboard metrics remain usable."
+        onGenerate={dashboardAiSummary.generate ?? undefined}
+        isGenerating={dashboardAiSummary.isGenerating}
+        canGenerate={dashboardAiSummary.canGenerate}
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

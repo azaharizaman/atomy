@@ -32,6 +32,9 @@ export default function ReportingPage() {
         isError={reportingAiSummary.isError}
         error={reportingAiSummary.error}
         fallbackCopy="Reporting summaries are unavailable. Deterministic reporting remains usable."
+        onGenerate={reportingAiSummary.generate ?? undefined}
+        isGenerating={reportingAiSummary.isGenerating}
+        canGenerate={reportingAiSummary.canGenerate}
       />
 
       <div className="rounded-lg border border-slate-200 bg-white p-8">

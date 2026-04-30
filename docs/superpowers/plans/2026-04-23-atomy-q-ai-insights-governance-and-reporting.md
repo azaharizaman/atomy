@@ -10,6 +10,15 @@
 
 ---
 
+## Alpha Corrective Implementation
+
+This baseline plan is superseded for alpha functional-reality closure by:
+
+- `docs/superpowers/specs/2026-04-30-atomy-q-ai-insights-governance-functional-reality-design.md`
+- `docs/superpowers/plans/2026-04-30-atomy-q-ai-insights-governance-functional-reality.md`
+
+The corrective implementation moves Plan 5 AI coordination into `orchestrators/InsightOperations`, replaces hardcoded dashboard/report facts with tenant-scoped facts, makes RFQ risk/governance/sanctions behavior truthful, and adds WEB generation controls.
+
 ## Scope
 
 - Feature-level policies that separate AI narratives from factual dashboard, RFQ, governance, and reporting data

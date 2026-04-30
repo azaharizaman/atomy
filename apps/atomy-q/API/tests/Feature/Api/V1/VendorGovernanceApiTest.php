@@ -29,20 +29,6 @@ final class VendorGovernanceApiTest extends ApiTestCase
         parent::tearDown();
     }
 
-    public function createApplication(): \Illuminate\Foundation\Application
-    {
-        $app = parent::createApplication();
-        $app['config']->set('database.default', 'sqlite');
-        $app['config']->set('database.connections.sqlite', [
-            'driver' => 'sqlite',
-            'database' => ':memory:',
-            'prefix' => '',
-            'foreign_key_constraints' => true,
-        ]);
-
-        return $app;
-    }
-
     public function testGovernanceListsEvidenceFindingsAndScoresForTenantVendor(): void
     {
         Carbon::setTestNow(Carbon::parse('2026-04-22T00:00:00Z'));
@@ -143,6 +129,21 @@ final class VendorGovernanceApiTest extends ApiTestCase
         $history->assertJsonPath('data.history.0.title', 'April sanctions screening');
     }
 
+    public function testSanctionsHistoryWithoutEvidenceDoesNotClaimCompletedScreening(): void
+    {
+        $tenantId = (string) Str::ulid();
+        $user = $this->createUser($tenantId);
+        $vendor = $this->createVendor($tenantId);
+
+        $history = $this->getJson('/api/v1/vendors/' . $vendor->id . '/sanctions-history', $this->authHeaders($tenantId, (string) $user->id));
+
+        $history->assertOk();
+        $history->assertJsonPath('data.history', []);
+        $history->assertJsonPath('data.screening_status', 'manual_review_required');
+        $history->assertJsonPath('data.reason_code', 'no_evidence_found');
+    }
+
+
     public function testSanctionsScreeningReplaysForSameIdempotencyKey(): void
     {
         Carbon::setTestNow(Carbon::parse('2026-04-22T00:00:00Z'));
@@ -233,11 +234,15 @@ final class VendorGovernanceApiTest extends ApiTestCase
         $response->assertOk();
         $generate->assertJsonPath('data.ai_narrative.available', true);
         $generate->assertJsonPath('data.ai_narrative.payload.headline', 'Vendor governance is acceptable with targeted follow-up.');
-        $generate->assertJsonPath('data.ai_narrative.payload.source_facts.summary_scores.compliance_health_score', 45);
-        $generate->assertJsonPath('data.ai_narrative.payload.source_facts.evidence.0.has_notes', false);
-        $generate->assertJsonMissingPath('data.ai_narrative.payload.source_facts.evidence.0.id');
-        $generate->assertJsonMissingPath('data.ai_narrative.payload.source_facts.findings.0.id');
-        $this->assertIsString($generate->json('data.ai_narrative.payload.source_facts.findings.0.opened_by_hash'));
+        $generate->assertJsonPath('data.ai_narrative.source_facts.summary_scores.compliance_health_score', 45);
+        $generate->assertJsonPath('data.ai_narrative.source_facts.evidence.0.has_notes', false);
+        $generate->assertJsonMissingPath('data.ai_narrative.source_facts.evidence.0.id');
+        $generate->assertJsonMissingPath('data.ai_narrative.source_facts.findings.0.id');
+        $generate->assertJsonMissingPath('data.ai_narrative.source_facts.evidence.0.notes');
+        $generate->assertJsonMissingPath('data.ai_narrative.source_facts.evidence.0.reviewed_by');
+        $generate->assertJsonMissingPath('data.ai_narrative.source_facts.findings.0.opened_by');
+        $generate->assertJsonMissingPath('data.ai_narrative.source_facts.findings.0.remediation_owner');
+        $this->assertIsString($generate->json('data.ai_narrative.source_facts.findings.0.opened_by_hash'));
         $response->assertJsonPath('data.summary_scores.compliance_health_score', 45);
     }
 

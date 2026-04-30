@@ -5,6 +5,7 @@ import React from 'react';
 import { AiStatusChip } from '@/components/ai/ai-status-chip';
 import { AiUnavailableCallout } from '@/components/ai/ai-unavailable-callout';
 import { SectionCard } from '@/components/ds/Card';
+import { Button } from '@/components/ds/Button';
 import { useAiStatus } from '@/hooks/use-ai-status';
 import type { AiNarrativeSummary } from '@/hooks/use-ai-narrative-summary';
 
@@ -68,6 +69,10 @@ export interface AiNarrativePanelProps {
   error?: Error | null;
   fallbackCopy?: string;
   className?: string;
+  onGenerate?: () => void;
+  isGenerating?: boolean;
+  canGenerate?: boolean;
+  generateLabel?: string;
 }
 
 export function AiNarrativePanel({
@@ -80,6 +85,10 @@ export function AiNarrativePanel({
   error = null,
   fallbackCopy = 'AI narrative is unavailable.',
   className = '',
+  onGenerate,
+  isGenerating = false,
+  canGenerate = true,
+  generateLabel,
 }: AiNarrativePanelProps) {
   const aiStatus = useAiStatus();
   React.useEffect(() => {
@@ -98,13 +107,32 @@ export function AiNarrativePanel({
   const hasAvailableSummary = summary?.available === true;
   const bullets = Array.isArray(summary?.bullets) ? summary.bullets : [];
   const bulletCounts = new Map<string, number>();
+  const generationLabel = isGenerating
+    ? 'Generating...'
+    : (generateLabel ?? (hasAvailableSummary ? 'Regenerate' : 'Generate'));
+  const actions = (
+    <div className="flex items-center gap-2">
+      {hasAvailableSummary ? <AiStatusChip tone="available" label="AI-derived" /> : null}
+      {onGenerate ? (
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={onGenerate}
+          loading={isGenerating}
+          disabled={!canGenerate || isGenerating}
+        >
+          {generationLabel}
+        </Button>
+      ) : null}
+    </div>
+  );
 
   return (
     <SectionCard
       title={title}
       subtitle={subtitle}
       className={className}
-      actions={hasAvailableSummary ? <AiStatusChip tone="available" label="AI-derived" /> : null}
+      actions={hasAvailableSummary || onGenerate ? actions : null}
     >
       {hasAvailableSummary ? (
         <div className="space-y-3">
