@@ -42,7 +42,7 @@ final class ReportingInsightCoordinatorTest extends TestCase
             $provider,
         );
 
-        $result = $coordinator->generate('tenant-a', 'actor-1', 'report_spend_trend')->toResponseArray();
+        $result = $coordinator->generate('tenant-a', 'report_spend_trend', 'actor-1')->toResponseArray();
 
         self::assertSame(1, $provider->calls);
         self::assertSame('reporting_ai_summary', $provider->featureKey);
@@ -65,11 +65,29 @@ final class ReportingInsightCoordinatorTest extends TestCase
             $provider,
         );
 
-        $result = $coordinator->generate('tenant-a', 'actor-1', 'report_spend_by_category')->toResponseArray();
+        $result = $coordinator->generate('tenant-a', 'report_spend_by_category', 'actor-1')->toResponseArray();
 
         self::assertSame(0, $provider->calls);
         self::assertSame('report_spend_by_category', $result['data']['subject_type']);
         self::assertSame(['ai_unavailable'], $result['data']['ai_summary']['reason_codes']);
+    }
+
+    public function test_generate_returns_unavailable_when_provider_throws(): void
+    {
+        $provider = new FailingNarrativePort();
+        $coordinator = new ReportingInsightCoordinator(
+            new ReportingFactsFake(),
+            new InMemoryArtifactCache(),
+            new AvailableAiFake(),
+            $provider,
+        );
+
+        $result = $coordinator->generate('tenant-a', 'report_kpis', 'actor-1')->toResponseArray();
+
+        self::assertSame(1, $provider->calls);
+        self::assertFalse($result['data']['ai_summary']['available']);
+        self::assertSame(['provider_unavailable'], $result['data']['ai_summary']['reason_codes']);
+        self::assertSame(51000.00, $result['data']['total_spend']);
     }
 }
 

@@ -11,6 +11,7 @@ use Nexus\InsightOperations\Contracts\ReportingFactsPortInterface;
 use Nexus\InsightOperations\DTOs\AiArtifactDto;
 use Nexus\InsightOperations\DTOs\InsightResultDto;
 use Nexus\InsightOperations\Services\FactHasher;
+use Throwable;
 
 final readonly class ReportingInsightCoordinator
 {
@@ -37,7 +38,7 @@ final readonly class ReportingInsightCoordinator
         return new InsightResultDto($facts, $artifact, self::ARTIFACT_FIELD);
     }
 
-    public function generate(string $tenantId, string $actorId, string $subjectType): InsightResultDto
+    public function generate(string $tenantId, string $subjectType, string $actorId): InsightResultDto
     {
         $facts = $this->factsPort->factsForTenant($tenantId, $subjectType)->toArray();
         $sourceFactsHash = $this->factHasher->hash($facts);
@@ -50,9 +51,17 @@ final readonly class ReportingInsightCoordinator
             );
         }
 
-        $artifact = $this->narrativePort
-            ->generate(self::FEATURE_KEY, $tenantId, $subjectType, $actorId, $facts)
-            ->withSourceFacts($facts, $sourceFactsHash, $actorId);
+        try {
+            $artifact = $this->narrativePort
+                ->generate(self::FEATURE_KEY, $tenantId, $subjectType, $actorId, $facts)
+                ->withSourceFacts($facts, $sourceFactsHash, $actorId);
+        } catch (Throwable) {
+            return new InsightResultDto(
+                $facts,
+                $this->unavailable($facts, $sourceFactsHash, ['provider_unavailable']),
+                self::ARTIFACT_FIELD,
+            );
+        }
 
         $this->cachePort->put($this->cacheKey($tenantId, $subjectType, $sourceFactsHash), $artifact, $this->artifactTtlSeconds);
 

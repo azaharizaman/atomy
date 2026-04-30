@@ -38,6 +38,18 @@ final class TrackingNarrativePort implements InsightNarrativePortInterface
     }
 }
 
+final class FailingNarrativePort implements InsightNarrativePortInterface
+{
+    public int $calls = 0;
+
+    public function generate(string $featureKey, string $tenantId, string $subjectType, string $actorId, array $facts): AiArtifactDto
+    {
+        $this->calls++;
+
+        throw new \RuntimeException('provider unavailable');
+    }
+}
+
 final class InMemoryArtifactCache implements AiArtifactCachePortInterface
 {
     /** @var array<string, AiArtifactDto> */

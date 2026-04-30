@@ -11,12 +11,13 @@ use Nexus\InsightOperations\Contracts\InsightNarrativePortInterface;
 use Nexus\InsightOperations\DTOs\AiArtifactDto;
 use Nexus\InsightOperations\DTOs\InsightResultDto;
 use Nexus\InsightOperations\Services\FactHasher;
+use Throwable;
 
 final readonly class DashboardInsightCoordinator
 {
     private const FEATURE_KEY = 'dashboard_ai_summary';
     private const CAPABILITY_GROUP = 'insight_intelligence';
-    private const SUBJECT_TYPE = 'dashboard';
+    private const SUBJECT_TYPE = 'dashboard_kpis';
     private const ARTIFACT_FIELD = 'ai_summary';
 
     public function __construct(
@@ -51,9 +52,17 @@ final readonly class DashboardInsightCoordinator
             );
         }
 
-        $artifact = $this->narrativePort
-            ->generate(self::FEATURE_KEY, $tenantId, self::SUBJECT_TYPE, $actorId, $facts)
-            ->withSourceFacts($facts, $sourceFactsHash, $actorId);
+        try {
+            $artifact = $this->narrativePort
+                ->generate(self::FEATURE_KEY, $tenantId, self::SUBJECT_TYPE, $actorId, $facts)
+                ->withSourceFacts($facts, $sourceFactsHash, $actorId);
+        } catch (Throwable) {
+            return new InsightResultDto(
+                $facts,
+                $this->unavailable($facts, $sourceFactsHash, ['provider_unavailable']),
+                self::ARTIFACT_FIELD,
+            );
+        }
 
         $this->cachePort->put($this->cacheKey($tenantId, $sourceFactsHash), $artifact, $this->artifactTtlSeconds);
 

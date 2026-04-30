@@ -54,7 +54,7 @@ final class DashboardInsightCoordinatorTest extends TestCase
         self::assertSame('dashboard_ai_summary', $provider->featureKey);
         self::assertSame('tenant-a', $provider->tenantId);
         self::assertSame('actor-1', $provider->actorId);
-        self::assertSame('dashboard', $provider->subjectType);
+        self::assertSame('dashboard_kpis', $provider->subjectType);
         self::assertSame(3, $this->metricValue($provider->facts['metrics'], 'active_rfqs'));
         self::assertSame(2, $this->metricValue($provider->facts['metrics'], 'pending_approvals'));
         self::assertSame(12500.50, $this->metricValue($provider->facts['metrics'], 'total_savings'));
@@ -87,6 +87,24 @@ final class DashboardInsightCoordinatorTest extends TestCase
         self::assertFalse($result['data']['ai_summary']['available']);
         self::assertSame('unavailable', $result['data']['ai_summary']['status']);
         self::assertSame(['ai_disabled'], $result['data']['ai_summary']['reason_codes']);
+    }
+
+    public function test_generate_returns_unavailable_when_provider_throws(): void
+    {
+        $provider = new FailingNarrativePort();
+        $coordinator = new DashboardInsightCoordinator(
+            new DashboardFactsFake(),
+            new InMemoryArtifactCache(),
+            new AvailableAiFake(),
+            $provider,
+        );
+
+        $result = $coordinator->generate('tenant-a', 'actor-1')->toResponseArray();
+
+        self::assertSame(1, $provider->calls);
+        self::assertFalse($result['data']['ai_summary']['available']);
+        self::assertSame(['provider_unavailable'], $result['data']['ai_summary']['reason_codes']);
+        self::assertSame(3, $result['data']['active_rfqs']);
     }
 
     /**
