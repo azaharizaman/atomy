@@ -6,12 +6,13 @@ namespace Nexus\InsightOperations\Tests\Unit\Coordinators;
 
 use PHPUnit\Framework\TestCase;
 use Nexus\InsightOperations\Coordinators\GovernanceNarrativeCoordinator;
+use Nexus\InsightOperations\Services\FactHasher;
 
 require_once __DIR__ . "/CoordinatorFakes.php";
 
 final class GovernanceNarrativeCoordinatorTest extends TestCase
 {
-    public function test_show_returns_governance_facts_and_cached_narrative(): void
+    public function test_show_returns_governance_facts_and_missing_cached_narrative(): void
     {
         $factsPort = new GovernanceFactsFake();
         $cachePort = new InMemoryArtifactCache();
@@ -23,6 +24,7 @@ final class GovernanceNarrativeCoordinatorTest extends TestCase
             $cachePort,
             $availabilityPort,
             $narrativePort,
+            new FactHasher(),
         );
 
         $result = $coordinator->show("tenant-a", "vendor-1")->toResponseArray();
@@ -45,6 +47,7 @@ final class GovernanceNarrativeCoordinatorTest extends TestCase
             $cachePort,
             $availabilityPort,
             $narrativePort,
+            new FactHasher(),
         );
 
         $result = $coordinator
@@ -60,11 +63,17 @@ final class GovernanceNarrativeCoordinatorTest extends TestCase
                 : "wrong",
         );
 
-        // Assert sanitization: evidence note and actor name should be missing or hashed
+        // Assert sanitization contract for provider context.
         $evidence = $narrativePort->facts["evidence"][0];
+        self::assertSame("compliance", $evidence["domain"]);
         self::assertArrayNotHasKey("notes", $evidence);
         self::assertArrayNotHasKey("id", $evidence);
-        self::assertSame("compliance", $evidence["domain"]);
+        self::assertArrayNotHasKey("actor_name", $evidence);
+        self::assertArrayNotHasKey("actor", $evidence);
+        self::assertArrayNotHasKey("email", $evidence);
+        self::assertArrayNotHasKey("phone", $evidence);
+        self::assertArrayNotHasKey("finding_id", $evidence);
+        self::assertArrayNotHasKey("external_id", $evidence);
 
         self::assertTrue($result["data"]["ai_narrative"]["available"]);
         self::assertSame(
@@ -85,6 +94,7 @@ final class GovernanceNarrativeCoordinatorTest extends TestCase
             $cachePort,
             $availabilityPort,
             $narrativePort,
+            new FactHasher(),
         );
 
         $result = $coordinator

@@ -26,6 +26,7 @@ final readonly class ProviderInsightNarrativeAdapter implements InsightNarrative
             featureKey: $featureKey,
             tenantId: $tenantId,
             subjectType: $subjectType,
+            actorId: $actorId,
             facts: $facts,
         ));
         $payload = $this->unwrapPayload($response);
@@ -34,7 +35,7 @@ final readonly class ProviderInsightNarrativeAdapter implements InsightNarrative
             featureKey: $featureKey,
             capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_INSIGHT_INTELLIGENCE,
             payload: $payload,
-            provenance: $this->provenance($response, $payload),
+            provenance: $this->provenance($response, $payload, $actorId),
         );
     }
 
@@ -44,16 +45,18 @@ final readonly class ProviderInsightNarrativeAdapter implements InsightNarrative
      */
     private function unwrapPayload(array $response): array
     {
-        $payload = $response['payload'] ?? $response;
+        if (isset($response['payload']) && ! is_array($response['payload'])) {
+            throw new \DomainException('AI provider returned a non-array payload.');
+        }
 
-        return is_array($payload) ? $payload : [];
+        return $response['payload'] ?? $response;
     }
 
     /**
      * @param array<string, mixed> $response
      * @param array<string, mixed> $payload
      */
-    private function provenance(array $response, array $payload): AiArtifactProvenanceDto
+    private function provenance(array $response, array $payload, ?string $actorId = null): AiArtifactProvenanceDto
     {
         $provenance = is_array($response['provenance'] ?? null) ? $response['provenance'] : [];
 
@@ -67,7 +70,7 @@ final readonly class ProviderInsightNarrativeAdapter implements InsightNarrative
             outputHash: $this->stringOrNull($provenance['output_hash'] ?? null) ?? $this->payloadHash($payload),
             latencyMs: is_numeric($provenance['latency_ms'] ?? null) ? (int) $provenance['latency_ms'] : null,
             generatedAt: $this->stringOrNull($provenance['generated_at'] ?? null) ?? $this->clock->now()->format(DATE_ATOM),
-            actorId: $this->stringOrNull($provenance['actor_id'] ?? null),
+            actorId: $this->stringOrNull($provenance['actor_id'] ?? null) ?? $actorId,
             actorHash: $this->stringOrNull($provenance['actor_hash'] ?? null),
         );
     }

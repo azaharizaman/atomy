@@ -131,8 +131,18 @@ final readonly class GovernanceFactsAdapter implements GovernanceFactsPortInterf
     private function evidenceFreshness(Collection $evidence): array
     {
         $now = CarbonImmutable::now('UTC');
-        $expired = $evidence->filter(static fn (VendorEvidence $record): bool => $record->expires_at !== null && $record->expires_at->isBefore($now))->count();
-        $stale = $evidence->filter(static fn (VendorEvidence $record): bool => $record->observed_at === null || $record->observed_at->diffInDays($now) > 365)->count();
+        $isExpired = static fn(VendorEvidence $record): bool => $record->expires_at !==
+            null && $record->expires_at->isBefore($now);
+        $isStale = static fn(VendorEvidence $record): bool => $record->observed_at ===
+            null || $record->observed_at->diffInDays($now) > 365;
+
+        $expired = $evidence->filter($isExpired)->count();
+        $stale = $evidence
+            ->filter(
+                static fn(VendorEvidence $record): bool => !$isExpired($record) &&
+                    $isStale($record),
+            )
+            ->count();
 
         return [
             'total' => $evidence->count(),

@@ -8,13 +8,13 @@ use Throwable;
 
 use Nexus\InsightOperations\Contracts\AiArtifactCachePortInterface;
 use Nexus\InsightOperations\Contracts\AiAvailabilityPortInterface;
-use Nexus\InsightOperations\Contracts\FactHasherInterface;
-use Nexus\InsightOperations\Contracts\InsightNarrativePortInterface;
 use Nexus\InsightOperations\Contracts\RiskInsightCoordinatorInterface;
-use Nexus\InsightOperations\Contracts\RiskInsightFactsPortInterface;
+use Nexus\InsightOperations\Contracts\RiskInsightFactsCommandInterface;
+use Nexus\InsightOperations\Contracts\RiskInsightFactsQueryInterface;
+use Nexus\InsightOperations\Contracts\InsightNarrativePortInterface;
+use Nexus\InsightOperations\Contracts\FactHasherInterface;
 use Nexus\InsightOperations\DTOs\AiArtifactDto;
 use Nexus\InsightOperations\DTOs\InsightResultDto;
-use Nexus\InsightOperations\Services\FactHasher;
 
 final readonly class RiskInsightCoordinator implements
     RiskInsightCoordinatorInterface
@@ -25,17 +25,18 @@ final readonly class RiskInsightCoordinator implements
     private const ARTIFACT_FIELD = "ai_insights";
 
     public function __construct(
-        private RiskInsightFactsPortInterface $factsPort,
+        private RiskInsightFactsQueryInterface $queryPort,
+        private RiskInsightFactsCommandInterface $commandPort,
         private AiArtifactCachePortInterface $cachePort,
         private AiAvailabilityPortInterface $availabilityPort,
         private InsightNarrativePortInterface $narrativePort,
-        private FactHasherInterface $factHasher = new FactHasher(),
+        private FactHasherInterface $factHasher,
         private int $artifactTtlSeconds = 3600,
     ) {}
 
     public function show(string $tenantId, string $rfqId): InsightResultDto
     {
-        $facts = $this->factsPort->factsForRfq($tenantId, $rfqId)->toArray();
+        $facts = $this->queryPort->factsForRfq($tenantId, $rfqId)->toArray();
         $sourceFactsHash = $this->factHasher->hash($facts);
         $artifact =
             $this->cachePort->get(
@@ -53,7 +54,7 @@ final readonly class RiskInsightCoordinator implements
         string $rfqId,
         string $actorId,
     ): InsightResultDto {
-        $facts = $this->factsPort->factsForRfq($tenantId, $rfqId)->toArray();
+        $facts = $this->queryPort->factsForRfq($tenantId, $rfqId)->toArray();
         $sourceFactsHash = $this->factHasher->hash($facts);
 
         if (($facts["risk_items"] ?? []) === []) {
@@ -112,7 +113,7 @@ final readonly class RiskInsightCoordinator implements
         string $rfqId,
         string $itemId,
     ): void {
-        $this->factsPort->escalate($tenantId, $rfqId, $itemId);
+        $this->commandPort->escalate($tenantId, $rfqId, $itemId);
     }
 
     public function resolveAsException(
@@ -121,7 +122,7 @@ final readonly class RiskInsightCoordinator implements
         string $itemId,
         string $actorId,
     ): void {
-        $this->factsPort->resolveAsException(
+        $this->commandPort->resolveAsException(
             $tenantId,
             $rfqId,
             $itemId,

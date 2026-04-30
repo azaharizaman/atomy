@@ -140,7 +140,7 @@ final class VendorGovernanceApiTest extends ApiTestCase
         $history->assertOk();
         $history->assertJsonPath('data.history', []);
         $history->assertJsonPath('data.screening_status', 'manual_review_required');
-        $history->assertJsonPath('data.reason_code', 'sanctions_provider_not_configured');
+        $history->assertJsonPath('data.reason_code', 'no_evidence_found');
     }
 
 

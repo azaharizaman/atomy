@@ -124,12 +124,14 @@ final class ReportController extends Controller
      */
     public function export(Request $request): JsonResponse
     {
-        return response()->json([
-            "data" => [
-                "download_url" => "https://example.com/reports/export-stub",
-                "expires_at" => now()->addHours(24)->toIso8601String(),
-            ],
-        ]);
+        $tenantId = $this->tenantId($request);
+
+        throw new \DomainException(
+            sprintf(
+                'Report export not yet implemented for tenant "%s".',
+                $tenantId,
+            ),
+        );
     }
 
     /**

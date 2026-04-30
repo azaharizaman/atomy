@@ -11,7 +11,8 @@ use Nexus\InsightOperations\Contracts\GovernanceFactsPortInterface;
 use Nexus\InsightOperations\Contracts\GovernanceNarrativePortInterface;
 use Nexus\InsightOperations\Contracts\InsightNarrativePortInterface;
 use Nexus\InsightOperations\Contracts\ReportingFactsPortInterface;
-use Nexus\InsightOperations\Contracts\RiskInsightFactsPortInterface;
+use Nexus\InsightOperations\Contracts\RiskInsightFactsCommandInterface;
+use Nexus\InsightOperations\Contracts\RiskInsightFactsQueryInterface;
 use Nexus\InsightOperations\DTOs\AiArtifactDto;
 use Nexus\InsightOperations\DTOs\DashboardFactsDto;
 use Nexus\InsightOperations\DTOs\GovernanceFactsDto;
@@ -202,13 +203,16 @@ final class ReportingFactsFake implements ReportingFactsPortInterface
             subjectType: $subjectType,
             metrics: [
                 new MetricFactDto("total_spend", 51000.0),
-                new MetricFactDto("awarded_rfqs", 4),
+                new MetricFactDto("active_rfqs", 4),
+                new MetricFactDto("savings", 2500.0),
             ],
         );
     }
 }
 
-final class RiskFactsFake implements RiskInsightFactsPortInterface
+final class RiskFactsFake implements
+    RiskInsightFactsQueryInterface,
+    RiskInsightFactsCommandInterface
 {
     public function factsForRfq(
         string $tenantId,
@@ -235,7 +239,9 @@ final class RiskFactsFake implements RiskInsightFactsPortInterface
     ): void {}
 }
 
-final class EmptyRiskFactsFake implements RiskInsightFactsPortInterface
+final class EmptyRiskFactsFake implements
+    RiskInsightFactsQueryInterface,
+    RiskInsightFactsCommandInterface
 {
     public function factsForRfq(
         string $tenantId,

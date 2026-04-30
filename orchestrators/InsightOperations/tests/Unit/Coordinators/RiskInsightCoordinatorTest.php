@@ -6,6 +6,7 @@ namespace Nexus\InsightOperations\Tests\Unit\Coordinators;
 
 use PHPUnit\Framework\TestCase;
 use Nexus\InsightOperations\Coordinators\RiskInsightCoordinator;
+use Nexus\InsightOperations\Services\FactHasher;
 
 require_once __DIR__ . "/CoordinatorFakes.php";
 
@@ -20,16 +21,18 @@ final class RiskInsightCoordinatorTest extends TestCase
 
         $coordinator = new RiskInsightCoordinator(
             $factsPort,
+            $factsPort,
             $cachePort,
             $availabilityPort,
             $narrativePort,
+            new FactHasher(),
         );
 
         $result = $coordinator->show("tenant-a", "rfq-1")->toResponseArray();
 
         self::assertSame(0, $narrativePort->calls);
         self::assertSame("rfq-1", $result["data"]["rfq_id"]);
-        self::assertCount(1, $result["data"]["items"]);
+        self::assertCount(1, $result["data"]["risk_items"]);
         self::assertSame(1, $result["data"]["manual_review"]["pending_items"]);
         self::assertFalse($result["data"]["ai_insights"]["available"]);
         self::assertSame(
@@ -47,9 +50,11 @@ final class RiskInsightCoordinatorTest extends TestCase
 
         $coordinator = new RiskInsightCoordinator(
             $factsPort,
+            $factsPort,
             $cachePort,
             $availabilityPort,
             $narrativePort,
+            new FactHasher(),
         );
 
         $result = $coordinator
@@ -76,9 +81,11 @@ final class RiskInsightCoordinatorTest extends TestCase
 
         $coordinator = new RiskInsightCoordinator(
             $factsPort,
+            $factsPort,
             $cachePort,
             $availabilityPort,
             $narrativePort,
+            new FactHasher(),
         );
 
         $result = $coordinator
@@ -86,7 +93,7 @@ final class RiskInsightCoordinatorTest extends TestCase
             ->toResponseArray();
 
         self::assertSame(0, $narrativePort->calls);
-        self::assertSame([], $result["data"]["items"]);
+        self::assertSame([], $result["data"]["risk_items"]);
         self::assertSame(0, $result["data"]["manual_review"]["pending_items"]);
         self::assertSame(
             ["source_facts_unavailable"],

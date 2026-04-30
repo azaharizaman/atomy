@@ -171,7 +171,8 @@ export function useAiNarrativeSummary(
     const canGenerate =
         Boolean(options?.generatePath) &&
         isFeatureAvailable &&
-        !shouldHideAiControls;
+        !shouldHideAiControls &&
+        enabled;
 
     return {
         summary: query.data ?? null,

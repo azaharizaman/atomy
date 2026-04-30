@@ -76,6 +76,9 @@ final class RiskComplianceController extends Controller
         $this->riskInsightCoordinator->escalate($tenantId, $rfqId, $id);
 
         $riskItem = $this->findRiskItem($tenantId, $id);
+        if (!$riskItem instanceof RiskItem) {
+            abort(404, "Risk item not found.");
+        }
 
         return response()->json([
             "data" => $this->serializeRiskItem($riskItem),
@@ -98,6 +101,9 @@ final class RiskComplianceController extends Controller
         );
 
         $riskItem = $this->findRiskItem($tenantId, $id);
+        if (!$riskItem instanceof RiskItem) {
+            abort(404, "Risk item not found.");
+        }
 
         return response()->json([
             "data" => $this->serializeRiskItem($riskItem),

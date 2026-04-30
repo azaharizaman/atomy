@@ -26,8 +26,7 @@ final readonly class RiskInsightFactsDto
 
         return [
             "rfq_id" => $this->rfqId,
-            // 'items' kept for backward compatibility with initial alpha UI
-            "items" => $this->riskItems,
+            // TODO(alpha-ui-deprecation): legacy `items` alias is removed; consume `risk_items` only.
             "risk_items" => $this->riskItems,
             "manual_review" => [
                 ...$manualReview,

@@ -14,13 +14,15 @@ use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
-use Nexus\InsightOperations\Contracts\RiskInsightFactsPortInterface;
+use Nexus\InsightOperations\Contracts\RiskInsightFactsCommandInterface;
+use Nexus\InsightOperations\Contracts\RiskInsightFactsQueryInterface;
 use Nexus\InsightOperations\DTOs\RiskInsightFactsDto;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 use Throwable;
 
 final readonly class RiskInsightFactsAdapter implements
-    RiskInsightFactsPortInterface
+    RiskInsightFactsQueryInterface,
+    RiskInsightFactsCommandInterface
 {
     public function factsForRfq(
         string $tenantId,
@@ -34,7 +36,7 @@ final readonly class RiskInsightFactsAdapter implements
             ->first();
 
         if (!$rfq instanceof Rfq) {
-            return new RiskInsightFactsDto($rfqId, [], $this->manualReview([]));
+            throw (new ModelNotFoundException())->setModel(Rfq::class, [$rfqId]);
         }
 
         $items = [
@@ -333,9 +335,9 @@ final readonly class RiskInsightFactsAdapter implements
     private function manualReview(array $items): array
     {
         return [
-            "feature_key" => "governance_manual_review",
+            "feature_key" => "risk_manual_review",
             "capability_group" =>
-                AiStatusSchema::CAPABILITY_GROUP_GOVERNANCE_INTELLIGENCE,
+                AiStatusSchema::CAPABILITY_GROUP_INSIGHT_INTELLIGENCE,
             "available" => true,
             "status" => AiStatusSchema::CAPABILITY_STATUS_AVAILABLE,
             "manual_continuity" => "available",

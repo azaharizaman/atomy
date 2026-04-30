@@ -40,7 +40,8 @@ Do not start Part 2 before Part 1 is green. Do not start Part 4 before the API p
 - Create: `orchestrators/InsightOperations/src/Contracts/GovernanceFactsPortInterface.php`
 - Create: `orchestrators/InsightOperations/src/Contracts/InsightNarrativePortInterface.php`
 - Create: `orchestrators/InsightOperations/src/Contracts/ReportingFactsPortInterface.php`
-- Create: `orchestrators/InsightOperations/src/Contracts/RiskInsightFactsPortInterface.php`
+- Create: `orchestrators/InsightOperations/src/Contracts/RiskInsightFactsQueryInterface.php`
+- Create: `orchestrators/InsightOperations/src/Contracts/RiskInsightFactsCommandInterface.php`
 - Create: `orchestrators/InsightOperations/src/Coordinators/DashboardInsightCoordinator.php`
 - Create: `orchestrators/InsightOperations/src/Coordinators/GovernanceNarrativeCoordinator.php`
 - Create: `orchestrators/InsightOperations/src/Coordinators/ReportingInsightCoordinator.php`
@@ -174,7 +175,8 @@ Expected: every file reports `No syntax errors detected`.
 - Create: `orchestrators/InsightOperations/src/Contracts/GovernanceFactsPortInterface.php`
 - Create: `orchestrators/InsightOperations/src/Contracts/InsightNarrativePortInterface.php`
 - Create: `orchestrators/InsightOperations/src/Contracts/ReportingFactsPortInterface.php`
-- Create: `orchestrators/InsightOperations/src/Contracts/RiskInsightFactsPortInterface.php`
+- Create: `orchestrators/InsightOperations/src/Contracts/RiskInsightFactsQueryInterface.php`
+- Create: `orchestrators/InsightOperations/src/Contracts/RiskInsightFactsCommandInterface.php`
 - Create: `orchestrators/InsightOperations/src/Services/FactHasher.php`
 
 - [ ] **Step 1: Define interfaces**
@@ -192,9 +194,15 @@ interface ReportingFactsPortInterface
     public function factsForTenant(string $tenantId, string $subjectType): ReportingFactsDto;
 }
 
-interface RiskInsightFactsPortInterface
+interface RiskInsightFactsQueryInterface
 {
     public function factsForRfq(string $tenantId, string $rfqId): RiskInsightFactsDto;
+}
+
+interface RiskInsightFactsCommandInterface
+{
+    public function escalate(string $tenantId, string $rfqId, string $itemId): void;
+    public function resolveAsException(string $tenantId, string $rfqId, string $itemId, string $actorId): void;
 }
 
 interface GovernanceFactsPortInterface
@@ -213,7 +221,7 @@ interface AiAvailabilityPortInterface
 interface InsightNarrativePortInterface
 {
     /** @param array<string, mixed> $facts */
-    public function generate(string $featureKey, string $tenantId, string $subjectType, array $facts): AiArtifactDto;
+    public function generate(string $featureKey, string $tenantId, string $subjectType, string $actorId, array $facts): AiArtifactDto;
 }
 
 interface AiArtifactCachePortInterface

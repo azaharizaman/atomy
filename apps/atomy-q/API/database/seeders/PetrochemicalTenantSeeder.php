@@ -65,12 +65,14 @@ final class PetrochemicalTenantSeeder extends Seeder
             return;
         }
 
-        $this->seedTenant();
-        $this->seedUsers();
-        $this->seedProjectsAndAcl();
-        $this->seedScoringAndTemplates();
-        $this->seedVendors();
-        $this->seedRfqsAndQuotes();
+        DB::transaction(function (): void {
+            $this->seedTenant();
+            $this->seedUsers();
+            $this->seedProjectsAndAcl();
+            $this->seedScoringAndTemplates();
+            $this->seedVendors();
+            $this->seedRfqsAndQuotes();
+        });
     }
 
     private function seedTenant(): void

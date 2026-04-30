@@ -55,7 +55,7 @@ final readonly class ProviderGovernanceNarrativeAdapter implements
     private function unwrapPayload(array $response): array
     {
         if (isset($response["payload"]) && !is_array($response["payload"])) {
-            throw new \InvalidArgumentException(
+            throw new \DomainException(
                 "AI provider returned a non-array payload.",
             );
         }

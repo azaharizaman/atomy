@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\InsightOperations\Coordinators;
 
-use Throwable;
+use DomainException;
 
 use Nexus\InsightOperations\Contracts\AiArtifactCachePortInterface;
 use Nexus\InsightOperations\Contracts\AiAvailabilityPortInterface;
@@ -14,7 +14,6 @@ use Nexus\InsightOperations\Contracts\GovernanceNarrativeCoordinatorInterface;
 use Nexus\InsightOperations\Contracts\GovernanceNarrativePortInterface;
 use Nexus\InsightOperations\DTOs\AiArtifactDto;
 use Nexus\InsightOperations\DTOs\InsightResultDto;
-use Nexus\InsightOperations\Services\FactHasher;
 
 final readonly class GovernanceNarrativeCoordinator implements
     GovernanceNarrativeCoordinatorInterface
@@ -79,7 +78,7 @@ final readonly class GovernanceNarrativeCoordinator implements
         private AiArtifactCachePortInterface $cachePort,
         private AiAvailabilityPortInterface $availabilityPort,
         private GovernanceNarrativePortInterface $narrativePort,
-        private FactHasherInterface $factHasher = new FactHasher(),
+        private FactHasherInterface $factHasher,
         private int $artifactTtlSeconds = 3600,
     ) {}
 
@@ -134,7 +133,7 @@ final readonly class GovernanceNarrativeCoordinator implements
                     $sourceFacts,
                 )
                 ->withSourceFacts($sourceFacts, $sourceFactsHash, $actorId);
-        } catch (Throwable) {
+        } catch (DomainException) {
             return new InsightResultDto(
                 $facts,
                 $this->unavailable($sourceFacts, $sourceFactsHash, [

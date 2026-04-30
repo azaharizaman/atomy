@@ -231,7 +231,8 @@ use Nexus\InsightOperations\Contracts\InsightNarrativePortInterface;
 use Nexus\InsightOperations\Contracts\ReportingFactsPortInterface;
 use Nexus\InsightOperations\Contracts\ReportingInsightCoordinatorInterface;
 use Nexus\InsightOperations\Contracts\RiskInsightCoordinatorInterface;
-use Nexus\InsightOperations\Contracts\RiskInsightFactsPortInterface;
+use Nexus\InsightOperations\Contracts\RiskInsightFactsCommandInterface;
+use Nexus\InsightOperations\Contracts\RiskInsightFactsQueryInterface;
 use Nexus\InsightOperations\Coordinators\DashboardInsightCoordinator;
 use Nexus\InsightOperations\Coordinators\GovernanceNarrativeCoordinator;
 use Nexus\InsightOperations\Coordinators\ReportingInsightCoordinator;
@@ -419,7 +420,11 @@ class AppServiceProvider extends ServiceProvider
             ReportingFactsAdapter::class,
         );
         $this->app->singleton(
-            RiskInsightFactsPortInterface::class,
+            RiskInsightFactsQueryInterface::class,
+            RiskInsightFactsAdapter::class,
+        );
+        $this->app->singleton(
+            RiskInsightFactsCommandInterface::class,
             RiskInsightFactsAdapter::class,
         );
         $this->app->singleton(

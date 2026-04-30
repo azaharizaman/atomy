@@ -146,6 +146,27 @@ describe('AiNarrativePanel', () => {
     expect(onGenerate).toHaveBeenCalledTimes(1);
   });
 
+  it('does not re-trigger generate while generation is in-flight', async () => {
+    const user = userEvent.setup();
+    const onGenerate = vi.fn();
+
+    renderWithProviders(
+      <AiNarrativePanel
+        featureKey="insight_intelligence"
+        title="AI summary"
+        summary={null}
+        onGenerate={onGenerate}
+        canGenerate
+        isGenerating
+      />,
+    );
+
+    const button = screen.getByRole('button', { name: 'Generating...' });
+    expect(button).toBeDisabled();
+    await user.click(button);
+    expect(onGenerate).not.toHaveBeenCalled();
+  });
+
   it('labels generation as regenerate when an available summary exists', () => {
     renderWithProviders(
       <AiNarrativePanel

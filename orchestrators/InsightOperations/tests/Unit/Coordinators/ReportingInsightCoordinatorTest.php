@@ -32,7 +32,8 @@ final class ReportingInsightCoordinatorTest extends TestCase
         self::assertSame(0, $narrativePort->calls);
         self::assertSame("report_kpis", $result["data"]["subject_type"]);
         self::assertSame(51000.0, $result["data"]["total_spend"]);
-        self::assertSame(4, $result["data"]["awarded_rfqs"]);
+        self::assertSame(4, $result["data"]["active_rfqs"]);
+        self::assertSame(2500.0, $result["data"]["savings"]);
         self::assertFalse($result["data"]["ai_summary"]["available"]);
         self::assertSame(
             ["no_cached_ai_artifact"],

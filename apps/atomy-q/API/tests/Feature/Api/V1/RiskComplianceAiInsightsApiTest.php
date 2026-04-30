@@ -68,7 +68,7 @@ final class RiskComplianceAiInsightsApiTest extends ApiTestCase
         $response = $this->getJson('/api/v1/risk-items?rfqId=' . $rfqId, $this->authHeaders());
 
         $response->assertOk();
-        $response->assertJsonPath('data.items', []);
+        $response->assertJsonPath('data.risk_items', []);
         $response->assertJsonPath('data.ai_insights.available', false);
         $response->assertJsonPath('data.ai_insights.payload', null);
         $response->assertJsonPath('data.manual_review.available', true);
@@ -124,12 +124,12 @@ final class RiskComplianceAiInsightsApiTest extends ApiTestCase
         $response = $this->getJson('/api/v1/risk-items?rfqId=' . strtolower((string) $rfq->id), $this->authHeaders());
 
         $response->assertOk();
-        $response->assertJsonPath('data.items.0.domain', 'risk');
-        $response->assertJsonPath('data.items.0.severity', 'high');
-        $response->assertJsonPath('data.items.0.status', 'open');
-        $this->assertIsString($response->json('data.items.0.title'));
-        $this->assertIsString($response->json('data.items.0.source'));
-        $this->assertIsString($response->json('data.items.0.source_id'));
+        $response->assertJsonPath('data.risk_items.0.domain', 'risk');
+        $response->assertJsonPath('data.risk_items.0.severity', 'high');
+        $response->assertJsonPath('data.risk_items.0.status', 'open');
+        $this->assertIsString($response->json('data.risk_items.0.title'));
+        $this->assertIsString($response->json('data.risk_items.0.source'));
+        $this->assertIsString($response->json('data.risk_items.0.source_id'));
         $response->assertJsonPath('data.manual_review.pending_items', 3);
         $response->assertJsonPath('data.ai_insights.reason_codes.0', 'no_cached_ai_artifact');
     }
@@ -150,7 +150,10 @@ final class RiskComplianceAiInsightsApiTest extends ApiTestCase
                 diagnostics: ['mode' => AiStatusSchema::MODE_PROVIDER],
             ),
         ]);
-        $rfq = $this->createRfq($this->tenantId, ['submission_deadline' => now()->subDay()]);
+        $rfq = $this->createRfq($this->tenantId, [
+            'submission_deadline' => now()->subDay(),
+            'closing_date' => now()->subDay(),
+        ]);
         $spy = new RiskInsightClientSpy(['headline' => 'RFQ risk requires attention.']);
         $this->app->instance(ProviderInsightClientInterface::class, $spy);
 

@@ -114,7 +114,7 @@ final readonly class DashboardFactsAdapter implements
                 "avg_cycle_time_days",
                 null,
                 "not_available",
-                "source_domain_not_implemented",
+                "no_data",
             );
         }
 
@@ -136,7 +136,7 @@ final readonly class DashboardFactsAdapter implements
                 "avg_cycle_time_days",
                 null,
                 "not_available",
-                "source_domain_not_available",
+                "data_not_available",
             );
         }
 
@@ -167,6 +167,7 @@ final readonly class DashboardFactsAdapter implements
         return Rfq::query()
             ->where("tenant_id", $tenantId)
             ->latest("updated_at")
+            ->orderBy("id", "desc")
             ->limit(5)
             ->get(["id", "rfq_number", "status", "updated_at"])
             ->map(
@@ -192,6 +193,7 @@ final readonly class DashboardFactsAdapter implements
             ->whereIn("severity", ["high", "critical"])
             ->whereNotIn("status", ["closed", "resolved"])
             ->latest("created_at")
+            ->orderBy("id", "desc")
             ->limit(5)
             ->get(["id", "vendor_id", "severity", "status"])
             ->map(

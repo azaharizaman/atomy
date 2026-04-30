@@ -238,9 +238,7 @@ final class VendorGovernanceController extends Controller
                         ? "manual_review_required"
                         : "completed",
                 "reason_code" =>
-                    $historyRows === []
-                        ? "sanctions_provider_not_configured"
-                        : null,
+                    $historyRows === [] ? "no_evidence_found" : null,
             ],
         ]);
     }
