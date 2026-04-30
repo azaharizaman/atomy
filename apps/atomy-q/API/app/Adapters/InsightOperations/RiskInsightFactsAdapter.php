@@ -20,10 +20,28 @@ use Nexus\InsightOperations\DTOs\RiskInsightFactsDto;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 use Throwable;
 
+/**
+ * Bridges the insight orchestrator's risk-facts contract to Atomy-Q Eloquent data.
+ *
+ * The orchestrator layer receives deterministic RFQ risk facts without depending
+ * on Laravel models. This adapter owns tenant-scoped lookup, derived schedule and
+ * quote-readiness facts, vendor finding translation, and persisted risk-item
+ * status changes.
+ */
 final readonly class RiskInsightFactsAdapter implements
     RiskInsightFactsQueryInterface,
     RiskInsightFactsCommandInterface
 {
+    /**
+     * Builds the RFQ risk snapshot from current API state.
+     *
+     * Facts are derived from RFQ deadlines, active vendor findings for vendors
+     * attached to the RFQ, and quote submissions that are not comparison-ready.
+     * Missing or cross-tenant RFQs intentionally surface as not found to avoid
+     * leaking existence across tenant boundaries.
+     *
+     * @throws ModelNotFoundException
+     */
     public function factsForRfq(
         string $tenantId,
         string $rfqId,
@@ -66,6 +84,15 @@ final readonly class RiskInsightFactsAdapter implements
         );
     }
 
+    /**
+     * Marks a persisted risk item for manual escalation inside the tenant scope.
+     *
+     * `$rfqId` is optional because some risk items may be global/vendor-scoped
+     * while still belonging to the same tenant. When supplied, it further narrows
+     * the mutation so an RFQ view cannot update an unrelated risk item.
+     *
+     * @throws ModelNotFoundException
+     */
     public function escalate(
         string $tenantId,
         string $rfqId,
@@ -86,6 +113,14 @@ final readonly class RiskInsightFactsAdapter implements
         }
     }
 
+    /**
+     * Resolves a persisted risk item as a recorded manual exception.
+     *
+     * The actor is stored verbatim from the authenticated application boundary;
+     * this adapter only enforces tenant/RFQ scoping and resolution timestamps.
+     *
+     * @throws ModelNotFoundException
+     */
     public function resolveAsException(
         string $tenantId,
         string $rfqId,
