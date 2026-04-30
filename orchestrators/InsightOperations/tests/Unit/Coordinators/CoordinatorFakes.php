@@ -104,7 +104,7 @@ final class FailingNarrativePort implements InsightNarrativePortInterface
     ): AiArtifactDto {
         $this->calls++;
 
-        throw new \RuntimeException("provider unavailable");
+        throw new \DomainException("provider unavailable");
     }
 }
 
@@ -220,7 +220,14 @@ final class RiskFactsFake implements
     ): RiskInsightFactsDto {
         return new RiskInsightFactsDto(
             $rfqId,
-            [["severity" => "high", "title" => "Deadline passed"]],
+            [[
+                "domain" => "risk",
+                "severity" => "high",
+                "status" => "open",
+                "title" => "Deadline passed",
+                "source" => "rfq_schedule",
+                "source_id" => "risk-source-1",
+            ]],
             [],
         );
     }

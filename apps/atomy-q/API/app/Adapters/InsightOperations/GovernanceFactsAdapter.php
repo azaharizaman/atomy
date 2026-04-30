@@ -25,10 +25,12 @@ final readonly class GovernanceFactsAdapter implements GovernanceFactsPortInterf
         $evidence = $this->evidenceQuery($tenantId, $vendorId)
             ->orderByDesc('observed_at')
             ->orderBy('title')
+            ->orderBy('id')
             ->get();
         $findings = $this->findingQuery($tenantId, $vendorId)
             ->orderByDesc('opened_at')
             ->orderBy('issue_type')
+            ->orderBy('id')
             ->get();
         $summary = $this->scoreService->summarize($evidence, $findings);
         $sanctionsScreenings = $evidence

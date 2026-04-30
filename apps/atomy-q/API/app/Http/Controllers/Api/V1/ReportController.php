@@ -141,16 +141,13 @@ final class ReportController extends Controller
      */
     public function schedules(Request $request): JsonResponse
     {
-        $params = $this->paginationParams($request);
-
-        return response()->json([
-            "data" => [],
-            "meta" => [
-                "current_page" => $params["page"],
-                "per_page" => $params["per_page"],
-                "total" => 0,
-            ],
-        ]);
+        $tenantId = $this->tenantId($request);
+        throw new \DomainException(
+            sprintf(
+                'Report schedules are not yet implemented for tenant "%s".',
+                $tenantId,
+            ),
+        );
     }
 
     /**
@@ -160,14 +157,12 @@ final class ReportController extends Controller
      */
     public function createSchedule(Request $request): JsonResponse
     {
-        return response()->json(
-            [
-                "data" => [
-                    "id" => "stub-schedule-id",
-                    "frequency" => "weekly",
-                ],
-            ],
-            201,
+        $tenantId = $this->tenantId($request);
+        throw new \DomainException(
+            sprintf(
+                'Report schedule creation is not yet implemented for tenant "%s".',
+                $tenantId,
+            ),
         );
     }
 
@@ -178,12 +173,14 @@ final class ReportController extends Controller
      */
     public function updateSchedule(Request $request, string $id): JsonResponse
     {
-        return response()->json([
-            "data" => [
-                "id" => $id,
-                "frequency" => "weekly",
-            ],
-        ]);
+        $tenantId = $this->tenantId($request);
+        throw new \DomainException(
+            sprintf(
+                'Report schedule update is not yet implemented for tenant "%s" (schedule "%s").',
+                $tenantId,
+                $id,
+            ),
+        );
     }
 
     /**
@@ -193,7 +190,14 @@ final class ReportController extends Controller
      */
     public function destroySchedule(Request $request, string $id): JsonResponse
     {
-        return response()->json([], 204);
+        $tenantId = $this->tenantId($request);
+        throw new \DomainException(
+            sprintf(
+                'Report schedule deletion is not yet implemented for tenant "%s" (schedule "%s").',
+                $tenantId,
+                $id,
+            ),
+        );
     }
 
     /**
@@ -203,12 +207,14 @@ final class ReportController extends Controller
      */
     public function runScheduleNow(Request $request, string $id): JsonResponse
     {
-        return response()->json([
-            "data" => [
-                "run_id" => "stub-run-id",
-                "status" => "queued",
-            ],
-        ]);
+        $tenantId = $this->tenantId($request);
+        throw new \DomainException(
+            sprintf(
+                'Report schedule run-now is not yet implemented for tenant "%s" (schedule "%s").',
+                $tenantId,
+                $id,
+            ),
+        );
     }
 
     /**
@@ -218,16 +224,13 @@ final class ReportController extends Controller
      */
     public function runs(Request $request): JsonResponse
     {
-        $params = $this->paginationParams($request);
-
-        return response()->json([
-            "data" => [],
-            "meta" => [
-                "current_page" => $params["page"],
-                "per_page" => $params["per_page"],
-                "total" => 0,
-            ],
-        ]);
+        $tenantId = $this->tenantId($request);
+        throw new \DomainException(
+            sprintf(
+                'Report runs listing is not yet implemented for tenant "%s".',
+                $tenantId,
+            ),
+        );
     }
 
     /**
@@ -237,12 +240,13 @@ final class ReportController extends Controller
      */
     public function downloadRun(Request $request, string $id): JsonResponse
     {
-        return response()->json([
-            "data" => [
-                "download_url" =>
-                    "https://example.com/reports/runs/" . $id . "/download",
-                "expires_at" => now()->addHours(24)->toIso8601String(),
-            ],
-        ]);
+        $tenantId = $this->tenantId($request);
+        throw new \DomainException(
+            sprintf(
+                'Report run download is not yet implemented for tenant "%s" (run "%s").',
+                $tenantId,
+                $id,
+            ),
+        );
     }
 }

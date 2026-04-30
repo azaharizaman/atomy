@@ -28,8 +28,8 @@ final readonly class RiskInsightFactsAdapter implements
         string $tenantId,
         string $rfqId,
     ): RiskInsightFactsDto {
-        $tenantId = trim($tenantId);
-        $rfqId = trim($rfqId);
+        $tenantId = strtolower(trim($tenantId));
+        $rfqId = strtolower(trim($rfqId));
         $rfq = Rfq::query()
             ->where("tenant_id", $tenantId)
             ->where("id", $rfqId)

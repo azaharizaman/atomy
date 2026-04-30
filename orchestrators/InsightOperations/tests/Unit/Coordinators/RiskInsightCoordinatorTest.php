@@ -7,6 +7,7 @@ namespace Nexus\InsightOperations\Tests\Unit\Coordinators;
 use PHPUnit\Framework\TestCase;
 use Nexus\InsightOperations\Coordinators\RiskInsightCoordinator;
 use Nexus\InsightOperations\Services\FactHasher;
+use Psr\Log\NullLogger;
 
 require_once __DIR__ . "/CoordinatorFakes.php";
 
@@ -25,6 +26,7 @@ final class RiskInsightCoordinatorTest extends TestCase
             $cachePort,
             $availabilityPort,
             $narrativePort,
+            new NullLogger(),
             new FactHasher(),
         );
 
@@ -54,6 +56,7 @@ final class RiskInsightCoordinatorTest extends TestCase
             $cachePort,
             $availabilityPort,
             $narrativePort,
+            new NullLogger(),
             new FactHasher(),
         );
 
@@ -85,6 +88,7 @@ final class RiskInsightCoordinatorTest extends TestCase
             $cachePort,
             $availabilityPort,
             $narrativePort,
+            new NullLogger(),
             new FactHasher(),
         );
 

@@ -6,6 +6,7 @@ namespace App\Adapters\InsightOperations;
 
 use App\Adapters\Ai\Contracts\ProviderInsightClientInterface;
 use App\Adapters\Ai\DTOs\InsightSummaryRequest;
+use App\Adapters\InsightOperations\Exceptions\ProviderInsightNarrativeAdapterException;
 use Nexus\Common\Contracts\ClockInterface;
 use Nexus\InsightOperations\Contracts\InsightNarrativePortInterface;
 use Nexus\InsightOperations\DTOs\AiArtifactDto;
@@ -45,7 +46,7 @@ final readonly class ProviderInsightNarrativeAdapter implements InsightNarrative
     private function unwrapPayload(array $response): array
     {
         if (isset($response['payload']) && ! is_array($response['payload'])) {
-            throw new \DomainException('AI provider returned a non-array payload.');
+            throw ProviderInsightNarrativeAdapterException::invalidPayload();
         }
 
         return $response['payload'] ?? $response;

@@ -6,6 +6,7 @@ namespace Nexus\InsightOperations\Tests\Unit\Coordinators;
 
 use PHPUnit\Framework\TestCase;
 use Nexus\InsightOperations\Coordinators\DashboardInsightCoordinator;
+use Nexus\InsightOperations\Services\FactHasher;
 use Psr\Log\NullLogger;
 
 require_once __DIR__ . "/CoordinatorFakes.php";
@@ -25,6 +26,7 @@ final class DashboardInsightCoordinatorTest extends TestCase
             $availabilityPort,
             $narrativePort,
             new NullLogger(),
+            new FactHasher(),
         );
 
         $result = $coordinator->show("tenant-a")->toResponseArray();
@@ -54,6 +56,7 @@ final class DashboardInsightCoordinatorTest extends TestCase
             $availabilityPort,
             $narrativePort,
             new NullLogger(),
+            new FactHasher(),
         );
 
         $result = $coordinator
@@ -95,6 +98,7 @@ final class DashboardInsightCoordinatorTest extends TestCase
             $availabilityPort,
             $narrativePort,
             new NullLogger(),
+            new FactHasher(),
         );
 
         $result = $coordinator
@@ -122,6 +126,7 @@ final class DashboardInsightCoordinatorTest extends TestCase
             $availabilityPort,
             $narrativePort,
             new NullLogger(),
+            new FactHasher(),
         );
 
         $result = $coordinator

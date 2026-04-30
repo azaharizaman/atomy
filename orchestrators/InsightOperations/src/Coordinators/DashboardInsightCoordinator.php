@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Nexus\InsightOperations\Coordinators;
 
-use Throwable;
+use DomainException;
 use Psr\Log\LoggerInterface;
 
 use Nexus\InsightOperations\Contracts\AiArtifactCachePortInterface;
@@ -15,7 +15,6 @@ use Nexus\InsightOperations\Contracts\FactHasherInterface;
 use Nexus\InsightOperations\Contracts\InsightNarrativePortInterface;
 use Nexus\InsightOperations\DTOs\AiArtifactDto;
 use Nexus\InsightOperations\DTOs\InsightResultDto;
-use Nexus\InsightOperations\Services\FactHasher;
 
 final readonly class DashboardInsightCoordinator implements
     DashboardInsightCoordinatorInterface
@@ -31,7 +30,7 @@ final readonly class DashboardInsightCoordinator implements
         private AiAvailabilityPortInterface $availabilityPort,
         private InsightNarrativePortInterface $narrativePort,
         private LoggerInterface $logger,
-        private FactHasherInterface $factHasher = new FactHasher(),
+        private FactHasherInterface $factHasher,
         private int $artifactTtlSeconds = 3600,
     ) {}
 
@@ -79,7 +78,7 @@ final readonly class DashboardInsightCoordinator implements
                     $facts,
                 )
                 ->withSourceFacts($facts, $sourceFactsHash, $actorId);
-        } catch (Throwable $e) {
+        } catch (DomainException $e) {
             $this->logger->error(
                 "Dashboard insight narrative generation failed.",
                 [

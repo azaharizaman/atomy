@@ -836,8 +836,8 @@ final class PetrochemicalTenantSeeder extends Seeder
                         27.0,
                 2,
             );
-            $lineItemsCount = rand(3, 25);
-            $warningsCount = rand(0, 2);
+            $lineItemsCount = 3 + ((($rfqIndex + $quoteIndex) * 7) % 23);
+            $warningsCount = (($rfqIndex + $quoteIndex) * 5) % 3;
         }
 
         if ($status === "needs_review") {

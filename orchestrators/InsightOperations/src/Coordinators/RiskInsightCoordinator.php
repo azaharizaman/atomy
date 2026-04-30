@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\InsightOperations\Coordinators;
 
 use Throwable;
+use Psr\Log\LoggerInterface;
 
 use Nexus\InsightOperations\Contracts\AiArtifactCachePortInterface;
 use Nexus\InsightOperations\Contracts\AiAvailabilityPortInterface;
@@ -30,6 +31,7 @@ final readonly class RiskInsightCoordinator implements
         private AiArtifactCachePortInterface $cachePort,
         private AiAvailabilityPortInterface $availabilityPort,
         private InsightNarrativePortInterface $narrativePort,
+        private LoggerInterface $logger,
         private FactHasherInterface $factHasher,
         private int $artifactTtlSeconds = 3600,
     ) {}
@@ -38,13 +40,29 @@ final readonly class RiskInsightCoordinator implements
     {
         $facts = $this->queryPort->factsForRfq($tenantId, $rfqId)->toArray();
         $sourceFactsHash = $this->factHasher->hash($facts);
-        $artifact =
-            $this->cachePort->get(
-                $this->cacheKey($tenantId, $rfqId, $sourceFactsHash),
-            ) ??
-            $this->unavailable($facts, $sourceFactsHash, [
+        $cacheKey = $this->cacheKey($tenantId, $rfqId, $sourceFactsHash);
+        try {
+            $artifact =
+                $this->cachePort->get($cacheKey) ??
+                $this->unavailable($facts, $sourceFactsHash, [
+                    "no_cached_ai_artifact",
+                ]);
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                "Risk insight cache read failed.",
+                [
+                    "feature_key" => self::FEATURE_KEY,
+                    "tenant_id" => $tenantId,
+                    "rfq_id" => $rfqId,
+                    "cache_key" => $cacheKey,
+                    "exception_class" => $e::class,
+                    "exception_message" => $e->getMessage(),
+                ],
+            );
+            $artifact = $this->unavailable($facts, $sourceFactsHash, [
                 "no_cached_ai_artifact",
             ]);
+        }
 
         return new InsightResultDto($facts, $artifact, self::ARTIFACT_FIELD);
     }
@@ -99,11 +117,26 @@ final readonly class RiskInsightCoordinator implements
             );
         }
 
-        $this->cachePort->put(
-            $this->cacheKey($tenantId, $rfqId, $sourceFactsHash),
-            $artifact,
-            $this->artifactTtlSeconds,
-        );
+        $cacheKey = $this->cacheKey($tenantId, $rfqId, $sourceFactsHash);
+        try {
+            $this->cachePort->put(
+                $cacheKey,
+                $artifact,
+                $this->artifactTtlSeconds,
+            );
+        } catch (Throwable $e) {
+            $this->logger->warning(
+                "Risk insight cache write failed.",
+                [
+                    "feature_key" => self::FEATURE_KEY,
+                    "tenant_id" => $tenantId,
+                    "rfq_id" => $rfqId,
+                    "cache_key" => $cacheKey,
+                    "exception_class" => $e::class,
+                    "exception_message" => $e->getMessage(),
+                ],
+            );
+        }
 
         return new InsightResultDto($facts, $artifact, self::ARTIFACT_FIELD);
     }
