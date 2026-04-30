@@ -40,6 +40,20 @@ Current status from this assessment: **internal alpha only / no external design-
 - Release impact: the superseding Task 5 alpha API matrix is **not satisfied** in the required PostgreSQL posture. SQLite-only evidence may be collected as extra regression signal, but it does not close this gate.
 - Next action: start or provision the intended PostgreSQL service, rerun `php artisan migrate:fresh --seed`, then rerun the superseding alpha API matrix before API contract closure is considered release evidence.
 
+## Latest Superseding Task 6 Route Surface Classification - 2026-05-01
+
+- Operator: Codex.
+- Branch: `alpha/launch-readiness`.
+- Commit under test: `8b726d36`.
+- Inventory command: `rg -n "href=|router\.push|routes|Route::" apps/atomy-q/WEB/src apps/atomy-q/API/routes apps/atomy-q/API/app/Http/Controllers/Api/V1`: PASS. The inventory confirms exposed WEB navigation, RFQ workspace links, and API route groups remain classifiable under the alpha surface policy.
+- Classification result:
+  - Alpha-supported visible top-level WEB surfaces: Dashboard, Requisitions, Vendors.
+  - Alpha-supported RFQ workspace surfaces: overview, details, line items, vendors, award, quote intake, comparison runs, approvals, decision trail.
+  - Intentionally hidden/deferred WEB surfaces: top-level Documents, Reporting, Settings shell, RFQ negotiations, RFQ documents. Settings Users & Roles remains reachable directly as the minimal A5 supporting surface.
+  - Supporting API surfaces remain authenticated and tenant-scoped; non-navigation API groups are not external design-partner navigation surfaces.
+- Verification: `cd apps/atomy-q/WEB && NEXT_PUBLIC_ALPHA_MODE=true npx playwright test tests/dashboard-nav.spec.ts tests/screen-smoke.spec.ts`: PASS. 3 tests passed.
+- Release impact: A4 surface classification remains closed locally under the superseding spec. This does not close staging evidence or PostgreSQL API matrix gates.
+
 ## Latest Rectification Evidence - 2026-04-15
 
 - `cd apps/atomy-q/WEB && npm run lint`: PASS. Exit 0 with 7 existing warnings:
