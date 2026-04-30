@@ -29,6 +29,17 @@ This assessment was captured while drafting the superseding alpha launch readine
 
 Current status from this assessment: **internal alpha only / no external design-partner launch** until a newer Task 9 run closes these no-go signals under the superseding spec.
 
+## Latest Superseding Task 5 API Matrix Posture - 2026-05-01
+
+- Operator: Codex.
+- Branch: `alpha/launch-readiness`.
+- Commit under test: `b388eaf8`.
+- Intended database posture from `apps/atomy-q/API/.env`: `DB_CONNECTION=pgsql`, `DB_HOST=127.0.0.1`, `DB_PORT=5433`, `DB_DATABASE=atomy_dev`.
+- `cd apps/atomy-q/API && php artisan migrate:fresh --seed`: BLOCKED. PostgreSQL on `127.0.0.1:5433` refused the connection (`SQLSTATE[08006] [7] connection refused`).
+- Extra non-closing regression signal: `cd apps/atomy-q/API && DB_CONNECTION=sqlite DB_DATABASE=':memory:' php artisan test --filter "RegisterCompanyTest|AuthTest|RfqLifecycleMutationTest|RfqInvitationReminderTest|QuoteSubmissionWorkflowTest|QuoteIngestionPipelineTest|QuoteIngestionIntelligenceTest|NormalizationReviewWorkflowTest|ComparisonRunWorkflowTest|ComparisonSnapshotWorkflowTest|AwardWorkflowTest|VendorWorkflowTest|IdentityGap7Test|OperationalApprovalApiTest|ProjectAclTest|DashboardReportAiSummaryApiTest|RiskComplianceAiInsightsApiTest|VendorGovernanceApiTest|VendorRecommendationApiTest|VendorRecommendationAiGateTest|AiStatusApiTest"`: PASS. 177 tests, 1184 assertions.
+- Release impact: the superseding Task 5 alpha API matrix is **not satisfied** in the required PostgreSQL posture. SQLite-only evidence may be collected as extra regression signal, but it does not close this gate.
+- Next action: start or provision the intended PostgreSQL service, rerun `php artisan migrate:fresh --seed`, then rerun the superseding alpha API matrix before API contract closure is considered release evidence.
+
 ## Latest Rectification Evidence - 2026-04-15
 
 - `cd apps/atomy-q/WEB && npm run lint`: PASS. Exit 0 with 7 existing warnings:
