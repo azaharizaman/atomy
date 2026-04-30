@@ -35,7 +35,8 @@ final class VendorRecommendationController extends Controller
         VendorRecommendationCoordinatorInterface $coordinator,
         DecisionTrailRecorderInterface $decisionTrailRecorder,
     ): JsonResponse {
-        $normalizedTenantId = $this->normalizeIdentifier($this->tenantId($request));
+        $tenantId = $this->tenantId($request);
+        $normalizedTenantId = $this->normalizeIdentifier($tenantId);
         $rfq = $this->findRfq($normalizedTenantId, $rfqId);
 
         if ($rfq === null) {
@@ -67,7 +68,7 @@ final class VendorRecommendationController extends Controller
             ->get();
 
         $recommendationRequest = new VendorRecommendationRequest(
-            tenantId: $normalizedTenantId,
+            tenantId: $tenantId,
             rfqId: (string) $rfq->id,
             categories: $this->stringList($validated['categories'] ?? [$rfq->category]),
             description: trim((string) ($validated['description'] ?? $rfq->description ?? $rfq->title ?? '')),
@@ -119,12 +120,12 @@ final class VendorRecommendationController extends Controller
             $provenance,
             $decisionTrailRecorder,
             $rfq,
-            $normalizedTenantId,
+            $tenantId,
             $status,
         ): void {
             RfqRecommendationArtifact::query()->updateOrCreate(
                 [
-                    'tenant_id' => $normalizedTenantId,
+                    'tenant_id' => $tenantId,
                     'rfq_id' => $rfq->id,
                     'feature_key' => 'vendor_ai_ranking',
                 ],
@@ -136,7 +137,7 @@ final class VendorRecommendationController extends Controller
             );
 
             $decisionTrailRecorder->recordVendorRecommendationGenerated(
-                $normalizedTenantId,
+                $tenantId,
                 (string) $rfq->id,
                 [
                     'payload' => $canonicalPayload,

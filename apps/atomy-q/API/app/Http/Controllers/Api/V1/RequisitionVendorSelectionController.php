@@ -28,7 +28,8 @@ final class RequisitionVendorSelectionController extends Controller
 
     public function index(Request $request, string $rfqId): JsonResponse
     {
-        $normalizedTenantId = $this->normalizeIdentifier($this->tenantId($request));
+        $tenantId = $this->tenantId($request);
+        $normalizedTenantId = $this->normalizeIdentifier($tenantId);
         $rfq = $this->findRfq($normalizedTenantId, $rfqId);
 
         if ($rfq === null) {
@@ -50,7 +51,8 @@ final class RequisitionVendorSelectionController extends Controller
 
     public function update(Request $request, string $rfqId): JsonResponse
     {
-        $normalizedTenantId = $this->normalizeIdentifier($this->tenantId($request));
+        $tenantId = $this->tenantId($request);
+        $normalizedTenantId = $this->normalizeIdentifier($tenantId);
         $rfq = $this->findRfq($normalizedTenantId, $rfqId);
 
         if ($rfq === null) {
@@ -85,7 +87,7 @@ final class RequisitionVendorSelectionController extends Controller
             ], 422);
         }
 
-        $rows = DB::transaction(function () use ($rfq, $normalizedTenantId, $vendorIds, $request, $vendors): Collection {
+        $rows = DB::transaction(function () use ($rfq, $tenantId, $normalizedTenantId, $vendorIds, $request, $vendors): Collection {
             RequisitionSelectedVendor::query()
                 ->whereRaw('lower(tenant_id) = ?', [$normalizedTenantId])
                 ->where('rfq_id', $rfq->id)
@@ -96,7 +98,7 @@ final class RequisitionVendorSelectionController extends Controller
             $payload = array_map(
                 static fn (string $vendorId): array => [
                     'id' => (string) Str::ulid(),
-                    'tenant_id' => $normalizedTenantId,
+                    'tenant_id' => $tenantId,
                     'rfq_id' => $rfq->id,
                     'vendor_id' => $vendorId,
                     'selected_by_user_id' => $userId,
@@ -117,7 +119,7 @@ final class RequisitionVendorSelectionController extends Controller
 
             $selectedVendorIds = $selections->map(static fn (RequisitionSelectedVendor $selection): string => (string) $selection->vendor_id)->values()->all();
             $this->decisionTrailRecorder->recordBuyerShortlistReplaced(
-                $normalizedTenantId,
+                $tenantId,
                 (string) $rfq->id,
                 [
                     'selection_count' => $selections->count(),

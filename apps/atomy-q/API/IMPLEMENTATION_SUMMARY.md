@@ -567,3 +567,10 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 - `ProviderQuoteContentProcessor` keeps `DocumentExtractionRequest` strict for live provider payloads, but when a quote file is no longer present it now builds comparison input from persisted `normalization_source_lines`.
 - If neither the source document nor normalized quote lines are available, provider comparison processing raises a `QuotationIntelligenceException` instead of leaking raw filesystem exceptions.
 - Added provider-mode comparison regressions proving preview and final freeze succeed from persisted normalized lines after stored quote files are deleted, without calling the provider document extraction client.
+
+## 2026-05-01 AI Truthfulness And Recommendation Artifacts
+
+- Dashboard AI summary generation now follows the reporting summary failure posture: provider narrative failures return deterministic dashboard facts plus an unavailable `ai_summary` artifact with `provider_unavailable`, not a raw `500`.
+- Vendor recommendation and buyer shortlist write paths now preserve canonical tenant IDs for persisted artifacts, selected-vendor rows, and decision-trail entries while keeping case-insensitive tenant lookup for reads.
+- `vendor_ai_ranking` artifacts are persisted for successful provider-backed recommendations, including empty eligible-candidate sets with deterministic reasons and provider provenance.
+- RFQ recommendation decision-trail coverage now uses complete provider provenance so artifact review exercises the same contract required for persisted alpha AI evidence.
