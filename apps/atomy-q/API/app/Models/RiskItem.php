@@ -21,15 +21,17 @@ class RiskItem extends Model
     protected $fillable = [
         'tenant_id',
         'rfq_id',
-        'vendor_id',
-        'type',
         'severity',
+        'title',
         'description',
+        'source',
         'status',
-        'resolution',
+        'resolved_at',
+        'resolved_by',
     ];
 
     protected $casts = [
+        'resolved_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

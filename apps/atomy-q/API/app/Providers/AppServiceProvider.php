@@ -30,9 +30,12 @@ use App\Adapters\Ai\ProviderNormalizationClient;
 use App\Adapters\Ai\ProviderSourcingRecommendationClient;
 use App\Adapters\InsightOperations\CacheAiArtifactStore;
 use App\Adapters\InsightOperations\DashboardFactsAdapter;
+use App\Adapters\InsightOperations\GovernanceFactsAdapter;
 use App\Adapters\InsightOperations\InsightAiAvailabilityAdapter;
+use App\Adapters\InsightOperations\ProviderGovernanceNarrativeAdapter;
 use App\Adapters\InsightOperations\ProviderInsightNarrativeAdapter;
 use App\Adapters\InsightOperations\ReportingFactsAdapter;
+use App\Adapters\InsightOperations\RiskInsightFactsAdapter;
 use App\Http\Idempotency\IdempotencyReplayResponseFactory;
 use App\Contracts\JwtServiceInterface;
 use App\Contracts\MfaChallengeStoreInterface;
@@ -219,10 +222,14 @@ use Nexus\IntelligenceOperations\Coordinators\AiStatusCoordinator;
 use Nexus\InsightOperations\Contracts\AiArtifactCachePortInterface;
 use Nexus\InsightOperations\Contracts\AiAvailabilityPortInterface;
 use Nexus\InsightOperations\Contracts\DashboardFactsPortInterface;
+use Nexus\InsightOperations\Contracts\GovernanceFactsPortInterface;
 use Nexus\InsightOperations\Contracts\InsightNarrativePortInterface;
 use Nexus\InsightOperations\Contracts\ReportingFactsPortInterface;
+use Nexus\InsightOperations\Contracts\RiskInsightFactsPortInterface;
 use Nexus\InsightOperations\Coordinators\DashboardInsightCoordinator;
+use Nexus\InsightOperations\Coordinators\GovernanceNarrativeCoordinator;
 use Nexus\InsightOperations\Coordinators\ReportingInsightCoordinator;
+use Nexus\InsightOperations\Coordinators\RiskInsightCoordinator;
 use Nexus\Notifier\Contracts\NotificationManagerInterface;
 use Nexus\Outbox\Contracts\OutboxClockInterface;
 use Nexus\Outbox\Contracts\OutboxPersistInterface;
@@ -306,9 +313,20 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(AiAvailabilityPortInterface::class, InsightAiAvailabilityAdapter::class);
         $this->app->singleton(DashboardFactsPortInterface::class, DashboardFactsAdapter::class);
         $this->app->singleton(ReportingFactsPortInterface::class, ReportingFactsAdapter::class);
+        $this->app->singleton(RiskInsightFactsPortInterface::class, RiskInsightFactsAdapter::class);
+        $this->app->singleton(GovernanceFactsPortInterface::class, GovernanceFactsAdapter::class);
         $this->app->singleton(InsightNarrativePortInterface::class, ProviderInsightNarrativeAdapter::class);
         $this->app->singleton(DashboardInsightCoordinator::class);
         $this->app->singleton(ReportingInsightCoordinator::class);
+        $this->app->singleton(RiskInsightCoordinator::class);
+        $this->app->singleton(GovernanceNarrativeCoordinator::class, static function ($app): GovernanceNarrativeCoordinator {
+            return new GovernanceNarrativeCoordinator(
+                $app->make(GovernanceFactsPortInterface::class),
+                $app->make(AiArtifactCachePortInterface::class),
+                $app->make(AiAvailabilityPortInterface::class),
+                $app->make(ProviderGovernanceNarrativeAdapter::class),
+            );
+        });
         $this->app->singleton(AiHealthProbeInterface::class, static function ($app): AiHealthProbeInterface {
             return new ConfiguredAiHealthProbe($app->make(HttpFactory::class));
         });

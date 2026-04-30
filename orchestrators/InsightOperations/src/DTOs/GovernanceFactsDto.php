@@ -34,6 +34,7 @@ final readonly class GovernanceFactsDto
             'vendor_id' => $this->vendorId,
             'evidence' => $this->evidence,
             'findings' => $this->findings,
+            'summary_scores' => $this->scores,
             'scores' => $this->scores,
             'warning_flags' => $this->warningFlags,
             'sanctions_screenings' => $this->sanctionsScreenings,

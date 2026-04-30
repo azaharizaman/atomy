@@ -11,6 +11,7 @@ use Nexus\InsightOperations\Contracts\RiskInsightFactsPortInterface;
 use Nexus\InsightOperations\DTOs\AiArtifactDto;
 use Nexus\InsightOperations\DTOs\InsightResultDto;
 use Nexus\InsightOperations\Services\FactHasher;
+use Throwable;
 
 final readonly class RiskInsightCoordinator
 {
@@ -59,9 +60,17 @@ final readonly class RiskInsightCoordinator
             );
         }
 
-        $artifact = $this->narrativePort
-            ->generate(self::FEATURE_KEY, $tenantId, self::SUBJECT_TYPE, $actorId, $facts)
-            ->withSourceFacts($facts, $sourceFactsHash, $actorId);
+        try {
+            $artifact = $this->narrativePort
+                ->generate(self::FEATURE_KEY, $tenantId, self::SUBJECT_TYPE, $actorId, $facts)
+                ->withSourceFacts($facts, $sourceFactsHash, $actorId);
+        } catch (Throwable) {
+            return new InsightResultDto(
+                $facts,
+                $this->unavailable($facts, $sourceFactsHash, ['provider_unavailable']),
+                self::ARTIFACT_FIELD,
+            );
+        }
 
         $this->cachePort->put($this->cacheKey($tenantId, $rfqId, $sourceFactsHash), $artifact, $this->artifactTtlSeconds);
 

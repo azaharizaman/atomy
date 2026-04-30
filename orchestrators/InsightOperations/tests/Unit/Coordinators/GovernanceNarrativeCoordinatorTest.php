@@ -58,8 +58,11 @@ final class GovernanceNarrativeCoordinatorTest extends TestCase
         self::assertSame('compliance', $provider->facts['findings'][0]['domain']);
         self::assertSame('high', $provider->facts['findings'][0]['severity']);
         self::assertSame('open', $provider->facts['findings'][0]['status']);
-        self::assertArrayHasKey('actor_hash', $provider->facts['evidence'][0]);
-        self::assertArrayHasKey('actor_hash', $provider->facts['findings'][0]);
+        self::assertArrayHasKey('actor_name_hash', $provider->facts['evidence'][0]);
+        self::assertArrayHasKey('actor_email_hash', $provider->facts['evidence'][0]);
+        self::assertArrayHasKey('actor_phone_hash', $provider->facts['evidence'][0]);
+        self::assertArrayHasKey('actor_name_hash', $provider->facts['findings'][0]);
+        self::assertArrayHasKey('actor_email_hash', $provider->facts['findings'][0]);
         self::assertStringNotContainsString('evidence-raw-id', $json);
         self::assertStringNotContainsString('finding-raw-id', $json);
         self::assertStringNotContainsString('Raw note should not leave system', $json);

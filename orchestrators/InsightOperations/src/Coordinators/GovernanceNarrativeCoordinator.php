@@ -11,6 +11,7 @@ use Nexus\InsightOperations\Contracts\InsightNarrativePortInterface;
 use Nexus\InsightOperations\DTOs\AiArtifactDto;
 use Nexus\InsightOperations\DTOs\InsightResultDto;
 use Nexus\InsightOperations\Services\FactHasher;
+use Throwable;
 
 final readonly class GovernanceNarrativeCoordinator
 {
@@ -25,9 +26,13 @@ final readonly class GovernanceNarrativeCoordinator
     private const PROVIDER_SAFE_RECORD_KEYS = [
         'domain',
         'type',
+        'source',
         'status',
+        'review_status',
         'severity',
+        'issue_type',
         'category',
+        'observed_at',
         'issued_at',
         'expires_at',
         'opened_at',
@@ -36,11 +41,14 @@ final readonly class GovernanceNarrativeCoordinator
         'reviewed_at',
         'completed_at',
         'due_at',
+        'remediation_due_at',
         'date',
         'dates',
         'score',
         'scores',
         'warning_flags',
+        'has_notes',
+        'has_resolution_summary',
     ];
 
     /**
@@ -55,6 +63,9 @@ final readonly class GovernanceNarrativeCoordinator
         'reviewer_name',
         'reviewer_email',
         'reviewer_phone',
+        'reviewed_by',
+        'opened_by',
+        'remediation_owner',
         'created_by',
         'updated_by',
     ];
@@ -93,9 +104,17 @@ final readonly class GovernanceNarrativeCoordinator
             );
         }
 
-        $artifact = $this->narrativePort
-            ->generate(self::FEATURE_KEY, $tenantId, self::SUBJECT_TYPE, $actorId, $sourceFacts)
-            ->withSourceFacts($sourceFacts, $sourceFactsHash, $actorId);
+        try {
+            $artifact = $this->narrativePort
+                ->generate(self::FEATURE_KEY, $tenantId, self::SUBJECT_TYPE, $actorId, $sourceFacts)
+                ->withSourceFacts($sourceFacts, $sourceFactsHash, $actorId);
+        } catch (Throwable) {
+            return new InsightResultDto(
+                $facts,
+                $this->unavailable($sourceFacts, $sourceFactsHash, ['provider_unavailable']),
+                self::ARTIFACT_FIELD,
+            );
+        }
 
         $this->cachePort->put($this->cacheKey($tenantId, $vendorId, $sourceFactsHash), $artifact, $this->artifactTtlSeconds);
 
@@ -112,7 +131,7 @@ final readonly class GovernanceNarrativeCoordinator
             'vendor_id_hash' => hash('sha256', (string) ($facts['vendor_id'] ?? '')),
             'evidence' => $this->sanitizeRecordList($facts['evidence'] ?? []),
             'findings' => $this->sanitizeRecordList($facts['findings'] ?? []),
-            'scores' => $facts['scores'] ?? [],
+            'summary_scores' => $facts['summary_scores'] ?? $facts['scores'] ?? [],
             'warning_flags' => $facts['warning_flags'] ?? [],
             'sanctions_screenings' => $this->sanitizeRecordList($facts['sanctions_screenings'] ?? []),
             'due_diligence_status' => $facts['due_diligence_status'] ?? null,
@@ -160,12 +179,8 @@ final readonly class GovernanceNarrativeCoordinator
             }
         }
 
-        if ($actorFields !== []) {
-            ksort($actorFields);
-            $safe['actor_hash'] = hash(
-                'sha256',
-                json_encode($actorFields, JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION),
-            );
+        foreach ($actorFields as $key => $value) {
+            $safe[$key . '_hash'] = hash('sha256', strtolower(trim($value)));
         }
 
         ksort($safe);
