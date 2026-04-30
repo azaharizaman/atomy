@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Adapters\QuotationIntelligence;
 
-use RuntimeException;
+use InvalidArgumentException;
 use App\Models\QuoteSubmission;
 use App\Models\RfqLineItem;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Nexus\Tenant\Contracts\TenantContextInterface;
@@ -37,6 +38,10 @@ final readonly class ProviderQuoteContentProcessor implements OrchestratorConten
             ->where('file_path', $relativePath)
             ->whereHas('rfq', fn ($query) => $query->where('tenant_id', $tenantId))
             ->with([
+                'normalizationSourceLines' => fn (HasMany $query) => $query
+                    ->orderBy('sort_order')
+                    ->orderBy('id'),
+                'normalizationSourceLines.rfqLineItem',
                 'rfq.lineItems' => fn ($query) => $query
                     ->where('tenant_id', $tenantId)
                     ->orderBy('sort_order'),
@@ -47,17 +52,45 @@ final readonly class ProviderQuoteContentProcessor implements OrchestratorConten
             throw new QuotationIntelligenceException('Quote submission source document was not found.');
         }
 
-        $result = $this->documentClient->extractDocument(new DocumentExtractionRequest(
-            tenantId: $tenantId,
-            rfqId: (string) $submission->rfq_id,
-            quoteSubmissionId: (string) $submission->id,
-            filename: (string) $submission->original_filename,
-            mimeType: (string) $submission->file_type,
-            absolutePath: $storagePath,
-        ));
+        if (!is_file($storagePath)) {
+            $persistedLines = $this->persistedLines($submission);
+            if ($persistedLines === []) {
+                throw new QuotationIntelligenceException(
+                    'Quote submission source document is unavailable and no normalized quote lines are available.',
+                );
+            }
+
+            return $this->analysisResult($persistedLines, [
+                'available' => false,
+                'status' => 'unavailable',
+                'reason_code' => 'source_document_missing',
+            ]);
+        }
+
+        try {
+            $result = $this->documentClient->extractDocument(new DocumentExtractionRequest(
+                tenantId: $tenantId,
+                rfqId: (string) $submission->rfq_id,
+                quoteSubmissionId: (string) $submission->id,
+                filename: (string) $submission->original_filename,
+                mimeType: (string) $submission->file_type,
+                absolutePath: $storagePath,
+            ));
+        } catch (InvalidArgumentException $exception) {
+            throw new QuotationIntelligenceException($exception->getMessage(), previous: $exception);
+        }
 
         $lines = $this->lines($submission, $result);
 
+        return $this->analysisResult($lines, $result);
+    }
+
+    /**
+     * @param list<array<string, mixed>> $lines
+     * @param array<string, mixed> $result
+     */
+    private function analysisResult(array $lines, array $result): object
+    {
         return new class($lines, $result) {
             /**
              * @param list<array<string, mixed>> $lines
@@ -87,11 +120,48 @@ final readonly class ProviderQuoteContentProcessor implements OrchestratorConten
             return substr($storagePath, strlen($prefix));
         }
 
-        throw new RuntimeException(sprintf(
+        throw new QuotationIntelligenceException(sprintf(
             'QuoteSubmission.file_path could not be resolved because [%s] is outside the expected local storage prefix [%s].',
             $storagePath,
             $prefix,
         ));
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function persistedLines(QuoteSubmission $submission): array
+    {
+        $lines = [];
+
+        foreach ($submission->normalizationSourceLines as $line) {
+            if ($line->rfq_line_item_id === null) {
+                continue;
+            }
+
+            $rfqLineItem = $line->rfqLineItem;
+            $description = $line->source_description !== null && trim((string) $line->source_description) !== ''
+                ? (string) $line->source_description
+                : (string) ($rfqLineItem?->description ?? '');
+            if ($description === '') {
+                continue;
+            }
+
+            $lines[] = [
+                'rfq_line_id' => (string) $line->rfq_line_item_id,
+                'description' => $description,
+                'quantity' => $line->source_quantity !== null ? (float) $line->source_quantity : 1.0,
+                'unit_price' => $line->source_unit_price !== null ? (float) $line->source_unit_price : 0.0,
+                'unit' => $line->source_uom !== null && trim((string) $line->source_uom) !== ''
+                    ? (string) $line->source_uom
+                    : (string) ($rfqLineItem?->uom ?? 'EA'),
+                'currency' => (string) ($rfqLineItem?->currency ?? 'USD'),
+                'terms' => '',
+                'bbox' => ['x' => 0, 'y' => 0, 'w' => 0, 'h' => 0],
+            ];
+        }
+
+        return $lines;
     }
 
     /**

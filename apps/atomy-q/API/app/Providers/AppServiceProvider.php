@@ -625,6 +625,12 @@ class AppServiceProvider extends ServiceProvider
                     );
                 }
 
+                if ($mode === "llm") {
+                    return new DormantLlmContentProcessor(
+                        $this->quoteIntelligenceLlmConfig(),
+                    );
+                }
+
                 $aiMode = (string) config(
                     "atomy.ai.mode",
                     AiStatusSchema::MODE_DETERMINISTIC,
@@ -635,12 +641,6 @@ class AppServiceProvider extends ServiceProvider
                             ProviderDocumentIntelligenceClientInterface::class,
                         ),
                         $this->app->make(TenantContextInterface::class),
-                    );
-                }
-
-                if ($mode === "llm") {
-                    return new DormantLlmContentProcessor(
-                        $this->quoteIntelligenceLlmConfig(),
                     );
                 }
 

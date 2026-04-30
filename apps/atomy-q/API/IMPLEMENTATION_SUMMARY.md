@@ -560,3 +560,10 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 
 - `cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Feature/ProviderQuoteExtractionTest.php tests/Feature/QuoteIngestionPipelineTest.php`
 - `cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Unit/Adapters/Ai/DocumentExtractionRequestTest.php tests/Unit/Adapters/Ai/OpenRouterDocumentPayloadFactoryTest.php tests/Unit/Adapters/Ai/OpenRouterDocumentExtractionMapperTest.php tests/Unit/Adapters/Ai/ProviderDocumentIntelligenceClientTest.php`
+
+## 2026-05-01 Comparison Missing-File Continuity
+
+- Quote intelligence binding now honors explicit `quote_intelligence.mode=llm` before falling back to the global provider AI mode, so missing LLM configuration returns the intended domain `422` instead of invoking provider document extraction.
+- `ProviderQuoteContentProcessor` keeps `DocumentExtractionRequest` strict for live provider payloads, but when a quote file is no longer present it now builds comparison input from persisted `normalization_source_lines`.
+- If neither the source document nor normalized quote lines are available, provider comparison processing raises a `QuotationIntelligenceException` instead of leaking raw filesystem exceptions.
+- Added provider-mode comparison regressions proving preview and final freeze succeed from persisted normalized lines after stored quote files are deleted, without calling the provider document extraction client.

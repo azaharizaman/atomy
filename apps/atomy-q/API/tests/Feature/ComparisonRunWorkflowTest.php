@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Adapters\Ai\Contracts\ComparisonAwardAiClientInterface;
 use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
+use App\Adapters\Ai\Contracts\ProviderDocumentIntelligenceClientInterface;
 use App\Adapters\Ai\DTOs\ComparisonOverlayRequest;
 use App\Adapters\Ai\DTOs\ComparisonOverlayResponse;
 use App\Models\ComparisonRun;
@@ -18,6 +19,7 @@ use App\Models\User;
 use DateTimeImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Nexus\IntelligenceOperations\DTOs\AiCapabilityStatus;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSnapshot;
@@ -71,6 +73,25 @@ final class ComparisonRunWorkflowTest extends ApiTestCase
         app()->forgetInstance(QuotationIntelligenceCoordinatorInterface::class);
         app()->forgetInstance(OrchestratorContentProcessorInterface::class);
         app()->forgetInstance(SemanticMapperInterface::class);
+    }
+
+    private function useProviderQuoteIntelligenceWithoutDocumentExtraction(): void
+    {
+        config()->set('atomy.ai.mode', AiStatusSchema::MODE_PROVIDER);
+        config()->set('atomy.quote_intelligence.mode', AiStatusSchema::MODE_PROVIDER);
+        $this->resetQuotationIntelligenceBindings();
+
+        $documentClient = $this->createMock(ProviderDocumentIntelligenceClientInterface::class);
+        $documentClient->expects($this->never())->method('extractDocument');
+        $this->app->instance(ProviderDocumentIntelligenceClientInterface::class, $documentClient);
+    }
+
+    private function removeStoredQuoteFiles(QuoteSubmission ...$submissions): void
+    {
+        foreach ($submissions as $submission) {
+            Storage::disk('local')->put((string) $submission->file_path, 'stored quote');
+            Storage::disk('local')->delete((string) $submission->file_path);
+        }
     }
 
     /**
@@ -372,6 +393,83 @@ final class ComparisonRunWorkflowTest extends ApiTestCase
         $response->assertStatus(422);
         $response->assertJsonPath('code', 'QuotationIntelligenceException');
         $response->assertJsonPath('error', 'Quote intelligence LLM provider configuration is missing or incomplete.');
+    }
+
+    public function test_provider_preview_uses_persisted_normalized_lines_when_quote_files_are_missing(): void
+    {
+        $this->bindAiRuntimeStatus([
+            'comparison_ai_overlay' => new AiCapabilityStatus(
+                featureKey: 'comparison_ai_overlay',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_COMPARISON_INTELLIGENCE,
+                endpointGroup: AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD,
+                fallbackUiMode: AiStatusSchema::FALLBACK_UI_MODE_SHOW_UNAVAILABLE_MESSAGE,
+                messageKey: 'ai.comparison_ai_overlay.unavailable',
+                status: AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE,
+                available: false,
+                reasonCodes: ['provider_unavailable'],
+                operatorCritical: true,
+                diagnostics: ['mode' => AiStatusSchema::MODE_PROVIDER],
+            ),
+        ]);
+        $this->useProviderQuoteIntelligenceWithoutDocumentExtraction();
+
+        $user = $this->createUser();
+        [$rfq, $quote, $secondQuote] = $this->seedReadyComparisonContext($user);
+        NormalizationSourceLine::query()
+            ->where('quote_submission_id', $quote->id)
+            ->update(['source_description' => null]);
+        $this->removeStoredQuoteFiles($quote, $secondQuote);
+
+        $response = $this->postJson(
+            '/api/v1/comparison-runs/preview',
+            ['rfq_id' => (string) $rfq->id],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.status', 'preview');
+        $response->assertJsonPath('data.readiness.is_ready', true);
+        $this->assertNotEmpty($response->json('data.matrix.clusters'));
+    }
+
+    public function test_provider_final_freezes_comparison_from_persisted_normalized_lines_when_quote_files_are_missing(): void
+    {
+        $this->bindAiRuntimeStatus([
+            'comparison_ai_overlay' => new AiCapabilityStatus(
+                featureKey: 'comparison_ai_overlay',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_COMPARISON_INTELLIGENCE,
+                endpointGroup: AiStatusSchema::ENDPOINT_GROUP_COMPARISON_AWARD,
+                fallbackUiMode: AiStatusSchema::FALLBACK_UI_MODE_SHOW_UNAVAILABLE_MESSAGE,
+                messageKey: 'ai.comparison_ai_overlay.unavailable',
+                status: AiStatusSchema::CAPABILITY_STATUS_UNAVAILABLE,
+                available: false,
+                reasonCodes: ['provider_unavailable'],
+                operatorCritical: true,
+                diagnostics: ['mode' => AiStatusSchema::MODE_PROVIDER],
+            ),
+        ]);
+        $this->useProviderQuoteIntelligenceWithoutDocumentExtraction();
+
+        $user = $this->createUser();
+        [$rfq, $quote, $secondQuote] = $this->seedReadyComparisonContext($user);
+        $this->removeStoredQuoteFiles($quote, $secondQuote);
+
+        $response = $this->postJson(
+            '/api/v1/comparison-runs/final',
+            ['rfq_id' => (string) $rfq->id],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.status', 'final');
+        $response->assertJsonPath('data.readiness.is_ready', true);
+        $this->assertNotEmpty($response->json('data.snapshot.normalized_lines'));
+        $this->assertNotEmpty($response->json('data.matrix.clusters'));
+        $this->assertDatabaseHas('decision_trail_entries', [
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'event_type' => 'comparison_snapshot_frozen',
+        ]);
     }
 
     public function test_matrix_and_readiness_endpoints_return_stored_payloads_for_tenant(): void
