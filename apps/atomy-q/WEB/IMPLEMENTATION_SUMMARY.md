@@ -16,6 +16,12 @@
   - `cd apps/atomy-q/WEB && npx vitest run "src/app/(dashboard)/vendors/[vendorId]/esg-compliance/page.test.tsx"` -> PASS
   - `cd apps/atomy-q/WEB && npm run test:unit` -> PASS
   - `cd apps/atomy-q/WEB && npm run build` -> PASS
+- Remaining `npm run lint` warnings are non-blocking alpha hygiene items, not Task 1 release-gate failures:
+  - unused RFQ context variables in hidden/deferred or shell-only RFQ pages: `rfqs/[rfqId]/[section]`, `approvals`, `comparison-runs`, `decision-trail`, `documents`, `negotiations`, and `risk`;
+  - existing unused `_ids` parameter in RFQ bulk page selection handling;
+  - unused `api` import in `use-rfq-counts`;
+  - stale `no-console` disable in `AiNarrativePanel`.
+  These should be cleaned in the route/surface classification and frontend hygiene follow-up rather than mixed into the WEB release-gate repair.
 
 ## 2026-04-27 Vendor Sourcing Recommendation Browser Coverage
 

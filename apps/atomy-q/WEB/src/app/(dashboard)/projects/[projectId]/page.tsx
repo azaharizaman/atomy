@@ -97,11 +97,6 @@ export default function ProjectDetailPage() {
     }
   }, [authUser?.id, editMode, editPmId, userOptions, usersLoading]);
 
-  const aclSyncKey = React.useMemo(
-    () => acl.map((e) => `${e.userId}:${e.role}`).join('|'),
-    [acl],
-  );
-
   React.useEffect(
     () => {
       if (aclDirty) {
@@ -114,8 +109,7 @@ export default function ProjectDetailPage() {
         })),
       );
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `acl` omitted: stable EMPTY_PROJECT_ACL + aclSyncKey tracks content
-    [aclSyncKey, aclDirty],
+    [acl, aclDirty],
   );
 
   const normalizedAcl = React.useMemo(
