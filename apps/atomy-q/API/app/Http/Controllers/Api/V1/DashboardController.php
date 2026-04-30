@@ -8,16 +8,15 @@ use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Nexus\InsightOperations\Coordinators\DashboardInsightCoordinator;
+use Nexus\InsightOperations\Contracts\DashboardInsightCoordinatorInterface;
 
 final class DashboardController extends Controller
 {
     use ExtractsAuthContext;
 
     public function __construct(
-        private readonly DashboardInsightCoordinator $dashboardInsightCoordinator,
-    ) {
-    }
+        private readonly DashboardInsightCoordinatorInterface $dashboardInsightCoordinator,
+    ) {}
 
     /**
      * Get dashboard KPIs scoped by tenant.
@@ -28,7 +27,11 @@ final class DashboardController extends Controller
     {
         $tenantId = $this->tenantId($request);
 
-        return response()->json($this->dashboardInsightCoordinator->show($tenantId)->toResponseArray());
+        return response()->json(
+            $this->dashboardInsightCoordinator
+                ->show($tenantId)
+                ->toResponseArray(),
+        );
     }
 
     /**
@@ -39,7 +42,11 @@ final class DashboardController extends Controller
         $tenantId = $this->tenantId($request);
         $userId = $this->userId($request);
 
-        return response()->json($this->dashboardInsightCoordinator->generate($tenantId, $userId)->toResponseArray());
+        return response()->json(
+            $this->dashboardInsightCoordinator
+                ->generate($tenantId, $userId)
+                ->toResponseArray(),
+        );
     }
 
     /**
@@ -52,7 +59,7 @@ final class DashboardController extends Controller
         $this->tenantId($request);
 
         return response()->json([
-            'data' => [],
+            "data" => [],
         ]);
     }
 
@@ -66,7 +73,7 @@ final class DashboardController extends Controller
         $this->tenantId($request);
 
         return response()->json([
-            'data' => [],
+            "data" => [],
         ]);
     }
 
@@ -80,7 +87,7 @@ final class DashboardController extends Controller
         $this->tenantId($request);
 
         return response()->json([
-            'data' => [],
+            "data" => [],
         ]);
     }
 
@@ -94,8 +101,7 @@ final class DashboardController extends Controller
         $this->tenantId($request);
 
         return response()->json([
-            'data' => [],
+            "data" => [],
         ]);
     }
-
 }

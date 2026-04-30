@@ -222,14 +222,21 @@ use Nexus\IntelligenceOperations\Coordinators\AiStatusCoordinator;
 use Nexus\InsightOperations\Contracts\AiArtifactCachePortInterface;
 use Nexus\InsightOperations\Contracts\AiAvailabilityPortInterface;
 use Nexus\InsightOperations\Contracts\DashboardFactsPortInterface;
+use Nexus\InsightOperations\Contracts\DashboardInsightCoordinatorInterface;
+use Nexus\InsightOperations\Contracts\FactHasherInterface;
 use Nexus\InsightOperations\Contracts\GovernanceFactsPortInterface;
+use Nexus\InsightOperations\Contracts\GovernanceNarrativeCoordinatorInterface;
+use Nexus\InsightOperations\Contracts\GovernanceNarrativePortInterface;
 use Nexus\InsightOperations\Contracts\InsightNarrativePortInterface;
 use Nexus\InsightOperations\Contracts\ReportingFactsPortInterface;
+use Nexus\InsightOperations\Contracts\ReportingInsightCoordinatorInterface;
+use Nexus\InsightOperations\Contracts\RiskInsightCoordinatorInterface;
 use Nexus\InsightOperations\Contracts\RiskInsightFactsPortInterface;
 use Nexus\InsightOperations\Coordinators\DashboardInsightCoordinator;
 use Nexus\InsightOperations\Coordinators\GovernanceNarrativeCoordinator;
 use Nexus\InsightOperations\Coordinators\ReportingInsightCoordinator;
 use Nexus\InsightOperations\Coordinators\RiskInsightCoordinator;
+use Nexus\InsightOperations\Services\FactHasher;
 use Nexus\Notifier\Contracts\NotificationManagerInterface;
 use Nexus\Outbox\Contracts\OutboxClockInterface;
 use Nexus\Outbox\Contracts\OutboxPersistInterface;
@@ -249,365 +256,778 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(ReplayResponseFactoryInterface::class, IdempotencyReplayResponseFactory::class);
+        $this->app->singleton(
+            ReplayResponseFactoryInterface::class,
+            IdempotencyReplayResponseFactory::class,
+        );
 
         $this->app->singleton(EloquentVendorRepository::class);
-        $this->app->bind(VendorQueryInterface::class, EloquentVendorRepository::class);
-        $this->app->bind(VendorPersistInterface::class, EloquentVendorRepository::class);
-        $this->app->singleton(VendorStatusTransitionPolicyInterface::class, VendorStatusTransitionPolicy::class);
+        $this->app->bind(
+            VendorQueryInterface::class,
+            EloquentVendorRepository::class,
+        );
+        $this->app->bind(
+            VendorPersistInterface::class,
+            EloquentVendorRepository::class,
+        );
+        $this->app->singleton(
+            VendorStatusTransitionPolicyInterface::class,
+            VendorStatusTransitionPolicy::class,
+        );
         $this->app->singleton(ClockInterface::class, SystemClock::class);
         $this->app->singleton(
             VendorScorerInterface::class,
-            static fn ($app): VendorScorerInterface => new DeterministicVendorScorer($app->make(ClockInterface::class)),
+            static fn(
+                $app,
+            ): VendorScorerInterface => new DeterministicVendorScorer(
+                $app->make(ClockInterface::class),
+            ),
         );
-        $this->app->singleton(OpenRouterDocumentPayloadFactory::class, function (): OpenRouterDocumentPayloadFactory {
-            return new OpenRouterDocumentPayloadFactory(
-                modelId: (string) config('atomy.ai.endpoints.document.model_id', ''),
-                parserPlugin: (string) config('atomy.ai.endpoints.document.parser_plugin', 'file-parser'),
-                pdfEngine: (string) config('atomy.ai.endpoints.document.pdf_engine', 'mistral-ocr'),
-                maxFileSizeBytes: (int) config('atomy.ai.endpoints.document.max_file_size_bytes', 10_485_760),
-            );
-        });
+        $this->app->singleton(
+            OpenRouterDocumentPayloadFactory::class,
+            function (): OpenRouterDocumentPayloadFactory {
+                return new OpenRouterDocumentPayloadFactory(
+                    modelId: (string) config(
+                        "atomy.ai.endpoints.document.model_id",
+                        "",
+                    ),
+                    parserPlugin: (string) config(
+                        "atomy.ai.endpoints.document.parser_plugin",
+                        "file-parser",
+                    ),
+                    pdfEngine: (string) config(
+                        "atomy.ai.endpoints.document.pdf_engine",
+                        "mistral-ocr",
+                    ),
+                    maxFileSizeBytes: (int) config(
+                        "atomy.ai.endpoints.document.max_file_size_bytes",
+                        10_485_760,
+                    ),
+                );
+            },
+        );
         $this->app->singleton(
             DocumentPayloadFactoryInterface::class,
-            static fn ($app): DocumentPayloadFactoryInterface => $app->make(OpenRouterDocumentPayloadFactory::class),
+            static fn($app): DocumentPayloadFactoryInterface => $app->make(
+                OpenRouterDocumentPayloadFactory::class,
+            ),
         );
-        $this->app->singleton(OpenRouterDocumentExtractionMapper::class, function (): OpenRouterDocumentExtractionMapper {
-            /** @var array<string, string> $currencyMappings */
-            $currencyMappings = (array) config('atomy.ai.endpoints.document.currency_mappings', ['RM' => 'MYR']);
+        $this->app->singleton(
+            OpenRouterDocumentExtractionMapper::class,
+            function (): OpenRouterDocumentExtractionMapper {
+                /** @var array<string, string> $currencyMappings */
+                $currencyMappings = (array) config(
+                    "atomy.ai.endpoints.document.currency_mappings",
+                    ["RM" => "MYR"],
+                );
 
-            return new OpenRouterDocumentExtractionMapper($currencyMappings);
-        });
+                return new OpenRouterDocumentExtractionMapper(
+                    $currencyMappings,
+                );
+            },
+        );
         $this->app->singleton(
             DocumentExtractionMapperInterface::class,
-            static fn ($app): DocumentExtractionMapperInterface => $app->make(OpenRouterDocumentExtractionMapper::class),
+            static fn($app): DocumentExtractionMapperInterface => $app->make(
+                OpenRouterDocumentExtractionMapper::class,
+            ),
         );
         $this->app->singleton(ProviderDocumentIntelligenceClient::class);
         $this->app->singleton(
             ProviderDocumentIntelligenceClientInterface::class,
-            static fn ($app): ProviderDocumentIntelligenceClientInterface => $app->make(ProviderDocumentIntelligenceClient::class),
+            static fn(
+                $app,
+            ): ProviderDocumentIntelligenceClientInterface => $app->make(
+                ProviderDocumentIntelligenceClient::class,
+            ),
         );
         $this->app->singleton(ProviderNormalizationClient::class);
         $this->app->singleton(
             ProviderNormalizationClientInterface::class,
-            static fn ($app): ProviderNormalizationClientInterface => $app->make(ProviderNormalizationClient::class),
+            static fn($app): ProviderNormalizationClientInterface => $app->make(
+                ProviderNormalizationClient::class,
+            ),
         );
         $this->app->singleton(ProviderSourcingRecommendationClient::class);
         $this->app->singleton(
             ProviderSourcingRecommendationClientInterface::class,
-            static fn ($app): ProviderSourcingRecommendationClientInterface => $app->make(ProviderSourcingRecommendationClient::class),
+            static fn(
+                $app,
+            ): ProviderSourcingRecommendationClientInterface => $app->make(
+                ProviderSourcingRecommendationClient::class,
+            ),
         );
-        $this->app->singleton(VendorRecommendationLlmInterface::class, ProviderSourcingRecommendationClient::class);
-        $this->app->singleton(ComparisonAwardAiClientInterface::class, ProviderComparisonAwardClient::class);
-        $this->app->singleton(ProviderInsightClientInterface::class, ProviderInsightClient::class);
-        $this->app->singleton(ProviderGovernanceClientInterface::class, ProviderGovernanceClient::class);
-        $this->app->singleton(VendorRecommendationCoordinatorInterface::class, VendorRecommendationCoordinator::class);
-        $this->app->singleton(ConfiguredAiEndpointRegistry::class, function (): ConfiguredAiEndpointRegistry {
-            return new ConfiguredAiEndpointRegistry($this->aiRuntimeConfig());
-        });
-        $this->app->singleton(AiEndpointRegistryInterface::class, ConfiguredAiEndpointRegistry::class);
-        $this->app->singleton(ProviderAiTransportInterface::class, ProviderAiTransport::class);
-        $this->app->singleton(AiCapabilityCatalogInterface::class, AtomyAiCapabilityCatalog::class);
-        $this->app->singleton(AiStatusCoordinatorInterface::class, AiStatusCoordinator::class);
-        $this->app->singleton(AiArtifactCachePortInterface::class, CacheAiArtifactStore::class);
-        $this->app->singleton(AiAvailabilityPortInterface::class, InsightAiAvailabilityAdapter::class);
-        $this->app->singleton(DashboardFactsPortInterface::class, DashboardFactsAdapter::class);
-        $this->app->singleton(ReportingFactsPortInterface::class, ReportingFactsAdapter::class);
-        $this->app->singleton(RiskInsightFactsPortInterface::class, RiskInsightFactsAdapter::class);
-        $this->app->singleton(GovernanceFactsPortInterface::class, GovernanceFactsAdapter::class);
-        $this->app->singleton(InsightNarrativePortInterface::class, ProviderInsightNarrativeAdapter::class);
-        $this->app->singleton(DashboardInsightCoordinator::class);
-        $this->app->singleton(ReportingInsightCoordinator::class);
-        $this->app->singleton(RiskInsightCoordinator::class);
-        $this->app->singleton(GovernanceNarrativeCoordinator::class, static function ($app): GovernanceNarrativeCoordinator {
-            return new GovernanceNarrativeCoordinator(
-                $app->make(GovernanceFactsPortInterface::class),
-                $app->make(AiArtifactCachePortInterface::class),
-                $app->make(AiAvailabilityPortInterface::class),
-                $app->make(ProviderGovernanceNarrativeAdapter::class),
-            );
-        });
-        $this->app->singleton(AiHealthProbeInterface::class, static function ($app): AiHealthProbeInterface {
+        $this->app->singleton(
+            VendorRecommendationLlmInterface::class,
+            ProviderSourcingRecommendationClient::class,
+        );
+        $this->app->singleton(
+            ComparisonAwardAiClientInterface::class,
+            ProviderComparisonAwardClient::class,
+        );
+        $this->app->singleton(
+            ProviderInsightClientInterface::class,
+            ProviderInsightClient::class,
+        );
+        $this->app->singleton(
+            ProviderGovernanceClientInterface::class,
+            ProviderGovernanceClient::class,
+        );
+        $this->app->singleton(
+            VendorRecommendationCoordinatorInterface::class,
+            VendorRecommendationCoordinator::class,
+        );
+        $this->app->singleton(
+            ConfiguredAiEndpointRegistry::class,
+            function (): ConfiguredAiEndpointRegistry {
+                return new ConfiguredAiEndpointRegistry(
+                    $this->aiRuntimeConfig(),
+                );
+            },
+        );
+        $this->app->singleton(
+            AiEndpointRegistryInterface::class,
+            ConfiguredAiEndpointRegistry::class,
+        );
+        $this->app->singleton(
+            ProviderAiTransportInterface::class,
+            ProviderAiTransport::class,
+        );
+        $this->app->singleton(
+            AiCapabilityCatalogInterface::class,
+            AtomyAiCapabilityCatalog::class,
+        );
+        $this->app->singleton(
+            AiStatusCoordinatorInterface::class,
+            AiStatusCoordinator::class,
+        );
+        $this->app->singleton(FactHasherInterface::class, FactHasher::class);
+        $this->app->singleton(
+            AiArtifactCachePortInterface::class,
+            CacheAiArtifactStore::class,
+        );
+        $this->app->singleton(
+            AiAvailabilityPortInterface::class,
+            InsightAiAvailabilityAdapter::class,
+        );
+        $this->app->singleton(
+            DashboardFactsPortInterface::class,
+            DashboardFactsAdapter::class,
+        );
+        $this->app->singleton(
+            ReportingFactsPortInterface::class,
+            ReportingFactsAdapter::class,
+        );
+        $this->app->singleton(
+            RiskInsightFactsPortInterface::class,
+            RiskInsightFactsAdapter::class,
+        );
+        $this->app->singleton(
+            GovernanceFactsPortInterface::class,
+            GovernanceFactsAdapter::class,
+        );
+        $this->app->singleton(
+            InsightNarrativePortInterface::class,
+            ProviderInsightNarrativeAdapter::class,
+        );
+        $this->app->singleton(
+            GovernanceNarrativePortInterface::class,
+            ProviderGovernanceNarrativeAdapter::class,
+        );
+
+        $this->app->singleton(
+            DashboardInsightCoordinatorInterface::class,
+            DashboardInsightCoordinator::class,
+        );
+        $this->app->singleton(
+            ReportingInsightCoordinatorInterface::class,
+            ReportingInsightCoordinator::class,
+        );
+        $this->app->singleton(
+            RiskInsightCoordinatorInterface::class,
+            RiskInsightCoordinator::class,
+        );
+        $this->app->singleton(
+            GovernanceNarrativeCoordinatorInterface::class,
+            GovernanceNarrativeCoordinator::class,
+        );
+        $this->app->singleton(AiHealthProbeInterface::class, static function (
+            $app,
+        ): AiHealthProbeInterface {
             return new ConfiguredAiHealthProbe($app->make(HttpFactory::class));
         });
-        $this->app->singleton(AiRuntimeStatusInterface::class, AiRuntimeStatusAdapter::class);
-        $this->app->singleton(OutboxStoreInterface::class, InMemoryOutboxStore::class);
-        $this->app->singleton(OutboxQueryInterface::class, static fn ($app): OutboxQueryInterface => $app->make(OutboxStoreInterface::class));
-        $this->app->singleton(OutboxPersistInterface::class, static fn ($app): OutboxPersistInterface => $app->make(OutboxStoreInterface::class));
-        $this->app->singleton(OutboxClockInterface::class, OutboxSystemClock::class);
-        $this->app->singleton(OutboxServiceInterface::class, static function ($app): OutboxServiceInterface {
+        $this->app->singleton(
+            AiRuntimeStatusInterface::class,
+            AiRuntimeStatusAdapter::class,
+        );
+        $this->app->singleton(
+            OutboxStoreInterface::class,
+            InMemoryOutboxStore::class,
+        );
+        $this->app->singleton(
+            OutboxQueryInterface::class,
+            static fn($app): OutboxQueryInterface => $app->make(
+                OutboxStoreInterface::class,
+            ),
+        );
+        $this->app->singleton(
+            OutboxPersistInterface::class,
+            static fn($app): OutboxPersistInterface => $app->make(
+                OutboxStoreInterface::class,
+            ),
+        );
+        $this->app->singleton(
+            OutboxClockInterface::class,
+            OutboxSystemClock::class,
+        );
+        $this->app->singleton(OutboxServiceInterface::class, static function (
+            $app,
+        ): OutboxServiceInterface {
             return new OutboxService(
                 $app->make(OutboxQueryInterface::class),
                 $app->make(OutboxPersistInterface::class),
                 $app->make(OutboxClockInterface::class),
             );
         });
-        $this->app->singleton(AiOperationalAlertPublisher::class, static function ($app): AiOperationalAlertPublisher {
-            return new AiOperationalAlertPublisher(
-                clock: $app->make(ClockInterface::class),
-                cache: $app->make(CacheFactory::class)->store(),
-                logger: $app->make(LogManager::class)->channel((string) config('atomy.ai.operations.log_channel', 'stack')),
-                notificationManager: $app->bound(NotificationManagerInterface::class)
-                    ? $app->make(NotificationManagerInterface::class)
-                    : null,
-                outbox: $app->bound(OutboxServiceInterface::class)
-                    ? $app->make(OutboxServiceInterface::class)
-                    : null,
-            );
-        });
+        $this->app->singleton(
+            AiOperationalAlertPublisher::class,
+            static function ($app): AiOperationalAlertPublisher {
+                return new AiOperationalAlertPublisher(
+                    clock: $app->make(ClockInterface::class),
+                    cache: $app->make(CacheFactory::class)->store(),
+                    logger: $app
+                        ->make(LogManager::class)
+                        ->channel(
+                            (string) config(
+                                "atomy.ai.operations.log_channel",
+                                "stack",
+                            ),
+                        ),
+                    notificationManager: $app->bound(
+                        NotificationManagerInterface::class,
+                    )
+                        ? $app->make(NotificationManagerInterface::class)
+                        : null,
+                    outbox: $app->bound(OutboxServiceInterface::class)
+                        ? $app->make(OutboxServiceInterface::class)
+                        : null,
+                );
+            },
+        );
         $this->app->singleton(
             AiOperationalAlertPublisherInterface::class,
-            static fn ($app): AiOperationalAlertPublisherInterface => $app->make(AiOperationalAlertPublisher::class),
+            static fn($app): AiOperationalAlertPublisherInterface => $app->make(
+                AiOperationalAlertPublisher::class,
+            ),
         );
 
         // Nexus ApprovalOperations (operational approvals — distinct from RFQ quote flows).
         $this->app->singleton(AtomyApprovalPolicyRegistry::class);
-        $this->app->singleton(PolicyValidatorInterface::class, PolicyValidator::class);
-        $this->app->singleton(PolicyDefinitionDecoderInterface::class, static function ($app): PolicyDefinitionDecoderInterface {
-            return new JsonPolicyDecoder($app->make(PolicyValidatorInterface::class));
-        });
-        $this->app->singleton(PolicyRegistryInterface::class, static function ($app): PolicyRegistryInterface {
+        $this->app->singleton(
+            PolicyValidatorInterface::class,
+            PolicyValidator::class,
+        );
+        $this->app->singleton(
+            PolicyDefinitionDecoderInterface::class,
+            static function ($app): PolicyDefinitionDecoderInterface {
+                return new JsonPolicyDecoder(
+                    $app->make(PolicyValidatorInterface::class),
+                );
+            },
+        );
+        $this->app->singleton(PolicyRegistryInterface::class, static function (
+            $app,
+        ): PolicyRegistryInterface {
             return $app->make(AtomyApprovalPolicyRegistry::class);
         });
-        $this->app->singleton(PolicyEvaluator::class, static function ($app): PolicyEvaluator {
+        $this->app->singleton(PolicyEvaluator::class, static function (
+            $app,
+        ): PolicyEvaluator {
             return new PolicyEvaluator(
                 $app->make(PolicyRegistryInterface::class),
                 $app->make(PolicyValidatorInterface::class),
             );
         });
-        $this->app->singleton(PolicyEngineInterface::class, static function ($app): PolicyEngineInterface {
+        $this->app->singleton(PolicyEngineInterface::class, static function (
+            $app,
+        ): PolicyEngineInterface {
             return new AtomyApprovalPolicyEngine(
                 $app->make(PolicyEvaluator::class),
                 $app->make(LoggerInterface::class),
             );
         });
-        $this->app->singleton(UlidInterface::class, LaravelUlidGenerator::class);
+        $this->app->singleton(
+            UlidInterface::class,
+            LaravelUlidGenerator::class,
+        );
         $this->app->singleton(ApprovalTemplateResolver::class);
-        $this->app->bind(ApprovalTemplateResolverInterface::class, static function ($app): ApprovalTemplateResolverInterface {
-            return $app->make(ApprovalTemplateResolver::class);
-        });
-        $this->app->singleton(ApprovalProcessCoordinator::class, static function ($app): ApprovalProcessCoordinator {
-            return new ApprovalProcessCoordinator(
-                $app->make(ApprovalTemplateResolverInterface::class),
-                $app->make(ApprovalInstancePersistInterface::class),
-                $app->make(ApprovalInstanceQueryInterface::class),
-                $app->make(PolicyEngineInterface::class),
-                $app->make(OperationalWorkflowBridgeInterface::class),
-                $app->make(UlidInterface::class),
-                $app->make(ApprovalCommentPersistInterface::class),
-            );
-        });
+        $this->app->bind(
+            ApprovalTemplateResolverInterface::class,
+            static function ($app): ApprovalTemplateResolverInterface {
+                return $app->make(ApprovalTemplateResolver::class);
+            },
+        );
+        $this->app->singleton(
+            ApprovalProcessCoordinator::class,
+            static function ($app): ApprovalProcessCoordinator {
+                return new ApprovalProcessCoordinator(
+                    $app->make(ApprovalTemplateResolverInterface::class),
+                    $app->make(ApprovalInstancePersistInterface::class),
+                    $app->make(ApprovalInstanceQueryInterface::class),
+                    $app->make(PolicyEngineInterface::class),
+                    $app->make(OperationalWorkflowBridgeInterface::class),
+                    $app->make(UlidInterface::class),
+                    $app->make(ApprovalCommentPersistInterface::class),
+                );
+            },
+        );
 
         // Nexus QuotationIntelligence: Intelligent quote ingestion pipeline.
-        $this->app->bind(UomRepositoryInterface::class, InMemoryUomRepository::class);
-        $this->app->singleton(ExchangeRateProviderInterface::class, StaticExchangeRateProvider::class);
-        $this->app->singleton(OrchestratorDocumentRepositoryInterface::class, OrchestratorDocumentRepository::class);
-        $this->app->singleton(OrchestratorTenantRepositoryInterface::class, OrchestratorTenantRepository::class);
-        $this->app->singleton(OrchestratorProcurementManagerInterface::class, OrchestratorProcurementManager::class);
-        $this->app->singleton(DecisionTrailWriterInterface::class, AtomyDecisionTrailWriter::class);
-        $this->app->bind(OrchestratorContentProcessorInterface::class, function (): OrchestratorContentProcessorInterface {
-            $aiMode = (string) config('atomy.ai.mode', AiStatusSchema::MODE_DETERMINISTIC);
-            if ($aiMode === AiStatusSchema::MODE_PROVIDER) {
-                return new ProviderQuoteContentProcessor(
-                    $this->app->make(ProviderDocumentIntelligenceClientInterface::class),
-                    $this->app->make(TenantContextInterface::class),
+        $this->app->bind(
+            UomRepositoryInterface::class,
+            InMemoryUomRepository::class,
+        );
+        $this->app->singleton(
+            ExchangeRateProviderInterface::class,
+            StaticExchangeRateProvider::class,
+        );
+        $this->app->singleton(
+            OrchestratorDocumentRepositoryInterface::class,
+            OrchestratorDocumentRepository::class,
+        );
+        $this->app->singleton(
+            OrchestratorTenantRepositoryInterface::class,
+            OrchestratorTenantRepository::class,
+        );
+        $this->app->singleton(
+            OrchestratorProcurementManagerInterface::class,
+            OrchestratorProcurementManager::class,
+        );
+        $this->app->singleton(
+            DecisionTrailWriterInterface::class,
+            AtomyDecisionTrailWriter::class,
+        );
+        $this->app->bind(
+            OrchestratorContentProcessorInterface::class,
+            function (): OrchestratorContentProcessorInterface {
+                $aiMode = (string) config(
+                    "atomy.ai.mode",
+                    AiStatusSchema::MODE_DETERMINISTIC,
                 );
-            }
-
-            $mode = (string) config('atomy.quote_intelligence.mode', 'deterministic');
-
-            if ($mode === 'deterministic') {
-                return new DeterministicContentProcessor($this->app->make(TenantContextInterface::class));
-            }
-
-            if ($mode === 'llm') {
-                return new DormantLlmContentProcessor($this->quoteIntelligenceLlmConfig());
-            }
-
-            $message = 'Unsupported quote intelligence mode.';
-
-            return new class($message) implements OrchestratorContentProcessorInterface {
-                public function __construct(private readonly string $message) {}
-
-                public function analyze(string $storagePath): object
-                {
-                    throw new QuotationIntelligenceException($this->message);
-                }
-            };
-        });
-        $this->app->singleton(SemanticMapperInterface::class, function (): SemanticMapperInterface {
-            $mode = (string) config('atomy.quote_intelligence.mode', 'deterministic');
-
-            if ($mode === 'deterministic') {
-                return new DeterministicSemanticMapper();
-            }
-
-            if ($mode === 'llm') {
-                return new DormantLlmSemanticMapper($this->quoteIntelligenceLlmConfig());
-            }
-
-            $message = 'Unsupported quote intelligence mode.';
-
-            return new class($message) implements SemanticMapperInterface {
-                public function __construct(private readonly string $message) {}
-
-                public function mapToTaxonomy(string $description, string $tenantId): array
-                {
-                    throw new QuotationIntelligenceException($this->message);
+                if ($aiMode === AiStatusSchema::MODE_PROVIDER) {
+                    return new ProviderQuoteContentProcessor(
+                        $this->app->make(
+                            ProviderDocumentIntelligenceClientInterface::class,
+                        ),
+                        $this->app->make(TenantContextInterface::class),
+                    );
                 }
 
-                public function validateCode(string $code, string $version): bool
-                {
-                    throw new QuotationIntelligenceException($this->message);
+                $mode = (string) config(
+                    "atomy.quote_intelligence.mode",
+                    "deterministic",
+                );
+
+                if ($mode === "deterministic") {
+                    return new DeterministicContentProcessor(
+                        $this->app->make(TenantContextInterface::class),
+                    );
                 }
-            };
-        });
-        $this->app->singleton(QuoteNormalizationServiceInterface::class, QuoteNormalizationService::class);
-        $this->app->singleton(CommercialTermsExtractorInterface::class, RegexCommercialTermsExtractor::class);
-        $this->app->singleton(RiskAssessmentServiceInterface::class, RuleBasedRiskAssessmentService::class);
-        $this->app->singleton(QuoteComparisonMatrixServiceInterface::class, QuoteComparisonMatrixService::class);
-        $this->app->singleton(VendorScoringServiceInterface::class, WeightedVendorScoringService::class);
-        $this->app->singleton(ApprovalGateServiceInterface::class, HighRiskApprovalGateService::class);
-        $this->app->singleton(ComparisonReadinessValidatorInterface::class, static function ($app): ComparisonReadinessValidator {
-            return new ComparisonReadinessValidator(
-                $app->make(OrchestratorProcurementManagerInterface::class),
-            );
-        });
-        $this->app->singleton(BatchQuoteComparisonCoordinatorInterface::class, static function ($app): BatchQuoteComparisonCoordinator {
-            return new BatchQuoteComparisonCoordinator(
-                $app->make(QuotationIntelligenceCoordinatorInterface::class),
-                $app->make(QuoteComparisonMatrixServiceInterface::class),
-                $app->make(RiskAssessmentServiceInterface::class),
-                $app->make(VendorScoringServiceInterface::class),
-                $app->make(ApprovalGateServiceInterface::class),
-                $app->make(DecisionTrailWriterInterface::class),
-                $app->make(ComparisonReadinessValidatorInterface::class),
-                $app->make(LoggerInterface::class),
-            );
-        });
-        $this->app->singleton(QuotationIntelligenceCoordinatorInterface::class, static function ($app): QuotationIntelligenceCoordinator {
-            return new QuotationIntelligenceCoordinator(
-                $app->make(OrchestratorContentProcessorInterface::class),
-                $app->make(OrchestratorDocumentRepositoryInterface::class),
-                $app->make(OrchestratorTenantRepositoryInterface::class),
-                $app->make(OrchestratorProcurementManagerInterface::class),
-                $app->make(SemanticMapperInterface::class),
-                $app->make(QuoteNormalizationServiceInterface::class),
-                $app->make(CommercialTermsExtractorInterface::class),
-                $app->make(RiskAssessmentServiceInterface::class),
-                $app->make(LoggerInterface::class),
-            );
-        });
+
+                if ($mode === "llm") {
+                    return new DormantLlmContentProcessor(
+                        $this->quoteIntelligenceLlmConfig(),
+                    );
+                }
+
+                $message = "Unsupported quote intelligence mode.";
+
+                return new class ($message) implements
+                    OrchestratorContentProcessorInterface
+                {
+                    public function __construct(
+                        private readonly string $message,
+                    ) {}
+
+                    public function analyze(string $storagePath): object
+                    {
+                        throw new QuotationIntelligenceException(
+                            $this->message,
+                        );
+                    }
+                };
+            },
+        );
+        $this->app->singleton(
+            SemanticMapperInterface::class,
+            function (): SemanticMapperInterface {
+                $mode = (string) config(
+                    "atomy.quote_intelligence.mode",
+                    "deterministic",
+                );
+
+                if ($mode === "deterministic") {
+                    return new DeterministicSemanticMapper();
+                }
+
+                if ($mode === "llm") {
+                    return new DormantLlmSemanticMapper(
+                        $this->quoteIntelligenceLlmConfig(),
+                    );
+                }
+
+                $message = "Unsupported quote intelligence mode.";
+
+                return new class ($message) implements SemanticMapperInterface {
+                    public function __construct(
+                        private readonly string $message,
+                    ) {}
+
+                    public function mapToTaxonomy(
+                        string $description,
+                        string $tenantId,
+                    ): array {
+                        throw new QuotationIntelligenceException(
+                            $this->message,
+                        );
+                    }
+
+                    public function validateCode(
+                        string $code,
+                        string $version,
+                    ): bool {
+                        throw new QuotationIntelligenceException(
+                            $this->message,
+                        );
+                    }
+                };
+            },
+        );
+        $this->app->singleton(
+            QuoteNormalizationServiceInterface::class,
+            QuoteNormalizationService::class,
+        );
+        $this->app->singleton(
+            CommercialTermsExtractorInterface::class,
+            RegexCommercialTermsExtractor::class,
+        );
+        $this->app->singleton(
+            RiskAssessmentServiceInterface::class,
+            RuleBasedRiskAssessmentService::class,
+        );
+        $this->app->singleton(
+            QuoteComparisonMatrixServiceInterface::class,
+            QuoteComparisonMatrixService::class,
+        );
+        $this->app->singleton(
+            VendorScoringServiceInterface::class,
+            WeightedVendorScoringService::class,
+        );
+        $this->app->singleton(
+            ApprovalGateServiceInterface::class,
+            HighRiskApprovalGateService::class,
+        );
+        $this->app->singleton(
+            ComparisonReadinessValidatorInterface::class,
+            static function ($app): ComparisonReadinessValidator {
+                return new ComparisonReadinessValidator(
+                    $app->make(OrchestratorProcurementManagerInterface::class),
+                );
+            },
+        );
+        $this->app->singleton(
+            BatchQuoteComparisonCoordinatorInterface::class,
+            static function ($app): BatchQuoteComparisonCoordinator {
+                return new BatchQuoteComparisonCoordinator(
+                    $app->make(
+                        QuotationIntelligenceCoordinatorInterface::class,
+                    ),
+                    $app->make(QuoteComparisonMatrixServiceInterface::class),
+                    $app->make(RiskAssessmentServiceInterface::class),
+                    $app->make(VendorScoringServiceInterface::class),
+                    $app->make(ApprovalGateServiceInterface::class),
+                    $app->make(DecisionTrailWriterInterface::class),
+                    $app->make(ComparisonReadinessValidatorInterface::class),
+                    $app->make(LoggerInterface::class),
+                );
+            },
+        );
+        $this->app->singleton(
+            QuotationIntelligenceCoordinatorInterface::class,
+            static function ($app): QuotationIntelligenceCoordinator {
+                return new QuotationIntelligenceCoordinator(
+                    $app->make(OrchestratorContentProcessorInterface::class),
+                    $app->make(OrchestratorDocumentRepositoryInterface::class),
+                    $app->make(OrchestratorTenantRepositoryInterface::class),
+                    $app->make(OrchestratorProcurementManagerInterface::class),
+                    $app->make(SemanticMapperInterface::class),
+                    $app->make(QuoteNormalizationServiceInterface::class),
+                    $app->make(CommercialTermsExtractorInterface::class),
+                    $app->make(RiskAssessmentServiceInterface::class),
+                    $app->make(LoggerInterface::class),
+                );
+            },
+        );
 
         // Nexus QuoteIngestion: Orchestrator for quote submission processing.
-        $this->app->singleton(QuoteSubmissionQueryInterface::class, EloquentQuoteSubmissionQuery::class);
-        $this->app->singleton(QuoteSubmissionPersistInterface::class, EloquentQuoteSubmissionPersist::class);
-        $this->app->singleton(NormalizationSourceLineQueryInterface::class, EloquentNormalizationSourceLineRepository::class);
-        $this->app->singleton(NormalizationSourceLinePersistInterface::class, EloquentNormalizationSourceLineRepository::class);
-        $this->app->singleton(QuoteIngestionOrchestrator::class, static function ($app): QuoteIngestionOrchestrator {
-            return new QuoteIngestionOrchestrator(
-                $app->make(QuotationIntelligenceCoordinatorInterface::class),
-                $app->make(DecisionTrailWriterInterface::class),
-                $app->make(TenantContextInterface::class),
-                $app->make(LoggerInterface::class),
-                $app->make(QuoteSubmissionQueryInterface::class),
-                $app->make(QuoteSubmissionPersistInterface::class),
-                $app->make(NormalizationSourceLineQueryInterface::class),
-                $app->make(NormalizationSourceLinePersistInterface::class),
-            );
-        });
+        $this->app->singleton(
+            QuoteSubmissionQueryInterface::class,
+            EloquentQuoteSubmissionQuery::class,
+        );
+        $this->app->singleton(
+            QuoteSubmissionPersistInterface::class,
+            EloquentQuoteSubmissionPersist::class,
+        );
+        $this->app->singleton(
+            NormalizationSourceLineQueryInterface::class,
+            EloquentNormalizationSourceLineRepository::class,
+        );
+        $this->app->singleton(
+            NormalizationSourceLinePersistInterface::class,
+            EloquentNormalizationSourceLineRepository::class,
+        );
+        $this->app->singleton(
+            QuoteIngestionOrchestrator::class,
+            static function ($app): QuoteIngestionOrchestrator {
+                return new QuoteIngestionOrchestrator(
+                    $app->make(
+                        QuotationIntelligenceCoordinatorInterface::class,
+                    ),
+                    $app->make(DecisionTrailWriterInterface::class),
+                    $app->make(TenantContextInterface::class),
+                    $app->make(LoggerInterface::class),
+                    $app->make(QuoteSubmissionQueryInterface::class),
+                    $app->make(QuoteSubmissionPersistInterface::class),
+                    $app->make(NormalizationSourceLineQueryInterface::class),
+                    $app->make(NormalizationSourceLinePersistInterface::class),
+                );
+            },
+        );
 
-        $this->app->singleton(JwtServiceInterface::class, function (): JwtServiceInterface {
-            $secret = (string) config('jwt.secret');
+        $this->app->singleton(
+            JwtServiceInterface::class,
+            function (): JwtServiceInterface {
+                $secret = (string) config("jwt.secret");
 
-            if ($secret === '') {
-                throw new \InvalidArgumentException('JWT_SECRET is not set or empty in environment configuration.');
-            }
+                if ($secret === "") {
+                    throw new \InvalidArgumentException(
+                        "JWT_SECRET is not set or empty in environment configuration.",
+                    );
+                }
 
-            return new JwtService(
-                $secret,
-                (int) config('jwt.ttl'),
-                (int) config('jwt.refresh_ttl'),
-                (string) config('jwt.algo'),
-                (string) config('jwt.issuer'),
-            );
-        });
+                return new JwtService(
+                    $secret,
+                    (int) config("jwt.ttl"),
+                    (int) config("jwt.refresh_ttl"),
+                    (string) config("jwt.algo"),
+                    (string) config("jwt.issuer"),
+                );
+            },
+        );
 
-        $this->app->singleton(PasswordResetService::class, function (): PasswordResetService {
-            $ttl = (int) config('auth.passwords.users.expire', 60);
-            $ttl = max(1, $ttl);
+        $this->app->singleton(
+            PasswordResetService::class,
+            function (): PasswordResetService {
+                $ttl = (int) config("auth.passwords.users.expire", 60);
+                $ttl = max(1, $ttl);
 
-            return new PasswordResetService($ttl);
-        });
+                return new PasswordResetService($ttl);
+            },
+        );
 
-        $this->app->bind(PasswordResetServiceInterface::class, static fn ($app): PasswordResetServiceInterface => $app->make(PasswordResetService::class));
+        $this->app->bind(
+            PasswordResetServiceInterface::class,
+            static fn($app): PasswordResetServiceInterface => $app->make(
+                PasswordResetService::class,
+            ),
+        );
 
         // Nexus Tenant + TenantOperations: alpha company onboarding and tenant persistence.
-        $this->app->singleton(TenantPersistenceInterface::class, EloquentTenantPersistence::class);
-        $this->app->singleton(TenantValidationInterface::class, EloquentTenantValidation::class);
-        $this->app->singleton(TenantCreatorAdapterInterface::class, EloquentTenantCreator::class);
-        $this->app->singleton(AdminCreatorAdapterInterface::class, EloquentAdminCreator::class);
-        $this->app->singleton(TenantCompanyOnboardingServiceInterface::class, TenantCompanyOnboardingService::class);
-        $this->app->singleton(TenantCompanyOnboardingCoordinatorInterface::class, TenantCompanyOnboardingCoordinator::class);
+        $this->app->singleton(
+            TenantPersistenceInterface::class,
+            EloquentTenantPersistence::class,
+        );
+        $this->app->singleton(
+            TenantValidationInterface::class,
+            EloquentTenantValidation::class,
+        );
+        $this->app->singleton(
+            TenantCreatorAdapterInterface::class,
+            EloquentTenantCreator::class,
+        );
+        $this->app->singleton(
+            AdminCreatorAdapterInterface::class,
+            EloquentAdminCreator::class,
+        );
+        $this->app->singleton(
+            TenantCompanyOnboardingServiceInterface::class,
+            TenantCompanyOnboardingService::class,
+        );
+        $this->app->singleton(
+            TenantCompanyOnboardingCoordinatorInterface::class,
+            TenantCompanyOnboardingCoordinator::class,
+        );
 
         // Nexus Project: Laravel implementations + package Manager.
-        $this->app->bind(ProjectPersistInterface::class, AtomyProjectPersist::class);
-        $this->app->bind(ProjectQueryInterface::class, AtomyProjectQuery::class);
-        $this->app->bind(IncompleteTaskCountInterface::class, AtomyIncompleteTaskCount::class);
+        $this->app->bind(
+            ProjectPersistInterface::class,
+            AtomyProjectPersist::class,
+        );
+        $this->app->bind(
+            ProjectQueryInterface::class,
+            AtomyProjectQuery::class,
+        );
+        $this->app->bind(
+            IncompleteTaskCountInterface::class,
+            AtomyIncompleteTaskCount::class,
+        );
         $this->app->bind(ProjectManagerInterface::class, ProjectManager::class);
 
         // Nexus Task: Laravel implementations + package Manager and DependencyGraph.
         $this->app->bind(TaskPersistInterface::class, AtomyTaskPersist::class);
         $this->app->bind(TaskQueryInterface::class, AtomyTaskQuery::class);
-        $this->app->bind(DependencyGraphInterface::class, DependencyGraphService::class);
+        $this->app->bind(
+            DependencyGraphInterface::class,
+            DependencyGraphService::class,
+        );
         $this->app->bind(TaskManagerInterface::class, TaskManager::class);
 
         // Tenant context for tenant-scoped persistence/query services.
-        $this->app->bind(TenantContextInterface::class, RequestTenantContext::class);
+        $this->app->bind(
+            TenantContextInterface::class,
+            RequestTenantContext::class,
+        );
 
         // ProjectManagementOperations orchestrator and health services.
-        $this->app->bind(LaborHealthServiceInterface::class, AtomyLaborHealthService::class);
-        $this->app->bind(ExpenseHealthServiceInterface::class, AtomyExpenseHealthService::class);
-        $this->app->bind(TimelineDriftServiceInterface::class, AtomyTimelineDriftService::class);
-        $this->app->bind(MilestoneBillingServiceInterface::class, AtomyMilestoneBillingService::class);
-        $this->app->bind(ProjectTaskIdsQueryInterface::class, AtomyProjectTaskIdsQuery::class);
+        $this->app->bind(
+            LaborHealthServiceInterface::class,
+            AtomyLaborHealthService::class,
+        );
+        $this->app->bind(
+            ExpenseHealthServiceInterface::class,
+            AtomyExpenseHealthService::class,
+        );
+        $this->app->bind(
+            TimelineDriftServiceInterface::class,
+            AtomyTimelineDriftService::class,
+        );
+        $this->app->bind(
+            MilestoneBillingServiceInterface::class,
+            AtomyMilestoneBillingService::class,
+        );
+        $this->app->bind(
+            ProjectTaskIdsQueryInterface::class,
+            AtomyProjectTaskIdsQuery::class,
+        );
         $this->app->singleton(ProjectManagementOperationsCoordinator::class);
 
         // Nexus SourcingOperations: RFQ lifecycle orchestration + Laravel adapters.
-        $this->app->bind(RfqLifecycleQueryPortInterface::class, AtomyRfqLifecycleQuery::class);
-        $this->app->bind(RfqLifecyclePersistPortInterface::class, AtomyRfqLifecyclePersist::class);
-        $this->app->bind(RfqLineItemQueryPortInterface::class, AtomyRfqLineItemQuery::class);
-        $this->app->bind(RfqLineItemPersistPortInterface::class, AtomyRfqLineItemPersist::class);
-        $this->app->bind(RfqInvitationQueryPortInterface::class, AtomyRfqInvitationQuery::class);
-        $this->app->bind(RfqInvitationPersistPortInterface::class, AtomyRfqInvitationPersist::class);
-        $this->app->bind(RfqInvitationReminderPortInterface::class, AtomyRfqInvitationReminder::class);
-        $this->app->singleton(RfqStatusTransitionPolicyInterface::class, RfqStatusTransitionPolicy::class);
-        $this->app->bind(SourcingRfqStatusTransitionPolicyInterface::class, AtomySourcingRfqStatusTransitionPolicy::class);
-        $this->app->bind(SourcingTransactionManagerInterface::class, AtomySourcingTransactionManager::class);
-        $this->app->singleton(RfqLifecycleCoordinatorInterface::class, SourcingOperationsCoordinator::class);
+        $this->app->bind(
+            RfqLifecycleQueryPortInterface::class,
+            AtomyRfqLifecycleQuery::class,
+        );
+        $this->app->bind(
+            RfqLifecyclePersistPortInterface::class,
+            AtomyRfqLifecyclePersist::class,
+        );
+        $this->app->bind(
+            RfqLineItemQueryPortInterface::class,
+            AtomyRfqLineItemQuery::class,
+        );
+        $this->app->bind(
+            RfqLineItemPersistPortInterface::class,
+            AtomyRfqLineItemPersist::class,
+        );
+        $this->app->bind(
+            RfqInvitationQueryPortInterface::class,
+            AtomyRfqInvitationQuery::class,
+        );
+        $this->app->bind(
+            RfqInvitationPersistPortInterface::class,
+            AtomyRfqInvitationPersist::class,
+        );
+        $this->app->bind(
+            RfqInvitationReminderPortInterface::class,
+            AtomyRfqInvitationReminder::class,
+        );
+        $this->app->singleton(
+            RfqStatusTransitionPolicyInterface::class,
+            RfqStatusTransitionPolicy::class,
+        );
+        $this->app->bind(
+            SourcingRfqStatusTransitionPolicyInterface::class,
+            AtomySourcingRfqStatusTransitionPolicy::class,
+        );
+        $this->app->bind(
+            SourcingTransactionManagerInterface::class,
+            AtomySourcingTransactionManager::class,
+        );
+        $this->app->singleton(
+            RfqLifecycleCoordinatorInterface::class,
+            SourcingOperationsCoordinator::class,
+        );
 
         // Nexus Identity (L3): required by nexus/laravel-identity-adapter for SSO + coordinator resolution.
-        $this->app->singleton(IdentityUserQueryInterface::class, AtomyUserQuery::class);
-        $this->app->singleton(UserPersistInterface::class, AtomyUserPersist::class);
-        $this->app->singleton(PasswordHasherInterface::class, AtomyPasswordHasher::class);
-        $this->app->singleton(UserAuthenticatorInterface::class, AtomyUserAuthenticator::class);
-        $this->app->singleton(IdentityTokenManagerInterface::class, AtomyIdentityTokenManagerStub::class);
-        $this->app->singleton(SessionManagerInterface::class, \Nexus\Laravel\Identity\Adapters\DatabaseSessionManager::class);
-        $this->app->singleton(MfaEnrollmentServiceInterface::class, AtomyNoopMfaEnrollmentService::class);
+        $this->app->singleton(
+            IdentityUserQueryInterface::class,
+            AtomyUserQuery::class,
+        );
+        $this->app->singleton(
+            UserPersistInterface::class,
+            AtomyUserPersist::class,
+        );
+        $this->app->singleton(
+            PasswordHasherInterface::class,
+            AtomyPasswordHasher::class,
+        );
+        $this->app->singleton(
+            UserAuthenticatorInterface::class,
+            AtomyUserAuthenticator::class,
+        );
+        $this->app->singleton(
+            IdentityTokenManagerInterface::class,
+            AtomyIdentityTokenManagerStub::class,
+        );
+        $this->app->singleton(
+            SessionManagerInterface::class,
+            \Nexus\Laravel\Identity\Adapters\DatabaseSessionManager::class,
+        );
+        $this->app->singleton(
+            MfaEnrollmentServiceInterface::class,
+            AtomyNoopMfaEnrollmentService::class,
+        );
         $this->app->singleton(TotpManagerInterface::class, TotpManager::class);
-        $this->app->singleton(MfaVerificationServiceInterface::class, AtomyMfaVerificationService::class);
-        $this->app->singleton(MfaChallengeStoreInterface::class, AtomyMfaChallengeStore::class);
-        $this->app->singleton(PermissionQueryInterface::class, static function ($app): PermissionQueryInterface {
-            return $app->make(\Nexus\Identity\Contracts\PermissionRepositoryInterface::class);
+        $this->app->singleton(
+            MfaVerificationServiceInterface::class,
+            AtomyMfaVerificationService::class,
+        );
+        $this->app->singleton(
+            MfaChallengeStoreInterface::class,
+            AtomyMfaChallengeStore::class,
+        );
+        $this->app->singleton(PermissionQueryInterface::class, static function (
+            $app,
+        ): PermissionQueryInterface {
+            return $app->make(
+                \Nexus\Identity\Contracts\PermissionRepositoryInterface::class,
+            );
         });
-        $this->app->singleton(RoleQueryInterface::class, static function ($app): RoleQueryInterface {
+        $this->app->singleton(RoleQueryInterface::class, static function (
+            $app,
+        ): RoleQueryInterface {
             return $app->make(LaravelRoleQuery::class);
         });
         // Persist identity audit events (Gap 7 extension) instead of dropping them on the floor.
         $this->app->singleton(AtomyAuditLogRepository::class);
-        $this->app->singleton(AuditLogRepositoryInterface::class, AtomyAuditLogRepository::class);
+        $this->app->singleton(
+            AuditLogRepositoryInterface::class,
+            AtomyAuditLogRepository::class,
+        );
 
-        $this->app->singleton(DecisionTrailRecorderInterface::class, DecisionTrailRecorder::class);
+        $this->app->singleton(
+            DecisionTrailRecorderInterface::class,
+            DecisionTrailRecorder::class,
+        );
     }
 
     /**
@@ -625,7 +1045,7 @@ class AppServiceProvider extends ServiceProvider
      */
     private function quoteIntelligenceLlmConfig(): array
     {
-        return (array) config('atomy.quote_intelligence.llm', []);
+        return (array) config("atomy.quote_intelligence.llm", []);
     }
 
     /**
@@ -633,6 +1053,6 @@ class AppServiceProvider extends ServiceProvider
      */
     private function aiRuntimeConfig(): array
     {
-        return (array) config('atomy.ai', []);
+        return (array) config("atomy.ai", []);
     }
 }

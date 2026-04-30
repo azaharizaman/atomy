@@ -533,12 +533,15 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 ## 2026-04-30 AI Insights RFQ Risk And Governance Truthfulness
 
 - `RiskComplianceController` now delegates RFQ AI insight read/generate flows to `RiskInsightCoordinator`; risk facts come from tenant-scoped RFQ schedule dates, RFQ-linked vendor findings, and quote submission readiness instead of an empty stub.
+- `RiskComplianceController::escalate` and `exception` now delegate to the coordinator, and the adapter correctly enforces tenant-scoped model updates and throws `ModelNotFoundException` on failure.
 - `VendorGovernanceController` now delegates governance narrative read/generate flows to `GovernanceNarrativeCoordinator`; provider context is assembled through `GovernanceFactsAdapter` and sanitized by the orchestrator instead of in the controller.
 - Added governance-specific narrative provider wiring so governance narratives use the governance provider client while dashboard/report/RFQ insight narratives continue using the insight provider client.
 - Sanctions history now returns `manual_review_required` with `sanctions_provider_not_configured` when no sanctions evidence exists; `completed` is returned only for actual manual screening evidence.
+- Hardened `DashboardFactsAdapter` with database-level aggregations where possible and resilient date parsing.
+- Updated `GovernanceNarrativeRequest` DTO to support `actorId` for audit-ready provenance.
 - Verification:
-  - `cd apps/atomy-q/API && php artisan test tests/Feature/Api/V1/RiskComplianceAiInsightsApiTest.php tests/Feature/Api/V1/VendorGovernanceApiTest.php` -> PASS (13 tests, 80 assertions).
-  - `cd orchestrators/InsightOperations && composer test` -> PASS (17 tests, 110 assertions).
+  - `cd apps/atomy-q/API && php artisan test tests/Feature/Api/V1/RiskComplianceAiInsightsApiTest.php tests/Feature/Api/V1/VendorGovernanceApiTest.php` -> PASS (13 tests, 86 assertions).
+  - `cd orchestrators/InsightOperations && composer test` -> PASS (16 tests, 77 assertions).
 
 ## Verification
 

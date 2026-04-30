@@ -8,7 +8,7 @@ use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Nexus\InsightOperations\Coordinators\ReportingInsightCoordinator;
+use Nexus\InsightOperations\Contracts\ReportingInsightCoordinatorInterface;
 
 /**
  * Report API controller (Section 21).
@@ -20,9 +20,8 @@ final class ReportController extends Controller
     use ExtractsAuthContext;
 
     public function __construct(
-        private readonly ReportingInsightCoordinator $reportingInsightCoordinator,
-    ) {
-    }
+        private readonly ReportingInsightCoordinatorInterface $reportingInsightCoordinator,
+    ) {}
 
     /**
      * Get KPI metrics.
@@ -33,7 +32,11 @@ final class ReportController extends Controller
     {
         $tenantId = $this->tenantId($request);
 
-        return response()->json($this->reportingInsightCoordinator->show($tenantId, 'report_kpis')->toResponseArray());
+        return response()->json(
+            $this->reportingInsightCoordinator
+                ->show($tenantId, "report_kpis")
+                ->toResponseArray(),
+        );
     }
 
     /**
@@ -45,7 +48,11 @@ final class ReportController extends Controller
     {
         $tenantId = $this->tenantId($request);
 
-        return response()->json($this->reportingInsightCoordinator->show($tenantId, 'report_spend_trend')->toResponseArray());
+        return response()->json(
+            $this->reportingInsightCoordinator
+                ->show($tenantId, "report_spend_trend")
+                ->toResponseArray(),
+        );
     }
 
     /**
@@ -57,7 +64,11 @@ final class ReportController extends Controller
     {
         $tenantId = $this->tenantId($request);
 
-        return response()->json($this->reportingInsightCoordinator->show($tenantId, 'report_spend_by_category')->toResponseArray());
+        return response()->json(
+            $this->reportingInsightCoordinator
+                ->show($tenantId, "report_spend_by_category")
+                ->toResponseArray(),
+        );
     }
 
     /**
@@ -68,7 +79,11 @@ final class ReportController extends Controller
         $tenantId = $this->tenantId($request);
         $userId = $this->userId($request);
 
-        return response()->json($this->reportingInsightCoordinator->generate($tenantId, 'report_kpis', $userId)->toResponseArray());
+        return response()->json(
+            $this->reportingInsightCoordinator
+                ->generate($tenantId, "report_kpis", $userId)
+                ->toResponseArray(),
+        );
     }
 
     /**
@@ -79,18 +94,27 @@ final class ReportController extends Controller
         $tenantId = $this->tenantId($request);
         $userId = $this->userId($request);
 
-        return response()->json($this->reportingInsightCoordinator->generate($tenantId, 'report_spend_trend', $userId)->toResponseArray());
+        return response()->json(
+            $this->reportingInsightCoordinator
+                ->generate($tenantId, "report_spend_trend", $userId)
+                ->toResponseArray(),
+        );
     }
 
     /**
      * POST /reports/spend-by-category/generate
      */
-    public function generateSpendByCategorySummary(Request $request): JsonResponse
-    {
+    public function generateSpendByCategorySummary(
+        Request $request,
+    ): JsonResponse {
         $tenantId = $this->tenantId($request);
         $userId = $this->userId($request);
 
-        return response()->json($this->reportingInsightCoordinator->generate($tenantId, 'report_spend_by_category', $userId)->toResponseArray());
+        return response()->json(
+            $this->reportingInsightCoordinator
+                ->generate($tenantId, "report_spend_by_category", $userId)
+                ->toResponseArray(),
+        );
     }
 
     /**
@@ -101,9 +125,9 @@ final class ReportController extends Controller
     public function export(Request $request): JsonResponse
     {
         return response()->json([
-            'data' => [
-                'download_url' => 'https://example.com/reports/export-stub',
-                'expires_at' => now()->addHours(24)->toIso8601String(),
+            "data" => [
+                "download_url" => "https://example.com/reports/export-stub",
+                "expires_at" => now()->addHours(24)->toIso8601String(),
             ],
         ]);
     }
@@ -118,11 +142,11 @@ final class ReportController extends Controller
         $params = $this->paginationParams($request);
 
         return response()->json([
-            'data' => [],
-            'meta' => [
-                'current_page' => $params['page'],
-                'per_page' => $params['per_page'],
-                'total' => 0,
+            "data" => [],
+            "meta" => [
+                "current_page" => $params["page"],
+                "per_page" => $params["per_page"],
+                "total" => 0,
             ],
         ]);
     }
@@ -134,12 +158,15 @@ final class ReportController extends Controller
      */
     public function createSchedule(Request $request): JsonResponse
     {
-        return response()->json([
-            'data' => [
-                'id' => 'stub-schedule-id',
-                'frequency' => 'weekly',
+        return response()->json(
+            [
+                "data" => [
+                    "id" => "stub-schedule-id",
+                    "frequency" => "weekly",
+                ],
             ],
-        ], 201);
+            201,
+        );
     }
 
     /**
@@ -150,9 +177,9 @@ final class ReportController extends Controller
     public function updateSchedule(Request $request, string $id): JsonResponse
     {
         return response()->json([
-            'data' => [
-                'id' => $id,
-                'frequency' => 'weekly',
+            "data" => [
+                "id" => $id,
+                "frequency" => "weekly",
             ],
         ]);
     }
@@ -175,9 +202,9 @@ final class ReportController extends Controller
     public function runScheduleNow(Request $request, string $id): JsonResponse
     {
         return response()->json([
-            'data' => [
-                'run_id' => 'stub-run-id',
-                'status' => 'queued',
+            "data" => [
+                "run_id" => "stub-run-id",
+                "status" => "queued",
             ],
         ]);
     }
@@ -192,11 +219,11 @@ final class ReportController extends Controller
         $params = $this->paginationParams($request);
 
         return response()->json([
-            'data' => [],
-            'meta' => [
-                'current_page' => $params['page'],
-                'per_page' => $params['per_page'],
-                'total' => 0,
+            "data" => [],
+            "meta" => [
+                "current_page" => $params["page"],
+                "per_page" => $params["per_page"],
+                "total" => 0,
             ],
         ]);
     }
@@ -209,11 +236,11 @@ final class ReportController extends Controller
     public function downloadRun(Request $request, string $id): JsonResponse
     {
         return response()->json([
-            'data' => [
-                'download_url' => 'https://example.com/reports/runs/' . $id . '/download',
-                'expires_at' => now()->addHours(24)->toIso8601String(),
+            "data" => [
+                "download_url" =>
+                    "https://example.com/reports/runs/" . $id . "/download",
+                "expires_at" => now()->addHours(24)->toIso8601String(),
             ],
         ]);
     }
-
 }

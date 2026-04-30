@@ -380,6 +380,8 @@
 - `AiNarrativePanel` now renders a scoped `Generate` / `Regenerate` action when generation is available, while preserving AI hidden/unavailable gating.
 - Dashboard, reporting, RFQ overview/risk, vendor detail, and vendor ESG/compliance pages now wire generation actions to their API generate endpoints.
 - Vendor governance generation uses `useGenerateVendorGovernanceNarrative` and refreshes the shared vendor governance query cache.
+- Hardened `useGenerateVendorGovernanceNarrative` to accept `vendorId` as a variable for the mutation, preventing stale ID captures.
+- Added data presence validation in `useAiNarrativeSummary` mutation to fail loudly on empty API responses.
 - Verification:
-  - `cd apps/atomy-q/WEB && npm run test:unit -- src/components/ai/ai-narrative-panel.test.tsx src/hooks/use-ai-status.test.ts` -> PASS (16 tests).
+  - `cd apps/atomy-q/WEB && npm run test:unit -- src/components/ai/ai-narrative-panel.test.tsx src/hooks/use-ai-status.test.ts src/hooks/use-vendor-governance.test.ts` -> PASS.
   - `cd apps/atomy-q/WEB && npm run build` -> PASS.

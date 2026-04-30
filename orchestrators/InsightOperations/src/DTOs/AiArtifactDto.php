@@ -36,7 +36,7 @@ final readonly class AiArtifactDto
             featureKey: $featureKey,
             capabilityGroup: $capabilityGroup,
             available: true,
-            status: 'available',
+            status: "available",
             payload: $payload,
             provenance: $provenance,
         );
@@ -57,7 +57,7 @@ final readonly class AiArtifactDto
             featureKey: $featureKey,
             capabilityGroup: $capabilityGroup,
             available: false,
-            status: 'unavailable',
+            status: "unavailable",
             payload: null,
             provenance: null,
             sourceFacts: $sourceFacts,
@@ -69,10 +69,13 @@ final readonly class AiArtifactDto
     /**
      * @param array<string, mixed> $sourceFacts
      */
-    public function withSourceFacts(array $sourceFacts, string $sourceFactsHash, ?string $actorId = null): self
-    {
+    public function withSourceFacts(
+        array $sourceFacts,
+        string $sourceFactsHash,
+        ?string $actorId = null,
+    ): self {
         $provenance = $this->provenance;
-        if ($actorId !== null && $actorId !== '') {
+        if ($actorId !== null && $actorId !== "") {
             $provenance = new AiArtifactProvenanceDto(
                 providerName: $provenance?->providerName,
                 endpointGroup: $provenance?->endpointGroup,
@@ -83,8 +86,9 @@ final readonly class AiArtifactDto
                 outputHash: $provenance?->outputHash,
                 latencyMs: $provenance?->latencyMs,
                 generatedAt: $provenance?->generatedAt,
-                actorId: $provenance?->actorId,
-                actorHash: $provenance?->actorHash ?? hash('sha256', strtolower(trim($actorId))),
+                actorId: $actorId,
+                actorHash: $provenance?->actorHash ??
+                    hash("sha256", strtolower(trim($actorId))),
             );
         }
 
@@ -107,15 +111,15 @@ final readonly class AiArtifactDto
     public function toArray(): array
     {
         return [
-            'feature_key' => $this->featureKey,
-            'capability_group' => $this->capabilityGroup,
-            'available' => $this->available,
-            'status' => $this->status,
-            'payload' => $this->payload,
-            'provenance' => $this->provenance?->toArray(),
-            'source_facts' => $this->sourceFacts,
-            'source_facts_hash' => $this->sourceFactsHash,
-            'reason_codes' => $this->reasonCodes,
+            "feature_key" => $this->featureKey,
+            "capability_group" => $this->capabilityGroup,
+            "available" => $this->available,
+            "status" => $this->status,
+            "payload" => $this->payload,
+            "provenance" => $this->provenance?->toArray(),
+            "source_facts" => $this->sourceFacts,
+            "source_facts_hash" => $this->sourceFactsHash,
+            "reason_codes" => $this->reasonCodes,
         ];
     }
 }

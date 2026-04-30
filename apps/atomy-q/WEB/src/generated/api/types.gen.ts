@@ -2086,8 +2086,9 @@ export type DashboardKpisData = {
 
 export type DashboardKpisResponses = {
     200: {
-        data: {
-            ''?: {
+        data: [
+            Array<unknown>,
+            {
                 feature_key: string;
                 capability_group: string;
                 available: boolean;
@@ -2097,11 +2098,8 @@ export type DashboardKpisResponses = {
                 source_facts: Array<unknown>;
                 source_facts_hash: string | null;
                 reason_codes: Array<unknown>;
-            };
-            metrics: Array<unknown>;
-            recent_activity: Array<unknown>;
-            risk_alerts: Array<unknown>;
-        };
+            }
+        ];
     };
 };
 
@@ -2115,7 +2113,22 @@ export type DashboardGenerateKpisSummaryData = {
 };
 
 export type DashboardGenerateKpisSummaryResponses = {
-    200: string;
+    200: {
+        data: [
+            Array<unknown>,
+            {
+                feature_key: string;
+                capability_group: string;
+                available: boolean;
+                status: string;
+                payload: Array<unknown> | null;
+                provenance: string;
+                source_facts: Array<unknown>;
+                source_facts_hash: string | null;
+                reason_codes: Array<unknown>;
+            }
+        ];
+    };
 };
 
 export type DashboardGenerateKpisSummaryResponse = DashboardGenerateKpisSummaryResponses[keyof DashboardGenerateKpisSummaryResponses];
@@ -4534,8 +4547,9 @@ export type ReportKpisData = {
 
 export type ReportKpisResponses = {
     200: {
-        data: {
-            ''?: {
+        data: [
+            Array<unknown>,
+            {
                 feature_key: string;
                 capability_group: string;
                 available: boolean;
@@ -4545,13 +4559,8 @@ export type ReportKpisResponses = {
                 source_facts: Array<unknown>;
                 source_facts_hash: string | null;
                 reason_codes: Array<unknown>;
-            };
-            subject_type: 'report_kpis';
-            metrics: Array<unknown>;
-            series: Array<unknown>;
-            rows: Array<unknown>;
-            schedules: Array<unknown>;
-        };
+            }
+        ];
     };
 };
 
@@ -4565,7 +4574,22 @@ export type ReportGenerateKpisSummaryData = {
 };
 
 export type ReportGenerateKpisSummaryResponses = {
-    200: string;
+    200: {
+        data: [
+            Array<unknown>,
+            {
+                feature_key: string;
+                capability_group: string;
+                available: boolean;
+                status: string;
+                payload: Array<unknown> | null;
+                provenance: string;
+                source_facts: Array<unknown>;
+                source_facts_hash: string | null;
+                reason_codes: Array<unknown>;
+            }
+        ];
+    };
 };
 
 export type ReportGenerateKpisSummaryResponse = ReportGenerateKpisSummaryResponses[keyof ReportGenerateKpisSummaryResponses];
@@ -4579,8 +4603,9 @@ export type ReportSpendTrendData = {
 
 export type ReportSpendTrendResponses = {
     200: {
-        data: {
-            ''?: {
+        data: [
+            Array<unknown>,
+            {
                 feature_key: string;
                 capability_group: string;
                 available: boolean;
@@ -4590,13 +4615,8 @@ export type ReportSpendTrendResponses = {
                 source_facts: Array<unknown>;
                 source_facts_hash: string | null;
                 reason_codes: Array<unknown>;
-            };
-            subject_type: 'report_spend_trend';
-            metrics: Array<unknown>;
-            series: Array<unknown>;
-            rows: Array<unknown>;
-            schedules: Array<unknown>;
-        };
+            }
+        ];
     };
 };
 
@@ -4610,7 +4630,22 @@ export type ReportGenerateSpendTrendSummaryData = {
 };
 
 export type ReportGenerateSpendTrendSummaryResponses = {
-    200: string;
+    200: {
+        data: [
+            Array<unknown>,
+            {
+                feature_key: string;
+                capability_group: string;
+                available: boolean;
+                status: string;
+                payload: Array<unknown> | null;
+                provenance: string;
+                source_facts: Array<unknown>;
+                source_facts_hash: string | null;
+                reason_codes: Array<unknown>;
+            }
+        ];
+    };
 };
 
 export type ReportGenerateSpendTrendSummaryResponse = ReportGenerateSpendTrendSummaryResponses[keyof ReportGenerateSpendTrendSummaryResponses];
@@ -4624,8 +4659,9 @@ export type ReportSpendByCategoryData = {
 
 export type ReportSpendByCategoryResponses = {
     200: {
-        data: {
-            ''?: {
+        data: [
+            Array<unknown>,
+            {
                 feature_key: string;
                 capability_group: string;
                 available: boolean;
@@ -4635,13 +4671,8 @@ export type ReportSpendByCategoryResponses = {
                 source_facts: Array<unknown>;
                 source_facts_hash: string | null;
                 reason_codes: Array<unknown>;
-            };
-            subject_type: 'report_spend_by_category';
-            metrics: Array<unknown>;
-            series: Array<unknown>;
-            rows: Array<unknown>;
-            schedules: Array<unknown>;
-        };
+            }
+        ];
     };
 };
 
@@ -4655,7 +4686,22 @@ export type ReportGenerateSpendByCategorySummaryData = {
 };
 
 export type ReportGenerateSpendByCategorySummaryResponses = {
-    200: string;
+    200: {
+        data: [
+            Array<unknown>,
+            {
+                feature_key: string;
+                capability_group: string;
+                available: boolean;
+                status: string;
+                payload: Array<unknown> | null;
+                provenance: string;
+                source_facts: Array<unknown>;
+                source_facts_hash: string | null;
+                reason_codes: Array<unknown>;
+            }
+        ];
+    };
 };
 
 export type ReportGenerateSpendByCategorySummaryResponse = ReportGenerateSpendByCategorySummaryResponses[keyof ReportGenerateSpendByCategorySummaryResponses];
@@ -5740,15 +5786,9 @@ export type RiskComplianceIndexError = RiskComplianceIndexErrors[keyof RiskCompl
 
 export type RiskComplianceIndexResponses = {
     200: {
-        data: {
-            rfq_id: string;
-            items: Array<unknown>;
-            risk_items: Array<unknown>;
-            manual_review: {
-                ''?: Array<unknown>;
-                pending_items: number;
-            };
-            ''?: {
+        data: [
+            Array<unknown>,
+            {
                 feature_key: string;
                 capability_group: string;
                 available: boolean;
@@ -5758,8 +5798,8 @@ export type RiskComplianceIndexResponses = {
                 source_facts: Array<unknown>;
                 source_facts_hash: string | null;
                 reason_codes: Array<unknown>;
-            };
-        };
+            }
+        ];
         meta: {
             rfq_id: string | null;
         };
@@ -5784,7 +5824,25 @@ export type RiskComplianceGenerateErrors = {
 export type RiskComplianceGenerateError = RiskComplianceGenerateErrors[keyof RiskComplianceGenerateErrors];
 
 export type RiskComplianceGenerateResponses = {
-    200: string;
+    200: {
+        data: [
+            Array<unknown>,
+            {
+                feature_key: string;
+                capability_group: string;
+                available: boolean;
+                status: string;
+                payload: Array<unknown> | null;
+                provenance: string;
+                source_facts: Array<unknown>;
+                source_facts_hash: string | null;
+                reason_codes: Array<unknown>;
+            }
+        ];
+        meta: {
+            rfq_id: string;
+        };
+    };
 };
 
 export type RiskComplianceGenerateResponse = RiskComplianceGenerateResponses[keyof RiskComplianceGenerateResponses];
@@ -5797,14 +5855,6 @@ export type RiskComplianceEscalateData = {
     query?: never;
     url: '/risk-items/{id}/escalate';
 };
-
-export type RiskComplianceEscalateErrors = {
-    404: {
-        message: 'Risk item not found';
-    };
-};
-
-export type RiskComplianceEscalateError = RiskComplianceEscalateErrors[keyof RiskComplianceEscalateErrors];
 
 export type RiskComplianceEscalateResponses = {
     200: {
@@ -5833,14 +5883,6 @@ export type RiskComplianceExceptionData = {
     query?: never;
     url: '/risk-items/{id}/exception';
 };
-
-export type RiskComplianceExceptionErrors = {
-    404: {
-        message: 'Risk item not found';
-    };
-};
-
-export type RiskComplianceExceptionError = RiskComplianceExceptionErrors[keyof RiskComplianceExceptionErrors];
 
 export type RiskComplianceExceptionResponses = {
     200: {
@@ -7329,17 +7371,9 @@ export type VendorGovernanceShowError = VendorGovernanceShowErrors[keyof VendorG
 
 export type VendorGovernanceShowResponses = {
     200: {
-        data: {
-            vendor_id: string;
-            evidence: Array<unknown>;
-            findings: Array<unknown>;
-            summary_scores: Array<unknown>;
-            scores: Array<unknown>;
-            warning_flags: Array<unknown>;
-            sanctions_screenings: Array<unknown>;
-            due_diligence_status: string;
-            evidence_freshness: Array<unknown>;
-            ''?: {
+        data: [
+            Array<unknown>,
+            {
                 feature_key: string;
                 capability_group: string;
                 available: boolean;
@@ -7349,8 +7383,8 @@ export type VendorGovernanceShowResponses = {
                 source_facts: Array<unknown>;
                 source_facts_hash: string | null;
                 reason_codes: Array<unknown>;
-            };
-        };
+            }
+        ];
     };
 };
 
@@ -7374,7 +7408,22 @@ export type VendorGovernanceGenerateErrors = {
 export type VendorGovernanceGenerateError = VendorGovernanceGenerateErrors[keyof VendorGovernanceGenerateErrors];
 
 export type VendorGovernanceGenerateResponses = {
-    200: string;
+    200: {
+        data: [
+            Array<unknown>,
+            {
+                feature_key: string;
+                capability_group: string;
+                available: boolean;
+                status: string;
+                payload: Array<unknown> | null;
+                provenance: string;
+                source_facts: Array<unknown>;
+                source_facts_hash: string | null;
+                reason_codes: Array<unknown>;
+            }
+        ];
+    };
 };
 
 export type VendorGovernanceGenerateResponse = VendorGovernanceGenerateResponses[keyof VendorGovernanceGenerateResponses];

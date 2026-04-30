@@ -23,19 +23,25 @@ final readonly class DashboardFactsDto
     public function toArray(): array
     {
         $metrics = array_map(
-            static fn (MetricFactDto $metric): array => $metric->toArray(),
+            static fn(MetricFactDto $metric): array => $metric->toArray(),
             $this->metrics,
         );
         $metricValues = [];
+        $reservedKeys = ["metrics", "recent_activity", "risk_alerts"];
+
         foreach ($metrics as $metric) {
-            $metricValues[(string) $metric['key']] = $metric['value'];
+            $key = (string) $metric["key"];
+            if (in_array($key, $reservedKeys, true)) {
+                continue;
+            }
+            $metricValues[$key] = $metric["value"];
         }
 
         return [
             ...$metricValues,
-            'metrics' => $metrics,
-            'recent_activity' => $this->recentActivity,
-            'risk_alerts' => $this->riskAlerts,
+            "metrics" => $metrics,
+            "recent_activity" => $this->recentActivity,
+            "risk_alerts" => $this->riskAlerts,
         ];
     }
 }

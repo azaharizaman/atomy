@@ -21,13 +21,17 @@ final readonly class RiskInsightFactsDto
      */
     public function toArray(): array
     {
+        $manualReview = $this->manualReview;
+        unset($manualReview["pending_items"]);
+
         return [
-            'rfq_id' => $this->rfqId,
-            'items' => $this->riskItems,
-            'risk_items' => $this->riskItems,
-            'manual_review' => [
-                ...$this->manualReview,
-                'pending_items' => count($this->riskItems),
+            "rfq_id" => $this->rfqId,
+            // 'items' kept for backward compatibility with initial alpha UI
+            "items" => $this->riskItems,
+            "risk_items" => $this->riskItems,
+            "manual_review" => [
+                ...$manualReview,
+                "pending_items" => count($this->riskItems),
             ],
         ];
     }

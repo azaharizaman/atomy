@@ -6,12 +6,27 @@ namespace Nexus\InsightOperations\DTOs;
 
 final readonly class MetricFactDto
 {
+    public MetricStatus $status;
+
     public function __construct(
         public string $key,
         public mixed $value,
-        public string $status = 'available',
+        string|MetricStatus $status = MetricStatus::AVAILABLE,
         public ?string $reasonCode = null,
-    ) {}
+    ) {
+        $this->status = is_string($status)
+            ? MetricStatus::from($status)
+            : $status;
+
+        if (
+            $this->status === MetricStatus::AVAILABLE &&
+            $this->reasonCode !== null
+        ) {
+            throw new \InvalidArgumentException(
+                "Reason code must be null when status is available.",
+            );
+        }
+    }
 
     /**
      * @return array{key: string, value: mixed, status: string, reason_code: string|null}
@@ -19,10 +34,10 @@ final readonly class MetricFactDto
     public function toArray(): array
     {
         return [
-            'key' => $this->key,
-            'value' => $this->value,
-            'status' => $this->status,
-            'reason_code' => $this->reasonCode,
+            "key" => $this->key,
+            "value" => $this->value,
+            "status" => $this->status->value,
+            "reason_code" => $this->reasonCode,
         ];
     }
 }

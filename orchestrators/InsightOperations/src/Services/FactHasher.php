@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Nexus\InsightOperations\Services;
 
-final class FactHasher
+use Nexus\InsightOperations\Contracts\FactHasherInterface;
+
+final class FactHasher implements FactHasherInterface
 {
     /**
      * @param array<string, mixed> $facts
@@ -12,14 +14,17 @@ final class FactHasher
     public function hash(array $facts): string
     {
         return hash(
-            'sha256',
-            json_encode($this->normalize($facts), JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION),
+            "sha256",
+            json_encode(
+                $this->normalize($facts),
+                JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION,
+            ),
         );
     }
 
     private function normalize(mixed $value): mixed
     {
-        if (! is_array($value)) {
+        if (!is_array($value)) {
             return $value;
         }
 

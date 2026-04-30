@@ -1023,9 +1023,9 @@ In Plan 6, add Plan 5 verification evidence requirements:
 - Sanctions endpoints do not fake completed/no-match outcomes.
 - WEB generation buttons are capability-gated.
 
-- [ ] **Step 3: Confirm summaries include commands**
+- [ ] **Step 3: Confirm summaries include commands and contract changes**
 
-Each `IMPLEMENTATION_SUMMARY.md` touched by Parts 1-4 must include exact commands run and outcomes.
+Each `IMPLEMENTATION_SUMMARY.md` touched by Parts 1-4 must include exact commands run and outcomes. Any changes to API response envelopes, AI artifact structure, or orchestrator interfaces must be explicitly recorded.
 
 ### Task 5.3: Final Verification Matrix
 

@@ -4,81 +4,129 @@ declare(strict_types=1);
 
 namespace Nexus\InsightOperations\Coordinators;
 
+use Throwable;
+
 use Nexus\InsightOperations\Contracts\AiArtifactCachePortInterface;
 use Nexus\InsightOperations\Contracts\AiAvailabilityPortInterface;
+use Nexus\InsightOperations\Contracts\FactHasherInterface;
 use Nexus\InsightOperations\Contracts\InsightNarrativePortInterface;
 use Nexus\InsightOperations\Contracts\ReportingFactsPortInterface;
+use Nexus\InsightOperations\Contracts\ReportingInsightCoordinatorInterface;
 use Nexus\InsightOperations\DTOs\AiArtifactDto;
 use Nexus\InsightOperations\DTOs\InsightResultDto;
 use Nexus\InsightOperations\Services\FactHasher;
-use Throwable;
 
-final readonly class ReportingInsightCoordinator
+final readonly class ReportingInsightCoordinator implements
+    ReportingInsightCoordinatorInterface
 {
-    private const FEATURE_KEY = 'reporting_ai_summary';
-    private const CAPABILITY_GROUP = 'insight_intelligence';
-    private const ARTIFACT_FIELD = 'ai_summary';
+    private const FEATURE_KEY = "reporting_ai_summary";
+    private const CAPABILITY_GROUP = "insight_intelligence";
+    private const ARTIFACT_FIELD = "ai_summary";
 
     public function __construct(
         private ReportingFactsPortInterface $factsPort,
         private AiArtifactCachePortInterface $cachePort,
         private AiAvailabilityPortInterface $availabilityPort,
         private InsightNarrativePortInterface $narrativePort,
-        private FactHasher $factHasher = new FactHasher(),
+        private FactHasherInterface $factHasher = new FactHasher(),
         private int $artifactTtlSeconds = 3600,
     ) {}
 
-    public function show(string $tenantId, string $subjectType): InsightResultDto
-    {
-        $facts = $this->factsPort->factsForTenant($tenantId, $subjectType)->toArray();
+    public function show(
+        string $tenantId,
+        string $subjectType,
+    ): InsightResultDto {
+        $facts = $this->factsPort
+            ->factsForTenant($tenantId, $subjectType)
+            ->toArray();
         $sourceFactsHash = $this->factHasher->hash($facts);
-        $artifact = $this->cachePort->get($this->cacheKey($tenantId, $subjectType, $sourceFactsHash))
-            ?? $this->unavailable($facts, $sourceFactsHash, ['no_cached_ai_artifact']);
+        $artifact =
+            $this->cachePort->get(
+                $this->cacheKey($tenantId, $subjectType, $sourceFactsHash),
+            ) ??
+            $this->unavailable($facts, $sourceFactsHash, [
+                "no_cached_ai_artifact",
+            ]);
 
         return new InsightResultDto($facts, $artifact, self::ARTIFACT_FIELD);
     }
 
-    public function generate(string $tenantId, string $subjectType, string $actorId): InsightResultDto
-    {
-        $facts = $this->factsPort->factsForTenant($tenantId, $subjectType)->toArray();
+    public function generate(
+        string $tenantId,
+        string $subjectType,
+        string $actorId,
+    ): InsightResultDto {
+        $facts = $this->factsPort
+            ->factsForTenant($tenantId, $subjectType)
+            ->toArray();
         $sourceFactsHash = $this->factHasher->hash($facts);
 
-        if (! $this->availabilityPort->isFeatureAvailable(self::FEATURE_KEY)) {
+        if (!$this->availabilityPort->isFeatureAvailable(self::FEATURE_KEY)) {
             return new InsightResultDto(
                 $facts,
-                $this->unavailable($facts, $sourceFactsHash, $this->availabilityReasonCodes()),
+                $this->unavailable(
+                    $facts,
+                    $sourceFactsHash,
+                    $this->availabilityReasonCodes(),
+                ),
                 self::ARTIFACT_FIELD,
             );
         }
 
         try {
             $artifact = $this->narrativePort
-                ->generate(self::FEATURE_KEY, $tenantId, $subjectType, $actorId, $facts)
+                ->generate(
+                    self::FEATURE_KEY,
+                    $tenantId,
+                    $subjectType,
+                    $actorId,
+                    $facts,
+                )
                 ->withSourceFacts($facts, $sourceFactsHash, $actorId);
         } catch (Throwable) {
             return new InsightResultDto(
                 $facts,
-                $this->unavailable($facts, $sourceFactsHash, ['provider_unavailable']),
+                $this->unavailable($facts, $sourceFactsHash, [
+                    "provider_unavailable",
+                ]),
                 self::ARTIFACT_FIELD,
             );
         }
 
-        $this->cachePort->put($this->cacheKey($tenantId, $subjectType, $sourceFactsHash), $artifact, $this->artifactTtlSeconds);
+        $this->cachePort->put(
+            $this->cacheKey($tenantId, $subjectType, $sourceFactsHash),
+            $artifact,
+            $this->artifactTtlSeconds,
+        );
 
         return new InsightResultDto($facts, $artifact, self::ARTIFACT_FIELD);
     }
 
-    private function cacheKey(string $tenantId, string $subjectType, string $sourceFactsHash): string
-    {
-        return self::FEATURE_KEY . ':' . hash('sha256', json_encode([$tenantId, $subjectType, $sourceFactsHash], JSON_THROW_ON_ERROR));
+    private function cacheKey(
+        string $tenantId,
+        string $subjectType,
+        string $sourceFactsHash,
+    ): string {
+        return self::FEATURE_KEY .
+            ":" .
+            hash(
+                "sha256",
+                json_encode(
+                    [$tenantId, $subjectType, $sourceFactsHash],
+                    JSON_THROW_ON_ERROR,
+                ),
+            );
     }
 
     /**
      * @param array<string, mixed> $sourceFacts
      * @param list<string> $reasonCodes
      */
-    private function unavailable(array $sourceFacts, string $sourceFactsHash, array $reasonCodes): AiArtifactDto
-    {
+    private function unavailable(
+        array $sourceFacts,
+        string $sourceFactsHash,
+        array $reasonCodes,
+    ): AiArtifactDto {
         return AiArtifactDto::unavailable(
             self::FEATURE_KEY,
             self::CAPABILITY_GROUP,
@@ -95,6 +143,6 @@ final readonly class ReportingInsightCoordinator
     {
         $reasonCodes = $this->availabilityPort->reasonCodes(self::FEATURE_KEY);
 
-        return $reasonCodes === [] ? ['ai_unavailable'] : $reasonCodes;
+        return $reasonCodes === [] ? ["ai_unavailable"] : $reasonCodes;
     }
 }

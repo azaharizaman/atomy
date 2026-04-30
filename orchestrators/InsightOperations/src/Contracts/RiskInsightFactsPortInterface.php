@@ -8,5 +8,21 @@ use Nexus\InsightOperations\DTOs\RiskInsightFactsDto;
 
 interface RiskInsightFactsPortInterface
 {
-    public function factsForRfq(string $tenantId, string $rfqId): RiskInsightFactsDto;
+    public function factsForRfq(
+        string $tenantId,
+        string $rfqId,
+    ): RiskInsightFactsDto;
+
+    public function escalate(
+        string $tenantId,
+        string $rfqId,
+        string $itemId,
+    ): void;
+
+    public function resolveAsException(
+        string $tenantId,
+        string $rfqId,
+        string $itemId,
+        string $actorId,
+    ): void;
 }

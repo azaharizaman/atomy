@@ -720,6 +720,10 @@ final class PetrochemicalTenantSeeder extends Seeder
         );
         $approvedVendors = array_values($approvedVendors);
 
+        if (count($approvedVendors) === 0) {
+            return;
+        }
+
         $invitationIds = [];
         for ($v = 0; $v < $inviteTotal; $v++) {
             $vend =

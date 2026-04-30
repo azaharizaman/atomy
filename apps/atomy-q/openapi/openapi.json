@@ -6099,9 +6099,13 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "": {
+                                            "type": "array",
+                                            "prefixItems": [
+                                                {
+                                                    "type": "array",
+                                                    "items": {}
+                                                },
+                                                {
                                                     "type": "object",
                                                     "properties": {
                                                         "feature_key": {
@@ -6152,27 +6156,11 @@
                                                         "source_facts_hash",
                                                         "reason_codes"
                                                     ]
-                                                },
-                                                "metrics": {
-                                                    "type": "array",
-                                                    "items": {}
-                                                },
-                                                "recent_activity": {
-                                                    "type": "array",
-                                                    "items": {}
-                                                },
-                                                "risk_alerts": {
-                                                    "type": "array",
-                                                    "items": {}
                                                 }
-                                            },
-                                            "required": [
-                                                null,
-                                                "metrics",
-                                                "recent_activity",
-                                                "risk_alerts",
-                                                null
-                                            ]
+                                            ],
+                                            "minItems": 2,
+                                            "maxItems": 2,
+                                            "additionalItems": false
                                         }
                                     },
                                     "required": [
@@ -6198,7 +6186,76 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "string"
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "prefixItems": [
+                                                {
+                                                    "type": "array",
+                                                    "items": {}
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "feature_key": {
+                                                            "type": "string"
+                                                        },
+                                                        "capability_group": {
+                                                            "type": "string"
+                                                        },
+                                                        "available": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "status": {
+                                                            "type": "string"
+                                                        },
+                                                        "payload": {
+                                                            "type": [
+                                                                "array",
+                                                                "null"
+                                                            ],
+                                                            "items": {}
+                                                        },
+                                                        "provenance": {
+                                                            "type": "string"
+                                                        },
+                                                        "source_facts": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        "source_facts_hash": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "reason_codes": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "feature_key",
+                                                        "capability_group",
+                                                        "available",
+                                                        "status",
+                                                        "payload",
+                                                        "provenance",
+                                                        "source_facts",
+                                                        "source_facts_hash",
+                                                        "reason_codes"
+                                                    ]
+                                                }
+                                            ],
+                                            "minItems": 2,
+                                            "maxItems": 2,
+                                            "additionalItems": false
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
                                 }
                             }
                         }
@@ -12556,9 +12613,13 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "": {
+                                            "type": "array",
+                                            "prefixItems": [
+                                                {
+                                                    "type": "array",
+                                                    "items": {}
+                                                },
+                                                {
                                                     "type": "object",
                                                     "properties": {
                                                         "feature_key": {
@@ -12609,37 +12670,11 @@
                                                         "source_facts_hash",
                                                         "reason_codes"
                                                     ]
-                                                },
-                                                "subject_type": {
-                                                    "type": "string",
-                                                    "const": "report_kpis"
-                                                },
-                                                "metrics": {
-                                                    "type": "array",
-                                                    "items": {}
-                                                },
-                                                "series": {
-                                                    "type": "array",
-                                                    "items": {}
-                                                },
-                                                "rows": {
-                                                    "type": "array",
-                                                    "items": {}
-                                                },
-                                                "schedules": {
-                                                    "type": "array",
-                                                    "items": {}
                                                 }
-                                            },
-                                            "required": [
-                                                null,
-                                                "subject_type",
-                                                "metrics",
-                                                "series",
-                                                "rows",
-                                                "schedules",
-                                                null
-                                            ]
+                                            ],
+                                            "minItems": 2,
+                                            "maxItems": 2,
+                                            "additionalItems": false
                                         }
                                     },
                                     "required": [
@@ -12665,34 +12700,16 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/reports/spend-trend": {
-            "get": {
-                "operationId": "report.spendTrend",
-                "description": "GET /reports/spend-trend",
-                "summary": "Get spend trend",
-                "tags": [
-                    "Report"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "": {
+                                            "type": "array",
+                                            "prefixItems": [
+                                                {
+                                                    "type": "array",
+                                                    "items": {}
+                                                },
+                                                {
                                                     "type": "object",
                                                     "properties": {
                                                         "feature_key": {
@@ -12743,37 +12760,102 @@
                                                         "source_facts_hash",
                                                         "reason_codes"
                                                     ]
-                                                },
-                                                "subject_type": {
-                                                    "type": "string",
-                                                    "const": "report_spend_trend"
-                                                },
-                                                "metrics": {
-                                                    "type": "array",
-                                                    "items": {}
-                                                },
-                                                "series": {
-                                                    "type": "array",
-                                                    "items": {}
-                                                },
-                                                "rows": {
-                                                    "type": "array",
-                                                    "items": {}
-                                                },
-                                                "schedules": {
-                                                    "type": "array",
-                                                    "items": {}
                                                 }
-                                            },
-                                            "required": [
-                                                null,
-                                                "subject_type",
-                                                "metrics",
-                                                "series",
-                                                "rows",
-                                                "schedules",
-                                                null
-                                            ]
+                                            ],
+                                            "minItems": 2,
+                                            "maxItems": 2,
+                                            "additionalItems": false
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/spend-trend": {
+            "get": {
+                "operationId": "report.spendTrend",
+                "description": "GET /reports/spend-trend",
+                "summary": "Get spend trend",
+                "tags": [
+                    "Report"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "prefixItems": [
+                                                {
+                                                    "type": "array",
+                                                    "items": {}
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "feature_key": {
+                                                            "type": "string"
+                                                        },
+                                                        "capability_group": {
+                                                            "type": "string"
+                                                        },
+                                                        "available": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "status": {
+                                                            "type": "string"
+                                                        },
+                                                        "payload": {
+                                                            "type": [
+                                                                "array",
+                                                                "null"
+                                                            ],
+                                                            "items": {}
+                                                        },
+                                                        "provenance": {
+                                                            "type": "string"
+                                                        },
+                                                        "source_facts": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        "source_facts_hash": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "reason_codes": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "feature_key",
+                                                        "capability_group",
+                                                        "available",
+                                                        "status",
+                                                        "payload",
+                                                        "provenance",
+                                                        "source_facts",
+                                                        "source_facts_hash",
+                                                        "reason_codes"
+                                                    ]
+                                                }
+                                            ],
+                                            "minItems": 2,
+                                            "maxItems": 2,
+                                            "additionalItems": false
                                         }
                                     },
                                     "required": [
@@ -12799,34 +12881,16 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/reports/spend-by-category": {
-            "get": {
-                "operationId": "report.spendByCategory",
-                "description": "GET /reports/spend-by-category",
-                "summary": "Get spend by category",
-                "tags": [
-                    "Report"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "": {
+                                            "type": "array",
+                                            "prefixItems": [
+                                                {
+                                                    "type": "array",
+                                                    "items": {}
+                                                },
+                                                {
                                                     "type": "object",
                                                     "properties": {
                                                         "feature_key": {
@@ -12877,37 +12941,102 @@
                                                         "source_facts_hash",
                                                         "reason_codes"
                                                     ]
-                                                },
-                                                "subject_type": {
-                                                    "type": "string",
-                                                    "const": "report_spend_by_category"
-                                                },
-                                                "metrics": {
-                                                    "type": "array",
-                                                    "items": {}
-                                                },
-                                                "series": {
-                                                    "type": "array",
-                                                    "items": {}
-                                                },
-                                                "rows": {
-                                                    "type": "array",
-                                                    "items": {}
-                                                },
-                                                "schedules": {
-                                                    "type": "array",
-                                                    "items": {}
                                                 }
-                                            },
-                                            "required": [
-                                                null,
-                                                "subject_type",
-                                                "metrics",
-                                                "series",
-                                                "rows",
-                                                "schedules",
-                                                null
-                                            ]
+                                            ],
+                                            "minItems": 2,
+                                            "maxItems": 2,
+                                            "additionalItems": false
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/spend-by-category": {
+            "get": {
+                "operationId": "report.spendByCategory",
+                "description": "GET /reports/spend-by-category",
+                "summary": "Get spend by category",
+                "tags": [
+                    "Report"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "prefixItems": [
+                                                {
+                                                    "type": "array",
+                                                    "items": {}
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "feature_key": {
+                                                            "type": "string"
+                                                        },
+                                                        "capability_group": {
+                                                            "type": "string"
+                                                        },
+                                                        "available": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "status": {
+                                                            "type": "string"
+                                                        },
+                                                        "payload": {
+                                                            "type": [
+                                                                "array",
+                                                                "null"
+                                                            ],
+                                                            "items": {}
+                                                        },
+                                                        "provenance": {
+                                                            "type": "string"
+                                                        },
+                                                        "source_facts": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        "source_facts_hash": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "reason_codes": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "feature_key",
+                                                        "capability_group",
+                                                        "available",
+                                                        "status",
+                                                        "payload",
+                                                        "provenance",
+                                                        "source_facts",
+                                                        "source_facts_hash",
+                                                        "reason_codes"
+                                                    ]
+                                                }
+                                            ],
+                                            "minItems": 2,
+                                            "maxItems": 2,
+                                            "additionalItems": false
                                         }
                                     },
                                     "required": [
@@ -12933,7 +13062,76 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "string"
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "prefixItems": [
+                                                {
+                                                    "type": "array",
+                                                    "items": {}
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "feature_key": {
+                                                            "type": "string"
+                                                        },
+                                                        "capability_group": {
+                                                            "type": "string"
+                                                        },
+                                                        "available": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "status": {
+                                                            "type": "string"
+                                                        },
+                                                        "payload": {
+                                                            "type": [
+                                                                "array",
+                                                                "null"
+                                                            ],
+                                                            "items": {}
+                                                        },
+                                                        "provenance": {
+                                                            "type": "string"
+                                                        },
+                                                        "source_facts": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        "source_facts_hash": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "reason_codes": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "feature_key",
+                                                        "capability_group",
+                                                        "available",
+                                                        "status",
+                                                        "payload",
+                                                        "provenance",
+                                                        "source_facts",
+                                                        "source_facts_hash",
+                                                        "reason_codes"
+                                                    ]
+                                                }
+                                            ],
+                                            "minItems": 2,
+                                            "maxItems": 2,
+                                            "additionalItems": false
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
                                 }
                             }
                         }
@@ -15840,36 +16038,13 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "rfq_id": {
-                                                    "type": "string"
-                                                },
-                                                "items": {
+                                            "type": "array",
+                                            "prefixItems": [
+                                                {
                                                     "type": "array",
                                                     "items": {}
                                                 },
-                                                "risk_items": {
-                                                    "type": "array",
-                                                    "items": {}
-                                                },
-                                                "manual_review": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                        "": {
-                                                            "type": "array",
-                                                            "items": {}
-                                                        },
-                                                        "pending_items": {
-                                                            "type": "integer"
-                                                        }
-                                                    },
-                                                    "required": [
-                                                        null,
-                                                        "pending_items"
-                                                    ]
-                                                },
-                                                "": {
+                                                {
                                                     "type": "object",
                                                     "properties": {
                                                         "feature_key": {
@@ -15921,14 +16096,10 @@
                                                         "reason_codes"
                                                     ]
                                                 }
-                                            },
-                                            "required": [
-                                                "rfq_id",
-                                                "items",
-                                                "risk_items",
-                                                "manual_review",
-                                                null
-                                            ]
+                                            ],
+                                            "minItems": 2,
+                                            "maxItems": 2,
+                                            "additionalItems": false
                                         },
                                         "meta": {
                                             "type": "object",
@@ -15988,7 +16159,88 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "string"
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "prefixItems": [
+                                                {
+                                                    "type": "array",
+                                                    "items": {}
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "feature_key": {
+                                                            "type": "string"
+                                                        },
+                                                        "capability_group": {
+                                                            "type": "string"
+                                                        },
+                                                        "available": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "status": {
+                                                            "type": "string"
+                                                        },
+                                                        "payload": {
+                                                            "type": [
+                                                                "array",
+                                                                "null"
+                                                            ],
+                                                            "items": {}
+                                                        },
+                                                        "provenance": {
+                                                            "type": "string"
+                                                        },
+                                                        "source_facts": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        "source_facts_hash": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "reason_codes": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "feature_key",
+                                                        "capability_group",
+                                                        "available",
+                                                        "status",
+                                                        "payload",
+                                                        "provenance",
+                                                        "source_facts",
+                                                        "source_facts_hash",
+                                                        "reason_codes"
+                                                    ]
+                                                }
+                                            ],
+                                            "minItems": 2,
+                                            "maxItems": 2,
+                                            "additionalItems": false
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "rfq_id": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "rfq_id"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "meta"
+                                    ]
                                 }
                             }
                         }
@@ -16106,25 +16358,6 @@
                                 }
                             }
                         }
-                    },
-                    "404": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Risk item not found"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
                     }
                 }
             }
@@ -16216,25 +16449,6 @@
                                     },
                                     "required": [
                                         "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "const": "Risk item not found"
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
                                     ]
                                 }
                             }
@@ -19900,43 +20114,13 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "vendor_id": {
-                                                    "type": "string"
-                                                },
-                                                "evidence": {
+                                            "type": "array",
+                                            "prefixItems": [
+                                                {
                                                     "type": "array",
                                                     "items": {}
                                                 },
-                                                "findings": {
-                                                    "type": "array",
-                                                    "items": {}
-                                                },
-                                                "summary_scores": {
-                                                    "type": "array",
-                                                    "items": {}
-                                                },
-                                                "scores": {
-                                                    "type": "array",
-                                                    "items": {}
-                                                },
-                                                "warning_flags": {
-                                                    "type": "array",
-                                                    "items": {}
-                                                },
-                                                "sanctions_screenings": {
-                                                    "type": "array",
-                                                    "items": {}
-                                                },
-                                                "due_diligence_status": {
-                                                    "type": "string"
-                                                },
-                                                "evidence_freshness": {
-                                                    "type": "array",
-                                                    "items": {}
-                                                },
-                                                "": {
+                                                {
                                                     "type": "object",
                                                     "properties": {
                                                         "feature_key": {
@@ -19988,19 +20172,10 @@
                                                         "reason_codes"
                                                     ]
                                                 }
-                                            },
-                                            "required": [
-                                                "vendor_id",
-                                                "evidence",
-                                                "findings",
-                                                "summary_scores",
-                                                "scores",
-                                                "warning_flags",
-                                                "sanctions_screenings",
-                                                "due_diligence_status",
-                                                "evidence_freshness",
-                                                null
-                                            ]
+                                            ],
+                                            "minItems": 2,
+                                            "maxItems": 2,
+                                            "additionalItems": false
                                         }
                                     },
                                     "required": [
@@ -20054,7 +20229,76 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "string"
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "prefixItems": [
+                                                {
+                                                    "type": "array",
+                                                    "items": {}
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "feature_key": {
+                                                            "type": "string"
+                                                        },
+                                                        "capability_group": {
+                                                            "type": "string"
+                                                        },
+                                                        "available": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "status": {
+                                                            "type": "string"
+                                                        },
+                                                        "payload": {
+                                                            "type": [
+                                                                "array",
+                                                                "null"
+                                                            ],
+                                                            "items": {}
+                                                        },
+                                                        "provenance": {
+                                                            "type": "string"
+                                                        },
+                                                        "source_facts": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        },
+                                                        "source_facts_hash": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "reason_codes": {
+                                                            "type": "array",
+                                                            "items": {}
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "feature_key",
+                                                        "capability_group",
+                                                        "available",
+                                                        "status",
+                                                        "payload",
+                                                        "provenance",
+                                                        "source_facts",
+                                                        "source_facts_hash",
+                                                        "reason_codes"
+                                                    ]
+                                                }
+                                            ],
+                                            "minItems": 2,
+                                            "maxItems": 2,
+                                            "additionalItems": false
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
                                 }
                             }
                         }

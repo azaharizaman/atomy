@@ -12,28 +12,28 @@ class RiskItem extends Model
 {
     use HasUlids;
 
-    protected $keyType = 'string';
+    protected $keyType = "string";
 
     public $incrementing = false;
 
-    protected $table = 'risk_items';
+    protected $table = "risk_items";
 
     protected $fillable = [
-        'tenant_id',
-        'rfq_id',
-        'severity',
-        'title',
-        'description',
-        'source',
-        'status',
-        'resolved_at',
-        'resolved_by',
+        "tenant_id",
+        "rfq_id",
+        "severity",
+        "title",
+        "description",
+        "source",
+        "status",
+        "resolved_at",
+        "resolved_by",
     ];
 
     protected $casts = [
-        'resolved_at' => 'datetime',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        "resolved_at" => "datetime",
+        "created_at" => "datetime",
+        "updated_at" => "datetime",
     ];
 
     /**
@@ -41,6 +41,11 @@ class RiskItem extends Model
      */
     public function rfq(): BelongsTo
     {
-        return $this->belongsTo(Rfq::class, 'rfq_id');
+        return $this->belongsTo(Rfq::class);
+    }
+
+    public function resolvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, "resolved_by");
     }
 }

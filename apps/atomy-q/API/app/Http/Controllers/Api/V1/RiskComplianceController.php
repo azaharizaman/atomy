@@ -10,16 +10,15 @@ use App\Models\RiskItem;
 use App\Models\Rfq;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Nexus\InsightOperations\Coordinators\RiskInsightCoordinator;
+use Nexus\InsightOperations\Contracts\RiskInsightCoordinatorInterface;
 
 final class RiskComplianceController extends Controller
 {
     use ExtractsAuthContext;
 
     public function __construct(
-        private readonly RiskInsightCoordinator $riskInsightCoordinator,
-    ) {
-    }
+        private readonly RiskInsightCoordinatorInterface $riskInsightCoordinator,
+    ) {}
 
     /**
      * GET /risk-items?rfqId=:id
@@ -27,14 +26,16 @@ final class RiskComplianceController extends Controller
     public function index(Request $request): JsonResponse
     {
         $tenantId = $this->tenantId($request);
-        $rfqId = trim((string) $request->query('rfqId'));
-        if ($rfqId !== '' && ! $this->rfqExists($tenantId, $rfqId)) {
-            return response()->json(['message' => 'RFQ not found'], 404);
+        $rfqId = trim((string) $request->query("rfqId"));
+        if ($rfqId !== "" && !$this->rfqExists($tenantId, $rfqId)) {
+            return response()->json(["message" => "RFQ not found"], 404);
         }
 
-        $result = $this->riskInsightCoordinator->show($tenantId, $rfqId)->toResponseArray();
-        $result['meta'] = [
-            'rfq_id' => $rfqId !== '' ? $rfqId : null,
+        $result = $this->riskInsightCoordinator
+            ->show($tenantId, $rfqId)
+            ->toResponseArray();
+        $result["meta"] = [
+            "rfq_id" => $rfqId !== "" ? $rfqId : null,
         ];
 
         return response()->json($result);
@@ -46,14 +47,19 @@ final class RiskComplianceController extends Controller
     public function generate(Request $request): JsonResponse
     {
         $tenantId = $this->tenantId($request);
-        $rfqId = trim((string) ($request->input('rfq_id') ?? $request->query('rfqId', '')));
-        if ($rfqId === '' || ! $this->rfqExists($tenantId, $rfqId)) {
-            return response()->json(['message' => 'RFQ not found'], 404);
+        $rfqId = trim(
+            (string) ($request->input("rfq_id") ??
+                $request->query("rfqId", "")),
+        );
+        if ($rfqId === "" || !$this->rfqExists($tenantId, $rfqId)) {
+            return response()->json(["message" => "RFQ not found"], 404);
         }
 
-        $result = $this->riskInsightCoordinator->generate($tenantId, $rfqId, $this->userId($request))->toResponseArray();
-        $result['meta'] = [
-            'rfq_id' => $rfqId,
+        $result = $this->riskInsightCoordinator
+            ->generate($tenantId, $rfqId, $this->userId($request))
+            ->toResponseArray();
+        $result["meta"] = [
+            "rfq_id" => $rfqId,
         ];
 
         return response()->json($result);
@@ -64,15 +70,16 @@ final class RiskComplianceController extends Controller
      */
     public function escalate(Request $request, string $id): JsonResponse
     {
-        $riskItem = $this->findRiskItem($this->tenantId($request), $id);
-        if (! $riskItem instanceof RiskItem) {
-            return response()->json(['message' => 'Risk item not found'], 404);
-        }
+        $tenantId = $this->tenantId($request);
+        $rfqId = trim((string) $request->query("rfqId", ""));
 
-        $riskItem->status = 'escalated';
-        $riskItem->save();
+        $this->riskInsightCoordinator->escalate($tenantId, $rfqId, $id);
 
-        return response()->json(['data' => $this->serializeRiskItem($riskItem)]);
+        $riskItem = $this->findRiskItem($tenantId, $id);
+
+        return response()->json([
+            "data" => $this->serializeRiskItem($riskItem),
+        ]);
     }
 
     /**
@@ -80,32 +87,36 @@ final class RiskComplianceController extends Controller
      */
     public function exception(Request $request, string $id): JsonResponse
     {
-        $riskItem = $this->findRiskItem($this->tenantId($request), $id);
-        if (! $riskItem instanceof RiskItem) {
-            return response()->json(['message' => 'Risk item not found'], 404);
-        }
+        $tenantId = $this->tenantId($request);
+        $rfqId = trim((string) $request->query("rfqId", ""));
 
-        $riskItem->status = 'exception';
-        $riskItem->resolved_at = now();
-        $riskItem->resolved_by = $this->userId($request);
-        $riskItem->save();
+        $this->riskInsightCoordinator->resolveAsException(
+            $tenantId,
+            $rfqId,
+            $id,
+            $this->userId($request),
+        );
 
-        return response()->json(['data' => $this->serializeRiskItem($riskItem)]);
+        $riskItem = $this->findRiskItem($tenantId, $id);
+
+        return response()->json([
+            "data" => $this->serializeRiskItem($riskItem),
+        ]);
     }
 
     private function rfqExists(string $tenantId, string $rfqId): bool
     {
         return Rfq::query()
-            ->where('tenant_id', strtolower(trim($tenantId)))
-            ->where('id', strtolower(trim($rfqId)))
+            ->where("tenant_id", strtolower(trim($tenantId)))
+            ->where("id", strtolower(trim($rfqId)))
             ->exists();
     }
 
     private function findRiskItem(string $tenantId, string $id): ?RiskItem
     {
         return RiskItem::query()
-            ->where('tenant_id', strtolower(trim($tenantId)))
-            ->where('id', strtolower(trim($id)))
+            ->where("tenant_id", strtolower(trim($tenantId)))
+            ->where("id", strtolower(trim($id)))
             ->first();
     }
 
@@ -115,16 +126,16 @@ final class RiskComplianceController extends Controller
     private function serializeRiskItem(RiskItem $riskItem): array
     {
         return [
-            'id' => (string) $riskItem->id,
-            'rfq_id' => $riskItem->rfq_id,
-            'severity' => (string) $riskItem->severity,
-            'title' => (string) $riskItem->title,
-            'description' => $riskItem->description,
-            'source' => $riskItem->source,
-            'status' => (string) $riskItem->status,
-            'resolved_at' => $riskItem->resolved_at?->toAtomString(),
-            'resolved_by' => $riskItem->resolved_by,
-            'updated_at' => $riskItem->updated_at?->toAtomString(),
+            "id" => (string) $riskItem->id,
+            "rfq_id" => $riskItem->rfq_id,
+            "severity" => (string) $riskItem->severity,
+            "title" => (string) $riskItem->title,
+            "description" => $riskItem->description,
+            "source" => $riskItem->source,
+            "status" => (string) $riskItem->status,
+            "resolved_at" => $riskItem->resolved_at?->toAtomString(),
+            "resolved_by" => $riskItem->resolved_by,
+            "updated_at" => $riskItem->updated_at?->toAtomString(),
         ];
     }
 }

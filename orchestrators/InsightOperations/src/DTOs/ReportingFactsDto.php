@@ -26,21 +26,33 @@ final readonly class ReportingFactsDto
     public function toArray(): array
     {
         $metrics = array_map(
-            static fn (MetricFactDto $metric): array => $metric->toArray(),
+            static fn(MetricFactDto $metric): array => $metric->toArray(),
             $this->metrics,
         );
         $metricValues = [];
+        $reservedKeys = [
+            "subject_type",
+            "metrics",
+            "series",
+            "rows",
+            "schedules",
+        ];
+
         foreach ($metrics as $metric) {
-            $metricValues[(string) $metric['key']] = $metric['value'];
+            $key = (string) $metric["key"];
+            if (in_array($key, $reservedKeys, true)) {
+                continue;
+            }
+            $metricValues[$key] = $metric["value"];
         }
 
         return [
             ...$metricValues,
-            'subject_type' => $this->subjectType,
-            'metrics' => $metrics,
-            'series' => $this->series,
-            'rows' => $this->rows,
-            'schedules' => $this->schedules,
+            "subject_type" => $this->subjectType,
+            "metrics" => $metrics,
+            "series" => $this->series,
+            "rows" => $this->rows,
+            "schedules" => $this->schedules,
         ];
     }
 }

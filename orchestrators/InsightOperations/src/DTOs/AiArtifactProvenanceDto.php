@@ -25,18 +25,21 @@ final readonly class AiArtifactProvenanceDto
      */
     public function toArray(): array
     {
-        return [
-            'provider_name' => $this->providerName,
-            'endpoint_group' => $this->endpointGroup,
-            'model' => $this->model,
-            'prompt_version' => $this->promptVersion,
-            'provider_request_id' => $this->providerRequestId,
-            'input_hash' => $this->inputHash,
-            'output_hash' => $this->outputHash,
-            'latency_ms' => $this->latencyMs,
-            'generated_at' => $this->generatedAt,
-            'actor_id' => $this->actorId,
-            'actor_hash' => $this->actorHash,
-        ];
+        return array_filter(
+            [
+                "provider_name" => $this->providerName,
+                "endpoint_group" => $this->endpointGroup,
+                "model" => $this->model,
+                "prompt_version" => $this->promptVersion,
+                "provider_request_id" => $this->providerRequestId,
+                "input_hash" => $this->inputHash,
+                "output_hash" => $this->outputHash,
+                "latency_ms" => $this->latencyMs,
+                "generated_at" => $this->generatedAt,
+                "actor_id" => $this->actorId,
+                "actor_hash" => $this->actorHash,
+            ],
+            static fn($value): bool => $value !== null,
+        );
     }
 }
