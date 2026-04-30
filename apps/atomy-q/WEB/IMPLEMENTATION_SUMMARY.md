@@ -1,5 +1,21 @@
 # Implementation Summary
 
+## 2026-04-30 WEB Alpha Release Gate Repair
+
+- Repaired the Task 1 WEB gate failures without weakening behavior:
+  - removed the explicit `any` cast from project detail rendering by using a page-local narrow type for the missing manager name field,
+  - replaced the quote-intake `any` cast with a direct `Error` guard,
+  - fixed the RFQ award memoization dependency to preserve React compiler memoization,
+  - passed the required `vendorId` argument to vendor governance narrative generation on both vendor governance surfaces.
+- Updated the ESG compliance page test to use the shared async page render helper so the suspended route params resolve under test.
+- Verification:
+  - `cd apps/atomy-q/WEB && npx eslint "src/app/(dashboard)/projects/[projectId]/page.tsx" "src/app/(dashboard)/rfqs/[rfqId]/quote-intake/page.tsx"` -> PASS
+  - `cd apps/atomy-q/WEB && npx eslint "src/app/(dashboard)/rfqs/[rfqId]/award/page.tsx"` -> PASS
+  - `cd apps/atomy-q/WEB && npx eslint "src/app/(dashboard)/vendors/[vendorId]/esg-compliance/page.test.tsx"` -> PASS
+  - `cd apps/atomy-q/WEB && npx vitest run "src/app/(dashboard)/vendors/[vendorId]/esg-compliance/page.test.tsx"` -> PASS
+  - `cd apps/atomy-q/WEB && npm run build` -> PASS
+- Residual non-blocking warnings remain in the wider unit suite around unrelated suspended page tests and a few live-normalization expectation drift cases outside Task 1 scope.
+
 ## 2026-04-27 Vendor Sourcing Recommendation Browser Coverage
 
 - Added `tests/provider-sourcing-recommendation-e2e.spec.ts` to cover the canonical buyer flow in fake mode: provider-backed recommendation output renders, recommendation never auto-selects the shortlist, the buyer saves a manual shortlist through `selected-vendors`, and an unavailable recommendation still leaves manual selection usable.

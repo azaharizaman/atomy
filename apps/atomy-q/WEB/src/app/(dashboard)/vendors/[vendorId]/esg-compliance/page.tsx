@@ -72,7 +72,7 @@ function VendorEsgCompliancePageContent({ vendorId }: { vendorId: string }) {
         subtitle="Assistive interpretation of the current governance posture."
         summary={governance.narrative}
         fallbackCopy="Governance narrative is unavailable. Continue with the evidence and findings below."
-        onGenerate={() => generateGovernanceMutation.mutate()}
+        onGenerate={() => generateGovernanceMutation.mutate(vendorId)}
         isGenerating={generateGovernanceMutation.isPending}
         canGenerate={!generateGovernanceMutation.isPending}
       />

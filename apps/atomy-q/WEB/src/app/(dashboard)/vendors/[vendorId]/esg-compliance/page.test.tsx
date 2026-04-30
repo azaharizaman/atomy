@@ -1,6 +1,6 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 
 import { renderWithProviders } from '@/test/utils';
 
@@ -21,7 +21,7 @@ describe('VendorEsgCompliancePage', () => {
     vi.clearAllMocks();
   });
 
-  it('renders scores, evidence, findings, and warning flags', () => {
+  it('renders scores, evidence, findings, and warning flags', async () => {
     mockUseVendorGovernance.mockReturnValue({
       data: {
         vendorId: 'vendor-1',
@@ -68,9 +68,15 @@ describe('VendorEsgCompliancePage', () => {
       error: null,
     });
 
-    renderWithProviders(<VendorEsgCompliancePage params={Promise.resolve({ vendorId: 'vendor-1' })} />);
+    await act(async () => {
+      renderWithProviders(
+        <React.Suspense fallback={null}>
+          <VendorEsgCompliancePage params={Promise.resolve({ vendorId: 'vendor-1' })} />
+        </React.Suspense>,
+      );
+    });
 
-    expect(screen.getByText('ESG / Compliance')).toBeInTheDocument();
+    expect(await screen.findByText('ESG / Compliance')).toBeInTheDocument();
     expect(screen.getByText('Compliance Document Expired')).toBeInTheDocument();
     expect(screen.getByText('Open Severe Risk Finding')).toBeInTheDocument();
     expect(screen.getByText('ESG Review Stale')).toBeInTheDocument();
@@ -81,7 +87,7 @@ describe('VendorEsgCompliancePage', () => {
     expect(screen.getAllByText('45')).toHaveLength(2);
   });
 
-  it('surfaces an explicit unavailable live payload state', () => {
+  it('surfaces an explicit unavailable live payload state', async () => {
     mockUseVendorGovernance.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -89,9 +95,15 @@ describe('VendorEsgCompliancePage', () => {
       error: new Error('Invalid vendor governance payload'),
     });
 
-    renderWithProviders(<VendorEsgCompliancePage params={Promise.resolve({ vendorId: 'vendor-1' })} />);
+    await act(async () => {
+      renderWithProviders(
+        <React.Suspense fallback={null}>
+          <VendorEsgCompliancePage params={Promise.resolve({ vendorId: 'vendor-1' })} />
+        </React.Suspense>,
+      );
+    });
 
-    expect(screen.getByText(/could not load governance data/i)).toBeInTheDocument();
+    expect(await screen.findByText(/could not load governance data/i)).toBeInTheDocument();
     expect(screen.getByText(/invalid vendor governance payload/i)).toBeInTheDocument();
   });
 });
