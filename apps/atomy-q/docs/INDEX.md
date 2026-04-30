@@ -9,6 +9,7 @@ Use this file to find the canonical document for a topic without hunting through
 | What is the project status right now? | [`CURRENT_STATE.md`](./CURRENT_STATE.md) |
 | What is in alpha scope? | [`01-product/scope/alpha-scope.md`](./01-product/scope/alpha-scope.md) |
 | What is out of scope? | [`01-product/scope/out-of-scope.md`](./01-product/scope/out-of-scope.md) |
+| What supersedes prior alpha launch specs and controls go/no-go? | [`02-release-management/current-release/alpha-launch-readiness-superseding-spec-2026-04-30.md`](./02-release-management/current-release/alpha-launch-readiness-superseding-spec-2026-04-30.md) |
 | What is the active release task? | [`02-release-management/current-release/release-plan.md`](./02-release-management/current-release/release-plan.md) |
 | What evidence exists for the current release? | [`02-release-management/current-release/release-checklist.md`](./02-release-management/current-release/release-checklist.md) |
 | What are the current blockers and risks? | [`02-release-management/current-release/blockers.md`](./02-release-management/current-release/blockers.md) |

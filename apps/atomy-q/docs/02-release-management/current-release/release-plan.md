@@ -10,13 +10,20 @@ Goal:
 - consolidate blocker status, verification evidence, staging smoke results, and accepted deferments into one release decision
 
 Required completion criteria:
+- the superseding launch readiness spec is applied as the controlling go/no-go contract
 - blocker ledger reflects current reality
 - WEB lint/build/unit gates are in a releasable state
 - API alpha matrix passes against a clean test database
 - at least one true staging golden-path smoke passes with `NEXT_PUBLIC_USE_MOCKS=false`
 - every intentionally deferred feature still exposed in docs or code has owner, rationale, and operator-facing behavior
+- release posture is explicitly selected as either AI-enabled alpha or clearly disclosed manual-continuity alpha
+- manual continuity and human-in-the-loop gates pass regardless of AI posture
+- customer disclosure is complete if paid AI-assisted features are unavailable
 - release checklist contains engineering, product, and operator sign-off fields
 - alpha-supported flow is stated explicitly and cannot be inferred from broader route surface
+
+Controlling readiness contract:
+- [`alpha-launch-readiness-superseding-spec-2026-04-30.md`](./alpha-launch-readiness-superseding-spec-2026-04-30.md)
 
 ## Completed Tasks
 

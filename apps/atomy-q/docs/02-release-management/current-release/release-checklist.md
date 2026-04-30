@@ -2,16 +2,32 @@
 
 **Date:** 2026-04-15  
 **Plan:** `apps/atomy-q/docs/02-release-management/current-release/release-plan.md`  
+**Superseding readiness contract:** `apps/atomy-q/docs/02-release-management/current-release/alpha-launch-readiness-superseding-spec-2026-04-30.md`  
 **Scope:** Current alpha release evidence ledger for Atomy-Q API, WEB, staging readiness, and final Task 9 release gate.  
 **Environment:** Local workspace with project dependencies already installed; PostgreSQL, Redis, and MinIO containers were available per operator note. API tests used the project PHPUnit configuration.
 
 ## Executive Status
+
+As of 2026-04-30, the superseding launch readiness spec is the controlling go/no-go contract. Older green evidence remains historical until revalidated on the current branch under that contract.
 
 Task 1 rectification is **green locally as of 2026-04-15**. The WEB lint/build/unit gates, API alpha matrix, and API full suite now pass after the rectification pass documented below.
 
 The original baseline captured in this document was **not release-ready**. Those failure details are retained as historical context underneath the current evidence.
 
 The strongest rectification signal is that the alpha-critical backend flows pass together in the matrix: company registration, RFQ lifecycle, invitations, comparison, awards, vendor workflow, identity gap tests, normalization review, quote ingestion pipeline, and operational approvals. Remaining non-Task-1 alpha work should continue from the broader release plan before staging smoke.
+
+## Superseding Readiness Assessment - 2026-04-30
+
+This assessment was captured while drafting the superseding alpha launch readiness spec. It does not replace a final Task 9 evidence run, but it identifies current no-go signals that must be closed or superseded by newer evidence.
+
+- `cd apps/atomy-q/WEB && npm run lint`: FAIL. Three lint errors were observed: `no-explicit-any` in the project detail page, React compiler memoization preservation failure in the award page, and `no-explicit-any` in quote intake. Eleven warnings were also observed.
+- `cd apps/atomy-q/WEB && npm run build`: FAIL. TypeScript rejected `generateGovernanceMutation.mutate()` in `src/app/(dashboard)/vendors/[vendorId]/esg-compliance/page.tsx` because required mutation arguments were missing.
+- `cd apps/atomy-q/API && php artisan test --filter "RegisterCompanyTest|AuthTest|RfqLifecycleMutationTest|RfqInvitationReminderTest|QuoteSubmissionWorkflowTest|QuoteIngestionPipelineTest|QuoteIngestionIntelligenceTest|NormalizationReviewWorkflowTest|ComparisonRunWorkflowTest|ComparisonSnapshotWorkflowTest|AwardWorkflowTest|VendorWorkflowTest|IdentityGap7Test|OperationalApprovalApiTest|ProjectAclTest|DashboardReportAiSummaryApiTest|RiskComplianceAiInsightsApiTest|VendorGovernanceApiTest|VendorRecommendationApiTest|VendorRecommendationAiGateTest|AiStatusApiTest"`: FAIL in the default local DB posture because PostgreSQL on `127.0.0.1:5433` was unavailable, and also exposed real failures in RFQ duplication, quote ingestion, comparison snapshot/freeze, dashboard AI failure handling, and vendor recommendation artifact persistence.
+- `cd apps/atomy-q/API && DB_CONNECTION=sqlite DB_DATABASE=':memory:' php artisan test --filter "DashboardReportAiSummaryApiTest|RiskComplianceAiInsightsApiTest|VendorGovernanceApiTest|VendorRecommendationApiTest|ComparisonRunWorkflowTest|ComparisonSnapshotWorkflowTest|QuoteIngestionIntelligenceTest|QuoteSubmissionWorkflowTest|RfqLifecycleMutationTest"`: FAIL. 14 failed, 51 passed. Passing slices included risk compliance and vendor governance. Failing slices included RFQ duplication, dashboard provider-failure behavior, vendor recommendation artifact persistence, comparison preview/final missing-file behavior, and quote ingestion readiness.
+- `cd orchestrators/InsightOperations && ./vendor/bin/phpunit`: PASS. 16 tests, 84 assertions.
+- `cd orchestrators/IntelligenceOperations && ./vendor/bin/phpunit`: NOT RUN. No package-local `vendor/bin/phpunit` exists in that directory.
+
+Current status from this assessment: **internal alpha only / no external design-partner launch** until a newer Task 9 run closes these no-go signals under the superseding spec.
 
 ## Latest Rectification Evidence - 2026-04-15
 

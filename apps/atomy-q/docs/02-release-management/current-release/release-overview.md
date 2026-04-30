@@ -12,6 +12,7 @@ Design-partner alpha release for Atomy-Q.
 
 ## Active References
 
+- Superseding launch readiness spec: [`alpha-launch-readiness-superseding-spec-2026-04-30.md`](./alpha-launch-readiness-superseding-spec-2026-04-30.md)
 - Active execution plan: [`release-plan.md`](./release-plan.md)
 - Evidence ledger: [`release-checklist.md`](./release-checklist.md)
 - Blockers and current status: [`blockers.md`](./blockers.md)
@@ -19,4 +20,4 @@ Design-partner alpha release for Atomy-Q.
 
 ## Release Decision Rule
 
-If Task 9 cannot be closed with staging evidence, the release posture remains internal alpha only.
+The superseding launch readiness spec controls go/no-go interpretation. If Task 9 cannot be closed with staging evidence, explicit release posture, disclosure state, and sign-off, the release posture remains internal alpha only.

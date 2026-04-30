@@ -11,9 +11,12 @@ The current release has completed the execution work for Section 9 Tasks 1 to 8 
 - `Section 9 Task 9: Final Alpha Release Gate`
 
 Canonical active release docs:
+- [`02-release-management/current-release/alpha-launch-readiness-superseding-spec-2026-04-30.md`](./02-release-management/current-release/alpha-launch-readiness-superseding-spec-2026-04-30.md)
 - [`02-release-management/current-release/release-overview.md`](./02-release-management/current-release/release-overview.md)
 - [`02-release-management/current-release/release-plan.md`](./02-release-management/current-release/release-plan.md)
 - [`02-release-management/current-release/release-checklist.md`](./02-release-management/current-release/release-checklist.md)
+
+The superseding alpha launch readiness spec controls go/no-go interpretation where older alpha specs, implementation plans, handoff docs, or checklist entries conflict.
 
 ## Current Product Posture
 
@@ -31,6 +34,8 @@ Current alpha constraints:
 - `QUOTE_INTELLIGENCE_MODE=deterministic` is the supported alpha runtime.
 - `QUEUE_CONNECTION=sync` is the supported staging posture for the main alpha smoke.
 - non-alpha surfaces remain hidden or explicitly deferred.
+- manual continuity and human-in-the-loop review are permanent statutory product requirements, not temporary alpha fallbacks.
+- AI-enabled alpha and clearly disclosed manual-continuity alpha are both valid release postures only when their gates in the superseding spec pass.
 
 ## Nexus Dependency Posture
 
