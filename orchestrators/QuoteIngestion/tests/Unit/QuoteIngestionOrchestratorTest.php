@@ -328,6 +328,77 @@ final class QuoteIngestionOrchestratorTest extends TestCase
         $orchestrator->process($submissionId, $tenantId);
     }
 
+    public function testProcessNormalizesFractionalConfidenceBeforeReadinessThreshold(): void
+    {
+        $tenantId = 'tenant-1';
+        $submissionId = 'submission-1';
+        $submission = $this->createSubmission($submissionId, $tenantId, 'rfq-123', 'Vendor A');
+
+        $coordinator = $this->createMock(QuotationIntelligenceCoordinatorInterface::class);
+        $decisionTrailWriter = $this->createMock(DecisionTrailWriterInterface::class);
+        $tenantContext = $this->createMock(TenantContextInterface::class);
+        $logger = $this->createMock(LoggerInterface::class);
+        $submissionQuery = $this->createMock(QuoteSubmissionQueryInterface::class);
+        $submissionPersist = $this->createMock(QuoteSubmissionPersistInterface::class);
+        $sourceLineQuery = $this->createMock(NormalizationSourceLineQueryInterface::class);
+        $sourceLinePersist = $this->createMock(NormalizationSourceLinePersistInterface::class);
+
+        $submissionQuery->method('find')->willReturn($submission);
+        $sourceLineQuery->method('findExisting')->willReturn(null);
+
+        $coordinator->expects(self::once())
+            ->method('processQuote')
+            ->with($tenantId, $submissionId)
+            ->willReturn([
+                'lines' => [
+                    [
+                        'rfq_line_id' => 'rfq-line-1',
+                        'vendor_description' => 'Widget A',
+                        'quoted_quantity' => 1,
+                        'quoted_unit' => 'EA',
+                        'quoted_unit_price' => 12,
+                        'ai_confidence' => 0.95,
+                        'taxonomy_code' => 'TAX-100',
+                        'metadata' => ['mapping_version' => 'v1'],
+                    ],
+                ],
+                'risks' => [],
+            ]);
+
+        $sourceLinePersist->expects(self::once())
+            ->method('upsert')
+            ->with(
+                $tenantId,
+                $submissionId,
+                'rfq-line-1',
+                self::callback(static fn (array $payload): bool => $payload['ai_confidence'] === 95.0)
+            );
+
+        $decisionTrailWriter->expects(self::once())->method('write');
+        $submissionPersist->expects(self::once())->method('markExtracting')->with($submission);
+        $submissionPersist->expects(self::once())->method('markNormalizing')->with($submission);
+        $submissionPersist->expects(self::once())
+            ->method('markCompleted')
+            ->with($submission, 'ready', 95.0, 1);
+        $submissionPersist->expects(self::never())->method('markFailed');
+
+        $tenantContext->expects(self::once())->method('setTenant')->with($tenantId);
+        $tenantContext->expects(self::once())->method('clearTenant');
+
+        $orchestrator = new QuoteIngestionOrchestrator(
+            $coordinator,
+            $decisionTrailWriter,
+            $tenantContext,
+            $logger,
+            $submissionQuery,
+            $submissionPersist,
+            $sourceLineQuery,
+            $sourceLinePersist,
+        );
+
+        $orchestrator->process($submissionId, $tenantId);
+    }
+
     public function testProcessHandlesMissingMetadataWithoutFailing(): void
     {
         $tenantId = 'tenant-1';

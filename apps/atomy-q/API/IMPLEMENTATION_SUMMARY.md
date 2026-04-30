@@ -1,5 +1,18 @@
 # Implementation Summary - Atomy-Q Backend API
 
+## 2026-04-30 Alpha RFQ Duplication And Quote Intake Readiness Repair
+
+- RFQ line-item `specifications` now remains a text value end-to-end instead of being JSON-cast, so RFQ duplication preserves exact string/null values for copied line items.
+- RFQ line-item factory data now emits optional sentence text for `specifications`, matching the text database column and API validation contract.
+- RFQ line-item create/update responses now include `specifications` alongside list responses.
+- Quote ingestion processor binding now gives explicit `atomy.quote_intelligence.mode=deterministic` precedence over global provider AI mode, preserving deterministic/manual alpha quote intake when provider AI is globally enabled. Provider document extraction remains available through explicit `atomy.quote_intelligence.mode=provider`, with deterministic semantic mapping for the normalized source-line contract.
+- Deterministic quote processing now resolves both configured local-disk paths and `storage_path('app/...')` paths without dropping nested `quote-submissions/` prefixes, keeping tenant-scoped same-path lookup stable in tests and runtime helpers.
+- Quote reparse now returns the actual refreshed submission state after sync processing instead of always reporting `extracting`.
+- Quote ingestion confidence handling accepts both provider-style `0..1` and deterministic `0..100` confidence scales before applying the readiness threshold.
+- Verification:
+  - `cd apps/atomy-q/API && DB_CONNECTION=sqlite DB_DATABASE=':memory:' php artisan test --filter "RfqLifecycleMutationTest|QuoteSubmissionWorkflowTest|QuoteIngestionPipelineTest|QuoteIngestionIntelligenceTest"` -> PASS (38 tests, 221 assertions).
+  - `cd apps/atomy-q/API && DB_CONNECTION=sqlite DB_DATABASE=':memory:' php artisan test tests/Unit/QuoteIngestionOrchestratorTest.php tests/Feature/ProviderQuoteExtractionTest.php` -> PASS (6 tests, 62 assertions).
+
 ## 2026-04-26 Provider-Normalization Override Audit Contract
 
 - `NormalizationController` source-line responses now expose the provider-normalization contract needed by WEB: `provider_suggested`, `effective_values`, `is_buyer_overridden`, `latest_override`, and provider-confidence context alongside the existing source-line fields.

@@ -255,6 +255,10 @@ final readonly class QuoteIngestionOrchestrator
             return null;
         }
 
+        if ($confidence >= 0.0 && $confidence <= 1.0) {
+            return $confidence * 100.0;
+        }
+
         return $confidence;
     }
 

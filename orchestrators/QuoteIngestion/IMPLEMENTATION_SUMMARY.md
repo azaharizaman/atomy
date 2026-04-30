@@ -18,6 +18,9 @@
    - Sanitizes failure messages before persistence to avoid leaking internal error details.
    - Exposes the generic failure message as a shared constant reused by the retry-exhaustion job path.
 3. Added unit tests for core orchestration behavior and failure paths.
+4. 2026-04-30 alpha readiness update:
+   - Normalizes provider-style fractional confidence values (`0..1`) to the package readiness scale (`0..100`) before decision-trail and completion status decisions.
+   - Keeps deterministic confidence values already emitted on the `0..100` scale unchanged.
 
 ## Verification coverage added
 
@@ -29,3 +32,4 @@
   - completion status and persisted line count are correct.
 - Coordinator failure marks submission as failed and clears tenant context.
 - Confidence averaging falls back to `0.0` when no finite numeric confidence is available.
+- Fractional provider confidence such as `0.95` is treated as `95.0` so valid provider-backed extraction can reach `ready`.

@@ -467,12 +467,10 @@ final class QuoteSubmissionController extends Controller
         }
 
         $this->dispatchProcessingJob($qs);
+        $qs->refresh();
 
         return response()->json([
-            'data' => [
-                'id' => $qs->id,
-                'status' => 'extracting',
-            ],
+            'data' => $this->quoteSubmissionData($qs),
         ], 202);
     }
 

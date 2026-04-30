@@ -1005,6 +1005,7 @@ final class RfqController extends Controller
                 'uom' => $item->uom,
                 'unit_price' => $item->unit_price,
                 'currency' => $item->currency,
+                'specifications' => $item->specifications,
                 'sort_order' => $item->sort_order,
             ],
         ], 201);
@@ -1054,6 +1055,7 @@ final class RfqController extends Controller
                 'uom' => $item->uom,
                 'unit_price' => $item->unit_price,
                 'currency' => $item->currency,
+                'specifications' => $item->specifications,
                 'sort_order' => $item->sort_order,
             ],
         ]);
