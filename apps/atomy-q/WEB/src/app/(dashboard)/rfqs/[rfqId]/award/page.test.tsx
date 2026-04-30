@@ -1,7 +1,7 @@
 import React from 'react';
 import { beforeAll, describe, expect, it, vi, beforeEach } from 'vitest';
 import { act, fireEvent, screen } from '@testing-library/react';
-import { renderWithProviders } from '@/test/utils';
+import { renderPageWithProviders } from '@/test/utils';
 
 import { useAward } from '@/hooks/use-award';
 import { useComparisonRun } from '@/hooks/use-comparison-run';
@@ -210,13 +210,7 @@ describe('RfqAwardPage', () => {
   });
 
   it('renders live award data and action buttons', async () => {
-    await act(async () => {
-      renderWithProviders(
-        <React.Suspense fallback={null}>
-          <RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
-        </React.Suspense>,
-      );
-    });
+    await renderPageWithProviders(<RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
 
     expect(await screen.findByText('Winner Vendor', { selector: 'p' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /finalize award/i })).toBeEnabled();
@@ -232,13 +226,7 @@ describe('RfqAwardPage', () => {
       isError: true,
     } as unknown as UseComparisonRunsReturn);
 
-    await act(async () => {
-      renderWithProviders(
-        <React.Suspense fallback={null}>
-          <RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
-        </React.Suspense>,
-      );
-    });
+    await renderPageWithProviders(<RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
 
     expect(await screen.findByText('Winner Vendor', { selector: 'p' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /finalize award/i })).toBeEnabled();
@@ -246,13 +234,7 @@ describe('RfqAwardPage', () => {
   });
 
   it('allows sending debrief messages', async () => {
-    await act(async () => {
-      renderWithProviders(
-        <React.Suspense fallback={null}>
-          <RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
-        </React.Suspense>,
-      );
-    });
+    await renderPageWithProviders(<RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
 
     const debriefInput = await screen.findByLabelText(/debrief message/i);
     const sendButton = screen.getByRole('button', { name: /send debrief/i }); // Corrected regex
@@ -265,13 +247,7 @@ describe('RfqAwardPage', () => {
   });
 
   it('can apply an AI debrief draft into the editable textarea', async () => {
-    await act(async () => {
-      renderWithProviders(
-        <React.Suspense fallback={null}>
-          <RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
-        </React.Suspense>,
-      );
-    });
+    await renderPageWithProviders(<RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
 
     const reviewDraftButtons = await screen.findAllByRole('button', { name: /review ai draft/i });
     fireEvent.click(reviewDraftButtons[0]);
@@ -297,13 +273,7 @@ describe('RfqAwardPage', () => {
       data: [{ id: 'run-1', type: 'final', status: 'frozen' }],
     } as unknown as UseComparisonRunsReturn);
 
-    await act(async () => {
-      renderWithProviders(
-        <React.Suspense fallback={null}>
-          <RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
-        </React.Suspense>,
-      );
-    });
+    await renderPageWithProviders(<RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
 
     expect(await screen.findByText(/Select a vendor to award the contract based on the final comparison run/i)).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'Winner Vendor' })).toBeInTheDocument();
@@ -341,13 +311,7 @@ describe('RfqAwardPage', () => {
       store: { mutate: vi.fn(), isPending: false, isError: false },
     } as unknown as UseAwardReturn);
 
-    await act(async () => {
-      renderWithProviders(
-        <React.Suspense fallback={null}>
-          <RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
-        </React.Suspense>,
-      );
-    });
+    await renderPageWithProviders(<RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
 
     fireEvent.click(await screen.findByRole('button', { name: /finalize award/i }));
 
@@ -370,13 +334,7 @@ describe('RfqAwardPage', () => {
       store: { mutate: vi.fn(), isPending: false, isError: false },
     } as unknown as UseAwardReturn);
 
-    await act(async () => {
-      renderWithProviders(
-        <React.Suspense fallback={null}>
-          <RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
-        </React.Suspense>,
-      );
-    });
+    await renderPageWithProviders(<RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
 
     expect(await screen.findByText('Award payload rejected')).toBeInTheDocument();
     expect(screen.queryByText('No award record yet')).not.toBeInTheDocument();
@@ -398,13 +356,7 @@ describe('RfqAwardPage', () => {
       isError: true,
     } as unknown as UseComparisonRunsReturn);
 
-    await act(async () => {
-      renderWithProviders(
-        <React.Suspense fallback={null}>
-          <RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
-        </React.Suspense>,
-      );
-    });
+    await renderPageWithProviders(<RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
 
     expect(await screen.findByText('Comparison run snapshot missing')).toBeInTheDocument();
     expect(screen.queryByText('No award record yet')).not.toBeInTheDocument();
@@ -511,13 +463,7 @@ describe('RfqAwardPage', () => {
       },
     } as unknown as UseComparisonRunMatrixReturn);
 
-    await act(async () => {
-      renderWithProviders(
-        <React.Suspense fallback={null}>
-          <RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
-        </React.Suspense>,
-      );
-    });
+    await renderPageWithProviders(<RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
 
     expect(await screen.findByRole('option', { name: 'Winner Vendor' })).toBeInTheDocument();
     expect(screen.queryByRole('option', { name: 'Other Vendor' })).not.toBeInTheDocument();
@@ -538,13 +484,7 @@ describe('RfqAwardPage', () => {
       error: null,
     } as unknown as UseAwardGuidanceReturn);
 
-    await act(async () => {
-      renderWithProviders(
-        <React.Suspense fallback={null}>
-          <RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
-        </React.Suspense>,
-      );
-    });
+    await renderPageWithProviders(<RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
 
     expect(await screen.findByText('Award AI guidance unavailable')).toBeInTheDocument();
     expect(screen.queryByText('Award payload rejected')).not.toBeInTheDocument();

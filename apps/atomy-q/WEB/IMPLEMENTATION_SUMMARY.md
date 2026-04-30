@@ -7,7 +7,8 @@
   - replaced the quote-intake `any` cast with a direct `Error` guard,
   - fixed the RFQ award memoization dependency to preserve React compiler memoization,
   - passed the required `vendorId` argument to vendor governance narrative generation on both vendor governance surfaces.
-- Updated the ESG compliance page test to use the shared async page render helper so the suspended route params resolve under test.
+- Updated suspended route-param tests to use the shared async page render helper so Promise-backed route params resolve under test without duplicated `act`/`Suspense` wrappers.
+- Added vendor-governance generation assertions for both vendor governance surfaces so the live `vendorId` is passed to the mutation.
 - Verification:
   - `cd apps/atomy-q/WEB && npx eslint "src/app/(dashboard)/projects/[projectId]/page.tsx" "src/app/(dashboard)/rfqs/[rfqId]/quote-intake/page.tsx"` -> PASS
   - `cd apps/atomy-q/WEB && npx eslint "src/app/(dashboard)/rfqs/[rfqId]/award/page.tsx"` -> PASS
@@ -19,8 +20,7 @@
 - Remaining `npm run lint` warnings are non-blocking alpha hygiene items, not Task 1 release-gate failures:
   - unused RFQ context variables in hidden/deferred or shell-only RFQ pages: `rfqs/[rfqId]/[section]`, `approvals`, `comparison-runs`, `decision-trail`, `documents`, `negotiations`, and `risk`;
   - existing unused `_ids` parameter in RFQ bulk page selection handling;
-  - unused `api` import in `use-rfq-counts`;
-  - stale `no-console` disable in `AiNarrativePanel`.
+  - unused `api` import in `use-rfq-counts`.
   These should be cleaned in the route/surface classification and frontend hygiene follow-up rather than mixed into the WEB release-gate repair.
 
 ## 2026-04-27 Vendor Sourcing Recommendation Browser Coverage

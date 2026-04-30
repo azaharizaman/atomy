@@ -1,8 +1,8 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { normalizeApprovalSummary } from '@/hooks/use-approval-summary';
-import { renderWithProviders } from '@/test/utils';
+import { renderPageWithProviders } from '@/test/utils';
 
 let aiStatusData = {
   isFeatureAvailable: () => true,
@@ -128,13 +128,7 @@ describe('ApprovalsListPage', () => {
   });
 
   it('renders the AI summary aid panel and the selected approval summary payload', async () => {
-    await act(async () => {
-      renderWithProviders(
-        <React.Suspense fallback={null}>
-          <ApprovalsListPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
-        </React.Suspense>,
-      );
-    });
+    await renderPageWithProviders(<ApprovalsListPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
 
     expect(await screen.findByRole('heading', { name: 'AI summary aid' })).toBeInTheDocument();
     expect(screen.getAllByText('approval-1').length).toBeGreaterThan(0);
@@ -146,13 +140,7 @@ describe('ApprovalsListPage', () => {
   });
 
   it('reveals raw payload and provenance only after toggling view raw', async () => {
-    await act(async () => {
-      renderWithProviders(
-        <React.Suspense fallback={null}>
-          <ApprovalsListPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
-        </React.Suspense>,
-      );
-    });
+    await renderPageWithProviders(<ApprovalsListPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
 
     fireEvent.click(await screen.findByRole('button', { name: /view raw provider payload/i }));
     fireEvent.click(screen.getByRole('button', { name: /view raw provenance/i }));
@@ -162,13 +150,7 @@ describe('ApprovalsListPage', () => {
   });
 
   it('updates the summary when a different approval row is selected', async () => {
-    await act(async () => {
-      renderWithProviders(
-        <React.Suspense fallback={null}>
-          <ApprovalsListPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
-        </React.Suspense>,
-      );
-    });
+    await renderPageWithProviders(<ApprovalsListPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
 
     expect((await screen.findAllByText(/approval can proceed with the frozen comparison evidence/i)).length).toBeGreaterThan(0);
 
@@ -196,13 +178,7 @@ describe('ApprovalsListPage', () => {
       error: null,
     });
 
-    await act(async () => {
-      renderWithProviders(
-        <React.Suspense fallback={null}>
-          <ApprovalsListPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
-        </React.Suspense>,
-      );
-    });
+    await renderPageWithProviders(<ApprovalsListPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
 
     expect(await screen.findByRole('heading', { name: 'AI summary aid' })).toBeInTheDocument();
     expect(screen.getByText('Approval AI summary unavailable')).toBeInTheDocument();

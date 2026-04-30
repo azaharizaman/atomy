@@ -1,16 +1,29 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
-import { renderWithProviders } from '@/test/utils';
+import { renderPageWithProviders } from '@/test/utils';
 
 const mockUseVendorGovernance = vi.fn();
+const mockUseGenerateVendorGovernanceNarrative = vi.fn();
+const mockGenerateGovernance = vi.fn();
+
+vi.mock('@/hooks/use-ai-status', () => ({
+  useAiStatus: () => ({
+    isFeatureAvailable: () => true,
+    shouldHideAiControls: () => false,
+    shouldShowUnavailableMessage: () => false,
+    messageKeyForFeature: () => null,
+  }),
+}));
 
 vi.mock('@/hooks/use-vendor-governance', async () => {
   const actual = await vi.importActual<typeof import('@/hooks/use-vendor-governance')>('@/hooks/use-vendor-governance');
   return {
     ...actual,
     useVendorGovernance: (...args: unknown[]) => mockUseVendorGovernance(...args),
+    useGenerateVendorGovernanceNarrative: (...args: unknown[]) => mockUseGenerateVendorGovernanceNarrative(...args),
   };
 });
 
@@ -19,6 +32,10 @@ import VendorEsgCompliancePage from './page';
 describe('VendorEsgCompliancePage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseGenerateVendorGovernanceNarrative.mockReturnValue({
+      mutate: mockGenerateGovernance,
+      isPending: false,
+    });
   });
 
   it('renders scores, evidence, findings, and warning flags', async () => {
@@ -68,13 +85,7 @@ describe('VendorEsgCompliancePage', () => {
       error: null,
     });
 
-    await act(async () => {
-      renderWithProviders(
-        <React.Suspense fallback={null}>
-          <VendorEsgCompliancePage params={Promise.resolve({ vendorId: 'vendor-1' })} />
-        </React.Suspense>,
-      );
-    });
+    await renderPageWithProviders(<VendorEsgCompliancePage params={Promise.resolve({ vendorId: 'vendor-1' })} />);
 
     expect(await screen.findByText('ESG / Compliance')).toBeInTheDocument();
     expect(screen.getByText('Compliance Document Expired')).toBeInTheDocument();
@@ -87,6 +98,34 @@ describe('VendorEsgCompliancePage', () => {
     expect(screen.getAllByText('45')).toHaveLength(2);
   });
 
+  it('passes the live vendor id when generating governance narrative', async () => {
+    const user = userEvent.setup();
+    mockUseVendorGovernance.mockReturnValue({
+      data: {
+        vendorId: 'vendor-1',
+        evidence: [],
+        findings: [],
+        scores: {
+          esgScore: 55,
+          complianceHealthScore: 45,
+          riskWatchScore: 45,
+          evidenceFreshnessScore: 25,
+        },
+        warningFlags: [],
+        narrative: null,
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    await renderPageWithProviders(<VendorEsgCompliancePage params={Promise.resolve({ vendorId: 'vendor-1' })} />);
+
+    await user.click(screen.getByRole('button', { name: 'Generate' }));
+
+    expect(mockGenerateGovernance).toHaveBeenCalledWith('vendor-1');
+  });
+
   it('surfaces an explicit unavailable live payload state', async () => {
     mockUseVendorGovernance.mockReturnValue({
       data: undefined,
@@ -95,13 +134,7 @@ describe('VendorEsgCompliancePage', () => {
       error: new Error('Invalid vendor governance payload'),
     });
 
-    await act(async () => {
-      renderWithProviders(
-        <React.Suspense fallback={null}>
-          <VendorEsgCompliancePage params={Promise.resolve({ vendorId: 'vendor-1' })} />
-        </React.Suspense>,
-      );
-    });
+    await renderPageWithProviders(<VendorEsgCompliancePage params={Promise.resolve({ vendorId: 'vendor-1' })} />);
 
     expect(await screen.findByText(/could not load governance data/i)).toBeInTheDocument();
     expect(screen.getByText(/invalid vendor governance payload/i)).toBeInTheDocument();

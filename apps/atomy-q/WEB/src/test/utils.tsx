@@ -36,11 +36,16 @@ export async function renderPageWithProviders(
   ui: React.ReactElement,
   options?: Omit<RenderOptions, 'wrapper'>,
 ) {
-  const result = renderWithProviders(<React.Suspense fallback={null}>{ui}</React.Suspense>, options);
+  let result: ReturnType<typeof renderWithProviders> | null = null;
 
   await act(async () => {
+    result = renderWithProviders(<React.Suspense fallback={null}>{ui}</React.Suspense>, options);
     await Promise.resolve();
   });
+
+  if (result === null) {
+    throw new Error('Failed to render page with providers.');
+  }
 
   return result;
 }

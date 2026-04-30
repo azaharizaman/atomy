@@ -1,14 +1,25 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { renderWithProviders } from '@/test/utils';
+import { renderPageWithProviders } from '@/test/utils';
 
 const mockUseVendor = vi.fn();
 const mockUseVendorGovernance = vi.fn();
+const mockUseGenerateVendorGovernanceNarrative = vi.fn();
+const mockGenerateGovernance = vi.fn();
 const mockUseUpdateVendor = vi.fn();
 const mockUseUpdateVendorStatus = vi.fn();
+
+vi.mock('@/hooks/use-ai-status', () => ({
+  useAiStatus: () => ({
+    isFeatureAvailable: () => true,
+    shouldHideAiControls: () => false,
+    shouldShowUnavailableMessage: () => false,
+    messageKeyForFeature: () => null,
+  }),
+}));
 
 vi.mock('@/hooks/use-vendor', () => ({
   useVendor: (...args: unknown[]) => mockUseVendor(...args),
@@ -19,6 +30,7 @@ vi.mock('@/hooks/use-vendor-governance', async () => {
   return {
     ...actual,
     useVendorGovernance: (...args: unknown[]) => mockUseVendorGovernance(...args),
+    useGenerateVendorGovernanceNarrative: (...args: unknown[]) => mockUseGenerateVendorGovernanceNarrative(...args),
   };
 });
 
@@ -33,13 +45,7 @@ vi.mock('@/hooks/use-update-vendor', () => ({
 import VendorDetailPage from './page';
 
 async function renderVendorDetailPage(vendorId: string) {
-  await act(async () => {
-    renderWithProviders(
-      <React.Suspense fallback={null}>
-        <VendorDetailPage params={Promise.resolve({ vendorId })} />
-      </React.Suspense>,
-    );
-  });
+  await renderPageWithProviders(<VendorDetailPage params={Promise.resolve({ vendorId })} />);
 }
 
 describe('VendorDetailPage', () => {
@@ -85,6 +91,10 @@ describe('VendorDetailPage', () => {
       isLoading: false,
       isError: false,
       error: null,
+    });
+    mockUseGenerateVendorGovernanceNarrative.mockReturnValue({
+      mutate: mockGenerateGovernance,
+      isPending: false,
     });
   });
 
@@ -277,5 +287,24 @@ describe('VendorDetailPage', () => {
 
     expect(mutate).not.toHaveBeenCalled();
     expect(screen.getByText(/approval note is required/i)).toBeInTheDocument();
+  });
+
+  it('passes the live vendor id when generating governance narrative', async () => {
+    const user = userEvent.setup();
+
+    mockUseVendor.mockReturnValue({
+      data: baseVendor,
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    mockUseUpdateVendor.mockReturnValue({ mutate: vi.fn(), isPending: false, isError: false, error: null });
+    mockUseUpdateVendorStatus.mockReturnValue({ mutate: vi.fn(), isPending: false, isError: false, error: null });
+
+    await renderVendorDetailPage('ven-1');
+
+    await user.click(screen.getByRole('button', { name: 'Generate' }));
+
+    expect(mockGenerateGovernance).toHaveBeenCalledWith('ven-1');
   });
 });

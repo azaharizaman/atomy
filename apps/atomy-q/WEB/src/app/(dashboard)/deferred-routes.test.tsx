@@ -1,7 +1,8 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { renderPageWithProviders } from '@/test/utils';
 
 vi.mock('@/lib/alpha-mode', async () => {
   const actual = await vi.importActual<typeof import('@/lib/alpha-mode')>('@/lib/alpha-mode');
@@ -32,9 +33,7 @@ function renderWithQueryClient(ui: React.ReactElement) {
 }
 
 async function renderDeferredRoute(ui: React.ReactElement) {
-  await act(async () => {
-    renderWithQueryClient(<React.Suspense fallback={null}>{ui}</React.Suspense>);
-  });
+  await renderPageWithProviders(ui);
 }
 
 describe('alpha deferred routes', () => {
