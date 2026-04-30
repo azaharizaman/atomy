@@ -164,6 +164,9 @@ export default function RfqOverviewPage({ params }: { params: Promise<{ rfqId: s
         isError={rfqAiSummary.isError}
         error={rfqAiSummary.error}
         fallbackCopy="RFQ insights are unavailable. The deterministic RFQ overview remains usable."
+        onGenerate={rfqAiSummary.generate ?? undefined}
+        isGenerating={rfqAiSummary.isGenerating}
+        canGenerate={rfqAiSummary.canGenerate}
       />
 
       {/* 4 KPI scorecards */}

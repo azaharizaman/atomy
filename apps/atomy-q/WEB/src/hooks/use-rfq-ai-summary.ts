@@ -8,5 +8,7 @@ export function useRfqAiSummary(rfqId?: string | null) {
   return useAiNarrativeSummary(`/risk-items?rfqId=${encodeURIComponent(normalizedRfqId)}`, 'rfq_ai_insights', {
     enabled: normalizedRfqId !== '',
     queryKey: ['rfqs', normalizedRfqId, 'ai-summary'],
+    generatePath: '/risk-items/generate',
+    generatePayload: { rfq_id: normalizedRfqId },
   });
 }

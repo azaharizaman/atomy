@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
 import { renderWithProviders } from '@/test/utils';
 
@@ -96,5 +97,100 @@ describe('AiNarrativePanel', () => {
 
     expect(screen.getByText('AI summary unavailable')).toBeInTheDocument();
     expect(screen.getByText('ai.status.degraded')).toBeInTheDocument();
+  });
+
+  it('renders a generate button when generation is available', () => {
+    renderWithProviders(
+      <AiNarrativePanel
+        featureKey="insight_intelligence"
+        title="AI summary"
+        summary={null}
+        onGenerate={vi.fn()}
+        canGenerate
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Generate' })).toBeEnabled();
+  });
+
+  it('disables generate when canGenerate is false', () => {
+    renderWithProviders(
+      <AiNarrativePanel
+        featureKey="insight_intelligence"
+        title="AI summary"
+        summary={null}
+        onGenerate={vi.fn()}
+        canGenerate={false}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Generate' })).toBeDisabled();
+  });
+
+  it('calls onGenerate when the button is clicked', async () => {
+    const user = userEvent.setup();
+    const onGenerate = vi.fn();
+
+    renderWithProviders(
+      <AiNarrativePanel
+        featureKey="insight_intelligence"
+        title="AI summary"
+        summary={null}
+        onGenerate={onGenerate}
+        canGenerate
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Generate' }));
+
+    expect(onGenerate).toHaveBeenCalledTimes(1);
+  });
+
+  it('labels generation as regenerate when an available summary exists', () => {
+    renderWithProviders(
+      <AiNarrativePanel
+        featureKey="insight_intelligence"
+        title="AI summary"
+        summary={{
+          featureKey: 'insight_intelligence',
+          available: true,
+          headline: 'Spend is stable.',
+          summary: null,
+          bullets: [],
+          provenance: null,
+          raw: null,
+        }}
+        onGenerate={vi.fn()}
+        canGenerate
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Regenerate' })).toBeEnabled();
+  });
+
+  it('keeps unavailable callout scoped to the panel', () => {
+    aiStatusData = {
+      shouldHideAiControls: () => false,
+      shouldShowUnavailableMessage: () => true,
+      messageKeyForFeature: () => 'ai.status.degraded',
+    };
+
+    renderWithProviders(
+      <div>
+        <span>Outside content</span>
+        <AiNarrativePanel
+          featureKey="insight_intelligence"
+          title="AI summary"
+          summary={null}
+          onGenerate={vi.fn()}
+          canGenerate
+          fallbackCopy="AI summary is unavailable."
+        />
+      </div>,
+    );
+
+    expect(screen.getByText('Outside content')).toBeInTheDocument();
+    expect(screen.getByText('AI summary unavailable')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Generate' })).toBeEnabled();
   });
 });

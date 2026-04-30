@@ -1,6 +1,6 @@
 'use client';
 
-import { useQueries, useQuery } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { isObject, toText } from '@/hooks/normalize-utils';
 import { normalizeAiNarrativePayload, type AiNarrativeSummary } from '@/hooks/use-ai-narrative-summary';
@@ -248,6 +248,26 @@ export function useVendorGovernance(vendorId: string) {
     queryKey: ['vendors', normalizedVendorId, 'governance'],
     enabled: normalizedVendorId !== '',
     queryFn: () => fetchVendorGovernance(normalizedVendorId),
+  });
+}
+
+export function useGenerateVendorGovernanceNarrative(vendorId: string) {
+  const queryClient = useQueryClient();
+  const normalizedVendorId = vendorId.trim();
+
+  return useMutation({
+    mutationFn: async (): Promise<VendorGovernanceSummary> => {
+      if (normalizedVendorId === '') {
+        throw new Error('Vendor id is required to generate governance narrative.');
+      }
+
+      const response = await api.post(`/vendors/${encodeURIComponent(normalizedVendorId)}/governance/generate`);
+
+      return normalizeVendorGovernancePayload(response.data);
+    },
+    onSuccess: (summary) => {
+      queryClient.setQueryData(['vendors', normalizedVendorId, 'governance'], summary);
+    },
   });
 }
 

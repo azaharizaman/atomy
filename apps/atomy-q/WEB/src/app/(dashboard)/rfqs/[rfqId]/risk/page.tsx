@@ -26,6 +26,9 @@ function RiskPageContent({ params }: { params: Promise<{ rfqId: string }> }) {
         isError={rfqAiSummary.isError}
         error={rfqAiSummary.error}
         fallbackCopy="Risk insights are unavailable. Continue with manual governance review."
+        onGenerate={rfqAiSummary.generate ?? undefined}
+        isGenerating={rfqAiSummary.isGenerating}
+        canGenerate={rfqAiSummary.canGenerate}
       />
       <SectionCard title="Screening summary">
         <div className="flex items-center gap-2">

@@ -373,3 +373,13 @@
 - Updated `apps/atomy-q/WEB/.env.example` for the approved AI-first rollout posture so `NEXT_PUBLIC_AI_MODE` now documents the selected-provider bootstrap contract, with `provider` describing the live selected-provider path rather than a Hugging Face-only mode.
 - Kept `NEXT_PUBLIC_AI_STATUS_PATH` as the public runtime truth source and `NEXT_PUBLIC_AI_PROVIDER_NAME` as a bootstrap-only operator label; the live status payload now owns `provider_name` when present, with `openrouter` as the alpha default and `huggingface` as the supported alternative.
 - The WEB example still keeps mocks disabled by default so developers can exercise real API-backed and future real Hugging Face-backed flows once the implementation plans land.
+
+## 2026-04-30 AI Narrative Generation Controls
+
+- `useAiNarrativeSummary` now supports optional generate mutations, updates the existing query cache on success, and exposes generation state to callers.
+- `AiNarrativePanel` now renders a scoped `Generate` / `Regenerate` action when generation is available, while preserving AI hidden/unavailable gating.
+- Dashboard, reporting, RFQ overview/risk, vendor detail, and vendor ESG/compliance pages now wire generation actions to their API generate endpoints.
+- Vendor governance generation uses `useGenerateVendorGovernanceNarrative` and refreshes the shared vendor governance query cache.
+- Verification:
+  - `cd apps/atomy-q/WEB && npm run test:unit -- src/components/ai/ai-narrative-panel.test.tsx src/hooks/use-ai-status.test.ts` -> PASS (16 tests).
+  - `cd apps/atomy-q/WEB && npm run build` -> PASS.

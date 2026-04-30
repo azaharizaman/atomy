@@ -5,7 +5,11 @@ import { AlertTriangle, FileCheck2, ShieldCheck } from 'lucide-react';
 import { AiNarrativePanel } from '@/components/ai/ai-narrative-panel';
 import { EmptyState, SectionCard } from '@/components/ds/Card';
 import { PageHeader } from '@/components/ds/FilterBar';
-import { formatVendorGovernanceWarning, useVendorGovernance } from '@/hooks/use-vendor-governance';
+import {
+  formatVendorGovernanceWarning,
+  useGenerateVendorGovernanceNarrative,
+  useVendorGovernance,
+} from '@/hooks/use-vendor-governance';
 
 function scoreLabel(label: string, score: number) {
   return (
@@ -31,6 +35,7 @@ function formatDisplayDate(value: string | null): string {
 
 function VendorEsgCompliancePageContent({ vendorId }: { vendorId: string }) {
   const governanceQuery = useVendorGovernance(vendorId);
+  const generateGovernanceMutation = useGenerateVendorGovernanceNarrative(vendorId);
 
   if (governanceQuery.isLoading) {
     return <p className="text-sm text-slate-500">Loading governance records...</p>;
@@ -67,6 +72,9 @@ function VendorEsgCompliancePageContent({ vendorId }: { vendorId: string }) {
         subtitle="Assistive interpretation of the current governance posture."
         summary={governance.narrative}
         fallbackCopy="Governance narrative is unavailable. Continue with the evidence and findings below."
+        onGenerate={() => generateGovernanceMutation.mutate()}
+        isGenerating={generateGovernanceMutation.isPending}
+        canGenerate={!generateGovernanceMutation.isPending}
       />
 
       <SectionCard title="Health scores" subtitle="Monitoring signals are advisory and do not automatically change eligibility">

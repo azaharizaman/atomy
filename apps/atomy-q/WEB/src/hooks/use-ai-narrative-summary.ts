@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '@/lib/api';
 import { isObject, toText, unwrapResponse } from '@/hooks/normalize-utils';
@@ -24,6 +24,10 @@ export interface UseAiNarrativeSummaryResult {
   isHidden: boolean;
   shouldShowUnavailableMessage: boolean;
   messageKey: string | null;
+  generate: (() => void) | null;
+  isGenerating: boolean;
+  generateError: Error | null;
+  canGenerate: boolean;
 }
 
 function normalizeStringList(value: unknown): string[] {
@@ -93,17 +97,22 @@ export function useAiNarrativeSummary(
   options?: {
     enabled?: boolean;
     queryKey?: readonly unknown[];
+    generatePath?: string;
+    generatePayload?: unknown;
   },
 ): UseAiNarrativeSummaryResult {
   const aiStatus = useAiStatus();
+  const queryClient = useQueryClient();
   const isFeatureAvailable = aiStatus.isFeatureAvailable(featureKey);
   const shouldHideAiControls = aiStatus.shouldHideAiControls(featureKey);
   const shouldShowUnavailableMessage = aiStatus.shouldShowUnavailableMessage(featureKey);
   const messageKey = aiStatus.messageKeyForFeature(featureKey);
   const enabled = Boolean(path) && options?.enabled !== false && isFeatureAvailable;
 
+  const queryKey = options?.queryKey ?? ['ai-narrative-summary', featureKey, path];
+
   const query = useQuery({
-    queryKey: options?.queryKey ?? ['ai-narrative-summary', featureKey, path],
+    queryKey,
     enabled,
     queryFn: async (): Promise<AiNarrativeSummary> => {
       const response = await api.get(path);
@@ -119,6 +128,21 @@ export function useAiNarrativeSummary(
     refetchOnReconnect: false,
     refetchOnWindowFocus: false,
   });
+  const mutation = useMutation({
+    mutationFn: async (): Promise<AiNarrativeSummary> => {
+      if (!options?.generatePath) {
+        throw new Error(`AI narrative "${featureKey}" does not expose a generate endpoint.`);
+      }
+
+      const response = await api.post(options.generatePath, options.generatePayload ?? {});
+
+      return normalizeAiNarrativePayload(response.data);
+    },
+    onSuccess: (summary) => {
+      queryClient.setQueryData(queryKey, summary);
+    },
+  });
+  const canGenerate = Boolean(options?.generatePath) && isFeatureAvailable && !shouldHideAiControls;
 
   return {
     summary: query.data ?? null,
@@ -128,5 +152,9 @@ export function useAiNarrativeSummary(
     isHidden: shouldHideAiControls,
     shouldShowUnavailableMessage,
     messageKey,
+    generate: canGenerate ? () => mutation.mutate() : null,
+    isGenerating: mutation.isPending,
+    generateError: mutation.error ?? null,
+    canGenerate,
   };
 }
