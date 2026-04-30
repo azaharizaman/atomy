@@ -32,4 +32,4 @@
 - Tests in `tests/Unit` and `tests/Integration` cover pipeline/snapshot flows, including `ReportingCoordinatorTest` and `ReportingPipelineIntegrationTest`.
 - Added package-local PHPUnit wiring via `phpunit.xml.dist` and a Composer `test` script that run from the package directory while bootstrapping the monorepo root autoloader, so `InsightOperations` verification matches the actual workspace layout.
 - The package now follows the monorepo-root PHPUnit pattern explicitly: `phpunit.xml.dist` boots `../../vendor/autoload.php`, and package verification delegates to the root PHPUnit binary instead of carrying a redundant package-local PHPUnit dependency.
-- Added focused unit coverage for dashboard, reporting, RFQ risk, and governance narrative coordinators. Verification command: `cd orchestrators/InsightOperations && composer test`. Result on 2026-04-30: PASS, 15 tests and 90 assertions.
+- Added focused unit coverage for dashboard, reporting, RFQ risk, and governance narrative coordinators. Verification command: `cd orchestrators/InsightOperations && composer test`. Result on 2026-04-30: PASS, 17 tests and 110 assertions.

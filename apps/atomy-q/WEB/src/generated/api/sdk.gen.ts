@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AccountAddPaymentMethodData, AccountAddPaymentMethodResponses, AccountChangePasswordData, AccountChangePasswordResponses, AccountChangeSubscriptionData, AccountChangeSubscriptionResponses, AccountMeData, AccountMeErrors, AccountMeResponses, AccountNotificationSettingsData, AccountNotificationSettingsResponses, AccountPaymentMethodsData, AccountPaymentMethodsResponses, AccountPreferencesData, AccountPreferencesResponses, AccountProfileData, AccountProfileErrors, AccountProfileResponses, AccountRemovePaymentMethodData, AccountRemovePaymentMethodResponses, AccountSetDefaultPaymentMethodData, AccountSetDefaultPaymentMethodResponses, AccountSubscriptionData, AccountSubscriptionPlansData, AccountSubscriptionPlansResponses, AccountSubscriptionResponses, AccountUpdateMeData, AccountUpdateMeErrors, AccountUpdateMeResponses, AccountUpdateNotificationSettingsData, AccountUpdateNotificationSettingsResponses, AccountUpdatePreferencesData, AccountUpdatePreferencesResponses, AccountUpdateProfileData, AccountUpdateProfileErrors, AccountUpdateProfileResponses, ApprovalApproveData, ApprovalApproveErrors, ApprovalApproveResponses, ApprovalBulkApproveData, ApprovalBulkApproveResponses, ApprovalBulkReassignData, ApprovalBulkReassignResponses, ApprovalBulkRejectData, ApprovalBulkRejectResponses, ApprovalHistoryData, ApprovalHistoryResponses, ApprovalIndexData, ApprovalIndexResponses, ApprovalReassignData, ApprovalReassignResponses, ApprovalRejectData, ApprovalRejectErrors, ApprovalRejectResponses, ApprovalRequestEvidenceData, ApprovalRequestEvidenceResponses, ApprovalReturnData, ApprovalReturnResponses, ApprovalShowData, ApprovalShowErrors, ApprovalShowResponses, ApprovalSnoozeData, ApprovalSnoozeResponses, AuthDeviceTrustData, AuthDeviceTrustErrors, AuthForgotPasswordData, AuthForgotPasswordErrors, AuthForgotPasswordResponses, AuthLoginData, AuthLoginErrors, AuthLoginResponses, AuthLogoutData, AuthLogoutErrors, AuthLogoutResponses, AuthMfaVerifyData, AuthMfaVerifyErrors, AuthMfaVerifyResponses, AuthRefreshData, AuthRefreshErrors, AuthRefreshResponses, AuthResetPasswordData, AuthResetPasswordErrors, AuthResetPasswordResponses, AuthSsoData, AuthSsoErrors, AuthSsoResponses, AwardDebriefData, AwardDebriefErrors, AwardDebriefResponses, AwardIndexData, AwardIndexResponses, AwardProtestData, AwardProtestErrors, AwardProtestResponses, AwardResolveProtestData, AwardResolveProtestErrors, AwardResolveProtestResponses, AwardSignoffData, AwardSignoffErrors, AwardSignoffResponses, AwardStoreData, AwardStoreErrors, AwardStoreResponses, AwardUpdateSplitData, AwardUpdateSplitErrors, AwardUpdateSplitResponses, ComparisonRunFinalData, ComparisonRunFinalErrors, ComparisonRunFinalResponses, ComparisonRunIndexData, ComparisonRunIndexResponses, ComparisonRunLockData, ComparisonRunLockErrors, ComparisonRunMatrixData, ComparisonRunMatrixErrors, ComparisonRunMatrixResponses, ComparisonRunPreviewData, ComparisonRunPreviewErrors, ComparisonRunPreviewResponses, ComparisonRunReadinessData, ComparisonRunReadinessErrors, ComparisonRunReadinessResponses, ComparisonRunShowData, ComparisonRunShowErrors, ComparisonRunShowResponses, ComparisonRunUnlockData, ComparisonRunUnlockErrors, ComparisonRunUpdateScoringModelData, ComparisonRunUpdateScoringModelErrors, DashboardKpisData, DashboardKpisResponses, DashboardRecentActivityData, DashboardRecentActivityResponses, DashboardRiskAlertsData, DashboardRiskAlertsResponses, DashboardSpendTrendData, DashboardSpendTrendResponses, DashboardVendorScoresData, DashboardVendorScoresResponses, DecisionTrailExportData, DecisionTrailExportResponses, DecisionTrailIndexData, DecisionTrailIndexResponses, DecisionTrailShowData, DecisionTrailShowErrors, DecisionTrailShowResponses, DecisionTrailVerifyData, DecisionTrailVerifyResponses, DocumentAddDocumentToBundleData, DocumentAddDocumentToBundleResponses, DocumentBundlesData, DocumentBundlesResponses, DocumentCreateBundleData, DocumentCreateBundleResponses, DocumentDownloadData, DocumentDownloadResponses, DocumentExportBundleData, DocumentExportBundleResponses, DocumentFinalizeBundleData, DocumentFinalizeBundleResponses, DocumentIndexData, DocumentIndexResponses, DocumentPreviewData, DocumentPreviewResponses, DocumentShowBundleData, DocumentShowBundleResponses, DocumentShowData, DocumentShowResponses, HandoffDestinationsData, HandoffDestinationsResponses, HandoffIndexData, HandoffIndexResponses, HandoffRetryData, HandoffRetryResponses, HandoffSendData, HandoffSendResponses, HandoffShowData, HandoffShowResponses, HandoffValidateData, HandoffValidateResponses, IntegrationCatalogData, IntegrationCatalogResponses, IntegrationDestroyData, IntegrationDestroyResponses, IntegrationHealthData, IntegrationHealthResponses, IntegrationIndexData, IntegrationIndexResponses, IntegrationJobsData, IntegrationJobsResponses, IntegrationRetryJobData, IntegrationRetryJobResponses, IntegrationShowData, IntegrationShowResponses, IntegrationStoreData, IntegrationStoreResponses, IntegrationTestData, IntegrationTestResponses, IntegrationUpdateData, IntegrationUpdateResponses, IntegrationUpdateStatusData, IntegrationUpdateStatusResponses, NegotiationBafoData, NegotiationBafoErrors, NegotiationCloseData, NegotiationCloseErrors, NegotiationCounterOfferData, NegotiationCounterOfferErrors, NegotiationIndexData, NegotiationIndexErrors, NegotiationStartRoundData, NegotiationStartRoundErrors, NormalizationBulkMappingData, NormalizationBulkMappingErrors, NormalizationBulkMappingResponses, NormalizationConflictsData, NormalizationConflictsErrors, NormalizationConflictsResponses, NormalizationLockData, NormalizationLockErrors, NormalizationLockResponses, NormalizationNormalizedItemsData, NormalizationNormalizedItemsErrors, NormalizationNormalizedItemsResponses, NormalizationOverrideData, NormalizationOverrideErrors, NormalizationOverrideResponses, NormalizationResolveConflictData, NormalizationResolveConflictErrors, NormalizationResolveConflictResponses, NormalizationRevertOverrideData, NormalizationRevertOverrideErrors, NormalizationRevertOverrideResponses, NormalizationSourceLinesData, NormalizationSourceLinesErrors, NormalizationSourceLinesResponses, NormalizationUnlockData, NormalizationUnlockErrors, NormalizationUnlockResponses, NormalizationUpdateMappingData, NormalizationUpdateMappingErrors, NormalizationUpdateMappingResponses, NotificationClearReadData, NotificationClearReadResponses, NotificationIndexData, NotificationIndexResponses, NotificationMarkAllReadData, NotificationMarkAllReadResponses, NotificationMarkReadData, NotificationMarkReadResponses, NotificationUnreadCountData, NotificationUnreadCountResponses, ProjectBudgetData, ProjectBudgetResponses, ProjectGetAclData, ProjectGetAclErrors, ProjectGetAclResponses, ProjectHealthData, ProjectHealthResponses, ProjectIndexData, ProjectIndexResponses, ProjectRfqsData, ProjectRfqsResponses, ProjectShowData, ProjectShowErrors, ProjectShowResponses, ProjectTasksData, ProjectTasksResponses, ProjectUpdateAclData, ProjectUpdateAclErrors, ProjectUpdateAclResponses, ProjectUpdateData, ProjectUpdateErrors, ProjectUpdateResponses, ProjectUpdateStatusData, ProjectUpdateStatusErrors, ProjectUpdateStatusResponses, QuoteSubmissionAssignData, QuoteSubmissionAssignResponses, QuoteSubmissionIndexData, QuoteSubmissionIndexResponses, QuoteSubmissionReparseData, QuoteSubmissionReparseErrors, QuoteSubmissionReparseResponses, QuoteSubmissionReplaceData, QuoteSubmissionReplaceResponses, QuoteSubmissionShowData, QuoteSubmissionShowErrors, QuoteSubmissionShowResponses, QuoteSubmissionUpdateStatusData, QuoteSubmissionUpdateStatusErrors, QuoteSubmissionUpdateStatusResponses, QuoteSubmissionUploadData, QuoteSubmissionUploadErrors, QuoteSubmissionUploadResponses, RecommendationMcdaData, RecommendationMcdaResponses, RecommendationOverrideData, RecommendationOverrideResponses, RecommendationRerunData, RecommendationRerunResponses, RecommendationShowData, RecommendationShowResponses, RegisterCompanyStoreData, RegisterCompanyStoreErrors, RegisterCompanyStoreResponses, ReportCreateScheduleData, ReportCreateScheduleResponses, ReportDestroyScheduleData, ReportDestroyScheduleResponses, ReportDownloadRunData, ReportDownloadRunResponses, ReportExportData, ReportExportResponses, ReportKpisData, ReportKpisResponses, ReportRunScheduleNowData, ReportRunScheduleNowResponses, ReportRunsData, ReportRunsResponses, ReportSchedulesData, ReportSchedulesResponses, ReportSpendByCategoryData, ReportSpendByCategoryResponses, ReportSpendTrendData, ReportSpendTrendResponses, ReportUpdateScheduleData, ReportUpdateScheduleResponses, RequisitionVendorSelectionIndexData, RequisitionVendorSelectionIndexErrors, RequisitionVendorSelectionIndexResponses, RequisitionVendorSelectionUpdateData, RequisitionVendorSelectionUpdateErrors, RequisitionVendorSelectionUpdateResponses, RfqActivityData, RfqActivityErrors, RfqActivityResponses, RfqCountsData, RfqCountsResponses, RfqDestroyLineItemData, RfqDestroyLineItemErrors, RfqDestroyLineItemResponses, RfqIndexData, RfqIndexResponses, RfqLineItemsData, RfqLineItemsErrors, RfqLineItemsResponses, RfqOverviewData, RfqOverviewErrors, RfqOverviewResponses, RfqSaveDraftData, RfqSaveDraftErrors, RfqSaveDraftResponses, RfqShowData, RfqShowErrors, RfqShowResponses, RfqStoreLineItemData, RfqStoreLineItemErrors, RfqStoreLineItemResponses, RfqTemplateIndexData, RfqTemplateIndexResponses, RfqTemplateShowData, RfqTemplateShowResponses, RfqTemplateUpdateData, RfqTemplateUpdateResponses, RfqTemplateUpdateStatusData, RfqTemplateUpdateStatusResponses, RfqUpdateData, RfqUpdateErrors, RfqUpdateLineItemData, RfqUpdateLineItemErrors, RfqUpdateLineItemResponses, RfqUpdateResponses, RfqUpdateStatusData, RfqUpdateStatusErrors, RfqUpdateStatusResponses, RiskComplianceEscalateData, RiskComplianceEscalateResponses, RiskComplianceExceptionData, RiskComplianceExceptionResponses, RiskComplianceIndexData, RiskComplianceIndexResponses, ScenarioCompareData, ScenarioCompareResponses, ScenarioDestroyData, ScenarioDestroyResponses, ScenarioIndexData, ScenarioIndexResponses, ScenarioStoreData, ScenarioStoreResponses, ScenarioUpdateData, ScenarioUpdateResponses, ScoringModelIndexData, ScoringModelIndexResponses, ScoringModelPreviewData, ScoringModelPreviewResponses, ScoringModelPublishData, ScoringModelPublishResponses, ScoringModelShowData, ScoringModelShowResponses, ScoringModelStoreData, ScoringModelStoreResponses, ScoringModelUpdateAssignmentsData, ScoringModelUpdateAssignmentsResponses, ScoringModelUpdateData, ScoringModelUpdateResponses, ScoringModelVersionsData, ScoringModelVersionsResponses, ScoringPolicyIndexData, ScoringPolicyIndexResponses, ScoringPolicyPublishData, ScoringPolicyPublishResponses, ScoringPolicyShowData, ScoringPolicyShowResponses, ScoringPolicyStoreData, ScoringPolicyStoreResponses, ScoringPolicyUpdateAssignmentsData, ScoringPolicyUpdateAssignmentsResponses, ScoringPolicyUpdateData, ScoringPolicyUpdateResponses, ScoringPolicyUpdateStatusData, ScoringPolicyUpdateStatusResponses, ScoringPolicyVersionsData, ScoringPolicyVersionsResponses, SearchSearchData, SearchSearchResponses, SettingFeatureFlagsData, SettingFeatureFlagsResponses, SettingIndexData, SettingIndexErrors, SettingUpdateComplianceData, SettingUpdateComplianceErrors, SettingUpdateFeatureFlagData, SettingUpdateFeatureFlagErrors, SettingUpdateGeneralData, SettingUpdateGeneralErrors, SettingUpdateWorkflowData, SettingUpdateWorkflowErrors, TaskGetDependenciesData, TaskGetDependenciesErrors, TaskGetDependenciesResponses, TaskIndexData, TaskIndexResponses, TaskSchedulePreviewData, TaskSchedulePreviewResponses, TaskShowData, TaskShowErrors, TaskShowResponses, TaskUpdateData, TaskUpdateDependenciesData, TaskUpdateDependenciesErrors, TaskUpdateDependenciesResponses, TaskUpdateErrors, TaskUpdateResponses, TaskUpdateStatusData, TaskUpdateStatusErrors, TaskUpdateStatusResponses, UserDelegationRulesData, UserDelegationRulesErrors, UserIndexData, UserIndexResponses, UserInviteData, UserInviteErrors, UserInviteResponses, UserReactivateData, UserReactivateResponses, UserRolesData, UserRolesResponses, UserShowData, UserShowResponses, UserSuspendData, UserSuspendResponses, UserUpdateAuthorityLimitsData, UserUpdateAuthorityLimitsErrors, UserUpdateData, UserUpdateDelegationRulesData, UserUpdateDelegationRulesErrors, UserUpdateErrors, V1OperationalApprovalsInstancesDecisionsStoreData, V1OperationalApprovalsInstancesDecisionsStoreErrors, V1OperationalApprovalsInstancesDecisionsStoreResponses, V1OperationalApprovalsInstancesIndexData, V1OperationalApprovalsInstancesIndexErrors, V1OperationalApprovalsInstancesIndexResponses, V1OperationalApprovalsInstancesShowData, V1OperationalApprovalsInstancesShowResponses, V1OperationalApprovalsInstancesStoreData, V1OperationalApprovalsInstancesStoreErrors, V1OperationalApprovalsInstancesStoreResponses, V1ProjectsStoreData, V1ProjectsStoreErrors, V1ProjectsStoreResponses, V1RfqsBulkActionData, V1RfqsBulkActionErrors, V1RfqsBulkActionResponses, V1RfqsDuplicateData, V1RfqsDuplicateErrors, V1RfqsDuplicateResponses, V1RfqsInvitationsRemindData, V1RfqsInvitationsRemindErrors, V1RfqsInvitationsRemindResponses, V1RfqsInvitationsStoreData, V1RfqsInvitationsStoreErrors, V1RfqsInvitationsStoreResponses, V1RfqsStoreData, V1RfqsStoreErrors, V1RfqsStoreResponses, V1RfqsVendorRecommendationsStoreData, V1RfqsVendorRecommendationsStoreErrors, V1RfqsVendorRecommendationsStoreResponses, V1RfqTemplatesApplyData, V1RfqTemplatesApplyResponses, V1RfqTemplatesDuplicateData, V1RfqTemplatesDuplicateResponses, V1RfqTemplatesStoreData, V1RfqTemplatesStoreResponses, V1TasksStoreData, V1TasksStoreErrors, V1TasksStoreResponses, V1VendorsSanctionsScreeningData, V1VendorsSanctionsScreeningErrors, V1VendorsSanctionsScreeningResponses, V1VendorsStoreData, V1VendorsStoreErrors, V1VendorsStoreResponses, VendorComplianceData, VendorComplianceErrors, VendorComplianceResponses, VendorGovernanceDueDiligenceData, VendorGovernanceDueDiligenceErrors, VendorGovernanceDueDiligenceResponses, VendorGovernanceSanctionsHistoryData, VendorGovernanceSanctionsHistoryErrors, VendorGovernanceSanctionsHistoryResponses, VendorGovernanceShowData, VendorGovernanceShowErrors, VendorGovernanceShowResponses, VendorGovernanceUpdateDueDiligenceData, VendorGovernanceUpdateDueDiligenceErrors, VendorGovernanceUpdateDueDiligenceResponses, VendorHistoryData, VendorHistoryErrors, VendorHistoryResponses, VendorIndexData, VendorIndexResponses, VendorInvitationIndexData, VendorInvitationIndexErrors, VendorInvitationIndexResponses, VendorPerformanceData, VendorPerformanceErrors, VendorPerformanceResponses, VendorShowData, VendorShowErrors, VendorShowResponses, VendorStatusUpdateData, VendorStatusUpdateErrors, VendorStatusUpdateResponses, VendorUpdateData, VendorUpdateErrors, VendorUpdateResponses } from './types.gen';
+import type { AccountAddPaymentMethodData, AccountAddPaymentMethodResponses, AccountChangePasswordData, AccountChangePasswordResponses, AccountChangeSubscriptionData, AccountChangeSubscriptionResponses, AccountNotificationSettingsData, AccountNotificationSettingsResponses, AccountPaymentMethodsData, AccountPaymentMethodsResponses, AccountPreferencesData, AccountPreferencesResponses, AccountRemovePaymentMethodData, AccountRemovePaymentMethodResponses, AccountSetDefaultPaymentMethodData, AccountSetDefaultPaymentMethodResponses, AccountSubscriptionData, AccountSubscriptionPlansData, AccountSubscriptionPlansResponses, AccountSubscriptionResponses, AccountUpdateNotificationSettingsData, AccountUpdateNotificationSettingsResponses, AccountUpdatePreferencesData, AccountUpdatePreferencesResponses, AiStatusShowData, AiStatusShowResponses, ApprovalApproveData, ApprovalApproveErrors, ApprovalApproveResponses, ApprovalBulkApproveData, ApprovalBulkApproveResponses, ApprovalBulkReassignData, ApprovalBulkReassignResponses, ApprovalBulkRejectData, ApprovalBulkRejectResponses, ApprovalGenerateSummaryData, ApprovalGenerateSummaryErrors, ApprovalGenerateSummaryResponses, ApprovalHistoryData, ApprovalHistoryResponses, ApprovalIndexData, ApprovalIndexResponses, ApprovalReassignData, ApprovalReassignResponses, ApprovalRejectData, ApprovalRejectErrors, ApprovalRejectResponses, ApprovalRequestEvidenceData, ApprovalRequestEvidenceResponses, ApprovalReturnData, ApprovalReturnResponses, ApprovalShowData, ApprovalShowErrors, ApprovalShowResponses, ApprovalSnoozeData, ApprovalSnoozeResponses, ApprovalSummaryData, ApprovalSummaryErrors, ApprovalSummaryResponses, AuthDeviceTrustData, AuthDeviceTrustErrors, AuthForgotPasswordData, AuthForgotPasswordErrors, AuthForgotPasswordResponses, AuthLoginData, AuthLoginErrors, AuthLoginResponses, AuthLogoutData, AuthLogoutErrors, AuthLogoutResponses, AuthMfaVerifyData, AuthMfaVerifyErrors, AuthMfaVerifyResponses, AuthRefreshData, AuthRefreshErrors, AuthRefreshResponses, AuthResetPasswordData, AuthResetPasswordErrors, AuthResetPasswordResponses, AuthSsoData, AuthSsoErrors, AuthSsoResponses, AwardDebriefData, AwardDebriefDraftData, AwardDebriefDraftErrors, AwardDebriefDraftResponses, AwardDebriefErrors, AwardDebriefResponses, AwardGenerateDebriefDraftData, AwardGenerateDebriefDraftErrors, AwardGenerateDebriefDraftResponses, AwardGenerateGuidanceData, AwardGenerateGuidanceErrors, AwardGenerateGuidanceResponses, AwardGuidanceData, AwardGuidanceErrors, AwardGuidanceResponses, AwardIndexData, AwardIndexResponses, AwardProtestData, AwardProtestErrors, AwardProtestResponses, AwardResolveProtestData, AwardResolveProtestErrors, AwardResolveProtestResponses, AwardSignoffData, AwardSignoffErrors, AwardSignoffResponses, AwardStoreData, AwardStoreErrors, AwardStoreResponses, AwardUpdateSplitData, AwardUpdateSplitErrors, AwardUpdateSplitResponses, ComparisonRunFinalData, ComparisonRunFinalErrors, ComparisonRunFinalResponses, ComparisonRunIndexData, ComparisonRunIndexResponses, ComparisonRunLockData, ComparisonRunLockErrors, ComparisonRunMatrixData, ComparisonRunMatrixErrors, ComparisonRunMatrixResponses, ComparisonRunOverlayData, ComparisonRunOverlayErrors, ComparisonRunOverlayResponses, ComparisonRunPreviewData, ComparisonRunPreviewErrors, ComparisonRunPreviewResponses, ComparisonRunReadinessData, ComparisonRunReadinessErrors, ComparisonRunReadinessResponses, ComparisonRunShowData, ComparisonRunShowErrors, ComparisonRunShowResponses, ComparisonRunUnlockData, ComparisonRunUnlockErrors, ComparisonRunUpdateScoringModelData, ComparisonRunUpdateScoringModelErrors, DashboardGenerateKpisSummaryData, DashboardGenerateKpisSummaryResponses, DashboardKpisData, DashboardKpisResponses, DashboardRecentActivityData, DashboardRecentActivityResponses, DashboardRiskAlertsData, DashboardRiskAlertsResponses, DashboardSpendTrendData, DashboardSpendTrendResponses, DashboardVendorScoresData, DashboardVendorScoresResponses, DecisionTrailExportData, DecisionTrailExportResponses, DecisionTrailIndexData, DecisionTrailIndexResponses, DecisionTrailShowData, DecisionTrailShowErrors, DecisionTrailShowResponses, DecisionTrailVerifyData, DecisionTrailVerifyResponses, DocumentAddDocumentToBundleData, DocumentAddDocumentToBundleResponses, DocumentBundlesData, DocumentBundlesResponses, DocumentCreateBundleData, DocumentCreateBundleResponses, DocumentDownloadData, DocumentDownloadResponses, DocumentExportBundleData, DocumentExportBundleResponses, DocumentFinalizeBundleData, DocumentFinalizeBundleResponses, DocumentIndexData, DocumentIndexResponses, DocumentPreviewData, DocumentPreviewResponses, DocumentShowBundleData, DocumentShowBundleResponses, DocumentShowData, DocumentShowResponses, HandoffDestinationsData, HandoffDestinationsResponses, HandoffIndexData, HandoffIndexResponses, HandoffRetryData, HandoffRetryResponses, HandoffSendData, HandoffSendResponses, HandoffShowData, HandoffShowResponses, HandoffValidateData, HandoffValidateResponses, IntegrationCatalogData, IntegrationCatalogResponses, IntegrationDestroyData, IntegrationDestroyResponses, IntegrationHealthData, IntegrationHealthResponses, IntegrationIndexData, IntegrationIndexResponses, IntegrationJobsData, IntegrationJobsResponses, IntegrationRetryJobData, IntegrationRetryJobResponses, IntegrationShowData, IntegrationShowResponses, IntegrationStoreData, IntegrationStoreResponses, IntegrationTestData, IntegrationTestResponses, IntegrationUpdateData, IntegrationUpdateResponses, IntegrationUpdateStatusData, IntegrationUpdateStatusResponses, NegotiationBafoData, NegotiationBafoErrors, NegotiationCloseData, NegotiationCloseErrors, NegotiationCounterOfferData, NegotiationCounterOfferErrors, NegotiationIndexData, NegotiationIndexErrors, NegotiationStartRoundData, NegotiationStartRoundErrors, NormalizationBulkMappingData, NormalizationBulkMappingErrors, NormalizationBulkMappingResponses, NormalizationConflictsData, NormalizationConflictsErrors, NormalizationConflictsResponses, NormalizationLockData, NormalizationLockErrors, NormalizationLockResponses, NormalizationNormalizedItemsData, NormalizationNormalizedItemsErrors, NormalizationNormalizedItemsResponses, NormalizationOverrideData, NormalizationOverrideErrors, NormalizationOverrideResponses, NormalizationResolveConflictData, NormalizationResolveConflictErrors, NormalizationResolveConflictResponses, NormalizationRevertOverrideData, NormalizationRevertOverrideErrors, NormalizationRevertOverrideResponses, NormalizationSourceLinesData, NormalizationSourceLinesErrors, NormalizationSourceLinesResponses, NormalizationUnlockData, NormalizationUnlockErrors, NormalizationUnlockResponses, NormalizationUpdateMappingData, NormalizationUpdateMappingErrors, NormalizationUpdateMappingResponses, NotificationClearReadData, NotificationClearReadResponses, NotificationIndexData, NotificationIndexResponses, NotificationMarkAllReadData, NotificationMarkAllReadResponses, NotificationMarkReadData, NotificationMarkReadResponses, NotificationUnreadCountData, NotificationUnreadCountResponses, ProjectBudgetData, ProjectBudgetResponses, ProjectGetAclData, ProjectGetAclErrors, ProjectGetAclResponses, ProjectHealthData, ProjectHealthResponses, ProjectIndexData, ProjectIndexResponses, ProjectRfqsData, ProjectRfqsResponses, ProjectShowData, ProjectShowErrors, ProjectShowResponses, ProjectTasksData, ProjectTasksResponses, ProjectUpdateAclData, ProjectUpdateAclErrors, ProjectUpdateAclResponses, ProjectUpdateData, ProjectUpdateErrors, ProjectUpdateResponses, ProjectUpdateStatusData, ProjectUpdateStatusErrors, ProjectUpdateStatusResponses, QuoteSubmissionAssignData, QuoteSubmissionAssignResponses, QuoteSubmissionDestroySourceLineData, QuoteSubmissionDestroySourceLineErrors, QuoteSubmissionDestroySourceLineResponses, QuoteSubmissionIndexData, QuoteSubmissionIndexResponses, QuoteSubmissionReparseData, QuoteSubmissionReparseErrors, QuoteSubmissionReparseResponses, QuoteSubmissionReplaceData, QuoteSubmissionReplaceResponses, QuoteSubmissionShowData, QuoteSubmissionShowErrors, QuoteSubmissionShowResponses, QuoteSubmissionUpdateSourceLineData, QuoteSubmissionUpdateSourceLineErrors, QuoteSubmissionUpdateSourceLineResponses, QuoteSubmissionUpdateStatusData, QuoteSubmissionUpdateStatusErrors, QuoteSubmissionUpdateStatusResponses, QuoteSubmissionUploadData, QuoteSubmissionUploadErrors, QuoteSubmissionUploadResponses, RegisterCompanyStoreData, RegisterCompanyStoreErrors, RegisterCompanyStoreResponses, ReportCreateScheduleData, ReportCreateScheduleResponses, ReportDestroyScheduleData, ReportDestroyScheduleResponses, ReportDownloadRunData, ReportDownloadRunResponses, ReportExportData, ReportExportResponses, ReportGenerateKpisSummaryData, ReportGenerateKpisSummaryResponses, ReportGenerateSpendByCategorySummaryData, ReportGenerateSpendByCategorySummaryResponses, ReportGenerateSpendTrendSummaryData, ReportGenerateSpendTrendSummaryResponses, ReportKpisData, ReportKpisResponses, ReportRunScheduleNowData, ReportRunScheduleNowResponses, ReportRunsData, ReportRunsResponses, ReportSchedulesData, ReportSchedulesResponses, ReportSpendByCategoryData, ReportSpendByCategoryResponses, ReportSpendTrendData, ReportSpendTrendResponses, ReportUpdateScheduleData, ReportUpdateScheduleResponses, RequisitionVendorSelectionIndexData, RequisitionVendorSelectionIndexErrors, RequisitionVendorSelectionIndexResponses, RequisitionVendorSelectionUpdateData, RequisitionVendorSelectionUpdateErrors, RequisitionVendorSelectionUpdateResponses, RfqActivityData, RfqActivityErrors, RfqActivityResponses, RfqCountsData, RfqCountsResponses, RfqDestroyLineItemData, RfqDestroyLineItemErrors, RfqDestroyLineItemResponses, RfqIndexData, RfqIndexResponses, RfqLineItemsData, RfqLineItemsErrors, RfqLineItemsResponses, RfqOverviewData, RfqOverviewErrors, RfqOverviewResponses, RfqSaveDraftData, RfqSaveDraftErrors, RfqSaveDraftResponses, RfqShowData, RfqShowErrors, RfqShowResponses, RfqStoreLineItemData, RfqStoreLineItemErrors, RfqStoreLineItemResponses, RfqTemplateIndexData, RfqTemplateIndexResponses, RfqTemplateShowData, RfqTemplateShowResponses, RfqTemplateUpdateData, RfqTemplateUpdateResponses, RfqTemplateUpdateStatusData, RfqTemplateUpdateStatusResponses, RfqUpdateData, RfqUpdateErrors, RfqUpdateLineItemData, RfqUpdateLineItemErrors, RfqUpdateLineItemResponses, RfqUpdateResponses, RfqUpdateStatusData, RfqUpdateStatusErrors, RfqUpdateStatusResponses, RiskComplianceEscalateData, RiskComplianceEscalateErrors, RiskComplianceEscalateResponses, RiskComplianceExceptionData, RiskComplianceExceptionErrors, RiskComplianceExceptionResponses, RiskComplianceGenerateData, RiskComplianceGenerateErrors, RiskComplianceGenerateResponses, RiskComplianceIndexData, RiskComplianceIndexErrors, RiskComplianceIndexResponses, ScenarioCompareData, ScenarioCompareResponses, ScenarioDestroyData, ScenarioDestroyResponses, ScenarioIndexData, ScenarioIndexResponses, ScenarioStoreData, ScenarioStoreResponses, ScenarioUpdateData, ScenarioUpdateResponses, ScoringModelIndexData, ScoringModelIndexResponses, ScoringModelPreviewData, ScoringModelPreviewResponses, ScoringModelPublishData, ScoringModelPublishResponses, ScoringModelShowData, ScoringModelShowResponses, ScoringModelStoreData, ScoringModelStoreResponses, ScoringModelUpdateAssignmentsData, ScoringModelUpdateAssignmentsResponses, ScoringModelUpdateData, ScoringModelUpdateResponses, ScoringModelVersionsData, ScoringModelVersionsResponses, ScoringPolicyIndexData, ScoringPolicyIndexResponses, ScoringPolicyPublishData, ScoringPolicyPublishResponses, ScoringPolicyShowData, ScoringPolicyShowResponses, ScoringPolicyStoreData, ScoringPolicyStoreResponses, ScoringPolicyUpdateAssignmentsData, ScoringPolicyUpdateAssignmentsResponses, ScoringPolicyUpdateData, ScoringPolicyUpdateResponses, ScoringPolicyUpdateStatusData, ScoringPolicyUpdateStatusResponses, ScoringPolicyVersionsData, ScoringPolicyVersionsResponses, SearchSearchData, SearchSearchResponses, SettingFeatureFlagsData, SettingFeatureFlagsResponses, SettingIndexData, SettingIndexErrors, SettingUpdateComplianceData, SettingUpdateComplianceErrors, SettingUpdateFeatureFlagData, SettingUpdateFeatureFlagErrors, SettingUpdateGeneralData, SettingUpdateGeneralErrors, SettingUpdateWorkflowData, SettingUpdateWorkflowErrors, TaskGetDependenciesData, TaskGetDependenciesErrors, TaskGetDependenciesResponses, TaskIndexData, TaskIndexResponses, TaskSchedulePreviewData, TaskSchedulePreviewResponses, TaskShowData, TaskShowErrors, TaskShowResponses, TaskUpdateData, TaskUpdateDependenciesData, TaskUpdateDependenciesErrors, TaskUpdateDependenciesResponses, TaskUpdateErrors, TaskUpdateResponses, TaskUpdateStatusData, TaskUpdateStatusErrors, TaskUpdateStatusResponses, UserDelegationRulesData, UserDelegationRulesErrors, UserIndexData, UserIndexResponses, UserInviteData, UserInviteErrors, UserInviteResponses, UserReactivateData, UserReactivateResponses, UserRolesData, UserRolesResponses, UserShowData, UserShowResponses, UserSuspendData, UserSuspendResponses, UserUpdateAuthorityLimitsData, UserUpdateAuthorityLimitsErrors, UserUpdateData, UserUpdateDelegationRulesData, UserUpdateDelegationRulesErrors, UserUpdateErrors, V1AccountProfile02Data, V1AccountProfile02Errors, V1AccountProfile02Responses, V1AccountProfile0Data, V1AccountProfile0Errors, V1AccountProfile0Responses, V1AccountUpdateProfile12Data, V1AccountUpdateProfile12Errors, V1AccountUpdateProfile12Responses, V1AccountUpdateProfile1Data, V1AccountUpdateProfile1Errors, V1AccountUpdateProfile1Responses, V1OperationalApprovalsInstancesDecisionsStoreData, V1OperationalApprovalsInstancesDecisionsStoreErrors, V1OperationalApprovalsInstancesDecisionsStoreResponses, V1OperationalApprovalsInstancesIndexData, V1OperationalApprovalsInstancesIndexErrors, V1OperationalApprovalsInstancesIndexResponses, V1OperationalApprovalsInstancesShowData, V1OperationalApprovalsInstancesShowResponses, V1OperationalApprovalsInstancesStoreData, V1OperationalApprovalsInstancesStoreErrors, V1OperationalApprovalsInstancesStoreResponses, V1ProjectsStoreData, V1ProjectsStoreErrors, V1ProjectsStoreResponses, V1QuoteSubmissionsSourceLinesStoreData, V1QuoteSubmissionsSourceLinesStoreErrors, V1QuoteSubmissionsSourceLinesStoreResponses, V1RfqsBulkActionData, V1RfqsBulkActionErrors, V1RfqsBulkActionResponses, V1RfqsDuplicateData, V1RfqsDuplicateErrors, V1RfqsDuplicateResponses, V1RfqsInvitationsRemindData, V1RfqsInvitationsRemindErrors, V1RfqsInvitationsRemindResponses, V1RfqsInvitationsStoreData, V1RfqsInvitationsStoreErrors, V1RfqsInvitationsStoreResponses, V1RfqsStoreData, V1RfqsStoreErrors, V1RfqsStoreResponses, V1RfqsVendorRecommendationsStoreData, V1RfqsVendorRecommendationsStoreErrors, V1RfqsVendorRecommendationsStoreResponses, V1RfqTemplatesApplyData, V1RfqTemplatesApplyResponses, V1RfqTemplatesDuplicateData, V1RfqTemplatesDuplicateResponses, V1RfqTemplatesStoreData, V1RfqTemplatesStoreResponses, V1TasksStoreData, V1TasksStoreErrors, V1TasksStoreResponses, V1VendorsSanctionsScreeningData, V1VendorsSanctionsScreeningErrors, V1VendorsSanctionsScreeningResponses, V1VendorsStoreData, V1VendorsStoreErrors, V1VendorsStoreResponses, VendorComplianceData, VendorComplianceErrors, VendorComplianceResponses, VendorGovernanceDueDiligenceData, VendorGovernanceDueDiligenceErrors, VendorGovernanceDueDiligenceResponses, VendorGovernanceGenerateData, VendorGovernanceGenerateErrors, VendorGovernanceGenerateResponses, VendorGovernanceSanctionsHistoryData, VendorGovernanceSanctionsHistoryErrors, VendorGovernanceSanctionsHistoryResponses, VendorGovernanceShowData, VendorGovernanceShowErrors, VendorGovernanceShowResponses, VendorGovernanceUpdateDueDiligenceData, VendorGovernanceUpdateDueDiligenceErrors, VendorGovernanceUpdateDueDiligenceResponses, VendorHistoryData, VendorHistoryErrors, VendorHistoryResponses, VendorIndexData, VendorIndexResponses, VendorInvitationIndexData, VendorInvitationIndexErrors, VendorInvitationIndexResponses, VendorPerformanceData, VendorPerformanceErrors, VendorPerformanceResponses, VendorShowData, VendorShowErrors, VendorShowResponses, VendorStatusUpdateData, VendorStatusUpdateErrors, VendorStatusUpdateResponses, VendorUpdateData, VendorUpdateErrors, VendorUpdateResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -23,28 +23,28 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
  *
  * GET /me or GET /account/profile
  */
-export const accountMe = <ThrowOnError extends boolean = false>(options?: Options<AccountMeData, ThrowOnError>) => (options?.client ?? client).get<AccountMeResponses, AccountMeErrors, ThrowOnError>({ url: '/me', ...options });
+export const v1AccountProfile0 = <ThrowOnError extends boolean = false>(options?: Options<V1AccountProfile0Data, ThrowOnError>) => (options?.client ?? client).get<V1AccountProfile0Responses, V1AccountProfile0Errors, ThrowOnError>({ url: '/me', ...options });
 
 /**
  * Update current user profile
  *
  * PUT /me or PUT /account/profile
  */
-export const accountUpdateMe = <ThrowOnError extends boolean = false>(options?: Options<AccountUpdateMeData, ThrowOnError>) => (options?.client ?? client).put<AccountUpdateMeResponses, AccountUpdateMeErrors, ThrowOnError>({ url: '/me', ...options });
+export const v1AccountUpdateProfile1 = <ThrowOnError extends boolean = false>(options?: Options<V1AccountUpdateProfile1Data, ThrowOnError>) => (options?.client ?? client).put<V1AccountUpdateProfile1Responses, V1AccountUpdateProfile1Errors, ThrowOnError>({ url: '/me', ...options });
 
 /**
  * Get current user profile
  *
  * GET /me or GET /account/profile
  */
-export const accountProfile = <ThrowOnError extends boolean = false>(options?: Options<AccountProfileData, ThrowOnError>) => (options?.client ?? client).get<AccountProfileResponses, AccountProfileErrors, ThrowOnError>({ url: '/account/profile', ...options });
+export const v1AccountProfile02 = <ThrowOnError extends boolean = false>(options?: Options<V1AccountProfile02Data, ThrowOnError>) => (options?.client ?? client).get<V1AccountProfile02Responses, V1AccountProfile02Errors, ThrowOnError>({ url: '/account/profile', ...options });
 
 /**
  * Update current user profile
  *
  * PUT /me or PUT /account/profile
  */
-export const accountUpdateProfile = <ThrowOnError extends boolean = false>(options?: Options<AccountUpdateProfileData, ThrowOnError>) => (options?.client ?? client).put<AccountUpdateProfileResponses, AccountUpdateProfileErrors, ThrowOnError>({ url: '/account/profile', ...options });
+export const v1AccountUpdateProfile12 = <ThrowOnError extends boolean = false>(options?: Options<V1AccountUpdateProfile12Data, ThrowOnError>) => (options?.client ?? client).put<V1AccountUpdateProfile12Responses, V1AccountUpdateProfile12Errors, ThrowOnError>({ url: '/account/profile', ...options });
 
 /**
  * Change password
@@ -130,6 +130,8 @@ export const accountRemovePaymentMethod = <ThrowOnError extends boolean = false>
  */
 export const accountSetDefaultPaymentMethod = <ThrowOnError extends boolean = false>(options: Options<AccountSetDefaultPaymentMethodData, ThrowOnError>) => (options.client ?? client).patch<AccountSetDefaultPaymentMethodResponses, unknown, ThrowOnError>({ url: '/account/payment-methods/{id}/default', ...options });
 
+export const aiStatusShow = <ThrowOnError extends boolean = false>(options?: Options<AiStatusShowData, ThrowOnError>) => (options?.client ?? client).get<AiStatusShowResponses, unknown, ThrowOnError>({ url: '/ai/status', ...options });
+
 /**
  * GET /approvals
  *
@@ -162,6 +164,18 @@ export const approvalBulkReassign = <ThrowOnError extends boolean = false>(optio
  * GET /approvals/:id
  */
 export const approvalShow = <ThrowOnError extends boolean = false>(options: Options<ApprovalShowData, ThrowOnError>) => (options.client ?? client).get<ApprovalShowResponses, ApprovalShowErrors, ThrowOnError>({ url: '/approvals/{id}', ...options });
+
+/**
+ * GET /approvals/:id/summary
+ * Scoped by tenant_id
+ */
+export const approvalSummary = <ThrowOnError extends boolean = false>(options: Options<ApprovalSummaryData, ThrowOnError>) => (options.client ?? client).get<ApprovalSummaryResponses, ApprovalSummaryErrors, ThrowOnError>({ url: '/approvals/{id}/summary', ...options });
+
+/**
+ * POST /approvals/:id/summary/generate
+ * Scoped by tenant_id
+ */
+export const approvalGenerateSummary = <ThrowOnError extends boolean = false>(options: Options<ApprovalGenerateSummaryData, ThrowOnError>) => (options.client ?? client).post<ApprovalGenerateSummaryResponses, ApprovalGenerateSummaryErrors, ThrowOnError>({ url: '/approvals/{id}/summary/generate', ...options });
 
 /**
  * POST /approvals/:id/approve
@@ -342,6 +356,28 @@ export const awardStore = <ThrowOnError extends boolean = false>(options: Option
 });
 
 /**
+ * GET /awards/:id/guidance
+ * Scoped by tenant_id
+ */
+export const awardGuidance = <ThrowOnError extends boolean = false>(options: Options<AwardGuidanceData, ThrowOnError>) => (options.client ?? client).get<AwardGuidanceResponses, AwardGuidanceErrors, ThrowOnError>({ url: '/awards/{id}/guidance', ...options });
+
+/**
+ * POST /awards/:id/guidance/generate
+ * Scoped by tenant_id
+ */
+export const awardGenerateGuidance = <ThrowOnError extends boolean = false>(options: Options<AwardGenerateGuidanceData, ThrowOnError>) => (options.client ?? client).post<AwardGenerateGuidanceResponses, AwardGenerateGuidanceErrors, ThrowOnError>({ url: '/awards/{id}/guidance/generate', ...options });
+
+/**
+ * GET /awards/:id/debrief-draft/:vendorId
+ */
+export const awardDebriefDraft = <ThrowOnError extends boolean = false>(options: Options<AwardDebriefDraftData, ThrowOnError>) => (options.client ?? client).get<AwardDebriefDraftResponses, AwardDebriefDraftErrors, ThrowOnError>({ url: '/awards/{id}/debrief-draft/{vendorId}', ...options });
+
+/**
+ * POST /awards/:id/debrief-draft/:vendorId/generate
+ */
+export const awardGenerateDebriefDraft = <ThrowOnError extends boolean = false>(options: Options<AwardGenerateDebriefDraftData, ThrowOnError>) => (options.client ?? client).post<AwardGenerateDebriefDraftResponses, AwardGenerateDebriefDraftErrors, ThrowOnError>({ url: '/awards/{id}/debrief-draft/{vendorId}/generate', ...options });
+
+/**
  * PUT /awards/:id/split
  */
 export const awardUpdateSplit = <ThrowOnError extends boolean = false>(options: Options<AwardUpdateSplitData, ThrowOnError>) => (options.client ?? client).put<AwardUpdateSplitResponses, AwardUpdateSplitErrors, ThrowOnError>({
@@ -427,6 +463,12 @@ export const comparisonRunFinal = <ThrowOnError extends boolean = false>(options
 export const comparisonRunShow = <ThrowOnError extends boolean = false>(options: Options<ComparisonRunShowData, ThrowOnError>) => (options.client ?? client).get<ComparisonRunShowResponses, ComparisonRunShowErrors, ThrowOnError>({ url: '/comparison-runs/{id}', ...options });
 
 /**
+ * GET /comparison-runs/:id/overlay
+ * Scoped by tenant_id
+ */
+export const comparisonRunOverlay = <ThrowOnError extends boolean = false>(options: Options<ComparisonRunOverlayData, ThrowOnError>) => (options.client ?? client).get<ComparisonRunOverlayResponses, ComparisonRunOverlayErrors, ThrowOnError>({ url: '/comparison-runs/{id}/overlay', ...options });
+
+/**
  * GET /comparison-runs/:id/matrix
  * Scoped by tenant_id
  */
@@ -462,6 +504,11 @@ export const comparisonRunUnlock = <ThrowOnError extends boolean = false>(option
  * GET /dashboard/kpis
  */
 export const dashboardKpis = <ThrowOnError extends boolean = false>(options?: Options<DashboardKpisData, ThrowOnError>) => (options?.client ?? client).get<DashboardKpisResponses, unknown, ThrowOnError>({ url: '/dashboard/kpis', ...options });
+
+/**
+ * POST /dashboard/kpis/generate
+ */
+export const dashboardGenerateKpisSummary = <ThrowOnError extends boolean = false>(options?: Options<DashboardGenerateKpisSummaryData, ThrowOnError>) => (options?.client ?? client).post<DashboardGenerateKpisSummaryResponses, unknown, ThrowOnError>({ url: '/dashboard/kpis/generate', ...options });
 
 /**
  * Get spend trend data scoped by tenant
@@ -959,6 +1006,26 @@ export const quoteSubmissionUpdateStatus = <ThrowOnError extends boolean = false
     }
 });
 
+export const v1QuoteSubmissionsSourceLinesStore = <ThrowOnError extends boolean = false>(options: Options<V1QuoteSubmissionsSourceLinesStoreData, ThrowOnError>) => (options.client ?? client).post<V1QuoteSubmissionsSourceLinesStoreResponses, V1QuoteSubmissionsSourceLinesStoreErrors, ThrowOnError>({
+    url: '/quote-submissions/{id}/source-lines',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const quoteSubmissionDestroySourceLine = <ThrowOnError extends boolean = false>(options: Options<QuoteSubmissionDestroySourceLineData, ThrowOnError>) => (options.client ?? client).delete<QuoteSubmissionDestroySourceLineResponses, QuoteSubmissionDestroySourceLineErrors, ThrowOnError>({ url: '/quote-submissions/{id}/source-lines/{sourceLineId}', ...options });
+
+export const quoteSubmissionUpdateSourceLine = <ThrowOnError extends boolean = false>(options: Options<QuoteSubmissionUpdateSourceLineData, ThrowOnError>) => (options.client ?? client).patch<QuoteSubmissionUpdateSourceLineResponses, QuoteSubmissionUpdateSourceLineErrors, ThrowOnError>({
+    url: '/quote-submissions/{id}/source-lines/{sourceLineId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
 /**
  * POST /quote-submissions/:id/replace
  * Scoped by tenant_id
@@ -977,26 +1044,6 @@ export const quoteSubmissionReparse = <ThrowOnError extends boolean = false>(opt
  */
 export const quoteSubmissionAssign = <ThrowOnError extends boolean = false>(options: Options<QuoteSubmissionAssignData, ThrowOnError>) => (options.client ?? client).post<QuoteSubmissionAssignResponses, unknown, ThrowOnError>({ url: '/quote-submissions/{id}/assign', ...options });
 
-/**
- * GET /recommendations/:runId
- */
-export const recommendationShow = <ThrowOnError extends boolean = false>(options: Options<RecommendationShowData, ThrowOnError>) => (options.client ?? client).get<RecommendationShowResponses, unknown, ThrowOnError>({ url: '/recommendations/{runId}', ...options });
-
-/**
- * GET /recommendations/:runId/mcda
- */
-export const recommendationMcda = <ThrowOnError extends boolean = false>(options: Options<RecommendationMcdaData, ThrowOnError>) => (options.client ?? client).get<RecommendationMcdaResponses, unknown, ThrowOnError>({ url: '/recommendations/{runId}/mcda', ...options });
-
-/**
- * POST /recommendations/:runId/override
- */
-export const recommendationOverride = <ThrowOnError extends boolean = false>(options: Options<RecommendationOverrideData, ThrowOnError>) => (options.client ?? client).post<RecommendationOverrideResponses, unknown, ThrowOnError>({ url: '/recommendations/{runId}/override', ...options });
-
-/**
- * POST /recommendations/:runId/rerun
- */
-export const recommendationRerun = <ThrowOnError extends boolean = false>(options: Options<RecommendationRerunData, ThrowOnError>) => (options.client ?? client).post<RecommendationRerunResponses, unknown, ThrowOnError>({ url: '/recommendations/{runId}/rerun', ...options });
-
 export const registerCompanyStore = <ThrowOnError extends boolean = false>(options: Options<RegisterCompanyStoreData, ThrowOnError>) => (options.client ?? client).post<RegisterCompanyStoreResponses, RegisterCompanyStoreErrors, ThrowOnError>({
     url: '/auth/register-company',
     ...options,
@@ -1014,6 +1061,11 @@ export const registerCompanyStore = <ThrowOnError extends boolean = false>(optio
 export const reportKpis = <ThrowOnError extends boolean = false>(options?: Options<ReportKpisData, ThrowOnError>) => (options?.client ?? client).get<ReportKpisResponses, unknown, ThrowOnError>({ url: '/reports/kpis', ...options });
 
 /**
+ * POST /reports/kpis/generate
+ */
+export const reportGenerateKpisSummary = <ThrowOnError extends boolean = false>(options?: Options<ReportGenerateKpisSummaryData, ThrowOnError>) => (options?.client ?? client).post<ReportGenerateKpisSummaryResponses, unknown, ThrowOnError>({ url: '/reports/kpis/generate', ...options });
+
+/**
  * Get spend trend
  *
  * GET /reports/spend-trend
@@ -1021,11 +1073,21 @@ export const reportKpis = <ThrowOnError extends boolean = false>(options?: Optio
 export const reportSpendTrend = <ThrowOnError extends boolean = false>(options?: Options<ReportSpendTrendData, ThrowOnError>) => (options?.client ?? client).get<ReportSpendTrendResponses, unknown, ThrowOnError>({ url: '/reports/spend-trend', ...options });
 
 /**
+ * POST /reports/spend-trend/generate
+ */
+export const reportGenerateSpendTrendSummary = <ThrowOnError extends boolean = false>(options?: Options<ReportGenerateSpendTrendSummaryData, ThrowOnError>) => (options?.client ?? client).post<ReportGenerateSpendTrendSummaryResponses, unknown, ThrowOnError>({ url: '/reports/spend-trend/generate', ...options });
+
+/**
  * Get spend by category
  *
  * GET /reports/spend-by-category
  */
 export const reportSpendByCategory = <ThrowOnError extends boolean = false>(options?: Options<ReportSpendByCategoryData, ThrowOnError>) => (options?.client ?? client).get<ReportSpendByCategoryResponses, unknown, ThrowOnError>({ url: '/reports/spend-by-category', ...options });
+
+/**
+ * POST /reports/spend-by-category/generate
+ */
+export const reportGenerateSpendByCategorySummary = <ThrowOnError extends boolean = false>(options?: Options<ReportGenerateSpendByCategorySummaryData, ThrowOnError>) => (options?.client ?? client).post<ReportGenerateSpendByCategorySummaryResponses, unknown, ThrowOnError>({ url: '/reports/spend-by-category/generate', ...options });
 
 /**
  * Export report
@@ -1116,7 +1178,14 @@ export const v1RfqsBulkAction = <ThrowOnError extends boolean = false>(options: 
 
 export const rfqShow = <ThrowOnError extends boolean = false>(options: Options<RfqShowData, ThrowOnError>) => (options.client ?? client).get<RfqShowResponses, RfqShowErrors, ThrowOnError>({ url: '/rfqs/{id}', ...options });
 
-export const rfqUpdate = <ThrowOnError extends boolean = false>(options: Options<RfqUpdateData, ThrowOnError>) => (options.client ?? client).put<RfqUpdateResponses, RfqUpdateErrors, ThrowOnError>({ url: '/rfqs/{id}', ...options });
+export const rfqUpdate = <ThrowOnError extends boolean = false>(options: Options<RfqUpdateData, ThrowOnError>) => (options.client ?? client).put<RfqUpdateResponses, RfqUpdateErrors, ThrowOnError>({
+    url: '/rfqs/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
 
 /**
  * GET /rfqs/:id/overview — aggregated summary for the RFQ overview screen
@@ -1215,17 +1284,22 @@ export const v1RfqTemplatesApply = <ThrowOnError extends boolean = false>(option
 /**
  * GET /risk-items?rfqId=:id
  */
-export const riskComplianceIndex = <ThrowOnError extends boolean = false>(options?: Options<RiskComplianceIndexData, ThrowOnError>) => (options?.client ?? client).get<RiskComplianceIndexResponses, unknown, ThrowOnError>({ url: '/risk-items', ...options });
+export const riskComplianceIndex = <ThrowOnError extends boolean = false>(options?: Options<RiskComplianceIndexData, ThrowOnError>) => (options?.client ?? client).get<RiskComplianceIndexResponses, RiskComplianceIndexErrors, ThrowOnError>({ url: '/risk-items', ...options });
+
+/**
+ * POST /risk-items/generate
+ */
+export const riskComplianceGenerate = <ThrowOnError extends boolean = false>(options?: Options<RiskComplianceGenerateData, ThrowOnError>) => (options?.client ?? client).post<RiskComplianceGenerateResponses, RiskComplianceGenerateErrors, ThrowOnError>({ url: '/risk-items/generate', ...options });
 
 /**
  * POST /risk-items/:id/escalate
  */
-export const riskComplianceEscalate = <ThrowOnError extends boolean = false>(options: Options<RiskComplianceEscalateData, ThrowOnError>) => (options.client ?? client).post<RiskComplianceEscalateResponses, unknown, ThrowOnError>({ url: '/risk-items/{id}/escalate', ...options });
+export const riskComplianceEscalate = <ThrowOnError extends boolean = false>(options: Options<RiskComplianceEscalateData, ThrowOnError>) => (options.client ?? client).post<RiskComplianceEscalateResponses, RiskComplianceEscalateErrors, ThrowOnError>({ url: '/risk-items/{id}/escalate', ...options });
 
 /**
  * POST /risk-items/:id/exception
  */
-export const riskComplianceException = <ThrowOnError extends boolean = false>(options: Options<RiskComplianceExceptionData, ThrowOnError>) => (options.client ?? client).post<RiskComplianceExceptionResponses, unknown, ThrowOnError>({ url: '/risk-items/{id}/exception', ...options });
+export const riskComplianceException = <ThrowOnError extends boolean = false>(options: Options<RiskComplianceExceptionData, ThrowOnError>) => (options.client ?? client).post<RiskComplianceExceptionResponses, RiskComplianceExceptionErrors, ThrowOnError>({ url: '/risk-items/{id}/exception', ...options });
 
 /**
  * GET /scenarios?rfqId=:id
@@ -1547,6 +1621,8 @@ export const vendorCompliance = <ThrowOnError extends boolean = false>(options: 
 export const vendorHistory = <ThrowOnError extends boolean = false>(options: Options<VendorHistoryData, ThrowOnError>) => (options.client ?? client).get<VendorHistoryResponses, VendorHistoryErrors, ThrowOnError>({ url: '/vendors/{id}/history', ...options });
 
 export const vendorGovernanceShow = <ThrowOnError extends boolean = false>(options: Options<VendorGovernanceShowData, ThrowOnError>) => (options.client ?? client).get<VendorGovernanceShowResponses, VendorGovernanceShowErrors, ThrowOnError>({ url: '/vendors/{id}/governance', ...options });
+
+export const vendorGovernanceGenerate = <ThrowOnError extends boolean = false>(options: Options<VendorGovernanceGenerateData, ThrowOnError>) => (options.client ?? client).post<VendorGovernanceGenerateResponses, VendorGovernanceGenerateErrors, ThrowOnError>({ url: '/vendors/{id}/governance/generate', ...options });
 
 export const v1VendorsSanctionsScreening = <ThrowOnError extends boolean = false>(options: Options<V1VendorsSanctionsScreeningData, ThrowOnError>) => (options.client ?? client).post<V1VendorsSanctionsScreeningResponses, V1VendorsSanctionsScreeningErrors, ThrowOnError>({
     url: '/vendors/{id}/sanctions-screening',

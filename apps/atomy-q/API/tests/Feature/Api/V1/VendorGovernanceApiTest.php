@@ -29,20 +29,6 @@ final class VendorGovernanceApiTest extends ApiTestCase
         parent::tearDown();
     }
 
-    public function createApplication(): \Illuminate\Foundation\Application
-    {
-        $app = parent::createApplication();
-        $app['config']->set('database.default', 'sqlite');
-        $app['config']->set('database.connections.sqlite', [
-            'driver' => 'sqlite',
-            'database' => ':memory:',
-            'prefix' => '',
-            'foreign_key_constraints' => true,
-        ]);
-
-        return $app;
-    }
-
     public function testGovernanceListsEvidenceFindingsAndScoresForTenantVendor(): void
     {
         Carbon::setTestNow(Carbon::parse('2026-04-22T00:00:00Z'));

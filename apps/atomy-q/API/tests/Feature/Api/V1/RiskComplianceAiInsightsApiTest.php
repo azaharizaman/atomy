@@ -24,20 +24,6 @@ final class RiskComplianceAiInsightsApiTest extends ApiTestCase
     use BindsAiRuntimeStatus;
     use RefreshDatabase;
 
-    public function createApplication(): \Illuminate\Foundation\Application
-    {
-        $app = parent::createApplication();
-        $app['config']->set('database.default', 'sqlite');
-        $app['config']->set('database.connections.sqlite', [
-            'driver' => 'sqlite',
-            'database' => ':memory:',
-            'prefix' => '',
-            'foreign_key_constraints' => true,
-        ]);
-
-        return $app;
-    }
-
     public function testIndexReturnsUnavailableInsightsAndManualReviewForExistingRfqWithoutRiskItems(): void
     {
         $this->bindAiRuntimeStatus([

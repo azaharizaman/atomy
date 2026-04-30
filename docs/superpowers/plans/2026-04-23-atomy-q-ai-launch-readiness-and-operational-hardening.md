@@ -68,6 +68,15 @@ Plan 6 is the operator handoff slice. The written handoff must be concrete enoug
 | RFQ browser continuity | `cd apps/atomy-q/WEB && npm run test:e2e -- tests/rfq-alpha-journeys.spec.ts tests/rfq-lifecycle-e2e.spec.ts tests/screen-smoke.spec.ts` | AI-assisted and AI-off browser journeys remain usable |
 | Staging drill evidence | Deployment-time `AI_MODE=off` and degraded-endpoint runs captured in the release log | The operator log records expected API and WEB outcomes for each drill |
 
+### Plan 5 Alpha Evidence Dependencies
+
+Plan 6 release verification must include the Plan 5 corrective evidence from `docs/superpowers/plans/2026-04-30-atomy-q-ai-insights-governance-functional-reality.md`:
+
+- Dashboard and reporting AI summaries use real tenant-scoped facts verified from seeded tenant data, not hardcoded zeroes.
+- RFQ risk item surfaces derive deterministic findings from RFQ schedule, RFQ-linked vendors, vendor findings, and quote readiness rather than empty stubs.
+- Sanctions history does not claim completed/no-match outcomes when no manual or provider screening evidence exists.
+- WEB AI generation buttons are capability-gated and scoped to the relevant dashboard, reporting, RFQ, and vendor governance panels.
+
 ## Layer Ownership
 
 - **Layer 1**
