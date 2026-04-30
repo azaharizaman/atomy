@@ -72,7 +72,7 @@ describe('useQuoteSubmissions (live mode)', () => {
 
     await waitFor(() => expect(result.current.isError).toBe(true));
     expect(result.current.error).toBeInstanceOf(Error);
-    expect((result.current.error as Error).message).toContain('Quote');
+    expect((result.current.error as Error).message).toContain('Invalid quote submission response');
   });
 
   it('rejects malformed quote submission rows', async () => {

@@ -210,7 +210,13 @@ describe('RfqAwardPage', () => {
   });
 
   it('renders live award data and action buttons', async () => {
-    renderWithProviders(<RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
+    await act(async () => {
+      renderWithProviders(
+        <React.Suspense fallback={null}>
+          <RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
+        </React.Suspense>,
+      );
+    });
 
     expect(await screen.findByText('Winner Vendor', { selector: 'p' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /finalize award/i })).toBeEnabled();
@@ -226,7 +232,13 @@ describe('RfqAwardPage', () => {
       isError: true,
     } as unknown as UseComparisonRunsReturn);
 
-    renderWithProviders(<RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
+    await act(async () => {
+      renderWithProviders(
+        <React.Suspense fallback={null}>
+          <RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
+        </React.Suspense>,
+      );
+    });
 
     expect(await screen.findByText('Winner Vendor', { selector: 'p' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /finalize award/i })).toBeEnabled();
@@ -234,7 +246,13 @@ describe('RfqAwardPage', () => {
   });
 
   it('allows sending debrief messages', async () => {
-    renderWithProviders(<RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
+    await act(async () => {
+      renderWithProviders(
+        <React.Suspense fallback={null}>
+          <RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
+        </React.Suspense>,
+      );
+    });
 
     const debriefInput = await screen.findByLabelText(/debrief message/i);
     const sendButton = screen.getByRole('button', { name: /send debrief/i }); // Corrected regex
@@ -247,7 +265,13 @@ describe('RfqAwardPage', () => {
   });
 
   it('can apply an AI debrief draft into the editable textarea', async () => {
-    renderWithProviders(<RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
+    await act(async () => {
+      renderWithProviders(
+        <React.Suspense fallback={null}>
+          <RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
+        </React.Suspense>,
+      );
+    });
 
     const reviewDraftButtons = await screen.findAllByRole('button', { name: /review ai draft/i });
     fireEvent.click(reviewDraftButtons[0]);
@@ -273,7 +297,13 @@ describe('RfqAwardPage', () => {
       data: [{ id: 'run-1', type: 'final', status: 'frozen' }],
     } as unknown as UseComparisonRunsReturn);
 
-    renderWithProviders(<RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
+    await act(async () => {
+      renderWithProviders(
+        <React.Suspense fallback={null}>
+          <RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
+        </React.Suspense>,
+      );
+    });
 
     expect(await screen.findByText(/Select a vendor to award the contract based on the final comparison run/i)).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'Winner Vendor' })).toBeInTheDocument();
@@ -311,7 +341,13 @@ describe('RfqAwardPage', () => {
       store: { mutate: vi.fn(), isPending: false, isError: false },
     } as unknown as UseAwardReturn);
 
-    renderWithProviders(<RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
+    await act(async () => {
+      renderWithProviders(
+        <React.Suspense fallback={null}>
+          <RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
+        </React.Suspense>,
+      );
+    });
 
     fireEvent.click(await screen.findByRole('button', { name: /finalize award/i }));
 
@@ -334,7 +370,13 @@ describe('RfqAwardPage', () => {
       store: { mutate: vi.fn(), isPending: false, isError: false },
     } as unknown as UseAwardReturn);
 
-    renderWithProviders(<RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
+    await act(async () => {
+      renderWithProviders(
+        <React.Suspense fallback={null}>
+          <RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
+        </React.Suspense>,
+      );
+    });
 
     expect(await screen.findByText('Award payload rejected')).toBeInTheDocument();
     expect(screen.queryByText('No award record yet')).not.toBeInTheDocument();
@@ -356,7 +398,13 @@ describe('RfqAwardPage', () => {
       isError: true,
     } as unknown as UseComparisonRunsReturn);
 
-    renderWithProviders(<RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
+    await act(async () => {
+      renderWithProviders(
+        <React.Suspense fallback={null}>
+          <RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
+        </React.Suspense>,
+      );
+    });
 
     expect(await screen.findByText('Comparison run snapshot missing')).toBeInTheDocument();
     expect(screen.queryByText('No award record yet')).not.toBeInTheDocument();
@@ -463,7 +511,13 @@ describe('RfqAwardPage', () => {
       },
     } as unknown as UseComparisonRunMatrixReturn);
 
-    renderWithProviders(<RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
+    await act(async () => {
+      renderWithProviders(
+        <React.Suspense fallback={null}>
+          <RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
+        </React.Suspense>,
+      );
+    });
 
     expect(await screen.findByRole('option', { name: 'Winner Vendor' })).toBeInTheDocument();
     expect(screen.queryByRole('option', { name: 'Other Vendor' })).not.toBeInTheDocument();
@@ -484,7 +538,13 @@ describe('RfqAwardPage', () => {
       error: null,
     } as unknown as UseAwardGuidanceReturn);
 
-    renderWithProviders(<RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
+    await act(async () => {
+      renderWithProviders(
+        <React.Suspense fallback={null}>
+          <RfqAwardPage params={Promise.resolve({ rfqId: 'rfq-1' })} />
+        </React.Suspense>,
+      );
+    });
 
     expect(await screen.findByText('Award AI guidance unavailable')).toBeInTheDocument();
     expect(screen.queryByText('Award payload rejected')).not.toBeInTheDocument();

@@ -1,6 +1,6 @@
 import React from 'react';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
 import { normalizeComparisonRun } from '@/hooks/use-comparison-run';
 
@@ -165,7 +165,13 @@ describe('ComparisonRunDetailPage', () => {
   });
 
   it('renders live run metadata, matrix content, and readiness details', async () => {
-    renderWithProviders(<ComparisonRunDetailPage params={Promise.resolve({ rfqId: 'rfq-1', runId: 'run-42' })} />);
+    await act(async () => {
+      renderWithProviders(
+        <React.Suspense fallback={null}>
+          <ComparisonRunDetailPage params={Promise.resolve({ rfqId: 'rfq-1', runId: 'run-42' })} />
+        </React.Suspense>,
+      );
+    });
 
     expect(await screen.findByRole('heading', { name: 'Final comparison' })).toBeInTheDocument();
     expect(screen.getByTestId('run-label')).toHaveTextContent('run-42');
@@ -181,7 +187,13 @@ describe('ComparisonRunDetailPage', () => {
   });
 
   it('does not render the retired fake controls or sample copy', async () => {
-    renderWithProviders(<ComparisonRunDetailPage params={Promise.resolve({ rfqId: 'rfq-1', runId: 'run-42' })} />);
+    await act(async () => {
+      renderWithProviders(
+        <React.Suspense fallback={null}>
+          <ComparisonRunDetailPage params={Promise.resolve({ rfqId: 'rfq-1', runId: 'run-42' })} />
+        </React.Suspense>,
+      );
+    });
 
     await screen.findByRole('heading', { name: 'Final comparison' });
 
@@ -214,7 +226,13 @@ describe('ComparisonRunDetailPage', () => {
       ],
     };
 
-    renderWithProviders(<ComparisonRunDetailPage params={Promise.resolve({ rfqId: 'rfq-1', runId: 'run-42' })} />);
+    await act(async () => {
+      renderWithProviders(
+        <React.Suspense fallback={null}>
+          <ComparisonRunDetailPage params={Promise.resolve({ rfqId: 'rfq-1', runId: 'run-42' })} />
+        </React.Suspense>,
+      );
+    });
 
     expect(await screen.findByRole('heading', { name: 'Final comparison' })).toBeInTheDocument();
     expect(screen.getAllByText('—').length).toBeGreaterThan(2);
@@ -277,7 +295,13 @@ describe('ComparisonRunDetailPage', () => {
       },
     };
 
-    renderWithProviders(<ComparisonRunDetailPage params={Promise.resolve({ rfqId: 'rfq-1', runId: 'run-42' })} />);
+    await act(async () => {
+      renderWithProviders(
+        <React.Suspense fallback={null}>
+          <ComparisonRunDetailPage params={Promise.resolve({ rfqId: 'rfq-1', runId: 'run-42' })} />
+        </React.Suspense>,
+      );
+    });
 
     expect(await screen.findByRole('heading', { name: 'Final comparison' })).toBeInTheDocument();
     expect(screen.getByText('Comparison AI overlay unavailable')).toBeInTheDocument();

@@ -223,8 +223,11 @@ describe('NormalizeQuotePage', () => {
   });
 
   it('keeps freeze disabled while the RFQ submission deadline is still open', async () => {
-    vi.mocked(useRfq).mockReturnValueOnce({
+    vi.mocked(useRfq).mockReturnValue({
       data: { title: 'RFQ', submission_deadline: '2099-04-01T00:00:00.000Z' },
+      isLoading: false,
+      isError: false,
+      error: null,
     } as ReturnType<typeof useRfq>);
 
     mockUseNormalizationReview.mockReturnValue({
@@ -366,7 +369,9 @@ describe('NormalizeQuotePage', () => {
       rfq_line_item_id: 'rfq-line-1',
       note: 'Typed from vendor email',
       reason: 'manual_entry_required',
-    });
+    }, expect.objectContaining({
+      onSuccess: expect.any(Function),
+    }));
 
     fireEvent.click(screen.getByRole('button', { name: /edit source line 1/i }));
     fireEvent.change(screen.getByLabelText(/description source line 1/i), {
@@ -385,11 +390,13 @@ describe('NormalizeQuotePage', () => {
       },
       note: 'Typed from signed quote',
       reason_code: 'price_correction',
-    });
+    }, expect.objectContaining({
+      onSuccess: expect.any(Function),
+    }));
 
     vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
-    fireEvent.click(screen.getByRole('button', { name: /delete source line 1/i }));
-    expect(mockDeleteSourceLine).toHaveBeenCalledWith({ quoteSubmissionId: 'q1', id: 'line-1' });
+    fireEvent.click(screen.getByRole('button', { name: /delete source line 2/i }));
+    expect(mockDeleteSourceLine).toHaveBeenCalledWith({ quoteSubmissionId: 'q1', id: 'line-2' });
   });
 
   it('sends null for unmapped RFQ line overrides', async () => {
@@ -413,6 +420,8 @@ describe('NormalizeQuotePage', () => {
       },
       note: 'Typed from signed quote',
       reason_code: 'price_correction',
-    });
+    }, expect.objectContaining({
+      onSuccess: expect.any(Function),
+    }));
   });
 });

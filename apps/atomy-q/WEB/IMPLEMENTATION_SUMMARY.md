@@ -12,9 +12,10 @@
   - `cd apps/atomy-q/WEB && npx eslint "src/app/(dashboard)/projects/[projectId]/page.tsx" "src/app/(dashboard)/rfqs/[rfqId]/quote-intake/page.tsx"` -> PASS
   - `cd apps/atomy-q/WEB && npx eslint "src/app/(dashboard)/rfqs/[rfqId]/award/page.tsx"` -> PASS
   - `cd apps/atomy-q/WEB && npx eslint "src/app/(dashboard)/vendors/[vendorId]/esg-compliance/page.test.tsx"` -> PASS
+  - `cd apps/atomy-q/WEB && npm run lint` -> PASS
   - `cd apps/atomy-q/WEB && npx vitest run "src/app/(dashboard)/vendors/[vendorId]/esg-compliance/page.test.tsx"` -> PASS
+  - `cd apps/atomy-q/WEB && npm run test:unit` -> PASS
   - `cd apps/atomy-q/WEB && npm run build` -> PASS
-- Residual non-blocking warnings remain in the wider unit suite around unrelated suspended page tests and a few live-normalization expectation drift cases outside Task 1 scope.
 
 ## 2026-04-27 Vendor Sourcing Recommendation Browser Coverage
 

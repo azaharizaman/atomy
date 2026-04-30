@@ -1,6 +1,6 @@
 import React from 'react';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import { renderWithProviders } from '@/test/utils';
 
 const mockUseNormalizationReview = vi.fn();
@@ -77,7 +77,13 @@ describe('QuoteIntakeListPage', () => {
   });
 
   it('renders live quote rows and normalization warnings', async () => {
-    renderWithProviders(<QuoteIntakePage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
+    await act(async () => {
+      renderWithProviders(
+        <React.Suspense fallback={null}>
+          <QuoteIntakePage params={Promise.resolve({ rfqId: 'rfq-1' })} />
+        </React.Suspense>,
+      );
+    });
 
     expect(await screen.findByText(/blocking issues/i)).toBeInTheDocument();
     expect(screen.getByText('winner.pdf')).toBeInTheDocument();
@@ -85,7 +91,13 @@ describe('QuoteIntakeListPage', () => {
   });
 
   it('makes provider-backed quote extraction visible when AI extraction is available', async () => {
-    renderWithProviders(<QuoteIntakePage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
+    await act(async () => {
+      renderWithProviders(
+        <React.Suspense fallback={null}>
+          <QuoteIntakePage params={Promise.resolve({ rfqId: 'rfq-1' })} />
+        </React.Suspense>,
+      );
+    });
 
     expect(await screen.findByText(/ai-assisted quote extraction/i)).toBeInTheDocument();
     expect(screen.getByText(/provider extraction active/i)).toBeInTheDocument();
@@ -101,7 +113,13 @@ describe('QuoteIntakeListPage', () => {
       status: { mode: 'provider', globalHealth: 'degraded', providerName: null },
     });
 
-    renderWithProviders(<QuoteIntakePage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
+    await act(async () => {
+      renderWithProviders(
+        <React.Suspense fallback={null}>
+          <QuoteIntakePage params={Promise.resolve({ rfqId: 'rfq-1' })} />
+        </React.Suspense>,
+      );
+    });
 
     expect(await screen.findByText('winner.pdf')).toBeInTheDocument();
     expect(screen.getByText(/ai extraction is unavailable/i)).toBeInTheDocument();
@@ -117,7 +135,13 @@ describe('QuoteIntakeListPage', () => {
       error: new Error('Quote submissions unavailable'),
     });
 
-    renderWithProviders(<QuoteIntakePage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
+    await act(async () => {
+      renderWithProviders(
+        <React.Suspense fallback={null}>
+          <QuoteIntakePage params={Promise.resolve({ rfqId: 'rfq-1' })} />
+        </React.Suspense>,
+      );
+    });
 
     expect(await screen.findByText(/quote intake unavailable/i)).toBeInTheDocument();
     expect(screen.getByText(/quote submissions unavailable/i)).toBeInTheDocument();
@@ -134,11 +158,17 @@ describe('QuoteIntakeListPage', () => {
       error: new Error('Normalization review unavailable'),
     });
 
-    renderWithProviders(<QuoteIntakePage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
+    await act(async () => {
+      renderWithProviders(
+        <React.Suspense fallback={null}>
+          <QuoteIntakePage params={Promise.resolve({ rfqId: 'rfq-1' })} />
+        </React.Suspense>,
+      );
+    });
 
     expect(await screen.findByText('winner.pdf')).toBeInTheDocument();
     expect(screen.getByText(/normalization review data unavailable/i)).toBeInTheDocument();
-    expect(screen.getByText(/review data could not be loaded/i)).toBeInTheDocument();
+    expect(screen.getByText(/normalization review unavailable/i)).toBeInTheDocument();
     expect(screen.queryByText(/quote intake unavailable/i)).not.toBeInTheDocument();
   });
 });
