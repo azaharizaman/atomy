@@ -120,12 +120,12 @@ final class VendorRecommendationController extends Controller
             $provenance,
             $decisionTrailRecorder,
             $rfq,
-            $tenantId,
+            $normalizedTenantId,
             $status,
         ): void {
             RfqRecommendationArtifact::query()->updateOrCreate(
                 [
-                    'tenant_id' => $tenantId,
+                    'tenant_id' => $normalizedTenantId,
                     'rfq_id' => $rfq->id,
                     'feature_key' => 'vendor_ai_ranking',
                 ],
@@ -137,7 +137,7 @@ final class VendorRecommendationController extends Controller
             );
 
             $decisionTrailRecorder->recordVendorRecommendationGenerated(
-                $tenantId,
+                $normalizedTenantId,
                 (string) $rfq->id,
                 [
                     'payload' => $canonicalPayload,

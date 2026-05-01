@@ -138,7 +138,7 @@ describe('QuoteIntakeListPage', () => {
 
     expect(await screen.findByText('winner.pdf')).toBeInTheDocument();
     expect(screen.getByText(/normalization review data unavailable/i)).toBeInTheDocument();
-    expect(screen.getByText(/normalization review unavailable/i)).toBeInTheDocument();
+    expect(screen.getByText('Normalization review unavailable')).toBeInTheDocument();
     expect(screen.queryByText(/quote intake unavailable/i)).not.toBeInTheDocument();
   });
 });

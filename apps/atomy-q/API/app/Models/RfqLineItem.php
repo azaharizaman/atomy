@@ -33,6 +33,7 @@ class RfqLineItem extends Model
 
     protected $casts = [
         'quantity' => 'decimal:4',
+        'sort_order' => 'integer',
         'unit_price' => 'decimal:4',
     ];
 

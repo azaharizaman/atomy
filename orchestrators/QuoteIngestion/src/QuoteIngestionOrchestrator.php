@@ -255,8 +255,21 @@ final readonly class QuoteIngestionOrchestrator
             return null;
         }
 
-        if ($confidence >= 0.0 && $confidence <= 1.0) {
-            return $confidence * 100.0;
+        if ($confidence < 0.0 || $confidence > 100.0) {
+            $this->logger->warning('Ignoring quote confidence outside readiness scale', [
+                'ai_confidence' => $confidence,
+            ]);
+            return null;
+        }
+
+        if ($confidence <= 1.0) {
+            $normalizedConfidence = $confidence * 100.0;
+            $this->logger->info('Normalized fractional quote confidence', [
+                'original_confidence' => $confidence,
+                'normalized_confidence' => $normalizedConfidence,
+            ]);
+
+            return $normalizedConfidence;
         }
 
         return $confidence;

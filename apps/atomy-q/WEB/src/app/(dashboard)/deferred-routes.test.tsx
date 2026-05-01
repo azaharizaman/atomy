@@ -33,7 +33,7 @@ function renderWithQueryClient(ui: React.ReactElement) {
 }
 
 async function renderDeferredRoute(ui: React.ReactElement) {
-  await renderPageWithProviders(ui);
+  return await renderPageWithProviders(ui);
 }
 
 describe('alpha deferred routes', () => {

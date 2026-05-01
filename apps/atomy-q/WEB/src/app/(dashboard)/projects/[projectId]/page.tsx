@@ -19,9 +19,6 @@ import { useUsers } from '@/hooks/use-users';
 import { useAuthStore } from '@/store/use-auth-store';
 
 type AclDraftEntry = ProjectAclEntry & { draftId: string };
-type ProjectManagerDisplay = {
-  projectManagerName?: string;
-};
 
 /** Stable fallback so `useEffect([acl])` does not see a new [] every render while loading. */
 const EMPTY_PROJECT_ACL: ProjectAclEntry[] = [];
@@ -267,7 +264,7 @@ export default function ProjectDetailPage() {
                 {editPmId !== '' && !userOptions.some((u) => u.id === editPmId) && (
                   <option value={editPmId}>
                     {project.projectManagerId === editPmId
-                      ? (project as ProjectManagerDisplay).projectManagerName || 'Current Manager'
+                      ? project.projectManagerName || 'Current Manager'
                       : 'Unknown User'}{' '}
                     ({editPmId})
                   </option>

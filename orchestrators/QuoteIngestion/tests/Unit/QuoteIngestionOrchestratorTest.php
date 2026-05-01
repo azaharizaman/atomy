@@ -371,7 +371,14 @@ final class QuoteIngestionOrchestratorTest extends TestCase
                 $tenantId,
                 $submissionId,
                 'rfq-line-1',
-                self::callback(static fn (array $payload): bool => $payload['ai_confidence'] === 95.0)
+                self::callback(static fn (array $payload): bool => $payload['ai_confidence'] === 95.0
+                    && $payload['source_description'] === 'Widget A'
+                    && $payload['source_quantity'] === 1.0
+                    && $payload['source_uom'] === 'EA'
+                    && $payload['source_unit_price'] === 12.0
+                    && $payload['taxonomy_code'] === 'TAX-100'
+                    && $payload['mapping_version'] === 'v1'
+                    && $payload['sort_order'] === 0)
             );
 
         $decisionTrailWriter->expects(self::once())->method('write');

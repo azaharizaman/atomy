@@ -88,7 +88,7 @@ final readonly class DeterministicContentProcessor implements OrchestratorConten
             return substr($normalizedPath, $segmentPosition + 1);
         }
 
-        return basename($storagePath);
+        return basename($normalizedPath);
     }
 
     /**

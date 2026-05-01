@@ -121,7 +121,7 @@ describe('VendorEsgCompliancePage', () => {
 
     await renderPageWithProviders(<VendorEsgCompliancePage params={Promise.resolve({ vendorId: 'vendor-1' })} />);
 
-    await user.click(screen.getByRole('button', { name: 'Generate' }));
+    await user.click(await screen.findByRole('button', { name: 'Generate' }));
 
     expect(mockGenerateGovernance).toHaveBeenCalledWith('vendor-1');
   });

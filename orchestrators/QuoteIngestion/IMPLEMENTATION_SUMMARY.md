@@ -19,8 +19,8 @@
    - Exposes the generic failure message as a shared constant reused by the retry-exhaustion job path.
 3. Added unit tests for core orchestration behavior and failure paths.
 4. 2026-04-30 alpha readiness update:
-   - Normalizes provider-style fractional confidence values (`0..1`) to the package readiness scale (`0..100`) before decision-trail and completion status decisions.
-   - Keeps deterministic confidence values already emitted on the `0..100` scale unchanged.
+   - Normalizes provider-style fractional confidence values (`0..1`, inclusive) to the package readiness scale (`0..100`) before decision-trail and completion status decisions.
+   - Keeps deterministic confidence values already emitted on the `0..100` scale unchanged, and ignores values outside that scale.
 
 ## Verification coverage added
 
@@ -32,4 +32,8 @@
   - completion status and persisted line count are correct.
 - Coordinator failure marks submission as failed and clears tenant context.
 - Confidence averaging falls back to `0.0` when no finite numeric confidence is available.
-- Fractional provider confidence such as `0.95` is treated as `95.0` so valid provider-backed extraction can reach `ready`.
+- Confidence scale detection:
+  - `0.0 -> 0.0`, `0.5 -> 50.0`, `0.95 -> 95.0`, `1.0 -> 100.0`.
+  - `1.5 -> 1.5`, `50 -> 50.0`; values greater than `1.0` and at most `100.0` are already percentage-scale.
+  - `-0.1` and `150` are outside the accepted readiness scale and are ignored for averaging.
+  - `ready` requires average normalized confidence `>= 80.0`; lower or missing valid confidence remains `needs_review`.
