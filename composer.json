@@ -46,7 +46,8 @@
         "nexus/sourcing-scoring": "*@dev",
         "nexus/sourcing-operations": "*@dev",
         "nexus/approval-operations": "*@dev",
-        "nexus/laravel-approval-operations-adapter": "*@dev"
+        "nexus/laravel-approval-operations-adapter": "*@dev",
+        "predis/predis": "^3.4"
     },
     "repositories": [
         {
