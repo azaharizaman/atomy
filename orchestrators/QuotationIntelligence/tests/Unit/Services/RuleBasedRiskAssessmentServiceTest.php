@@ -24,7 +24,7 @@ final class RuleBasedRiskAssessmentServiceTest extends TestCase
     {
         // 1. Arrange
         $line = new NormalizedQuoteLine(
-            'L1', 'Laptop', '43211503', 1.0, 'UNIT', 1.0, 1000.0, 1000.0, 0.5 // 0.5 < 0.7 threshold
+            'L1', 'Laptop', '43211503', 1.0, 'UNIT', 1.0, 1000.0, 1000.0, 50.0 // 50.0 < 70.0 threshold
         );
 
         // 2. Act
@@ -48,7 +48,7 @@ final class RuleBasedRiskAssessmentServiceTest extends TestCase
             1.0,
             1000.0,
             1000.0,
-            0.95,
+            95.0,
             [],
             [
                 'commercial_terms' => [
@@ -81,7 +81,7 @@ final class RuleBasedRiskAssessmentServiceTest extends TestCase
             1.0,
             1000.0,
             1000.0,
-            0.95,
+            95.0,
             [],
             [
                 'commercial_terms' => [
@@ -147,7 +147,7 @@ final class RuleBasedRiskAssessmentServiceTest extends TestCase
             1.0,
             1000.0,
             1000.0,
-            0.95,
+            95.0,
             [],
             [
                 'commercial_terms' => [
@@ -177,7 +177,7 @@ final class RuleBasedRiskAssessmentServiceTest extends TestCase
             1.0,
             1000.0,
             1000.0,
-            0.95,
+            95.0,
             [],
             [
                 'commercial_terms' => 'invalid',

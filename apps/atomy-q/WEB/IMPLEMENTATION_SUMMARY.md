@@ -1,5 +1,28 @@
 # Implementation Summary
 
+## 2026-04-30 WEB Alpha Release Gate Repair
+
+- Repaired the Task 1 WEB gate failures without weakening behavior:
+  - removed the explicit `any` cast from project detail rendering by using a page-local narrow type for the missing manager name field,
+  - replaced the quote-intake `any` cast with a direct `Error` guard,
+  - fixed the RFQ award memoization dependency to preserve React compiler memoization,
+  - passed the required `vendorId` argument to vendor governance narrative generation on both vendor governance surfaces.
+- Updated suspended route-param tests to use the shared async page render helper so Promise-backed route params resolve under test without duplicated `act`/`Suspense` wrappers.
+- Added vendor-governance generation assertions for both vendor governance surfaces so the live `vendorId` is passed to the mutation.
+- Verification:
+  - `cd apps/atomy-q/WEB && npx eslint "src/app/(dashboard)/projects/[projectId]/page.tsx" "src/app/(dashboard)/rfqs/[rfqId]/quote-intake/page.tsx"` -> PASS
+  - `cd apps/atomy-q/WEB && npx eslint "src/app/(dashboard)/rfqs/[rfqId]/award/page.tsx"` -> PASS
+  - `cd apps/atomy-q/WEB && npx eslint "src/app/(dashboard)/vendors/[vendorId]/esg-compliance/page.test.tsx"` -> PASS
+  - `cd apps/atomy-q/WEB && npm run lint` -> PASS
+  - `cd apps/atomy-q/WEB && npx vitest run "src/app/(dashboard)/vendors/[vendorId]/esg-compliance/page.test.tsx"` -> PASS
+  - `cd apps/atomy-q/WEB && npm run test:unit` -> PASS
+  - `cd apps/atomy-q/WEB && npm run build` -> PASS
+- Remaining `npm run lint` warnings are non-blocking alpha hygiene items, not Task 1 release-gate failures:
+  - unused RFQ context variables in hidden/deferred or shell-only RFQ pages: `rfqs/[rfqId]/[section]`, `approvals`, `comparison-runs`, `decision-trail`, `documents`, `negotiations`, and `risk`;
+  - existing unused `_ids` parameter in RFQ bulk page selection handling;
+  - unused `api` import in `use-rfq-counts`.
+  These should be cleaned in the route/surface classification and frontend hygiene follow-up rather than mixed into the WEB release-gate repair.
+
 ## 2026-04-27 Vendor Sourcing Recommendation Browser Coverage
 
 - Added `tests/provider-sourcing-recommendation-e2e.spec.ts` to cover the canonical buyer flow in fake mode: provider-backed recommendation output renders, recommendation never auto-selects the shortlist, the buyer saves a manual shortlist through `selected-vendors`, and an unavailable recommendation still leaves manual selection usable.

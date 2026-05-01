@@ -114,7 +114,7 @@ describe('normalizeVendorRecommendationPayload', () => {
           provenance: null,
         },
       }),
-    ).toThrow(/recommended_reason_summary|deprecated alias/);
+    ).toThrow(/provider_explanation.*missing|missing.*provider_explanation/i);
   });
 
   it('parses structured unavailable payloads without treating them as errors', () => {

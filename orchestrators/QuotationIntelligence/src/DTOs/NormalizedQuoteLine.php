@@ -23,7 +23,7 @@ final readonly class NormalizedQuoteLine
      * @param float $normalizedQuantity Converted quantity in RFQ base unit
      * @param float $quotedUnitPrice Original unit price
      * @param float $normalizedUnitPrice Converted unit price in RFQ base unit/currency
-     * @param float $aiConfidence Confidence score for extraction/classification (0-1)
+     * @param float $aiConfidence Confidence score for extraction/classification as a 0-100 percentage
      * @param array<QuoteSnippet> $snippets Evidence snippets for fields
      * @param array<string, mixed> $metadata Additional extracted attributes
      */
@@ -45,7 +45,7 @@ final readonly class NormalizedQuoteLine
     /**
      * Check if this line is an outlier (variance check logic elsewhere).
      */
-    public function hasLowConfidence(float $threshold = 0.9): bool
+    public function hasLowConfidence(float $threshold = 90.0): bool
     {
         return $this->aiConfidence < $threshold;
     }

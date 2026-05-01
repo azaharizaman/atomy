@@ -76,6 +76,9 @@ final class RfqRecommendationDecisionTrailTest extends ApiTestCase
                 'endpoint_group' => 'sourcing_recommendation',
                 'model_revision' => 'openai/gpt-4.1-mini:2026-04-24',
                 'prompt_template_version' => 'vendor-ranking@2026-04-24',
+                'request_trace_id' => 'trace-vendor-trail-1',
+                'input_hash' => 'sha256:trail-input',
+                'output_hash' => 'sha256:trail-output',
                 'latency_ms' => 410,
                 'confidence' => 0.93,
                 'processed_at' => '2026-04-24T09:30:00+08:00',
@@ -91,7 +94,7 @@ final class RfqRecommendationDecisionTrailTest extends ApiTestCase
         $response->assertOk();
 
         $artifact = RfqRecommendationArtifact::query()
-            ->where('tenant_id', $tenantId)
+            ->where('tenant_id', Str::lower($tenantId))
             ->where('rfq_id', $rfq->id)
             ->where('feature_key', 'vendor_ai_ranking')
             ->first();
@@ -100,7 +103,7 @@ final class RfqRecommendationDecisionTrailTest extends ApiTestCase
         self::assertSame('available', $artifact->status);
 
         $entry = DecisionTrailEntry::query()
-            ->where('tenant_id', $tenantId)
+            ->where('tenant_id', Str::lower($tenantId))
             ->where('rfq_id', $rfq->id)
             ->where('event_type', 'vendor_recommendation_generated')
             ->first();
@@ -117,6 +120,9 @@ final class RfqRecommendationDecisionTrailTest extends ApiTestCase
         $trail->assertJsonPath('data.event_type', 'vendor_recommendation_generated');
         $trail->assertJsonPath('data.metadata.artifact_kind', 'vendor_recommendation');
         $trail->assertJsonPath('data.metadata.description', 'Vendor recommendation generated');
+        $trail->assertJsonPath('data.metadata.provenance.request_trace_id', 'trace-vendor-trail-1');
+        $trail->assertJsonPath('data.metadata.provenance.input_hash', 'sha256:trail-input');
+        $trail->assertJsonPath('data.metadata.provenance.output_hash', 'sha256:trail-output');
     }
 
     public function testItRecordsBuyerShortlistDecisionTrailMetadata(): void

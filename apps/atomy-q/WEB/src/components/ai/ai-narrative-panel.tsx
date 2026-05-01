@@ -93,7 +93,6 @@ export function AiNarrativePanel({
   const aiStatus = useAiStatus();
   React.useEffect(() => {
     if (isError && error instanceof Error) {
-      // eslint-disable-next-line no-console
       console.error('AI narrative panel error', error);
     }
   }, [error, isError]);

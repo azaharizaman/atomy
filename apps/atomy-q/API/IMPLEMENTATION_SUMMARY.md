@@ -1,5 +1,18 @@
 # Implementation Summary - Atomy-Q Backend API
 
+## 2026-04-30 Alpha RFQ Duplication And Quote Intake Readiness Repair
+
+- RFQ line-item `specifications` now remains a text value end-to-end instead of being JSON-cast, so RFQ duplication preserves exact string/null values for copied line items.
+- RFQ line-item factory data now emits optional sentence text for `specifications`, matching the text database column and API validation contract.
+- RFQ line-item create/update responses now include `specifications` alongside list responses.
+- Quote ingestion processor binding now gives explicit `atomy.quote_intelligence.mode=deterministic` precedence over global provider AI mode, preserving deterministic/manual alpha quote intake when provider AI is globally enabled. Provider document extraction remains available through explicit `atomy.quote_intelligence.mode=provider`, with deterministic semantic mapping for the normalized source-line contract.
+- Deterministic quote processing now resolves both configured local-disk paths and `storage_path('app/...')` paths without dropping nested `quote-submissions/` prefixes, keeping tenant-scoped same-path lookup stable in tests and runtime helpers.
+- Quote reparse now returns the actual refreshed submission state after sync processing instead of always reporting `extracting`.
+- Quote ingestion confidence handling accepts both provider-style `0..1` and deterministic `0..100` confidence scales before applying the readiness threshold.
+- Verification:
+  - `cd apps/atomy-q/API && DB_CONNECTION=sqlite DB_DATABASE=':memory:' php artisan test --filter "RfqLifecycleMutationTest|QuoteSubmissionWorkflowTest|QuoteIngestionPipelineTest|QuoteIngestionIntelligenceTest"` -> PASS (38 tests, 221 assertions).
+  - `cd apps/atomy-q/API && DB_CONNECTION=sqlite DB_DATABASE=':memory:' php artisan test tests/Unit/QuoteIngestionOrchestratorTest.php tests/Feature/ProviderQuoteExtractionTest.php` -> PASS (6 tests, 62 assertions).
+
 ## 2026-04-26 Provider-Normalization Override Audit Contract
 
 - `NormalizationController` source-line responses now expose the provider-normalization contract needed by WEB: `provider_suggested`, `effective_values`, `is_buyer_overridden`, `latest_override`, and provider-confidence context alongside the existing source-line fields.
@@ -547,3 +560,17 @@ Quote intake persistence is now tenant-scoped for `upload`, `index`, and `show`:
 
 - `cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Feature/ProviderQuoteExtractionTest.php tests/Feature/QuoteIngestionPipelineTest.php`
 - `cd apps/atomy-q/API && ./vendor/bin/phpunit tests/Unit/Adapters/Ai/DocumentExtractionRequestTest.php tests/Unit/Adapters/Ai/OpenRouterDocumentPayloadFactoryTest.php tests/Unit/Adapters/Ai/OpenRouterDocumentExtractionMapperTest.php tests/Unit/Adapters/Ai/ProviderDocumentIntelligenceClientTest.php`
+
+## 2026-05-01 Comparison Missing-File Continuity
+
+- Quote intelligence binding now honors explicit `quote_intelligence.mode=llm` before falling back to the global provider AI mode, so missing LLM configuration returns the intended domain `422` instead of invoking provider document extraction.
+- `ProviderQuoteContentProcessor` keeps `DocumentExtractionRequest` strict for live provider payloads, but when a quote file is no longer present it now builds comparison input from persisted `normalization_source_lines`.
+- If neither the source document nor normalized quote lines are available, provider comparison processing raises a `QuotationIntelligenceException` instead of leaking raw filesystem exceptions.
+- Added provider-mode comparison regressions proving preview and final freeze succeed from persisted normalized lines after stored quote files are deleted, without calling the provider document extraction client.
+
+## 2026-05-01 AI Truthfulness And Recommendation Artifacts
+
+- Dashboard AI summary generation now follows the reporting summary failure posture: provider narrative failures return deterministic dashboard facts plus an unavailable `ai_summary` artifact with `provider_unavailable`, not a raw `500`.
+- Vendor recommendation and buyer shortlist write paths now preserve canonical tenant IDs for persisted artifacts, selected-vendor rows, and decision-trail entries while keeping case-insensitive tenant lookup for reads.
+- `vendor_ai_ranking` artifacts are persisted for successful provider-backed recommendations, including empty eligible-candidate sets with deterministic reasons and provider provenance.
+- RFQ recommendation decision-trail coverage now uses complete provider provenance so artifact review exercises the same contract required for persisted alpha AI evidence.

@@ -23,7 +23,7 @@ final class QuoteComparisonMatrixServiceTest extends TestCase
             normalizedQuantity: 10.0,
             quotedUnitPrice: 1200.0,
             normalizedUnitPrice: 1200.0,
-            aiConfidence: 0.95
+            aiConfidence: 95.0
         );
 
         $vendorBLine = new NormalizedQuoteLine(
@@ -35,7 +35,7 @@ final class QuoteComparisonMatrixServiceTest extends TestCase
             normalizedQuantity: 10.0,
             quotedUnitPrice: 1100.0,
             normalizedUnitPrice: 1100.0,
-            aiConfidence: 0.95
+            aiConfidence: 95.0
         );
 
         $matrix = $service->buildMatrix('tenant-1', 'rfq-1', [
@@ -64,7 +64,7 @@ final class QuoteComparisonMatrixServiceTest extends TestCase
             normalizedQuantity: 1.0,
             quotedUnitPrice: 999.0,
             normalizedUnitPrice: 999.0,
-            aiConfidence: 0.88
+            aiConfidence: 88.0
         );
 
         $matrix = $service->buildMatrix('tenant-1', 'rfq-1', [

@@ -23,9 +23,9 @@ final class RfqLineItemFactory extends Factory
             'description' => fake()->sentence(6),
             'quantity' => fake()->randomFloat(4, 1, 100),
             'uom' => fake()->randomElement(['EA', 'KG', 'L', 'M', 'SET', 'BOX']),
-            'unit_price' => fake()->randomFloat(2, 10, 5000),
+            'unit_price' => fake()->randomFloat(4, 10, 5000),
             'currency' => 'USD',
-            'specifications' => [],
+            'specifications' => fake()->optional()->sentence(),
             'sort_order' => 0,
         ];
     }

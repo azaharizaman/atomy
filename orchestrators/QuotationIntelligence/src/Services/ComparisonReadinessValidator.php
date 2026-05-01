@@ -16,7 +16,7 @@ use Nexus\QuotationIntelligence\ValueObjects\ComparisonReadinessResult;
 final readonly class ComparisonReadinessValidator implements ComparisonReadinessValidatorInterface
 {
     private const MIN_VENDORS_FOR_FINAL_RUN = 2;
-    private const MIN_AI_CONFIDENCE_THRESHOLD = 0.5;
+    private const MIN_AI_CONFIDENCE_THRESHOLD = 50.0;
 
     public function __construct(
         private OrchestratorProcurementManagerInterface $procurementManager,

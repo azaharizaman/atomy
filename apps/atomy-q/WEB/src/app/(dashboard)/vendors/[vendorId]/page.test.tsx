@@ -3,12 +3,23 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-import { renderWithProviders } from '@/test/utils';
+import { renderPageWithProviders } from '@/test/utils';
 
 const mockUseVendor = vi.fn();
 const mockUseVendorGovernance = vi.fn();
+const mockUseGenerateVendorGovernanceNarrative = vi.fn();
+const mockGenerateGovernance = vi.fn();
 const mockUseUpdateVendor = vi.fn();
 const mockUseUpdateVendorStatus = vi.fn();
+
+vi.mock('@/hooks/use-ai-status', () => ({
+  useAiStatus: () => ({
+    isFeatureAvailable: () => true,
+    shouldHideAiControls: () => false,
+    shouldShowUnavailableMessage: () => false,
+    messageKeyForFeature: () => null,
+  }),
+}));
 
 vi.mock('@/hooks/use-vendor', () => ({
   useVendor: (...args: unknown[]) => mockUseVendor(...args),
@@ -19,6 +30,7 @@ vi.mock('@/hooks/use-vendor-governance', async () => {
   return {
     ...actual,
     useVendorGovernance: (...args: unknown[]) => mockUseVendorGovernance(...args),
+    useGenerateVendorGovernanceNarrative: (...args: unknown[]) => mockUseGenerateVendorGovernanceNarrative(...args),
   };
 });
 
@@ -31,6 +43,10 @@ vi.mock('@/hooks/use-update-vendor', () => ({
 }));
 
 import VendorDetailPage from './page';
+
+async function renderVendorDetailPage(vendorId: string) {
+  await renderPageWithProviders(<VendorDetailPage params={Promise.resolve({ vendorId })} />);
+}
 
 describe('VendorDetailPage', () => {
   const baseVendor = {
@@ -76,9 +92,13 @@ describe('VendorDetailPage', () => {
       isError: false,
       error: null,
     });
+    mockUseGenerateVendorGovernanceNarrative.mockReturnValue({
+      mutate: mockGenerateGovernance,
+      isPending: false,
+    });
   });
 
-  it('renders approval metadata and status controls for an approved vendor', () => {
+  it('renders approval metadata and status controls for an approved vendor', async () => {
     const mutate = vi.fn();
 
     mockUseVendor.mockReturnValue({
@@ -90,7 +110,7 @@ describe('VendorDetailPage', () => {
     mockUseUpdateVendor.mockReturnValue({ mutate: vi.fn(), isPending: false, isError: false, error: null });
     mockUseUpdateVendorStatus.mockReturnValue({ mutate, isPending: false, isError: false, error: null });
 
-    renderWithProviders(<VendorDetailPage params={Promise.resolve({ vendorId: 'ven-1' })} />);
+    await renderVendorDetailPage('ven-1');
 
     expect(screen.getByText('Northwind')).toBeInTheDocument();
     expect(screen.getByText(/approval metadata/i)).toBeInTheDocument();
@@ -101,7 +121,7 @@ describe('VendorDetailPage', () => {
     expect(screen.getByRole('button', { name: /archive/i })).toBeInTheDocument();
   });
 
-  it('renders governance warning chips on the overview', () => {
+  it('renders governance warning chips on the overview', async () => {
     mockUseVendor.mockReturnValue({
       data: baseVendor,
       isLoading: false,
@@ -128,14 +148,14 @@ describe('VendorDetailPage', () => {
     mockUseUpdateVendor.mockReturnValue({ mutate: vi.fn(), isPending: false, isError: false, error: null });
     mockUseUpdateVendorStatus.mockReturnValue({ mutate: vi.fn(), isPending: false, isError: false, error: null });
 
-    renderWithProviders(<VendorDetailPage params={Promise.resolve({ vendorId: 'ven-1' })} />);
+    await renderVendorDetailPage('ven-1');
 
     expect(screen.getByText('Compliance Document Expired')).toBeInTheDocument();
     expect(screen.getByText('Open Severe Risk Finding')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /review/i })).toHaveAttribute('href', '/vendors/ven-1/esg-compliance');
   });
 
-  it('renders under-review transition for draft vendor', () => {
+  it('renders under-review transition for draft vendor', async () => {
     mockUseVendor.mockReturnValue({
       data: {
         id: 'ven-1',
@@ -163,7 +183,7 @@ describe('VendorDetailPage', () => {
     mockUseUpdateVendor.mockReturnValue({ mutate: vi.fn(), isPending: false, isError: false, error: null });
     mockUseUpdateVendorStatus.mockReturnValue({ mutate: vi.fn(), isPending: false, isError: false, error: null });
 
-    renderWithProviders(<VendorDetailPage params={Promise.resolve({ vendorId: 'ven-1' })} />);
+    await renderVendorDetailPage('ven-1');
 
     expect(screen.getByRole('button', { name: /move to under review/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /restrict/i })).not.toBeInTheDocument();
@@ -171,7 +191,7 @@ describe('VendorDetailPage', () => {
     expect(screen.queryByRole('button', { name: /archive/i })).not.toBeInTheDocument();
   });
 
-  it('renders status-action errors when an update fails', () => {
+  it('renders status-action errors when an update fails', async () => {
     mockUseVendor.mockReturnValue({
       data: {
         id: 'ven-1',
@@ -204,7 +224,7 @@ describe('VendorDetailPage', () => {
       error: new Error('Status update failed'),
     });
 
-    renderWithProviders(<VendorDetailPage params={Promise.resolve({ vendorId: 'ven-1' })} />);
+    await renderVendorDetailPage('ven-1');
 
     expect(screen.getByText(/status update failed/i)).toBeInTheDocument();
   });
@@ -222,7 +242,7 @@ describe('VendorDetailPage', () => {
     mockUseUpdateVendor.mockReturnValue({ mutate, isPending: false, isError: false, error: null });
     mockUseUpdateVendorStatus.mockReturnValue({ mutate: vi.fn(), isPending: false, isError: false, error: null });
 
-    renderWithProviders(<VendorDetailPage params={Promise.resolve({ vendorId: 'ven-1' })} />);
+    await renderVendorDetailPage('ven-1');
 
     await user.click(screen.getByRole('button', { name: /edit vendor/i }));
     await user.clear(screen.getByLabelText(/display name/i));
@@ -261,11 +281,30 @@ describe('VendorDetailPage', () => {
     mockUseUpdateVendor.mockReturnValue({ mutate: vi.fn(), isPending: false, isError: false, error: null });
     mockUseUpdateVendorStatus.mockReturnValue({ mutate, isPending: false, isError: false, error: null });
 
-    renderWithProviders(<VendorDetailPage params={Promise.resolve({ vendorId: 'ven-1' })} />);
+    await renderVendorDetailPage('ven-1');
 
     await user.click(screen.getByRole('button', { name: /^approve$/i }));
 
     expect(mutate).not.toHaveBeenCalled();
     expect(screen.getByText(/approval note is required/i)).toBeInTheDocument();
+  });
+
+  it('passes the live vendor id when generating governance narrative', async () => {
+    const user = userEvent.setup();
+
+    mockUseVendor.mockReturnValue({
+      data: baseVendor,
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    mockUseUpdateVendor.mockReturnValue({ mutate: vi.fn(), isPending: false, isError: false, error: null });
+    mockUseUpdateVendorStatus.mockReturnValue({ mutate: vi.fn(), isPending: false, isError: false, error: null });
+
+    await renderVendorDetailPage('ven-1');
+
+    await user.click(screen.getByRole('button', { name: 'Generate' }));
+
+    expect(mockGenerateGovernance).toHaveBeenCalledWith('ven-1');
   });
 });

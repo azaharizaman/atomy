@@ -132,7 +132,7 @@ final class VendorRecommendationApiTest extends ApiTestCase
         self::assertSame(0, DB::table('requisition_selected_vendors')->where('tenant_id', $tenantId)->where('rfq_id', $rfq->id)->count());
 
         $artifact = RfqRecommendationArtifact::query()
-            ->where('tenant_id', $tenantId)
+            ->where('tenant_id', Str::lower($tenantId))
             ->where('rfq_id', $rfq->id)
             ->where('feature_key', 'vendor_ai_ranking')
             ->first();
@@ -224,7 +224,7 @@ final class VendorRecommendationApiTest extends ApiTestCase
         $this->assertSame('suspended', $response->json('data.excluded_candidates.0.status'));
 
         $artifact = RfqRecommendationArtifact::query()
-            ->where('tenant_id', $tenantId)
+            ->where('tenant_id', Str::lower($tenantId))
             ->where('rfq_id', $rfq->id)
             ->where('feature_key', 'vendor_ai_ranking')
             ->first();

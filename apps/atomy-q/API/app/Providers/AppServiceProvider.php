@@ -615,33 +615,32 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             OrchestratorContentProcessorInterface::class,
             function (): OrchestratorContentProcessorInterface {
-                $aiMode = (string) config(
-                    "atomy.ai.mode",
-                    AiStatusSchema::MODE_DETERMINISTIC,
-                );
-                if ($aiMode === AiStatusSchema::MODE_PROVIDER) {
-                    return new ProviderQuoteContentProcessor(
-                        $this->app->make(
-                            ProviderDocumentIntelligenceClientInterface::class,
-                        ),
-                        $this->app->make(TenantContextInterface::class),
-                    );
-                }
-
-                $mode = (string) config(
+                $quoteMode = (string) config(
                     "atomy.quote_intelligence.mode",
                     "deterministic",
                 );
-
-                if ($mode === "deterministic") {
+                if ($quoteMode === "deterministic") {
                     return new DeterministicContentProcessor(
                         $this->app->make(TenantContextInterface::class),
                     );
                 }
 
-                if ($mode === "llm") {
+                if ($quoteMode === "llm") {
                     return new DormantLlmContentProcessor(
                         $this->quoteIntelligenceLlmConfig(),
+                    );
+                }
+
+                $aiMode = (string) config(
+                    "atomy.ai.mode",
+                    AiStatusSchema::MODE_DETERMINISTIC,
+                );
+                if ($quoteMode === AiStatusSchema::MODE_PROVIDER || $aiMode === AiStatusSchema::MODE_PROVIDER) {
+                    return new ProviderQuoteContentProcessor(
+                        $this->app->make(
+                            ProviderDocumentIntelligenceClientInterface::class,
+                        ),
+                        $this->app->make(TenantContextInterface::class),
                     );
                 }
 
@@ -672,6 +671,10 @@ class AppServiceProvider extends ServiceProvider
                 );
 
                 if ($mode === "deterministic") {
+                    return new DeterministicSemanticMapper();
+                }
+
+                if ($mode === "provider") {
                     return new DeterministicSemanticMapper();
                 }
 

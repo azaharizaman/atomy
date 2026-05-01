@@ -184,7 +184,7 @@ function VendorDetailPageContent({ vendorId }: { vendorId: string }) {
         subtitle="Assistive interpretation of the deterministic governance record."
         summary={governanceQuery.data?.narrative ?? null}
         fallbackCopy="Governance narrative is unavailable. Continue with the factual governance record."
-        onGenerate={() => generateGovernanceMutation.mutate()}
+        onGenerate={() => generateGovernanceMutation.mutate(vendorId)}
         isGenerating={generateGovernanceMutation.isPending}
         canGenerate={!generateGovernanceMutation.isPending}
       />

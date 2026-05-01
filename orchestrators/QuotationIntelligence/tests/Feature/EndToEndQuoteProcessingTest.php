@@ -579,7 +579,7 @@ final class EndToEndQuoteProcessingTest extends TestCase
 
         $this->assertCount(1, $result['lines']);
         $this->assertSame(1.0, $result['lines'][0]['normalized_quantity']);
-        $this->assertSame(0.6, $result['lines'][0]['ai_confidence']);
+        $this->assertSame(60.0, $result['lines'][0]['ai_confidence']);
         $this->assertSame(
             'uom_conversion_failed',
             $result['lines'][0]['metadata']['normalization_warnings'][0]['code']

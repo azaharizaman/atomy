@@ -298,6 +298,7 @@ final class ProviderQuoteExtractionTest extends ApiTestCase
     private function configureProviderDocumentEndpoint(): void
     {
         config()->set('atomy.ai.mode', 'provider');
+        config()->set('atomy.quote_intelligence.mode', 'provider');
         config()->set('atomy.ai.endpoints.document.uri', 'https://openrouter.example.test/chat/completions');
         config()->set('atomy.ai.endpoints.document.model_id', 'baidu/qianfan-ocr-fast:free');
         config()->set('atomy.ai.endpoints.document.parser_plugin', 'file-parser');

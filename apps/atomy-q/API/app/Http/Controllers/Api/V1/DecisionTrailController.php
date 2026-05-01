@@ -19,10 +19,11 @@ final class DecisionTrailController extends Controller
     public function index(Request $request): JsonResponse
     {
         $tenantId = $this->tenantId($request);
+        $normalizedTenantId = $this->normalizeIdentifier($tenantId);
         $pagination = $this->paginationParams($request);
 
         $query = DecisionTrailEntry::query()
-            ->where('tenant_id', $tenantId)
+            ->whereRaw('lower(tenant_id) = ?', [$normalizedTenantId])
             ->orderByDesc('occurred_at')
             ->orderByDesc('created_at');
 
@@ -35,9 +36,9 @@ final class DecisionTrailController extends Controller
         $entries = $query
             ->forPage($pagination['page'], $pagination['per_page'])
             ->with([
-                'comparisonRun' => static function ($relation) use ($tenantId): void {
+                'comparisonRun' => static function ($relation) use ($normalizedTenantId): void {
                     $relation
-                        ->where('tenant_id', $tenantId)
+                        ->whereRaw('lower(tenant_id) = ?', [$normalizedTenantId])
                         ->select('id', 'tenant_id', 'response_payload');
                 },
             ])
@@ -73,14 +74,15 @@ final class DecisionTrailController extends Controller
     public function show(Request $request, string $id): JsonResponse
     {
         $tenantId = $this->tenantId($request);
+        $normalizedTenantId = $this->normalizeIdentifier($tenantId);
 
         $entry = DecisionTrailEntry::query()
-            ->where('tenant_id', $tenantId)
+            ->whereRaw('lower(tenant_id) = ?', [$normalizedTenantId])
             ->where('id', $id)
             ->with([
-                'comparisonRun' => static function ($relation) use ($tenantId): void {
+                'comparisonRun' => static function ($relation) use ($normalizedTenantId): void {
                     $relation
-                        ->where('tenant_id', $tenantId)
+                        ->whereRaw('lower(tenant_id) = ?', [$normalizedTenantId])
                         ->select('id', 'tenant_id', 'response_payload');
                 },
             ])
@@ -118,12 +120,14 @@ final class DecisionTrailController extends Controller
     /** POST /decision-trail/verify */
     public function verify(Request $request): JsonResponse
     {
-        $tenantId = $this->tenantId($request);
+        $normalizedTenantId = $this->normalizeIdentifier($this->tenantId($request));
 
         return response()->json([
             'data' => [
                 'verified' => true,
-                'entries_checked' => DecisionTrailEntry::query()->where('tenant_id', $tenantId)->count(),
+                'entries_checked' => DecisionTrailEntry::query()
+                    ->whereRaw('lower(tenant_id) = ?', [$normalizedTenantId])
+                    ->count(),
                 'integrity_status' => 'valid',
                 'verified_at' => now()->toIso8601String(),
             ],
@@ -310,8 +314,20 @@ final class DecisionTrailController extends Controller
     private function artifactFromSummary(array $summary): ?array
     {
         $artifact = $summary['artifact'] ?? null;
+        if (is_array($artifact)) {
+            return $artifact;
+        }
 
-        return is_array($artifact) ? $artifact : null;
+        $payload = $summary['payload'] ?? null;
+        if (is_array($payload)) {
+            return array_replace([
+                'available' => $summary['available'] ?? null,
+                'feature_key' => $summary['feature_key'] ?? null,
+                'provenance' => is_array($summary['provenance'] ?? null) ? $summary['provenance'] : [],
+            ], $payload);
+        }
+
+        return null;
     }
 
     /**
@@ -360,5 +376,10 @@ final class DecisionTrailController extends Controller
             'available' => $available,
             'provenance' => $provenance,
         ], $extra);
+    }
+
+    private function normalizeIdentifier(string $value): string
+    {
+        return strtolower(trim($value));
     }
 }

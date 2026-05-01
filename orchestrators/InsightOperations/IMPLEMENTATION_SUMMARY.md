@@ -44,3 +44,4 @@
 - Refactored all coordinators to implement explicit interfaces and use the new `FactHasherInterface` for deterministic fact hashing.
 - Hardened `AiArtifactDto` provenance tracking to correctly propagate `actorId` during source-fact enrichment.
 - Added `MetricStatus` enum to `MetricFactDto` for strict status validation and improved type safety.
+- Dashboard narrative generation now matches reporting narrative generation by converting provider-port failures into unavailable artifacts while preserving deterministic dashboard facts. Verification on 2026-05-01: `cd orchestrators/InsightOperations && ./vendor/bin/phpunit tests/Unit/Coordinators/DashboardInsightCoordinatorTest.php tests/Unit/Coordinators/ReportingInsightCoordinatorTest.php` -> PASS, 7 tests and 39 assertions.

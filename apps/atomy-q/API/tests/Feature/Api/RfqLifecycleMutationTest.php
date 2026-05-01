@@ -117,6 +117,12 @@ final class RfqLifecycleMutationTest extends ApiTestCase
             'specifications' => 'Rack units',
             'sort_order' => 1,
         ]);
+
+        $duplicatedLineItem = RfqLineItem::query()
+            ->where('rfq_id', $newId)
+            ->firstOrFail();
+
+        $this->assertSame('Rack units', $duplicatedLineItem->specifications);
     }
 
     public function test_duplicate_returns_404_for_wrong_tenant(): void

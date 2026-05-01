@@ -94,11 +94,6 @@ export default function ProjectDetailPage() {
     }
   }, [authUser?.id, editMode, editPmId, userOptions, usersLoading]);
 
-  const aclSyncKey = React.useMemo(
-    () => acl.map((e) => `${e.userId}:${e.role}`).join('|'),
-    [acl],
-  );
-
   React.useEffect(
     () => {
       if (aclDirty) {
@@ -111,8 +106,7 @@ export default function ProjectDetailPage() {
         })),
       );
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `acl` omitted: stable EMPTY_PROJECT_ACL + aclSyncKey tracks content
-    [aclSyncKey, aclDirty],
+    [acl, aclDirty],
   );
 
   const normalizedAcl = React.useMemo(
@@ -269,7 +263,10 @@ export default function ProjectDetailPage() {
                 ))}
                 {editPmId !== '' && !userOptions.some((u) => u.id === editPmId) && (
                   <option value={editPmId}>
-                    {project.projectManagerId === editPmId ? (project as any).projectManagerName || 'Current Manager' : 'Unknown User'} ({editPmId})
+                    {project.projectManagerId === editPmId
+                      ? project.projectManagerName || 'Current Manager'
+                      : 'Unknown User'}{' '}
+                    ({editPmId})
                   </option>
                 )}
               </select>

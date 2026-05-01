@@ -119,20 +119,22 @@ final readonly class QuoteIngestionOrchestrator
                 }
             }
 
+            $confidence = $this->extractFiniteConfidence($line);
+
             $this->sourceLinePersist->upsert(
                 $tenantId,
                 $quoteSubmissionId,
                 $rfqLineId,
-                $this->buildSourceLinePayload($submission, $rfqLineId, $line, $sortOrder, $vendorName)
+                $this->buildSourceLinePayload($submission, $rfqLineId, $line, $sortOrder, $vendorName, $confidence)
             );
 
             $this->writeDecisionTrail(
                 $submission,
                 $rfqLineId,
-                $line
+                $line,
+                $confidence
             );
 
-            $confidence = $this->extractFiniteConfidence($line);
             if ($confidence !== null) {
                 $persistedConfidences[] = $confidence;
             }
@@ -147,9 +149,14 @@ final readonly class QuoteIngestionOrchestrator
         ];
     }
 
-    private function writeDecisionTrail(QuoteSubmissionInterface $submission, string $rfqLineId, array $line): void
+    private function writeDecisionTrail(
+        QuoteSubmissionInterface $submission,
+        string $rfqLineId,
+        array $line,
+        ?float $confidence,
+    ): void
     {
-        $confidence = $this->extractFiniteConfidence($line) ?? 0.0;
+        $confidence ??= 0.0;
         if ($confidence >= self::CONFIDENCE_THRESHOLD) {
             $this->decisionTrailWriter->write(
                 $submission->getTenantId(),
@@ -195,7 +202,8 @@ final readonly class QuoteIngestionOrchestrator
         string $rfqLineId,
         array $line,
         int $sortOrder,
-        string $vendorName
+        string $vendorName,
+        ?float $confidence,
     ): array {
         $missingFields = [];
         if (!array_key_exists('quoted_quantity', $line)) {
@@ -238,7 +246,7 @@ final readonly class QuoteIngestionOrchestrator
                 'normalized_unit_price' => $line['normalized_unit_price'] ?? null,
             ],
             'sort_order' => $sortOrder,
-            'ai_confidence' => $this->extractFiniteConfidence($line) ?? 0.0,
+            'ai_confidence' => $confidence ?? 0.0,
             'taxonomy_code' => $this->extractStringValue($line, 'taxonomy_code'),
             'mapping_version' => $this->extractMappingVersion($line),
         ];
@@ -253,6 +261,23 @@ final readonly class QuoteIngestionOrchestrator
         $confidence = (float) $line['ai_confidence'];
         if (!is_finite($confidence)) {
             return null;
+        }
+
+        if ($confidence < 0.0 || $confidence > 100.0) {
+            $this->logger->warning('Ignoring quote confidence outside readiness scale', [
+                'ai_confidence' => $confidence,
+            ]);
+            return null;
+        }
+
+        if ($confidence <= 1.0) {
+            $normalizedConfidence = $confidence * 100.0;
+            $this->logger->info('Normalized fractional quote confidence', [
+                'original_confidence' => $confidence,
+                'normalized_confidence' => $normalizedConfidence,
+            ]);
+
+            return $normalizedConfidence;
         }
 
         return $confidence;

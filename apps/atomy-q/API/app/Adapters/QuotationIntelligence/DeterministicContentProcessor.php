@@ -6,6 +6,7 @@ namespace App\Adapters\QuotationIntelligence;
 
 use Illuminate\Support\Facades\Storage;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
+use Nexus\QuotationIntelligence\Exceptions\QuotationIntelligenceException;
 use Nexus\Tenant\Contracts\TenantContextInterface;
 use App\Models\QuoteSubmission;
 
@@ -74,12 +75,45 @@ final readonly class DeterministicContentProcessor implements OrchestratorConten
 
     private function resolveRelativePath(string $storagePath): string
     {
-        $prefix = rtrim(Storage::disk('local')->path(''), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-        if (str_starts_with($storagePath, $prefix)) {
-            return substr($storagePath, strlen($prefix));
+        $normalizedPath = str_replace('\\', '/', $storagePath);
+
+        foreach ($this->storageRootPrefixes() as $prefix) {
+            if (str_starts_with($normalizedPath, $prefix)) {
+                return ltrim(substr($normalizedPath, strlen($prefix)), '/');
+            }
         }
 
-        return basename($storagePath);
+        $quoteSubmissionSegment = '/quote-submissions/';
+        $segmentPosition = strpos($normalizedPath, $quoteSubmissionSegment);
+        if ($segmentPosition !== false) {
+            return substr($normalizedPath, $segmentPosition + 1);
+        }
+
+        throw new QuotationIntelligenceException(sprintf(
+            'Quote submission path [%s] could not be resolved to a storage-relative path.',
+            $storagePath,
+        ));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function storageRootPrefixes(): array
+    {
+        $roots = [
+            Storage::disk('local')->path(''),
+            storage_path('app'),
+        ];
+
+        $prefixes = [];
+        foreach ($roots as $root) {
+            $normalizedRoot = rtrim(str_replace('\\', '/', $root), '/');
+            if ($normalizedRoot !== '') {
+                $prefixes[] = $normalizedRoot . '/';
+            }
+        }
+
+        return array_values(array_unique($prefixes));
     }
 
     /**

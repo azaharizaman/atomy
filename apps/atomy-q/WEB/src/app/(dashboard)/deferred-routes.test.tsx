@@ -2,6 +2,7 @@ import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { renderPageWithProviders } from '@/test/utils';
 
 vi.mock('@/lib/alpha-mode', async () => {
   const actual = await vi.importActual<typeof import('@/lib/alpha-mode')>('@/lib/alpha-mode');
@@ -31,22 +32,29 @@ function renderWithQueryClient(ui: React.ReactElement) {
   return render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
 }
 
+async function renderDeferredRoute(ui: React.ReactElement) {
+  return await renderPageWithProviders(ui);
+}
+
 describe('alpha deferred routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it.each([
-    { Component: DocumentsPage, heading: 'Documents' },
-    { Component: ReportingPage, heading: 'Reporting' },
-  ])('renders the shared deferred screen for hidden top-level routes', ({ Component, heading }) => {
-    render(<Component />);
+  it('renders the shared deferred screen for the hidden documents route', () => {
+    renderWithQueryClient(<DocumentsPage />);
     expect(screen.getByText('This feature will be available in future releases')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Documents' })).toBeInTheDocument();
+  });
+
+  it('renders the live reporting shell when routed directly', () => {
+    renderWithQueryClient(<ReportingPage />);
+    expect(screen.getByRole('heading', { name: 'Reporting' })).toBeInTheDocument();
+    expect(screen.getByText('Reports & analytics')).toBeInTheDocument();
   });
 
   it('renders the shared deferred screen for hidden settings page', () => {
-    render(<SettingsPage />);
+    renderWithQueryClient(<SettingsPage />);
     expect(screen.getByRole('heading', { name: 'Settings' })).toBeInTheDocument();
     expect(screen.getByText('This feature will be available in future releases')).toBeInTheDocument();
   });
@@ -57,21 +65,21 @@ describe('alpha deferred routes', () => {
     expect(screen.getByText('Loading users and roles…')).toBeInTheDocument();
   });
 
-  it('renders the shared deferred screen for hidden RFQ negotiations page', () => {
-    render(<NegotiationsPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
+  it('renders the shared deferred screen for hidden RFQ negotiations page', async () => {
+    await renderDeferredRoute(<NegotiationsPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
     expect(screen.getByRole('heading', { name: 'Negotiations' })).toBeInTheDocument();
     expect(screen.getByText('This feature will be available in future releases')).toBeInTheDocument();
   });
 
-  it('renders the shared deferred screen for hidden RFQ documents page', () => {
-    render(<RfqDocumentsPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
+  it('renders the shared deferred screen for hidden RFQ documents page', async () => {
+    await renderDeferredRoute(<RfqDocumentsPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
     expect(screen.getByText('This feature will be available in future releases')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'RFQ Documents' })).toBeInTheDocument();
   });
 
-  it('renders the shared deferred screen for hidden RFQ risk page', () => {
-    render(<RiskPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
-    expect(screen.getByText('This feature will be available in future releases')).toBeInTheDocument();
+  it('renders the live RFQ risk page when routed directly', async () => {
+    await renderDeferredRoute(<RiskPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
     expect(screen.getByRole('heading', { name: 'Risk & Compliance' })).toBeInTheDocument();
+    expect(screen.getByText('Review vendor evidence and findings')).toBeInTheDocument();
   });
 });

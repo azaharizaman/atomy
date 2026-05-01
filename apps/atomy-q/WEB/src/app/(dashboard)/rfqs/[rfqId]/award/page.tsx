@@ -83,14 +83,20 @@ function RfqAwardPageContent({ rfqId }: { rfqId: string }) {
     },
     [finalRunDetailQuery.data?.snapshot, finalRunMatrixQuery.data],
   );
-  const nonWinners = React.useMemo(
-    () => (
-      displayAward?.comparison?.vendors?.length
-        ? displayAward.comparison.vendors.filter((vendor) => vendor.vendor_id !== '' && vendor.vendor_id !== displayAward.vendor_id)
-        : []
-    ),
-    [displayAward?.comparison?.vendors, displayAward?.vendor_id],
-  );
+  const nonWinners = React.useMemo(() => {
+    if (!displayAward) {
+      return [];
+    }
+
+    const vendors = displayAward.comparison?.vendors ?? [];
+    if (vendors.length === 0) {
+      return [];
+    }
+
+    return vendors.filter(
+      (vendor) => vendor.vendor_id !== '' && vendor.vendor_id !== displayAward.vendor_id,
+    );
+  }, [displayAward]);
   const awardAmount = formatAmount(displayAward?.amount ?? null, displayAward?.currency ?? null);
   const isFinalEvidenceLoading = shouldLoadFinalRunEvidence && (finalRunDetailQuery.isLoading || finalRunMatrixQuery.isLoading);
   const showAwardGuidanceUnavailable = aiStatus.shouldShowUnavailableMessage('award_ai_guidance');

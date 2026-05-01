@@ -8,13 +8,13 @@
 
 ## Executive Status
 
-As of 2026-04-30, the superseding launch readiness design is the controlling go/no-go contract. Older green evidence remains historical until revalidated on the current branch under that contract.
+As of 2026-05-01, the superseding launch readiness design is the controlling go/no-go contract. Older green evidence remains historical until revalidated on the current branch under that contract.
 
 Task 1 rectification is **green locally as of 2026-04-15**. The WEB lint/build/unit gates, API alpha matrix, and API full suite now pass after the rectification pass documented below.
 
 The original baseline captured in this document was **not release-ready**. Those failure details are retained as historical context underneath the current evidence.
 
-The strongest rectification signal is that the alpha-critical backend flows pass together in the matrix: company registration, RFQ lifecycle, invitations, comparison, awards, vendor workflow, identity gap tests, normalization review, quote ingestion pipeline, and operational approvals. Remaining non-Task-1 alpha work should continue from the broader release plan before staging smoke.
+The strongest current regression signal is the 2026-05-01 SQLite alpha API matrix pass, but the required PostgreSQL posture is **not satisfied** because PostgreSQL on `127.0.0.1:5433` refused connections. The release remains internal alpha only until PostgreSQL matrix evidence, staging smoke, disclosure, and sign-offs are recorded.
 
 ## Superseding Readiness Assessment - 2026-04-30
 
@@ -28,6 +28,49 @@ This assessment was captured while drafting the superseding alpha launch readine
 - `cd orchestrators/IntelligenceOperations && ./vendor/bin/phpunit`: NOT RUN. No package-local `vendor/bin/phpunit` exists in that directory.
 
 Current status from this assessment: **internal alpha only / no external design-partner launch** until a newer Task 9 run closes these no-go signals under the superseding spec.
+
+## Latest Superseding Task 5 API Matrix Posture - 2026-05-01
+
+- Operator: Codex.
+- Branch: `alpha/launch-readiness`.
+- Commit under test: `b388eaf8`.
+- Intended database posture from `apps/atomy-q/API/.env`: `DB_CONNECTION=pgsql`, `DB_HOST=127.0.0.1`, `DB_PORT=5433`, `DB_DATABASE=atomy_dev`.
+- `cd apps/atomy-q/API && php artisan migrate:fresh --seed`: BLOCKED. PostgreSQL on `127.0.0.1:5433` refused the connection (`SQLSTATE[08006] [7] connection refused`).
+- Extra non-closing regression signal: `cd apps/atomy-q/API && DB_CONNECTION=sqlite DB_DATABASE=':memory:' php artisan test --filter "RegisterCompanyTest|AuthTest|RfqLifecycleMutationTest|RfqInvitationReminderTest|QuoteSubmissionWorkflowTest|QuoteIngestionPipelineTest|QuoteIngestionIntelligenceTest|NormalizationReviewWorkflowTest|ComparisonRunWorkflowTest|ComparisonSnapshotWorkflowTest|AwardWorkflowTest|VendorWorkflowTest|IdentityGap7Test|OperationalApprovalApiTest|ProjectAclTest|DashboardReportAiSummaryApiTest|RiskComplianceAiInsightsApiTest|VendorGovernanceApiTest|VendorRecommendationApiTest|VendorRecommendationAiGateTest|AiStatusApiTest"`: PASS. 177 tests, 1184 assertions.
+- Release impact: the superseding Task 5 alpha API matrix is **not satisfied** in the required PostgreSQL posture. SQLite-only evidence may be collected as extra regression signal, but it does not close this gate.
+- Next action: start or provision the intended PostgreSQL service, rerun `php artisan migrate:fresh --seed`, then rerun the superseding alpha API matrix before API contract closure is considered release evidence.
+
+## Latest Superseding Task 6 Route Surface Classification - 2026-05-01
+
+- Operator: Codex.
+- Branch: `alpha/launch-readiness`.
+- Commit under test: `8b726d36`.
+- Inventory command: `rg -n "href=|router\.push|routes|Route::" apps/atomy-q/WEB/src apps/atomy-q/API/routes apps/atomy-q/API/app/Http/Controllers/Api/V1`: PASS. The inventory confirms exposed WEB navigation, RFQ workspace links, and API route groups remain classifiable under the alpha surface policy.
+- Classification result:
+  - Alpha-supported visible top-level WEB surfaces: Dashboard, Requisitions, Vendors.
+  - Alpha-supported RFQ workspace surfaces: overview, details, line items, vendors, award, quote intake, comparison runs, approvals, decision trail.
+  - Intentionally hidden/deferred WEB surfaces: top-level Documents, Reporting, Settings shell, RFQ negotiations, RFQ documents. Settings Users & Roles remains reachable directly as the minimal A5 supporting surface.
+  - Supporting API surfaces remain authenticated and tenant-scoped; non-navigation API groups are not external design-partner navigation surfaces.
+- Verification: `cd apps/atomy-q/WEB && NEXT_PUBLIC_ALPHA_MODE=true npx playwright test tests/dashboard-nav.spec.ts tests/screen-smoke.spec.ts`: PASS. 3 tests passed.
+- Release impact: A4 surface classification remains closed locally under the superseding spec. This does not close staging evidence or PostgreSQL API matrix gates.
+
+## Latest Superseding Task 7 Staging Evidence And Disclosure - 2026-05-01
+
+- Operator: Codex.
+- Branch: `alpha/launch-readiness`.
+- Commit under review: `dbf8c4e0`.
+- Staging WEB URL: not provided.
+- Staging API URL: not provided.
+- Deployed database posture: not provided.
+- Storage disk: not provided.
+- Queue posture: not provided.
+- `NEXT_PUBLIC_USE_MOCKS=false`: not verified on a deployed WEB environment.
+- AI posture: not verified on a deployed API environment.
+- Mocks-off staging smoke: NOT RUN. Deployed WEB/API origins and operator-accessible staging environment details are not available in this workspace.
+- Release posture selected from the superseding spec options: **internal alpha only** until the PostgreSQL API matrix, deployed mocks-off staging smoke, release disclosure, and required sign-offs are recorded.
+- Customer/operator disclosure status: not publishable for design partners yet. Current disclosure is internal only: Atomy-Q remains in internal alpha; AI-assisted availability and manual-continuity claims must not be represented externally until staging evidence and sign-offs are complete.
+- Required sign-offs: Engineering pending; Product pending; Operator/Staging pending.
+- Release impact: no external design-partner launch is valid from the evidence currently present.
 
 ## Latest Rectification Evidence - 2026-04-15
 

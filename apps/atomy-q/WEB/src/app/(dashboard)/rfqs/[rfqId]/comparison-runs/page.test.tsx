@@ -1,7 +1,7 @@
 import React from 'react';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
-import { renderWithProviders } from '@/test/utils';
+import { renderPageWithProviders } from '@/test/utils';
 
 const mockUseComparisonRuns = vi.fn();
 
@@ -43,7 +43,7 @@ describe('ComparisonRunsPage', () => {
       ],
     });
 
-    renderWithProviders(<ComparisonRunsPage params={Promise.resolve({ rfqId: 'RFQ-2026-0001' })} />);
+    await renderPageWithProviders(<ComparisonRunsPage params={Promise.resolve({ rfqId: 'RFQ-2026-0001' })} />);
 
     expect(await screen.findByText(/snapshot frozen/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /decision trail/i })).toBeInTheDocument();
@@ -66,7 +66,7 @@ describe('ComparisonRunsPage', () => {
       ],
     });
 
-    renderWithProviders(<ComparisonRunsPage params={Promise.resolve({ rfqId: 'RFQ-2026-0001' })} />);
+    await renderPageWithProviders(<ComparisonRunsPage params={Promise.resolve({ rfqId: 'RFQ-2026-0001' })} />);
 
     expect(await screen.findByText('Preview comparison')).toBeInTheDocument();
     expect(screen.getByText('run-preview-1')).toBeInTheDocument();
@@ -82,7 +82,7 @@ describe('ComparisonRunsPage', () => {
       error: new Error('Comparison runs unavailable'),
     });
 
-    renderWithProviders(<ComparisonRunsPage params={Promise.resolve({ rfqId: 'RFQ-2026-0001' })} />);
+    await renderPageWithProviders(<ComparisonRunsPage params={Promise.resolve({ rfqId: 'RFQ-2026-0001' })} />);
 
     expect(await screen.findByText(/could not load comparison runs/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Comparison runs unavailable' })).toBeInTheDocument();
