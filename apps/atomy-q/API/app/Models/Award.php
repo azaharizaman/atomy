@@ -10,6 +10,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Award outcome for a tenant RFQ and comparison run.
+ *
+ * Amount, currency, split details, protest linkage, and signoff metadata describe
+ * the persisted procurement decision after comparison and approval workflows.
+ */
 class Award extends Model
 {
     use HasUlids;

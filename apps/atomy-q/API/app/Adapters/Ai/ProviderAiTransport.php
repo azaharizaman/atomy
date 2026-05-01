@@ -17,6 +17,13 @@ use Illuminate\Log\LogManager;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 use Nexus\MachineLearning\ValueObjects\AiEndpointConfig;
 
+/**
+ * HTTP transport boundary for configured AI provider endpoint groups.
+ *
+ * The transport centralizes provider auth, timeout, retry/backoff, response-shape
+ * validation, and sanitized operational logging. It fails truthfully with AI
+ * transport exceptions instead of fabricating provider output.
+ */
 final readonly class ProviderAiTransport implements ProviderAiTransportInterface
 {
     private const MAX_RETRY_ATTEMPTS = 5;

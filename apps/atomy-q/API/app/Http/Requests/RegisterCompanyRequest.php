@@ -6,6 +6,12 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validates self-service tenant registration and owner bootstrap input.
+ *
+ * Tenant codes are constrained to URL-safe account identifiers; currency,
+ * locale, and timezone are accepted as optional tenant defaults.
+ */
 final class RegisterCompanyRequest extends FormRequest
 {
     public function authorize(): bool

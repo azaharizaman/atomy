@@ -19,6 +19,13 @@ use Nexus\MachineLearning\ValueObjects\AiEndpointHealthSnapshot as RuntimeEndpoi
 use App\Adapters\Ai\Contracts\AiEndpointRegistryInterface;
 use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
 
+/**
+ * Maps machine-learning endpoint health into Atomy-Q AI capability status.
+ *
+ * Off and deterministic modes intentionally emit disabled endpoint snapshots;
+ * provider failures collapse to a truthful fallback snapshot instead of throwing
+ * status collection errors to callers.
+ */
 final readonly class AiRuntimeStatusAdapter implements AiRuntimeStatusInterface
 {
     public function __construct(

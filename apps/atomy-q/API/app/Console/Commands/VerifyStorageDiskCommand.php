@@ -11,6 +11,13 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
+/**
+ * Performs a temporary write/read/delete smoke test against a storage disk.
+ *
+ * The probe writes only a short generated object under the configured prefix and
+ * attempts cleanup in all cases, making it suitable for validating environment
+ * storage wiring before quote documents or artifacts depend on it.
+ */
 final class VerifyStorageDiskCommand extends Command
 {
     protected $signature = 'atomy:verify-storage-disk

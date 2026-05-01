@@ -19,6 +19,13 @@ use Nexus\Outbox\ValueObjects\TenantId;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
+/**
+ * Publishes operational alerts for degraded or unavailable AI capabilities.
+ *
+ * Alert emission is cooldown-deduplicated by feature, status, and reason codes;
+ * recovery notifications are sent only after a capability had an active alert.
+ * Optional outbox and notifier channels are best-effort and logged separately.
+ */
 final readonly class AiOperationalAlertPublisher implements AiOperationalAlertPublisherInterface
 {
     public function __construct(

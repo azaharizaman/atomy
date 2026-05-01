@@ -14,6 +14,13 @@ use Nexus\SSO\ValueObjects\AttributeMap;
 use Nexus\SSO\ValueObjects\SsoProtocol;
 use Nexus\SSO\ValueObjects\SsoProviderConfig;
 
+/**
+ * Coordinates OIDC login initiation and callback handling for tenant users.
+ *
+ * The service stores transient state outside the browser, provisions missing
+ * tenant users from provider claims, and issues Atomy-Q JWTs after the provider
+ * callback validates successfully.
+ */
 final readonly class OidcSsoService
 {
     private const STATE_TTL_SECONDS = 600;

@@ -10,6 +10,14 @@ use Illuminate\Http\Request;
 use Nexus\IdentityOperations\Services\SessionValidatorInterface;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Authenticates bearer access tokens and seeds request-scoped identity context.
+ *
+ * Downstream tenancy and permission checks rely on the `auth_user_id`,
+ * `auth_tenant_id`, and `auth_session_id` attributes set here. Session lookup
+ * failure is treated as unavailable authentication infrastructure rather than
+ * silently accepting the token.
+ */
 final readonly class JwtAuthenticate
 {
     public function __construct(

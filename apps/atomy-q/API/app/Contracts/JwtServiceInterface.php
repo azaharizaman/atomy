@@ -6,6 +6,12 @@ namespace App\Contracts;
 
 use App\Dtos\JwtPayloadDto;
 
+/**
+ * Boundary for issuing and decoding Atomy-Q tenant-scoped JWTs.
+ *
+ * Implementations must preserve the token type and tenant claims because
+ * middleware depends on them to establish authenticated request context.
+ */
 interface JwtServiceInterface
 {
     /**

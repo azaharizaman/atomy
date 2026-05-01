@@ -10,6 +10,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Tenant-owned sourcing event that anchors line items, quote submissions, comparisons, and awards.
+ *
+ * Lifecycle services enforce valid status transitions; this model primarily
+ * exposes the persisted aggregate relationships used by those services.
+ */
 class Rfq extends Model
 {
     use HasUlids;

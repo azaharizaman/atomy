@@ -9,6 +9,13 @@ use App\Models\VendorFinding;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 
+/**
+ * Derives governance scorecards and warning flags from vendor evidence/finding rows.
+ *
+ * The scorer is deterministic: stale evidence, missing sanctions screening,
+ * expired compliance documents, and unresolved findings lower bounded scores
+ * without treating AI narratives as authoritative risk decisions.
+ */
 final readonly class VendorGovernanceScoreService
 {
     /**

@@ -9,6 +9,13 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
+/**
+ * Validates buyer override payloads for normalized quote source lines.
+ *
+ * Override data is intentionally partial so omitted fields are not interpreted
+ * as clearing existing normalized values. The extra validator preserves the
+ * business rule that custom reasons require a note.
+ */
 final class NormalizationOverrideRequest extends FormRequest
 {
     public function authorize(): bool

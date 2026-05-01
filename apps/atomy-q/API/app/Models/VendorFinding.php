@@ -7,6 +7,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Tenant-scoped vendor governance finding used for risk scoring.
+ *
+ * Open severity, remediation dates, and resolution state reduce deterministic
+ * risk/compliance/ESG scores and generate warning flags.
+ */
 final class VendorFinding extends Model
 {
     use HasUlids;

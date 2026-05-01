@@ -9,6 +9,12 @@ use App\Models\Task;
 use App\Services\Task\Exceptions\TaskNotFoundException;
 use DomainException;
 
+/**
+ * Links tasks to projects only when both records belong to the same tenant.
+ *
+ * Missing tasks raise the domain-specific not-found exception; invalid project
+ * links fail before mutating the task.
+ */
 final readonly class TaskTenantLinkService
 {
     public function setTaskProjectId(string $tenantId, string $taskId, ?string $projectId): void

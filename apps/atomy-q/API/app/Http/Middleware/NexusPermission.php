@@ -10,6 +10,13 @@ use Nexus\Identity\Contracts\PermissionCheckerInterface;
 use Nexus\Identity\Contracts\UserRepositoryInterface;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Enforces Nexus permission checks inside the authenticated tenant boundary.
+ *
+ * The middleware rejects users whose repository tenant does not match the JWT
+ * tenant attribute before evaluating permissions, preventing cross-tenant role
+ * leakage through stale or mismatched identity records.
+ */
 final readonly class NexusPermission
 {
     public function __construct(

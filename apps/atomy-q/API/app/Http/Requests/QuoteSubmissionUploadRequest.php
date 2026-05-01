@@ -6,6 +6,12 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validates quote upload metadata and the supplier document file.
+ *
+ * Tenant ownership is enforced by the consuming service/controller; this request
+ * only validates the RFQ/vendor identifiers and attached file shape.
+ */
 final class QuoteSubmissionUploadRequest extends FormRequest
 {
     public function authorize(): bool

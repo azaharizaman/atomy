@@ -11,6 +11,12 @@ use Nexus\Tenant\Contracts\TenantContextInterface;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorTenantInterface;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorTenantRepositoryInterface;
 
+/**
+ * Resolves orchestrator tenant metadata from the active tenant context.
+ *
+ * Requests for a different tenant return null, while test/bootstrap states
+ * without a tenants table fall back to a minimal context tenant.
+ */
 final class OrchestratorTenantRepository implements OrchestratorTenantRepositoryInterface
 {
     use WrapsModels;

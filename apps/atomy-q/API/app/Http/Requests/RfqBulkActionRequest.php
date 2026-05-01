@@ -6,6 +6,12 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validates bulk RFQ lifecycle actions against the supported transition set.
+ *
+ * Distinct RFQ identifiers prevent duplicate work inside the tenant-scoped bulk
+ * close/cancel operation.
+ */
 final class RfqBulkActionRequest extends FormRequest
 {
     public function authorize(): bool

@@ -12,6 +12,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Nexus\Tenant\Contracts\TenantInterface;
 
+/**
+ * Account boundary for Atomy-Q data isolation and tenant defaults.
+ *
+ * Identity, sourcing, storage, locale, billing, and quota settings hang from this
+ * model; most application reads should still scope at query root instead of
+ * relying on relationships alone.
+ */
 final class Tenant extends Model implements TenantInterface
 {
     use HasUlids;

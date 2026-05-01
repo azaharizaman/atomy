@@ -8,6 +8,12 @@ use InvalidArgumentException;
 use App\Adapters\Ai\DTOs\DocumentExtractionRequest;
 use App\Adapters\Ai\Contracts\DocumentPayloadFactoryInterface;
 
+/**
+ * Builds OpenRouter file-parser payloads for supplier quote extraction.
+ *
+ * Local files must be readable, non-empty, and under the configured size limit
+ * before they are base64-embedded for the provider parser plugin.
+ */
 final readonly class OpenRouterDocumentPayloadFactory implements DocumentPayloadFactoryInterface
 {
     public function __construct(

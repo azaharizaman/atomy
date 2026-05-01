@@ -9,6 +9,12 @@ use App\Adapters\Ai\Contracts\ProviderGovernanceClientInterface;
 use App\Adapters\Ai\DTOs\GovernanceNarrativeRequest;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 
+/**
+ * Invokes the governance AI endpoint for vendor narrative generation.
+ *
+ * The request carries deterministic facts and an explicit action so provider
+ * output remains an assistive narrative layer over existing governance data.
+ */
 final readonly class ProviderGovernanceClient implements ProviderGovernanceClientInterface
 {
     public function __construct(

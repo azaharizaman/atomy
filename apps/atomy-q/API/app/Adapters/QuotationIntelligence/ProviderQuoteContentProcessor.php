@@ -17,6 +17,13 @@ use Nexus\QuotationIntelligence\Exceptions\QuotationIntelligenceException;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
 use App\Adapters\Ai\Contracts\ProviderDocumentIntelligenceClientInterface;
 
+/**
+ * Provider-backed quote content processor for the quote-ingestion orchestrator.
+ *
+ * It resolves documents only inside the current tenant, calls document AI when
+ * the source file is available, and falls back to persisted normalized lines when
+ * the document is missing but buyer-reviewed data already exists.
+ */
 final readonly class ProviderQuoteContentProcessor implements OrchestratorContentProcessorInterface
 {
     public function __construct(

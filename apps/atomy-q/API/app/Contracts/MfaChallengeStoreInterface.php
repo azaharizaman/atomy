@@ -6,6 +6,13 @@ namespace App\Contracts;
 
 use App\Models\MfaChallenge;
 
+/**
+ * Persistence boundary for MFA challenge lifecycle state.
+ *
+ * Verification may start from a challenge id before tenant context exists, so
+ * privileged lookups must be paired with challenge-state validation and all
+ * mutations must remain tenant-scoped.
+ */
 interface MfaChallengeStoreInterface
 {
     public function create(string $userId, string $tenantId, string $method): string;

@@ -10,6 +10,13 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use InvalidArgumentException;
 
+/**
+ * Issues and decodes Atomy-Q JWTs carrying user, tenant, expiry, issuer, and type.
+ *
+ * Access and refresh tokens share the same signing settings but use distinct
+ * lifetimes and token-type claims so middleware can reject refresh tokens on API
+ * routes.
+ */
 final readonly class JwtService implements JwtServiceInterface
 {
     private string $secret;

@@ -17,6 +17,13 @@ use App\Adapters\Ai\DTOs\ComparisonOverlayResponse;
 use App\Adapters\Ai\Exceptions\ComparisonAwardAiException;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 
+/**
+ * Typed client for comparison, award, debrief, and approval AI actions.
+ *
+ * Each action is sent through the comparison-award endpoint group and provider
+ * failures are wrapped with sanitized sourcing identifiers only. AI responses are
+ * assistive artifacts, not authoritative award decisions.
+ */
 final readonly class ProviderComparisonAwardClient implements ComparisonAwardAiClientInterface
 {
     public function __construct(

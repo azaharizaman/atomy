@@ -6,6 +6,12 @@ namespace App\Adapters\QuotationIntelligence;
 
 use Nexus\QuotationIntelligence\Contracts\SemanticMapperInterface;
 
+/**
+ * Deterministic UNSPSC mapper for quote-intelligence fallback mode.
+ *
+ * Keyword matching is intentionally tenant-agnostic and bounded to known codes so
+ * taxonomy behavior remains reproducible when AI semantic mapping is unavailable.
+ */
 final readonly class DeterministicSemanticMapper implements SemanticMapperInterface
 {
     private const UNSPSC_CODES = [

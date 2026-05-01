@@ -8,6 +8,13 @@ use App\Models\DecisionTrailEntry;
 use InvalidArgumentException;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Records buyer-visible quote-normalization decisions in the RFQ decision trail.
+ *
+ * The recorder converts manual source-line and conflict-resolution activity into
+ * immutable trail entries so comparison and award review can explain how quote
+ * data was produced or overridden.
+ */
 final readonly class DecisionTrailRecorder implements DecisionTrailRecorderInterface
 {
     /**

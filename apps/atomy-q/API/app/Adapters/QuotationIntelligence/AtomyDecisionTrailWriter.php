@@ -13,6 +13,13 @@ use Nexus\QuotationIntelligence\Contracts\DecisionTrailWriterInterface;
 use JsonException;
 use Psr\Log\LoggerInterface;
 
+/**
+ * Persists hash-chained decision trail entries for quote comparison review.
+ *
+ * Entries are appended under a tenant/RFQ comparison run lock, malformed entries
+ * are skipped with logging, and quote-submission ids are translated into
+ * idempotent comparison-run context when callers pass ingestion ids.
+ */
 final readonly class AtomyDecisionTrailWriter implements DecisionTrailWriterInterface
 {
     public function __construct(

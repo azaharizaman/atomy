@@ -10,6 +10,13 @@ use Nexus\QuotationIntelligence\Exceptions\QuotationIntelligenceException;
 use Nexus\Tenant\Contracts\TenantContextInterface;
 use App\Models\QuoteSubmission;
 
+/**
+ * Deterministic quote extraction adapter used when provider AI is disabled.
+ *
+ * The processor synthesizes predictable source lines from tenant-scoped RFQ line
+ * items so ingestion flows can be exercised without claiming provider extraction
+ * succeeded.
+ */
 final readonly class DeterministicContentProcessor implements OrchestratorContentProcessorInterface
 {
     private const VARIATIONS = [

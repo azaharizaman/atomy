@@ -12,6 +12,12 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
+/**
+ * Handles password reset tokens without revealing whether an email exists.
+ *
+ * Reset tokens are hashed, tenant-scoped by the resolved user, and consumed
+ * inside a transaction so password changes and token deletion commit together.
+ */
 final readonly class PasswordResetService implements PasswordResetServiceInterface
 {
     public function __construct(

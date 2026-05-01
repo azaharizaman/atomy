@@ -9,6 +9,12 @@ use App\Adapters\Ai\Contracts\ProviderInsightClientInterface;
 use App\Adapters\Ai\DTOs\InsightSummaryRequest;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 
+/**
+ * Invokes the insight AI endpoint for dashboard and reporting summaries.
+ *
+ * The transport enforces associative provider responses and raises invalid-payload
+ * exceptions before narrative adapters can persist or display malformed output.
+ */
 final readonly class ProviderInsightClient implements ProviderInsightClientInterface
 {
     public function __construct(

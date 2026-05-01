@@ -12,6 +12,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Nexus\QuoteIngestion\Contracts\NormalizationSourceLineReadInterface;
 
+/**
+ * Buyer-reviewable source line produced from supplier quote extraction.
+ *
+ * Raw data may contain provider provenance, override audit, and override history;
+ * effective values expose the currently accepted normalized fields without
+ * implying AI output has been approved.
+ */
 class NormalizationSourceLine extends Model implements NormalizationSourceLineReadInterface
 {
     use HasUlids;

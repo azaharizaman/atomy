@@ -13,6 +13,12 @@ use Nexus\InsightOperations\DTOs\AiArtifactDto;
 use Nexus\InsightOperations\DTOs\AiArtifactProvenanceDto;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 
+/**
+ * Converts insight facts into a persisted AI artifact with normalized provenance.
+ *
+ * Invalid provider payload wrappers are rejected, and missing output hashes are
+ * computed from the payload so cached narratives remain traceable.
+ */
 final readonly class ProviderInsightNarrativeAdapter implements InsightNarrativePortInterface
 {
     public function __construct(

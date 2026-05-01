@@ -8,6 +8,12 @@ use App\Services\QuoteIntake\NormalizationIssueCode;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Validates manual conflict-resolution actions for quote normalization.
+ *
+ * Resolution data is required only for actions that need buyer-supplied mapping,
+ * split/merge, price, or UOM detail; accept/mark actions can remain data-free.
+ */
 final class NormalizationResolveConflictRequest extends FormRequest
 {
     public function authorize(): bool
