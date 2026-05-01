@@ -37,7 +37,7 @@ function normalizeProject(payload: unknown): ProjectDetail {
     clientId: (raw?.client_id ?? raw?.clientId) as string | undefined,
     clientName: (raw?.client_name ?? raw?.clientName) as string | undefined,
     projectManagerId,
-    projectManagerName: (raw?.project_manager_name ?? raw?.projectManagerName) as string | undefined,
+    projectManagerName: raw?.projectManagerName as string | undefined,
     startDate: (raw?.start_date ?? raw?.startDate) as string | undefined,
     endDate: (raw?.end_date ?? raw?.endDate) as string | undefined,
     budgetType: (raw?.budget_type ?? raw?.budgetType) as string | undefined,

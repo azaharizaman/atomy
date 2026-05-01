@@ -6,6 +6,7 @@ namespace App\Adapters\QuotationIntelligence;
 
 use Illuminate\Support\Facades\Storage;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
+use Nexus\QuotationIntelligence\Exceptions\QuotationIntelligenceException;
 use Nexus\Tenant\Contracts\TenantContextInterface;
 use App\Models\QuoteSubmission;
 
@@ -88,7 +89,10 @@ final readonly class DeterministicContentProcessor implements OrchestratorConten
             return substr($normalizedPath, $segmentPosition + 1);
         }
 
-        return basename($normalizedPath);
+        throw new QuotationIntelligenceException(sprintf(
+            'Quote submission path [%s] could not be resolved to a storage-relative path.',
+            $storagePath,
+        ));
     }
 
     /**

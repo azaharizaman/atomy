@@ -151,7 +151,7 @@ final readonly class ProviderQuoteContentProcessor implements OrchestratorConten
                 'rfq_line_id' => (string) $line->rfq_line_item_id,
                 'description' => $description,
                 'quantity' => $line->source_quantity !== null ? (float) $line->source_quantity : 1.0,
-                'unit_price' => $line->source_unit_price !== null ? (float) $line->source_unit_price : 0.0,
+                'unit_price' => $this->nullableFloat($line->source_unit_price),
                 'unit' => $line->source_uom !== null && trim((string) $line->source_uom) !== ''
                     ? (string) $line->source_uom
                     : (string) ($rfqLineItem?->uom ?? 'EA'),
@@ -162,6 +162,15 @@ final readonly class ProviderQuoteContentProcessor implements OrchestratorConten
         }
 
         return $lines;
+    }
+
+    private function nullableFloat(mixed $value): ?float
+    {
+        if ($value === null || trim((string) $value) === '') {
+            return null;
+        }
+
+        return (float) $value;
     }
 
     /**

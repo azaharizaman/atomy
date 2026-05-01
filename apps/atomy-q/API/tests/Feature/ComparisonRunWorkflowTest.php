@@ -464,6 +464,14 @@ final class ComparisonRunWorkflowTest extends ApiTestCase
         $response->assertJsonPath('data.status', 'final');
         $response->assertJsonPath('data.readiness.is_ready', true);
         $this->assertNotEmpty($response->json('data.snapshot.normalized_lines'));
+        $expectedNormalizedLineCount = NormalizationSourceLine::query()
+            ->whereIn('quote_submission_id', [(string) $quote->id, (string) $secondQuote->id])
+            ->count();
+        $this->assertSame($expectedNormalizedLineCount, count($response->json('data.snapshot.normalized_lines')));
+        $this->assertDatabaseHas('normalization_source_lines', [
+            'quote_submission_id' => $quote->id,
+            'rfq_line_item_id' => $rfq->lineItems()->firstOrFail()->id,
+        ]);
         $this->assertNotEmpty($response->json('data.matrix.clusters'));
         $this->assertDatabaseHas('decision_trail_entries', [
             'tenant_id' => $user->tenant_id,

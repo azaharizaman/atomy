@@ -615,17 +615,17 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             OrchestratorContentProcessorInterface::class,
             function (): OrchestratorContentProcessorInterface {
-                $mode = (string) config(
+                $quoteMode = (string) config(
                     "atomy.quote_intelligence.mode",
                     "deterministic",
                 );
-                if ($mode === "deterministic") {
+                if ($quoteMode === "deterministic") {
                     return new DeterministicContentProcessor(
                         $this->app->make(TenantContextInterface::class),
                     );
                 }
 
-                if ($mode === "llm") {
+                if ($quoteMode === "llm") {
                     return new DormantLlmContentProcessor(
                         $this->quoteIntelligenceLlmConfig(),
                     );
@@ -635,7 +635,7 @@ class AppServiceProvider extends ServiceProvider
                     "atomy.ai.mode",
                     AiStatusSchema::MODE_DETERMINISTIC,
                 );
-                if ($aiMode === AiStatusSchema::MODE_PROVIDER) {
+                if ($quoteMode === AiStatusSchema::MODE_PROVIDER || $aiMode === AiStatusSchema::MODE_PROVIDER) {
                     return new ProviderQuoteContentProcessor(
                         $this->app->make(
                             ProviderDocumentIntelligenceClientInterface::class,
