@@ -13,13 +13,13 @@ final class AiStatusVisibilityTest extends ApiTestCase
     public function testItDoesNotLeakEndpointUrisOrAuthTokens(): void
     {
         config()->set('atomy.ai.mode', AiStatusSchema::MODE_PROVIDER);
-        config()->set('atomy.ai.provider.name', 'hf-public');
-        config()->set('atomy.ai.provider.default_auth_token', 'hf-super-secret-token');
-        config()->set('atomy.ai.endpoints.document.uri', 'https://hf.example.test/document/private');
-        config()->set('atomy.ai.endpoints.document.auth_token', 'hf-document-secret-token');
+        config()->set('atomy.ai.provider.name', 'generic-public');
+        config()->set('atomy.ai.provider.default_auth_token', 'provider-super-secret-token');
+        config()->set('atomy.ai.endpoints.document.uri', 'https://provider.example.test/document/private');
+        config()->set('atomy.ai.endpoints.document.auth_token', 'provider-document-secret-token');
 
         Http::fake([
-            'https://hf.example.test/document/private/health' => Http::response(['ok' => true], 200),
+            'https://provider.example.test/document/private/health' => Http::response(['ok' => true], 200),
         ]);
 
         $response = $this->getJson('/api/v1/ai/status');
@@ -29,8 +29,8 @@ final class AiStatusVisibilityTest extends ApiTestCase
         $payload = json_encode($response->json(), JSON_THROW_ON_ERROR);
 
         self::assertIsString($payload);
-        self::assertStringNotContainsString('hf-super-secret-token', $payload);
-        self::assertStringNotContainsString('hf-document-secret-token', $payload);
-        self::assertStringNotContainsString('https://hf.example.test/document/private', $payload);
+        self::assertStringNotContainsString('provider-super-secret-token', $payload);
+        self::assertStringNotContainsString('provider-document-secret-token', $payload);
+        self::assertStringNotContainsString('https://provider.example.test/document/private', $payload);
     }
 }

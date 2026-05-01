@@ -133,24 +133,24 @@ final class AiStatusApiTest extends ApiTestCase
     public function testItReflectsMixedProviderEndpointHealth(): void
     {
         config()->set('atomy.ai.mode', AiStatusSchema::MODE_PROVIDER);
-        config()->set('atomy.ai.provider.key', 'huggingface');
-        config()->set('atomy.ai.provider.name', 'hf-public');
+        config()->set('atomy.ai.provider.key', 'generic-provider');
+        config()->set('atomy.ai.provider.name', 'generic-public');
         config()->set('atomy.ai.provider.default_timeout_seconds', 5);
-        config()->set('atomy.ai.provider.default_auth_token', 'hf-secret-token');
-        config()->set('atomy.ai.endpoints.document.uri', 'https://hf.example.test/document');
-        config()->set('atomy.ai.endpoints.normalization.uri', 'https://hf.example.test/normalization');
-        config()->set('atomy.ai.endpoints.sourcing_recommendation.uri', 'https://hf.example.test/recommendation');
-        config()->set('atomy.ai.endpoints.comparison_award.uri', 'https://hf.example.test/comparison-award');
-        config()->set('atomy.ai.endpoints.insight.uri', 'https://hf.example.test/insight');
-        config()->set('atomy.ai.endpoints.governance.uri', 'https://hf.example.test/governance');
+        config()->set('atomy.ai.provider.default_auth_token', 'provider-secret-token');
+        config()->set('atomy.ai.endpoints.document.uri', 'https://provider.example.test/document');
+        config()->set('atomy.ai.endpoints.normalization.uri', 'https://provider.example.test/normalization');
+        config()->set('atomy.ai.endpoints.sourcing_recommendation.uri', 'https://provider.example.test/recommendation');
+        config()->set('atomy.ai.endpoints.comparison_award.uri', 'https://provider.example.test/comparison-award');
+        config()->set('atomy.ai.endpoints.insight.uri', 'https://provider.example.test/insight');
+        config()->set('atomy.ai.endpoints.governance.uri', 'https://provider.example.test/governance');
 
         Http::fake([
-            'https://hf.example.test/document/health' => Http::response(['ok' => true], 200),
-            'https://hf.example.test/normalization/health' => static fn (): never => throw new ConnectionException('timeout'),
-            'https://hf.example.test/recommendation/health' => Http::response(['ok' => true], 200),
-            'https://hf.example.test/comparison-award/health' => Http::response(['ok' => true], 200),
-            'https://hf.example.test/insight/health' => Http::response(['ok' => true], 200),
-            'https://hf.example.test/governance/health' => Http::response(['error' => 'down'], 503),
+            'https://provider.example.test/document/health' => Http::response(['ok' => true], 200),
+            'https://provider.example.test/normalization/health' => static fn (): never => throw new ConnectionException('timeout'),
+            'https://provider.example.test/recommendation/health' => Http::response(['ok' => true], 200),
+            'https://provider.example.test/comparison-award/health' => Http::response(['ok' => true], 200),
+            'https://provider.example.test/insight/health' => Http::response(['ok' => true], 200),
+            'https://provider.example.test/governance/health' => Http::response(['error' => 'down'], 503),
             '*' => Http::response(['error' => 'wrong-route'], 405),
         ]);
 
@@ -158,7 +158,7 @@ final class AiStatusApiTest extends ApiTestCase
 
         $response->assertOk();
         $response->assertJsonPath('data.mode', AiStatusSchema::MODE_PROVIDER);
-        $response->assertJsonPath('data.provider_name', 'hf-public');
+        $response->assertJsonPath('data.provider_name', 'generic-public');
         $response->assertJsonPath('data.global_health', AiStatusSchema::HEALTH_DEGRADED);
         $response->assertJsonPath(
             'data.capability_statuses.document_intelligence.status',
@@ -177,24 +177,24 @@ final class AiStatusApiTest extends ApiTestCase
         self::assertSame(AiStatusSchema::HEALTH_HEALTHY, $endpointGroups['document']['health']);
         self::assertSame(AiStatusSchema::HEALTH_UNAVAILABLE, $endpointGroups['normalization']['health']);
         self::assertSame(AiStatusSchema::HEALTH_DEGRADED, $endpointGroups['governance']['health']);
-        self::assertSame('hf-public', $endpointGroups['document']['diagnostics']['provider_name']);
-        self::assertSame('hf-public', $endpointGroups['normalization']['diagnostics']['provider_name']);
-        self::assertSame('hf-public', $endpointGroups['governance']['diagnostics']['provider_name']);
+        self::assertSame('generic-public', $endpointGroups['document']['diagnostics']['provider_name']);
+        self::assertSame('generic-public', $endpointGroups['normalization']['diagnostics']['provider_name']);
+        self::assertSame('generic-public', $endpointGroups['governance']['diagnostics']['provider_name']);
 
-        Http::assertSent(static fn ($request): bool => $request->url() === 'https://hf.example.test/document/health');
-        Http::assertNotSent(static fn ($request): bool => $request->url() === 'https://hf.example.test/document');
+        Http::assertSent(static fn ($request): bool => $request->url() === 'https://provider.example.test/document/health');
+        Http::assertNotSent(static fn ($request): bool => $request->url() === 'https://provider.example.test/document');
     }
 
     public function testItSupportsMethodAndPathSpecificHealthProbeOverrides(): void
     {
         config()->set('atomy.ai.mode', AiStatusSchema::MODE_PROVIDER);
-        config()->set('atomy.ai.provider.name', 'hf-public');
-        config()->set('atomy.ai.endpoints.document.uri', 'https://hf.example.test/document');
+        config()->set('atomy.ai.provider.name', 'generic-public');
+        config()->set('atomy.ai.endpoints.document.uri', 'https://provider.example.test/document');
         config()->set('atomy.ai.endpoints.document.health_path', '/status');
         config()->set('atomy.ai.endpoints.document.health_method', 'POST');
 
         Http::fake([
-            'https://hf.example.test/document/status' => function ($request) {
+            'https://provider.example.test/document/status' => function ($request) {
                 if ($request->method() !== 'POST') {
                     return Http::response(['error' => 'wrong-method'], 405);
                 }
@@ -213,7 +213,7 @@ final class AiStatusApiTest extends ApiTestCase
         );
 
         Http::assertSent(static function ($request): bool {
-            return $request->url() === 'https://hf.example.test/document/status'
+            return $request->url() === 'https://provider.example.test/document/status'
                 && $request->method() === 'POST';
         });
     }

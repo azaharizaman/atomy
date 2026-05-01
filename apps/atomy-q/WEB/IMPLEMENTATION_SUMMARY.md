@@ -393,9 +393,9 @@
 
 ## 2026-04-23 AI Runtime Env Preparation
 
-- Updated `apps/atomy-q/WEB/.env.example` for the approved AI-first rollout posture so `NEXT_PUBLIC_AI_MODE` now documents the selected-provider bootstrap contract, with `provider` describing the live selected-provider path rather than a Hugging Face-only mode.
-- Kept `NEXT_PUBLIC_AI_STATUS_PATH` as the public runtime truth source and `NEXT_PUBLIC_AI_PROVIDER_NAME` as a bootstrap-only operator label; the live status payload now owns `provider_name` when present, with `openrouter` as the alpha default and `huggingface` as the supported alternative.
-- The WEB example still keeps mocks disabled by default so developers can exercise real API-backed and future real Hugging Face-backed flows once the implementation plans land.
+- Updated `apps/atomy-q/WEB/.env.example` for the approved AI-first rollout posture so `NEXT_PUBLIC_AI_MODE` now documents the selected-provider bootstrap contract, with `provider` describing the live universal provider path.
+- Kept `NEXT_PUBLIC_AI_STATUS_PATH` as the public runtime truth source and `NEXT_PUBLIC_AI_PROVIDER_NAME` as a bootstrap-only operator label; the live status payload now owns `provider_name` when present, with `openrouter` as the alpha default.
+- The WEB example still keeps mocks disabled by default so developers can exercise real API-backed provider flows once the implementation plans land.
 
 ## 2026-04-30 AI Narrative Generation Controls
 

@@ -29,7 +29,7 @@ describe('useAiStatus', () => {
     vi.clearAllMocks();
     process.env.NEXT_PUBLIC_AI_MODE = 'provider';
     process.env.NEXT_PUBLIC_AI_STATUS_PATH = '/api/v1/ai/status';
-    process.env.NEXT_PUBLIC_AI_PROVIDER_NAME = 'huggingface';
+    process.env.NEXT_PUBLIC_AI_PROVIDER_NAME = 'openrouter';
   });
 
   it('normalizes provider mode payload and exposes availability helpers', async () => {
@@ -65,7 +65,7 @@ describe('useAiStatus', () => {
               operator_critical: false,
               reason_codes: [],
               diagnostics: {
-                provider: 'huggingface',
+                provider: 'openrouter',
               },
             },
           },
@@ -119,7 +119,7 @@ describe('useAiStatus', () => {
 
     await waitFor(() => expect(result.current.isReady).toBe(true));
 
-    expect(result.current.status.providerName).toBe('huggingface');
+    expect(result.current.status.providerName).toBe('openrouter');
   });
 
   it('exposes degraded capability helpers from fallback ui mode and message key', async () => {
@@ -154,7 +154,7 @@ describe('useAiStatus', () => {
               operator_critical: true,
               reason_codes: ['AI_PROVIDER_TIMEOUT'],
               diagnostics: {
-                provider: 'huggingface',
+                provider: 'openrouter',
               },
             },
           },
