@@ -15,6 +15,13 @@ use Nexus\InsightOperations\Contracts\DashboardFactsPortInterface;
 use Nexus\InsightOperations\DTOs\DashboardFactsDto;
 use Nexus\InsightOperations\DTOs\MetricFactDto;
 
+/**
+ * Assembles tenant-scoped dashboard facts for deterministic insight summaries.
+ *
+ * The adapter keeps joins and counts inside the tenant boundary, marks metrics
+ * unavailable when source columns are absent, and returns compact activity/risk
+ * slices suitable for AI narrative prompts or plain dashboard display.
+ */
 final readonly class DashboardFactsAdapter implements
     DashboardFactsPortInterface
 {

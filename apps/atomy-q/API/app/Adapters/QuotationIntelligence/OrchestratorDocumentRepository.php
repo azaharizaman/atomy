@@ -10,6 +10,12 @@ use Nexus\Tenant\Contracts\TenantContextInterface;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorDocumentRepositoryInterface;
 use Nexus\QuotationIntelligence\Contracts\QuotationDocumentInterface;
 
+/**
+ * Tenant-aware document repository for quote-ingestion orchestration.
+ *
+ * Quote submissions are looked up inside the current tenant context, and records
+ * whose RFQ belongs to a different tenant fail closed as missing documents.
+ */
 final class OrchestratorDocumentRepository implements OrchestratorDocumentRepositoryInterface
 {
     use WrapsModels;

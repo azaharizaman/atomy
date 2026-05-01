@@ -8,6 +8,12 @@ use App\Models\Rfq;
 use Nexus\SourcingOperations\Contracts\RfqLifecycleQueryPortInterface;
 use Nexus\SourcingOperations\DTOs\RfqLifecycleRecord;
 
+/**
+ * Reads RFQ lifecycle records by tenant and id or RFQ number.
+ *
+ * Returning null for misses keeps cross-tenant and missing RFQs indistinguishable
+ * to upstream sourcing orchestration.
+ */
 final readonly class AtomyRfqLifecycleQuery implements RfqLifecycleQueryPortInterface
 {
     public function findByTenantAndId(string $tenantId, string $rfqId): ?RfqLifecycleRecord

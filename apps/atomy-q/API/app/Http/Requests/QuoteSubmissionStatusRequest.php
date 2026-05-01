@@ -7,6 +7,12 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Restricts quote submission status changes to known intake states.
+ *
+ * These values mirror the upload, extraction, normalization, review, readiness,
+ * acceptance, and failure states used by the quote-ingestion pipeline.
+ */
 final class QuoteSubmissionStatusRequest extends FormRequest
 {
     public function authorize(): bool

@@ -10,6 +10,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Frozen comparison workspace for RFQ quote evaluation.
+ *
+ * Preview and final runs store request, matrix, scoring, readiness, approval, and
+ * response payloads so award decisions can be reviewed against a stable snapshot.
+ */
 class ComparisonRun extends Model
 {
     use HasUlids;

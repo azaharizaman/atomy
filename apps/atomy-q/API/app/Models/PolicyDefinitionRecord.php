@@ -7,6 +7,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
+ * Tenant-scoped persisted policy definition payload.
+ *
+ * Tenant ids are normalized to lowercase on write so policy lookups remain stable
+ * across callers that differ only by casing.
+ *
  * @property string $id
  * @property string $tenant_id
  * @property string $policy_id

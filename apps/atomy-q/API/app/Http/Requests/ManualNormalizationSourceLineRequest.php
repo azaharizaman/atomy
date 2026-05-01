@@ -8,6 +8,12 @@ use App\Enums\NormalizationOverrideReasonCode;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Validates buyer-created or buyer-edited normalization source lines.
+ *
+ * PATCH requests preserve omitted fields while create requests require the
+ * source description and reason; `other` reasons must carry an explanatory note.
+ */
 final class ManualNormalizationSourceLineRequest extends FormRequest
 {
     public function authorize(): bool

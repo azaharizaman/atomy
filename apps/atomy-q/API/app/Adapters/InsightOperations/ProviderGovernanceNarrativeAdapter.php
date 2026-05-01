@@ -12,6 +12,13 @@ use Nexus\InsightOperations\DTOs\AiArtifactDto;
 use Nexus\InsightOperations\DTOs\AiArtifactProvenanceDto;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 
+/**
+ * Converts governance facts into an AI artifact with provenance.
+ *
+ * Provider payloads may be wrapped or direct associative arrays, but provenance is
+ * normalized and missing output hashes are derived locally before the artifact is
+ * considered available.
+ */
 final readonly class ProviderGovernanceNarrativeAdapter implements
     GovernanceNarrativePortInterface
 {

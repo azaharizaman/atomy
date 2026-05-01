@@ -7,6 +7,12 @@ namespace App\Adapters\QuotationIntelligence;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
 use Nexus\QuotationIntelligence\Exceptions\QuotationIntelligenceException;
 
+/**
+ * Fail-closed content processor for configured-but-unimplemented LLM mode.
+ *
+ * This adapter makes incomplete provider configuration explicit instead of
+ * silently returning empty extraction results.
+ */
 final readonly class DormantLlmContentProcessor implements OrchestratorContentProcessorInterface
 {
     private string $message;

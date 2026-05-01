@@ -7,6 +7,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Tenant-scoped vendor governance evidence used for scoring and narratives.
+ *
+ * Evidence freshness, review status, expiry, domain, and type feed deterministic
+ * governance scores before any AI-generated narrative is produced.
+ */
 final class VendorEvidence extends Model
 {
     use HasUlids;

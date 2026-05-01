@@ -11,6 +11,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Nexus\QuoteIngestion\Contracts\QuoteSubmissionInterface;
 
+/**
+ * Supplier quote upload tracked through extraction, normalization, review, and acceptance.
+ *
+ * The persisted tenant and RFQ ids are used by queued ingestion workers and
+ * adapters to avoid relying on request context after upload.
+ */
 class QuoteSubmission extends Model implements QuoteSubmissionInterface
 {
     use HasUlids, HasFactory;

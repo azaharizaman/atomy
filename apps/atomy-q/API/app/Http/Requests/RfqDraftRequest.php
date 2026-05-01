@@ -7,6 +7,12 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Validates partial RFQ draft updates without treating omitted fields as null.
+ *
+ * Project references are tenant-qualified when authentication context is present
+ * so a draft cannot be linked to another tenant's project.
+ */
 final class RfqDraftRequest extends FormRequest
 {
     public function authorize(): bool

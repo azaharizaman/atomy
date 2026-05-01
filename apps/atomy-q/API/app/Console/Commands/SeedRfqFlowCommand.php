@@ -11,6 +11,14 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
+/**
+ * Replays the public RFQ API flow to seed end-to-end sourcing data.
+ *
+ * This command signs in as a real tenant user, creates RFQs through HTTP, and
+ * optionally drives quote intake, normalization, comparison, approval, and
+ * award transitions. It is intended for development/demo data where the API
+ * contract should be exercised instead of direct database fixtures.
+ */
 final class SeedRfqFlowCommand extends Command
 {
     protected $signature = 'atomy:seed-rfq-flow

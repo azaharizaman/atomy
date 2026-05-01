@@ -10,6 +10,13 @@ use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
 use App\Services\Ai\Contracts\AiOperationalAlertPublisherInterface;
 use Illuminate\Console\Command;
 
+/**
+ * Captures the configured AI runtime health snapshot for operators.
+ *
+ * When requested, this command also publishes degraded/unavailable alerts using
+ * the same snapshot so alerting reflects the exact status emitted to logs or
+ * JSON output.
+ */
 final class AiStatusSnapshotCommand extends Command
 {
     protected $signature = 'atomy:ai-status

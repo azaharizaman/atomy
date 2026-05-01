@@ -7,6 +7,12 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Validates final comparison requests against the authenticated tenant RFQ scope.
+ *
+ * The RFQ existence rule is tenant-qualified when tenant context is present so
+ * finalization cannot target another tenant's sourcing event.
+ */
 final class ComparisonFinalizeRequest extends FormRequest
 {
     public function authorize(): bool

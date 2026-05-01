@@ -7,6 +7,12 @@ namespace App\Adapters\QuotationIntelligence;
 use Nexus\QuotationIntelligence\Contracts\SemanticMapperInterface;
 use Nexus\QuotationIntelligence\Exceptions\QuotationIntelligenceException;
 
+/**
+ * Fail-closed semantic mapper for configured-but-unimplemented LLM mode.
+ *
+ * Both mapping and validation raise the same configuration-aware exception so
+ * callers do not mistake dormant AI mode for deterministic taxonomy support.
+ */
 final readonly class DormantLlmSemanticMapper implements SemanticMapperInterface
 {
     private string $message;

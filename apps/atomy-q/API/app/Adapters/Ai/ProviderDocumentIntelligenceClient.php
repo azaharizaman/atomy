@@ -12,6 +12,13 @@ use App\Adapters\Ai\Contracts\ProviderAiTransportInterface;
 use App\Adapters\Ai\Contracts\ProviderDocumentIntelligenceClientInterface;
 use App\Adapters\Ai\DTOs\DocumentExtractionRequest;
 
+/**
+ * Invokes document-intelligence providers for quote extraction.
+ *
+ * Raw extraction supports direct associative payload callers, while typed
+ * extraction builds provider-specific document payloads and maps responses back
+ * into the quote-ingestion shape expected by Atomy-Q.
+ */
 final readonly class ProviderDocumentIntelligenceClient implements ProviderDocumentIntelligenceClientInterface
 {
     public function __construct(

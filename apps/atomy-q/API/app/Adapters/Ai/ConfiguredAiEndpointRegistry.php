@@ -9,6 +9,13 @@ use Nexus\MachineLearning\Enums\AiEndpointGroup;
 use Nexus\MachineLearning\ValueObjects\AiEndpointConfig;
 use App\Adapters\Ai\Contracts\AiEndpointRegistryInterface;
 
+/**
+ * Resolves AI mode, provider identity, and endpoint configuration from app config.
+ *
+ * Empty endpoint URIs disable individual groups, retry values are normalized to
+ * safe bounds, and OpenRouter health probes are derived without leaking provider
+ * details into domain packages.
+ */
 final readonly class ConfiguredAiEndpointRegistry implements AiEndpointRegistryInterface
 {
     /**

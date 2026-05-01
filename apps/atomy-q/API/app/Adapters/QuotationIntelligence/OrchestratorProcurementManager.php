@@ -10,6 +10,12 @@ use Nexus\Tenant\Contracts\TenantContextInterface;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorProcurementManagerInterface;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorRequisitionInterface;
 
+/**
+ * Tenant-aware RFQ repository for quote-ingestion orchestration.
+ *
+ * RFQs are loaded with ordered line items, and any cross-tenant line-item
+ * corruption causes the adapter to return null rather than expose mixed data.
+ */
 final class OrchestratorProcurementManager implements OrchestratorProcurementManagerInterface
 {
     use WrapsModels;

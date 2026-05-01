@@ -19,6 +19,13 @@ use Nexus\SourcingOperations\DTOs\SaveRfqDraftCommand;
 use Nexus\SourcingOperations\DTOs\TransitionRfqStatusCommand;
 use Nexus\SourcingOperations\Exceptions\DuplicateRfqNumberException;
 
+/**
+ * Persists RFQ lifecycle changes for the sourcing operations port.
+ *
+ * All lookups are tenant-qualified, duplicate RFQs receive tenant-local RFQ
+ * numbers under lock, and bulk actions only update records inside the supplied
+ * tenant scope.
+ */
 final readonly class AtomyRfqLifecyclePersist implements RfqLifecyclePersistPortInterface
 {
     private const DUPLICATE_NUMBER_RETRY_LIMIT = 3;

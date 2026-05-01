@@ -9,6 +9,13 @@ use Nexus\IntelligenceOperations\Contracts\AiCapabilityCatalogInterface;
 use Nexus\IntelligenceOperations\DTOs\AiCapabilityDefinition;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 
+/**
+ * Declares Atomy-Q AI capabilities and their manual-continuity behavior.
+ *
+ * The catalog tells runtime status coordination which features require provider
+ * AI, which can continue manually, and how unavailable capability groups should
+ * be presented to operators and users.
+ */
 final readonly class AtomyAiCapabilityCatalog implements AiCapabilityCatalogInterface
 {
     /**

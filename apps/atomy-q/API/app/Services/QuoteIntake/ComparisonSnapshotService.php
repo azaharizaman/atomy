@@ -7,6 +7,13 @@ namespace App\Services\QuoteIntake;
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
 
+/**
+ * Freezes tenant-scoped normalized quote data for comparison runs.
+ *
+ * The snapshot captures RFQ version, source lines, conflict resolutions, vendor
+ * identities, and line-item currency metadata so final comparison uses a stable
+ * view of the buyer-reviewed intake state.
+ */
 final readonly class ComparisonSnapshotService
 {
     /**

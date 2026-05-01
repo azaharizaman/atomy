@@ -6,6 +6,12 @@ namespace App\Services\Project;
 
 use App\Models\ProjectAcl;
 
+/**
+ * Evaluates tenant-scoped project ACL roles using a fixed hierarchy.
+ *
+ * Unknown required or stored roles fail closed, and all ACL reads include tenant
+ * id so project membership cannot leak across tenants.
+ */
 final readonly class ProjectAclService
 {
     /**

@@ -12,6 +12,12 @@ use Illuminate\Support\Collection;
 use Nexus\InsightOperations\Contracts\GovernanceFactsPortInterface;
 use Nexus\InsightOperations\DTOs\GovernanceFactsDto;
 
+/**
+ * Builds tenant-scoped vendor governance facts from evidence and finding records.
+ *
+ * Sanctions screenings, due-diligence status, evidence freshness, and score
+ * warnings are derived before any AI narrative layer consumes the facts.
+ */
 final readonly class GovernanceFactsAdapter implements GovernanceFactsPortInterface
 {
     public function __construct(private VendorGovernanceScoreService $scoreService)

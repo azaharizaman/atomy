@@ -18,6 +18,13 @@ use Illuminate\Console\Command;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationRequest;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationScoredCandidate;
 
+/**
+ * Sends representative payloads through every configured AI endpoint group.
+ *
+ * Use this as an operator-facing smoke check for provider contract shape, not
+ * as a business workflow. Any provider response must remain an associative
+ * payload so downstream adapters can reject malformed AI output truthfully.
+ */
 final class AiVerifyContractsCommand extends Command
 {
     private const ENDPOINT_GROUPS = [

@@ -10,6 +10,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Nexus\Identity\Contracts\UserInterface;
 
+/**
+ * Tenant-scoped identity model used by the Nexus identity boundary.
+ *
+ * Lockout, verification, MFA, and tenant accessors are part of authentication
+ * and authorization decisions, so callers should not treat this as a generic
+ * profile record.
+ */
 class User extends Model implements UserInterface
 {
     use HasUlids;

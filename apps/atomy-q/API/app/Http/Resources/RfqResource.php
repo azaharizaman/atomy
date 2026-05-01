@@ -9,6 +9,11 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
+ * Serializes the public RFQ response contract for API consumers.
+ *
+ * Date fields are emitted as Atom strings, and project_name is included only
+ * when the project relation has already been loaded to avoid hidden queries.
+ *
  * @mixin Rfq
  */
 final class RfqResource extends JsonResource

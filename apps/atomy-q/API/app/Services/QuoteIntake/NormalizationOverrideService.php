@@ -14,6 +14,13 @@ use App\Models\RfqLineItem;
 use App\Models\User;
 use App\Support\DecimalString;
 
+/**
+ * Applies buyer corrections to normalized quote source lines.
+ *
+ * Each mutation runs in a transaction, preserves provider provenance, appends an
+ * override audit/history entry, recomputes submission readiness, and writes a
+ * decision-trail event for later comparison review.
+ */
 final readonly class NormalizationOverrideService
 {
     public function __construct(

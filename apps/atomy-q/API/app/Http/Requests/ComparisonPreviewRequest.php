@@ -7,6 +7,12 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Validates comparison preview requests only when tenant context is available.
+ *
+ * Missing tenant context fails authorization, and the RFQ lookup uses an
+ * impossible tenant when absent to avoid accidentally validating global RFQ ids.
+ */
 final class ComparisonPreviewRequest extends FormRequest
 {
     public function authorize(): bool

@@ -11,6 +11,12 @@ use Nexus\ProcurementOperations\Contracts\VendorRecommendationLlmInterface;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationRequest;
 use Nexus\ProcurementOperations\DTOs\VendorRecommendation\VendorRecommendationScoredCandidate;
 
+/**
+ * Enriches deterministic vendor recommendation candidates with provider AI.
+ *
+ * The request sends only already-eligible candidates and sourcing context, so AI
+ * can explain or rank options without bypassing deterministic eligibility gates.
+ */
 final readonly class ProviderSourcingRecommendationClient implements ProviderSourcingRecommendationClientInterface, VendorRecommendationLlmInterface
 {
     public function __construct(

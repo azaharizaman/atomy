@@ -10,6 +10,13 @@ use Nexus\InsightOperations\Contracts\ReportingFactsPortInterface;
 use Nexus\InsightOperations\DTOs\MetricFactDto;
 use Nexus\InsightOperations\DTOs\ReportingFactsDto;
 
+/**
+ * Provides tenant-scoped reporting facts for KPI, trend, and category summaries.
+ *
+ * Unsupported subjects return an explicit unavailable metric instead of empty
+ * success data, allowing insight consumers to distinguish missing domains from
+ * real zero-valued reports.
+ */
 final readonly class ReportingFactsAdapter implements ReportingFactsPortInterface
 {
     public function factsForTenant(string $tenantId, string $subjectType): ReportingFactsDto

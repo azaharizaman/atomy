@@ -8,6 +8,12 @@ use App\Adapters\Ai\Contracts\AiRuntimeStatusInterface;
 use Nexus\InsightOperations\Contracts\AiAvailabilityPortInterface;
 use Throwable;
 
+/**
+ * Adapts AI runtime status into insight-feature availability checks.
+ *
+ * Runtime failures are reported and converted to provider-unavailable reason
+ * codes so insight surfaces can degrade without throwing UI-facing errors.
+ */
 final class InsightAiAvailabilityAdapter implements AiAvailabilityPortInterface
 {
     /** @var array<string, list<string>> */

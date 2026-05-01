@@ -7,6 +7,13 @@ namespace App\Adapters\Ai\Support;
 use App\Adapters\Ai\Contracts\DocumentExtractionMapperInterface;
 use App\Adapters\Ai\Exceptions\AiTransportInvalidResponseException;
 
+/**
+ * Converts OpenRouter document responses into Atomy-Q quote extraction fields.
+ *
+ * The mapper accepts fenced JSON content, normalizes currencies such as RM to
+ * MYR, skips malformed line items, and raises invalid-response exceptions when
+ * provider content cannot be parsed as structured quote data.
+ */
 final readonly class OpenRouterDocumentExtractionMapper implements DocumentExtractionMapperInterface
 {
     /**

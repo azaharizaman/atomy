@@ -8,6 +8,12 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Requires authenticated tenant context before tenant-scoped routes execute.
+ *
+ * This middleware does not derive tenant identity from request payloads; the
+ * value must already have been established by authentication middleware.
+ */
 final class TenantContext
 {
     public function handle(Request $request, Closure $next): Response

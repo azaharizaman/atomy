@@ -8,6 +8,13 @@ use JsonException;
 
 use Illuminate\Console\Command;
 
+/**
+ * Prints the expected operational behavior for AI outage drills.
+ *
+ * The scenarios document failure-mode expectations for operators: AI should
+ * degrade truthfully, manual continuity must remain available where supported,
+ * and no synthetic success payload should hide provider failures.
+ */
 final class AiFailureDrillCommand extends Command
 {
     private const SCENARIOS = [

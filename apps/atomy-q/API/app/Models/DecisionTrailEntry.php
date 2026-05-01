@@ -8,6 +8,12 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Hash-linked audit entry for quote normalization and comparison decisions.
+ *
+ * Sequence, previous hash, payload hash, and entry hash are persisted so review
+ * surfaces can detect ordering and payload tampering concerns.
+ */
 class DecisionTrailEntry extends Model
 {
     use HasUlids;
