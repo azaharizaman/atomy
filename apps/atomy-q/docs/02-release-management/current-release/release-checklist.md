@@ -8,13 +8,13 @@
 
 ## Executive Status
 
-As of 2026-04-30, the superseding launch readiness design is the controlling go/no-go contract. Older green evidence remains historical until revalidated on the current branch under that contract.
+As of 2026-05-01, the superseding launch readiness design is the controlling go/no-go contract. Older green evidence remains historical until revalidated on the current branch under that contract.
 
 Task 1 rectification is **green locally as of 2026-04-15**. The WEB lint/build/unit gates, API alpha matrix, and API full suite now pass after the rectification pass documented below.
 
 The original baseline captured in this document was **not release-ready**. Those failure details are retained as historical context underneath the current evidence.
 
-The strongest rectification signal is that the alpha-critical backend flows pass together in the matrix: company registration, RFQ lifecycle, invitations, comparison, awards, vendor workflow, identity gap tests, normalization review, quote ingestion pipeline, and operational approvals. Remaining non-Task-1 alpha work should continue from the broader release plan before staging smoke.
+The strongest current regression signal is the 2026-05-01 SQLite alpha API matrix pass, but the required PostgreSQL posture is **not satisfied** because PostgreSQL on `127.0.0.1:5433` refused connections. The release remains internal alpha only until PostgreSQL matrix evidence, staging smoke, disclosure, and sign-offs are recorded.
 
 ## Superseding Readiness Assessment - 2026-04-30
 

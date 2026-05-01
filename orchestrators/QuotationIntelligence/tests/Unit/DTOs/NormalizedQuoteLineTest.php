@@ -30,12 +30,12 @@ final class NormalizedQuoteLineTest extends TestCase
             normalizedQuantity: 1.0,
             quotedUnitPrice: 1000.0,
             normalizedUnitPrice: 1000.0,
-            aiConfidence: 0.8,
+            aiConfidence: 80.0,
             snippets: [$snippet]
         );
 
         $this->assertTrue($line->hasLowConfidence());
-        $this->assertFalse($line->hasLowConfidence(0.7));
+        $this->assertFalse($line->hasLowConfidence(70.0));
         $this->assertSame($snippet, $line->getSnippet('description'));
         $this->assertNull($line->getSnippet('missing_field'));
 
@@ -45,4 +45,3 @@ final class NormalizedQuoteLineTest extends TestCase
         $this->assertCount(1, $asArray['snippets']);
     }
 }
-

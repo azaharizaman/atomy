@@ -150,7 +150,7 @@ final readonly class ProviderQuoteContentProcessor implements OrchestratorConten
             $lines[] = [
                 'rfq_line_id' => (string) $line->rfq_line_item_id,
                 'description' => $description,
-                'quantity' => $line->source_quantity !== null ? (float) $line->source_quantity : 1.0,
+                'quantity' => $this->nullableFloat($line->source_quantity) ?? 1.0,
                 'unit_price' => $this->nullableFloat($line->source_unit_price),
                 'unit' => $line->source_uom !== null && trim((string) $line->source_uom) !== ''
                     ? (string) $line->source_uom

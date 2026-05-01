@@ -39,7 +39,7 @@ final readonly class RuleBasedRiskAssessmentService implements RiskAssessmentSer
             // 1. Check for pricing anomalies (Placeholder for peer comparison in this basic version)
             // In a real coordinator, we'd pass $peerLines from other quotes.
             // For now, we assess in isolation or flag very low confidence AI extractions.
-            if ($line->aiConfidence < 0.7) {
+            if ($line->aiConfidence < 70.0) {
                 $risks[] = [
                     'level' => 'medium',
                     'message' => "Low AI extraction confidence ({$line->aiConfidence})",

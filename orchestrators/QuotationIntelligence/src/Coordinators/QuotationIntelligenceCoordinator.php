@@ -146,7 +146,7 @@ final readonly class QuotationIntelligenceCoordinator implements QuotationIntell
                     sprintf('Invalid taxonomy mapping payload for RFQ line "%s"', (string)$line['rfq_line_id'])
                 );
             }
-            $lineConfidence = (float) $mapping['confidence'];
+            $lineConfidence = $this->normalizeConfidence((float) $mapping['confidence']);
             $normalizationWarnings = [];
 
             // B. Normalization (UoM)
@@ -167,7 +167,7 @@ final readonly class QuotationIntelligenceCoordinator implements QuotationIntell
                     'error_message' => $exception->getMessage(),
                 ]);
                 $normQty = (float) $line['quantity'];
-                $lineConfidence = min($lineConfidence, 0.6);
+                $lineConfidence = min($lineConfidence, 60.0);
                 $normalizationWarnings[] = [
                     'code' => 'uom_conversion_failed',
                     'quoted_unit' => (string) $quotedUnit,
@@ -234,6 +234,15 @@ final readonly class QuotationIntelligenceCoordinator implements QuotationIntell
             'lines' => array_map(fn(NormalizedQuoteLine $l) => $l->toArray(), $normalizedLines),
             'risks' => $risks,
         ];
+    }
+
+    private function normalizeConfidence(float $confidence): float
+    {
+        if ($confidence >= 0.0 && $confidence <= 1.0) {
+            return $confidence * 100.0;
+        }
+
+        return $confidence;
     }
 
     /**

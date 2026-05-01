@@ -23,7 +23,7 @@ final class WeightedVendorScoringServiceTest extends TestCase
             normalizedQuantity: 10.0,
             quotedUnitPrice: 900.0,
             normalizedUnitPrice: 900.0,
-            aiConfidence: 0.95,
+            aiConfidence: 95.0,
             snippets: [],
             metadata: [
                 'lifecycle_multiplier' => 1.0,
@@ -41,7 +41,7 @@ final class WeightedVendorScoringServiceTest extends TestCase
             normalizedQuantity: 10.0,
             quotedUnitPrice: 1000.0,
             normalizedUnitPrice: 1000.0,
-            aiConfidence: 0.95,
+            aiConfidence: 95.0,
             snippets: [],
             metadata: [
                 'lifecycle_multiplier' => 1.2,
@@ -85,7 +85,7 @@ final class WeightedVendorScoringServiceTest extends TestCase
             normalizedQuantity: 1.0,
             quotedUnitPrice: 100.0,
             normalizedUnitPrice: 100.0,
-            aiConfidence: 0.9
+            aiConfidence: 90.0
         );
 
         $result = $service->score('tenant-1', 'rfq-1', [[
@@ -112,7 +112,7 @@ final class WeightedVendorScoringServiceTest extends TestCase
             normalizedQuantity: 2.0,
             quotedUnitPrice: 100.0,
             normalizedUnitPrice: 100.0,
-            aiConfidence: 0.9,
+            aiConfidence: 90.0,
             snippets: [],
             metadata: [
                 'lifecycle_multiplier' => 0,
