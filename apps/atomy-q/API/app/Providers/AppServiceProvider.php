@@ -55,7 +55,9 @@ use App\Services\Identity\AtomyUserPersist;
 use App\Services\Identity\AtomyUserQuery;
 use App\Services\Auth\PasswordResetService;
 use App\Services\Ai\AiOperationalAlertPublisher;
+use App\Services\Ai\AiProviderReadinessChecker;
 use App\Services\Ai\Contracts\AiOperationalAlertPublisherInterface;
+use App\Services\Ai\Contracts\AiProviderReadinessCheckerInterface;
 use App\Services\Ai\Contracts\ProviderContractVerifierInterface;
 use App\Services\Ai\ProviderContractVerificationService;
 use App\Services\JwtService;
@@ -470,6 +472,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(
             ProviderContractVerifierInterface::class,
             ProviderContractVerificationService::class,
+        );
+        $this->app->singleton(
+            AiProviderReadinessCheckerInterface::class,
+            AiProviderReadinessChecker::class,
         );
         $this->app->singleton(
             OutboxStoreInterface::class,
