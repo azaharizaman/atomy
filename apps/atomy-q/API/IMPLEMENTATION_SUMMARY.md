@@ -1,5 +1,9 @@
 # Implementation Summary - Atomy-Q Backend API
 
+## 2026-05-02 AI Provider Check Command
+
+- Added `php artisan atomy:ai-provider-check` as the safe operator readiness check for configured AI providers, with JSON output and endpoint-group filtering for targeted diagnostics.
+
 ## 2026-04-30 Alpha RFQ Duplication And Quote Intake Readiness Repair
 
 - RFQ line-item `specifications` now remains a text value end-to-end instead of being JSON-cast, so RFQ duplication preserves exact string/null values for copied line items.
