@@ -27,6 +27,7 @@ use App\Adapters\Ai\DTOs\ComparisonOverlayRequest;
 use App\Adapters\Ai\DTOs\ComparisonOverlayResponse;
 use App\Adapters\Ai\DTOs\GovernanceNarrativeRequest;
 use App\Adapters\Ai\DTOs\InsightSummaryRequest;
+use App\Adapters\Ai\Exceptions\AiTransportUnavailableException;
 use App\Adapters\Ai\ProviderDocumentIntelligenceClient;
 use App\Adapters\Ai\ProviderNormalizationClient;
 use App\Adapters\Ai\ProviderSourcingRecommendationClient;
@@ -35,7 +36,10 @@ use App\Adapters\Ai\Support\OpenRouterDocumentPayloadFactory;
 use Illuminate\Contracts\Cache\Factory as CacheFactory;
 use Illuminate\Log\LogManager;
 use App\Services\Ai\AiOperationalAlertPublisher;
+use App\Services\Ai\AiProviderCheckSeverity;
 use App\Services\Ai\Contracts\AiOperationalAlertPublisherInterface;
+use App\Services\Ai\Contracts\ProviderContractVerifierInterface;
+use App\Services\Ai\ProviderContractVerificationResult;
 use Tests\TestCase;
 
 final class AiConsoleCommandsTest extends TestCase
@@ -173,5 +177,80 @@ final class AiConsoleCommandsTest extends TestCase
             ->expectsOutputToContain('Verified provider contract for insight')
             ->expectsOutputToContain('Verified provider contract for governance')
             ->assertExitCode(0);
+    }
+
+    public function testAiVerifyContractsCommandFailsForUnsupportedEndpointGroup(): void
+    {
+        $this->artisan('atomy:ai-verify-contracts --endpoint-group=unsupported')
+            ->expectsOutputToContain('Unsupported endpoint group(s): unsupported')
+            ->assertExitCode(1);
+    }
+
+    public function testAiVerifyContractsCommandFailsForBlankTenantOption(): void
+    {
+        $this->artisan('atomy:ai-verify-contracts --tenant-id=')
+            ->expectsOutputToContain('The --tenant-id option must be non-empty.')
+            ->assertExitCode(1);
+    }
+
+    public function testAiVerifyContractsCommandFailsForBlankRfqOption(): void
+    {
+        $this->artisan('atomy:ai-verify-contracts --rfq-id=')
+            ->expectsOutputToContain('The --rfq-id option must be non-empty.')
+            ->assertExitCode(1);
+    }
+
+    public function testAiVerifyContractsCommandFailsWhenVerifierReportsFailedResult(): void
+    {
+        $this->app->instance(ProviderContractVerifierInterface::class, new readonly class implements ProviderContractVerifierInterface {
+            public function assertEndpointGroups(array $endpointGroups): void
+            {
+            }
+
+            public function verify(array $endpointGroups, string $tenantId, string $rfqId): array
+            {
+                return [
+                    new ProviderContractVerificationResult(
+                        endpointGroup: 'document',
+                        severity: AiProviderCheckSeverity::FAILED,
+                        verified: false,
+                        reasonCodes: ['provider_invalid_payload'],
+                        message: 'Provider contract verification returned an invalid payload for document',
+                    ),
+                ];
+            }
+        });
+
+        $this->artisan('atomy:ai-verify-contracts --endpoint-group=document')
+            ->expectsOutputToContain('Provider contract verification returned an invalid payload for document')
+            ->assertExitCode(1);
+    }
+
+    public function testAiVerifyContractsCommandClassifiesProviderUnavailableExceptions(): void
+    {
+        $this->app->instance(ProviderInsightClientInterface::class, new readonly class implements ProviderInsightClientInterface {
+            public function summarize(InsightSummaryRequest $request): array
+            {
+                throw new AiTransportUnavailableException('AI endpoint [insight] is unavailable.');
+            }
+        });
+
+        $this->artisan('atomy:ai-verify-contracts --endpoint-group=insight')
+            ->expectsOutputToContain('Provider contract verification failed for insight.')
+            ->assertExitCode(1);
+    }
+
+    public function testAiVerifyContractsCommandFailsWhenProviderReturnsListPayload(): void
+    {
+        $this->app->instance(ProviderInsightClientInterface::class, new readonly class implements ProviderInsightClientInterface {
+            public function summarize(InsightSummaryRequest $request): array
+            {
+                return ['not-associative'];
+            }
+        });
+
+        $this->artisan('atomy:ai-verify-contracts --endpoint-group=insight')
+            ->expectsOutputToContain('Provider contract verification returned an invalid payload for insight')
+            ->assertExitCode(1);
     }
 }
