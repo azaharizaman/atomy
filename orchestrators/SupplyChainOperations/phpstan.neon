@@ -3,4 +3,4 @@ parameters:
     paths:
         - src
     bootstrapFiles:
-        - vendor/autoload.php
+        - ../../vendor/autoload.php

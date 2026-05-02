@@ -53,20 +53,36 @@ final readonly class AiProviderReadinessChecker implements AiProviderReadinessCh
         }
 
         if ($deep) {
-            foreach ($this->contractVerifier->verify($selectedGroups, $tenantId, $rfqId) as $deepResult) {
+            try {
+                foreach ($this->contractVerifier->verify($selectedGroups, $tenantId, $rfqId) as $deepResult) {
+                    $findings[] = new AiProviderCheckFinding(
+                        severity: $deepResult->severity,
+                        area: 'deep_contract',
+                        message: $deepResult->message,
+                        endpointGroup: $deepResult->endpointGroup,
+                        reasonCode: $deepResult->reasonCodes[0] ?? null,
+                    );
+                }
+            } catch (Throwable $exception) {
                 $findings[] = new AiProviderCheckFinding(
-                    severity: $deepResult->severity,
+                    severity: AiProviderCheckSeverity::FAILED,
                     area: 'deep_contract',
-                    message: $deepResult->message,
-                    endpointGroup: $deepResult->endpointGroup,
-                    reasonCode: $deepResult->reasonCodes[0] ?? null,
+                    message: $exception->getMessage(),
                 );
             }
         }
 
         $publishedAlerts = [];
         if ($publishAlerts && $this->alertPublisher instanceof AiOperationalAlertPublisherInterface) {
-            $publishedAlerts = $this->alertPublisher->publishSnapshot($this->runtimeStatus->snapshot());
+            try {
+                $publishedAlerts = $this->alertPublisher->publishSnapshot($this->runtimeStatus->snapshot());
+            } catch (Throwable $exception) {
+                $findings[] = new AiProviderCheckFinding(
+                    severity: AiProviderCheckSeverity::FAILED,
+                    area: 'alert_publish',
+                    message: $exception->getMessage(),
+                );
+            }
         }
 
         return new AiProviderReadinessResult(
@@ -83,11 +99,11 @@ final readonly class AiProviderReadinessChecker implements AiProviderReadinessCh
     private function checkEndpoint(string $endpointGroup, string $mode, ?AiEndpointConfig $config): AiProviderEndpointCheck
     {
         if ($mode === AiStatusSchema::MODE_OFF) {
-            return $this->skippedEndpoint($endpointGroup, ['ai_disabled_by_config']);
+            return $this->skippedEndpoint($endpointGroup, ['ai_disabled_by_config'], $config);
         }
 
         if ($mode === AiStatusSchema::MODE_DETERMINISTIC) {
-            return $this->skippedEndpoint($endpointGroup, ['deterministic_fallback_mode']);
+            return $this->skippedEndpoint($endpointGroup, ['deterministic_fallback_mode'], $config);
         }
 
         if ($config === null) {
@@ -150,18 +166,18 @@ final readonly class AiProviderReadinessChecker implements AiProviderReadinessCh
     /**
      * @param  list<string>  $reasonCodes
      */
-    private function skippedEndpoint(string $endpointGroup, array $reasonCodes): AiProviderEndpointCheck
+    private function skippedEndpoint(string $endpointGroup, array $reasonCodes, ?AiEndpointConfig $config = null): AiProviderEndpointCheck
     {
         return new AiProviderEndpointCheck(
             endpointGroup: $endpointGroup,
-            configured: false,
-            enabled: false,
-            endpointUri: null,
+            configured: $config !== null,
+            enabled: $config?->enabled ?? false,
+            endpointUri: $config !== null ? $this->sanitizedEndpointUri($config->endpointUri) : null,
             probeHealth: AiHealth::DISABLED->value,
             latencyMs: null,
             severity: AiProviderCheckSeverity::SKIPPED,
             reasonCodes: $reasonCodes,
-            diagnostics: [],
+            diagnostics: $config !== null ? ['provider_name' => $config->providerName] : [],
         );
     }
 

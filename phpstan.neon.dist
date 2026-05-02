@@ -1,0 +1,10 @@
+parameters:
+    level: 5
+    paths:
+        - packages
+        - orchestrators
+        - adapters
+    bootstrapFiles:
+        - vendor/autoload.php
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false

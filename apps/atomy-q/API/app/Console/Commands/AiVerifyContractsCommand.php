@@ -55,17 +55,20 @@ final class AiVerifyContractsCommand extends Command
             return self::FAILURE;
         }
 
+        $hasFailures = false;
+
         foreach ($this->verifier->verify($endpointGroups, $tenantId, $rfqId) as $result) {
             if (! $result->verified) {
                 $this->error($result->message);
+                $hasFailures = true;
 
-                return self::FAILURE;
+                continue;
             }
 
             $this->info($result->message);
         }
 
-        return self::SUCCESS;
+        return $hasFailures ? self::FAILURE : self::SUCCESS;
     }
 
     /**

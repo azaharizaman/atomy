@@ -408,6 +408,48 @@ final class AiConsoleCommandsTest extends TestCase
             ->assertExitCode(1);
     }
 
+    public function testAiVerifyContractsCommandReportsAllResultsBeforeFailing(): void
+    {
+        $this->app->instance(ProviderContractVerifierInterface::class, new readonly class implements ProviderContractVerifierInterface {
+            public function endpointGroups(): array
+            {
+                return [
+                    AiStatusSchema::ENDPOINT_GROUP_DOCUMENT,
+                    AiStatusSchema::ENDPOINT_GROUP_INSIGHT,
+                ];
+            }
+
+            public function assertEndpointGroups(array $endpointGroups): void
+            {
+            }
+
+            public function verify(array $endpointGroups, string $tenantId, string $rfqId): array
+            {
+                return [
+                    new ProviderContractVerificationResult(
+                        endpointGroup: AiStatusSchema::ENDPOINT_GROUP_DOCUMENT,
+                        severity: AiProviderCheckSeverity::FAILED,
+                        verified: false,
+                        reasonCodes: ['provider_invalid_payload'],
+                        message: 'Provider contract verification returned an invalid payload for document',
+                    ),
+                    new ProviderContractVerificationResult(
+                        endpointGroup: AiStatusSchema::ENDPOINT_GROUP_INSIGHT,
+                        severity: AiProviderCheckSeverity::OK,
+                        verified: true,
+                        reasonCodes: ['provider_available'],
+                        message: 'Verified provider contract for insight',
+                    ),
+                ];
+            }
+        });
+
+        $this->artisan('atomy:ai-verify-contracts')
+            ->expectsOutputToContain('Provider contract verification returned an invalid payload for document')
+            ->expectsOutputToContain('Verified provider contract for insight')
+            ->assertExitCode(1);
+    }
+
     public function testAiVerifyContractsCommandClassifiesProviderUnavailableExceptions(): void
     {
         $this->app->instance(ProviderInsightClientInterface::class, new readonly class implements ProviderInsightClientInterface {

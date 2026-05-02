@@ -20,7 +20,7 @@ final class AiProviderCheckSeverity
             self::UNKNOWN => 30,
             self::SKIPPED => 20,
             self::OK => 10,
-            default => 0,
+            default => 30,
         };
     }
 

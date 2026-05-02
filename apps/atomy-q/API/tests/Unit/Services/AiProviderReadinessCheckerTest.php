@@ -28,6 +28,12 @@ use Tests\TestCase;
 
 final class AiProviderReadinessCheckerTest extends TestCase
 {
+    public function test_unknown_provider_check_severity_ranks_as_unknown_instead_of_healthier_than_ok(): void
+    {
+        self::assertSame(30, AiProviderCheckSeverity::rank('unexpected'));
+        self::assertSame('unexpected', AiProviderCheckSeverity::worse('unexpected', AiProviderCheckSeverity::OK));
+    }
+
     public function test_readiness_result_rolls_up_failed_severity_and_serializes_payload(): void
     {
         $result = new AiProviderReadinessResult(
@@ -93,6 +99,28 @@ final class AiProviderReadinessCheckerTest extends TestCase
         self::assertSame(['ai_disabled_by_config'], $result->endpointGroups[0]->reasonCodes);
     }
 
+    public function test_safe_check_preserves_real_config_state_for_off_mode_endpoints(): void
+    {
+        $checker = new AiProviderReadinessChecker(
+            endpointRegistry: new FakeEndpointRegistry('off', $this->endpointConfig()),
+            healthProbe: new FakeHealthProbe,
+            runtimeStatus: FakeRuntimeStatus::withMode('off'),
+            contractVerifier: new FailingContractVerifier,
+        );
+
+        $result = $checker->check(
+            endpointGroups: ['document'],
+            deep: false,
+            publishAlerts: false,
+            tenantId: 'plan6-tenant',
+            rfqId: 'plan6-rfq',
+        );
+
+        self::assertTrue($result->endpointGroups[0]->configured);
+        self::assertTrue($result->endpointGroups[0]->enabled);
+        self::assertSame('https://provider.example.test/ai', $result->endpointGroups[0]->endpointUri);
+    }
+
     public function test_safe_check_marks_deterministic_mode_endpoints_as_skipped(): void
     {
         $checker = new AiProviderReadinessChecker(
@@ -112,6 +140,28 @@ final class AiProviderReadinessCheckerTest extends TestCase
 
         self::assertSame(AiProviderCheckSeverity::SKIPPED, $result->endpointGroups[0]->severity);
         self::assertSame(['deterministic_fallback_mode'], $result->endpointGroups[0]->reasonCodes);
+    }
+
+    public function test_safe_check_preserves_real_config_state_for_deterministic_mode_endpoints(): void
+    {
+        $checker = new AiProviderReadinessChecker(
+            endpointRegistry: new FakeEndpointRegistry('deterministic', $this->endpointConfig()),
+            healthProbe: new FakeHealthProbe,
+            runtimeStatus: FakeRuntimeStatus::withMode('deterministic'),
+            contractVerifier: new FailingContractVerifier,
+        );
+
+        $result = $checker->check(
+            endpointGroups: ['document'],
+            deep: false,
+            publishAlerts: false,
+            tenantId: 'plan6-tenant',
+            rfqId: 'plan6-rfq',
+        );
+
+        self::assertTrue($result->endpointGroups[0]->configured);
+        self::assertTrue($result->endpointGroups[0]->enabled);
+        self::assertSame('https://provider.example.test/ai', $result->endpointGroups[0]->endpointUri);
     }
 
     public function test_empty_endpoint_groups_default_to_registry_endpoint_groups(): void
@@ -333,6 +383,30 @@ final class AiProviderReadinessCheckerTest extends TestCase
         self::assertSame('provider_invalid_payload', $result->operatorFindings[0]->reasonCode);
     }
 
+    public function test_deep_check_converts_verifier_exception_into_failure_finding(): void
+    {
+        $checker = new AiProviderReadinessChecker(
+            endpointRegistry: new FakeEndpointRegistry('provider', $this->endpointConfig()),
+            healthProbe: new FakeHealthProbe(AiHealth::HEALTHY),
+            runtimeStatus: FakeRuntimeStatus::withMode('provider'),
+            contractVerifier: new ExplodingContractVerifier('Deep verification crashed.'),
+        );
+
+        $result = $checker->check(
+            endpointGroups: ['document'],
+            deep: true,
+            publishAlerts: false,
+            tenantId: 'plan6-tenant',
+            rfqId: 'plan6-rfq',
+        );
+
+        self::assertSame(AiProviderCheckSeverity::FAILED, $result->operatorFindings[0]->severity);
+        self::assertSame('deep_contract', $result->operatorFindings[0]->area);
+        self::assertSame('Deep verification crashed.', $result->operatorFindings[0]->message);
+        self::assertNull($result->operatorFindings[0]->endpointGroup);
+        self::assertNull($result->operatorFindings[0]->reasonCode);
+    }
+
     public function test_publish_alerts_includes_published_alerts_when_publisher_is_available(): void
     {
         $publisher = new FakeAlertPublisher([['type' => 'ai_provider_check', 'status' => 'published']]);
@@ -354,6 +428,32 @@ final class AiProviderReadinessCheckerTest extends TestCase
 
         self::assertTrue($publisher->published);
         self::assertSame([['type' => 'ai_provider_check', 'status' => 'published']], $result->publishedAlerts);
+    }
+
+    public function test_publish_alerts_converts_publisher_exception_into_failure_finding(): void
+    {
+        $checker = new AiProviderReadinessChecker(
+            endpointRegistry: new FakeEndpointRegistry('provider', $this->endpointConfig()),
+            healthProbe: new FakeHealthProbe(AiHealth::HEALTHY),
+            runtimeStatus: FakeRuntimeStatus::withMode('provider'),
+            contractVerifier: new RecordingContractVerifier([]),
+            alertPublisher: new ExplodingAlertPublisher('Alert publishing crashed.'),
+        );
+
+        $result = $checker->check(
+            endpointGroups: ['document'],
+            deep: false,
+            publishAlerts: true,
+            tenantId: 'plan6-tenant',
+            rfqId: 'plan6-rfq',
+        );
+
+        self::assertSame([], $result->publishedAlerts);
+        self::assertSame(AiProviderCheckSeverity::FAILED, $result->operatorFindings[0]->severity);
+        self::assertSame('alert_publish', $result->operatorFindings[0]->area);
+        self::assertSame('Alert publishing crashed.', $result->operatorFindings[0]->message);
+        self::assertNull($result->operatorFindings[0]->endpointGroup);
+        self::assertNull($result->operatorFindings[0]->reasonCode);
     }
 
     /**
@@ -501,6 +601,23 @@ final class RecordingContractVerifier implements ProviderContractVerifierInterfa
     }
 }
 
+final readonly class ExplodingContractVerifier implements ProviderContractVerifierInterface
+{
+    public function __construct(private string $message) {}
+
+    public function endpointGroups(): array
+    {
+        return AiStatusSchema::endpointGroups();
+    }
+
+    public function assertEndpointGroups(array $endpointGroups): void {}
+
+    public function verify(array $endpointGroups, string $tenantId, string $rfqId): array
+    {
+        throw new RuntimeException($this->message);
+    }
+}
+
 final class FakeAlertPublisher implements AiOperationalAlertPublisherInterface
 {
     public bool $published = false;
@@ -515,5 +632,15 @@ final class FakeAlertPublisher implements AiOperationalAlertPublisherInterface
         $this->published = true;
 
         return $this->alerts;
+    }
+}
+
+final readonly class ExplodingAlertPublisher implements AiOperationalAlertPublisherInterface
+{
+    public function __construct(private string $message) {}
+
+    public function publishSnapshot(AiStatusSnapshot $snapshot): array
+    {
+        throw new RuntimeException($this->message);
     }
 }
