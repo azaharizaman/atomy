@@ -18,6 +18,8 @@ use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
  */
 final class AiProviderCheckCommand extends Command
 {
+    private const FAIL_ON_WARNING = 'warning';
+
     protected $signature = 'atomy:ai-provider-check
         {--endpoint-group=* : Restrict checks to one or more endpoint groups}
         {--deep : Run provider contract checks after readiness probes}
@@ -52,6 +54,13 @@ final class AiProviderCheckCommand extends Command
             return self::FAILURE;
         }
 
+        $failOn = strtolower(trim((string) $this->option('fail-on')));
+        if (! in_array($failOn, ['', self::FAIL_ON_WARNING], true)) {
+            $this->error('Unsupported --fail-on value ['.$failOn.']. Supported values: warning.');
+
+            return self::FAILURE;
+        }
+
         $endpointGroups = $this->requestedEndpointGroups();
         $unsupported = array_values(array_diff($endpointGroups, AiStatusSchema::endpointGroups()));
         if ($unsupported !== []) {
@@ -76,7 +85,7 @@ final class AiProviderCheckCommand extends Command
             $this->writeHumanOutput($result);
         }
 
-        return $this->exitCodeFor($result);
+        return $this->exitCodeFor($result, $failOn);
     }
 
     /**
@@ -176,15 +185,14 @@ final class AiProviderCheckCommand extends Command
         return $prefix.': '.$finding->message.$suffix;
     }
 
-    private function exitCodeFor(AiProviderReadinessResult $result): int
+    private function exitCodeFor(AiProviderReadinessResult $result, string $failOn): int
     {
         $severity = $result->exitSeverity();
         if ($severity === AiProviderCheckSeverity::FAILED) {
             return self::FAILURE;
         }
 
-        $failOn = strtolower(trim((string) $this->option('fail-on')));
-        if ($severity === AiProviderCheckSeverity::WARNING && $failOn === AiProviderCheckSeverity::WARNING) {
+        if ($severity === AiProviderCheckSeverity::WARNING && $failOn === self::FAIL_ON_WARNING) {
             return self::FAILURE;
         }
 

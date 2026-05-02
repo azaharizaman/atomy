@@ -214,6 +214,13 @@ final class AiConsoleCommandsTest extends TestCase
             ->assertExitCode(1);
     }
 
+    public function testAiProviderCheckCommandFailsForUnsupportedFailOnOption(): void
+    {
+        $this->artisan('atomy:ai-provider-check --fail-on=warnng')
+            ->expectsOutputToContain('Unsupported --fail-on value [warnng]. Supported values: warning.')
+            ->assertExitCode(1);
+    }
+
     public function testAiStatusCommandEmitsJsonSnapshot(): void
     {
         $snapshot = new AiStatusSnapshot(
@@ -373,6 +380,11 @@ final class AiConsoleCommandsTest extends TestCase
     public function testAiVerifyContractsCommandFailsWhenVerifierReportsFailedResult(): void
     {
         $this->app->instance(ProviderContractVerifierInterface::class, new readonly class implements ProviderContractVerifierInterface {
+            public function endpointGroups(): array
+            {
+                return [AiStatusSchema::ENDPOINT_GROUP_DOCUMENT];
+            }
+
             public function assertEndpointGroups(array $endpointGroups): void
             {
             }

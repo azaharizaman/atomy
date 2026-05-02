@@ -461,6 +461,11 @@ final readonly class FakeRuntimeStatus implements AiRuntimeStatusInterface
 
 final class FailingContractVerifier implements ProviderContractVerifierInterface
 {
+    public function endpointGroups(): array
+    {
+        return AiStatusSchema::endpointGroups();
+    }
+
     public function assertEndpointGroups(array $endpointGroups): void {}
 
     public function verify(array $endpointGroups, string $tenantId, string $rfqId): array
@@ -480,6 +485,11 @@ final class RecordingContractVerifier implements ProviderContractVerifierInterfa
      * @param  list<ProviderContractVerificationResult>  $results
      */
     public function __construct(private array $results) {}
+
+    public function endpointGroups(): array
+    {
+        return AiStatusSchema::endpointGroups();
+    }
 
     public function assertEndpointGroups(array $endpointGroups): void {}
 

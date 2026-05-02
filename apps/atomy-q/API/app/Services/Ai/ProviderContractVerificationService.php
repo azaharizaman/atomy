@@ -44,9 +44,14 @@ final readonly class ProviderContractVerificationService implements ProviderCont
     ) {
     }
 
+    public function endpointGroups(): array
+    {
+        return self::ENDPOINT_GROUPS;
+    }
+
     public function assertEndpointGroups(array $endpointGroups): void
     {
-        $unsupported = array_values(array_diff($endpointGroups, self::ENDPOINT_GROUPS));
+        $unsupported = array_values(array_diff($endpointGroups, $this->endpointGroups()));
         if ($unsupported !== []) {
             throw new InvalidArgumentException(
                 'Unsupported endpoint group(s): ' . implode(', ', $unsupported),

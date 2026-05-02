@@ -9,6 +9,11 @@ use App\Services\Ai\ProviderContractVerificationResult;
 interface ProviderContractVerifierInterface
 {
     /**
+     * @return list<string>
+     */
+    public function endpointGroups(): array;
+
+    /**
      * @param list<string> $endpointGroups
      */
     public function assertEndpointGroups(array $endpointGroups): void;

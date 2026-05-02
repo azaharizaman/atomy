@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Services\Ai\Contracts\ProviderContractVerifierInterface;
-use App\Services\Ai\ProviderContractVerificationService;
 use InvalidArgumentException;
 use Illuminate\Console\Command;
 
@@ -76,7 +75,7 @@ final class AiVerifyContractsCommand extends Command
     {
         $requested = $this->option('endpoint-group');
         if (! is_array($requested) || $requested === []) {
-            return ProviderContractVerificationService::ENDPOINT_GROUPS;
+            return $this->verifier->endpointGroups();
         }
 
         $filtered = array_values(array_filter(array_map(
@@ -93,14 +92,7 @@ final class AiVerifyContractsCommand extends Command
         )));
 
         if ($filtered === []) {
-            return ProviderContractVerificationService::ENDPOINT_GROUPS;
-        }
-
-        $unsupported = array_values(array_diff($filtered, ProviderContractVerificationService::ENDPOINT_GROUPS));
-        if ($unsupported !== []) {
-            throw new InvalidArgumentException(
-                'Unsupported endpoint group(s): ' . implode(', ', $unsupported),
-            );
+            return $this->verifier->endpointGroups();
         }
 
         return $filtered;
