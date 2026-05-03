@@ -6,13 +6,17 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\FinalizeEvidencePackRequest;
 use App\Http\Requests\StoreSupportingEvidenceRequest;
 use App\Models\Award;
+use App\Models\EvidenceBundle;
 use App\Models\QuoteSubmission;
 use App\Models\RequisitionSelectedVendor;
 use App\Models\Rfq;
 use App\Models\SupportingEvidence;
 use App\Models\User;
+use App\Services\EvidenceVault\AwardEvidencePackFinalizer;
+use App\Services\EvidenceVault\EvidencePackNotReadyException;
 use App\Services\EvidenceVault\EvidenceVaultSummaryService;
 use App\Services\EvidenceVault\SupportingEvidenceStorageService;
 use Illuminate\Http\JsonResponse;
@@ -28,6 +32,7 @@ final class EvidenceVaultController extends Controller
     public function __construct(
         private readonly EvidenceVaultSummaryService $summaryService,
         private readonly SupportingEvidenceStorageService $supportingEvidenceStorage,
+        private readonly AwardEvidencePackFinalizer $awardEvidencePackFinalizer,
     ) {
     }
 
@@ -87,21 +92,59 @@ final class EvidenceVaultController extends Controller
         ], 201);
     }
 
-    public function finalizeAwardPack(Request $request, string $rfqId): JsonResponse
+    public function finalizeAwardPack(FinalizeEvidencePackRequest $request, string $rfqId): JsonResponse
     {
-        return $this->notImplemented();
+        $tenantId = $this->tenantId($request);
+        $rfq = Rfq::query()
+            ->where('tenant_id', $tenantId)
+            ->whereKey($rfqId)
+            ->firstOrFail();
+
+        $actor = User::query()
+            ->where('tenant_id', $tenantId)
+            ->whereKey($this->userId($request))
+            ->firstOrFail();
+
+        try {
+            $bundle = $this->awardEvidencePackFinalizer->finalize($tenantId, $rfq, $actor);
+        } catch (EvidencePackNotReadyException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+                'blockers' => $exception->blockers(),
+                'errors' => [
+                    'evidence' => $exception->blockers(),
+                ],
+            ], 422);
+        }
+
+        return response()->json([
+            'data' => $this->bundleData($bundle),
+        ], 201);
     }
 
     public function exportAwardPack(Request $request, string $rfqId): JsonResponse
     {
-        return $this->notImplemented();
-    }
+        $tenantId = $this->tenantId($request);
+        Rfq::query()
+            ->where('tenant_id', $tenantId)
+            ->whereKey($rfqId)
+            ->firstOrFail();
 
-    private function notImplemented(): JsonResponse
-    {
+        $bundle = EvidenceBundle::query()
+            ->where('tenant_id', $tenantId)
+            ->where('rfq_id', $rfqId)
+            ->where('type', 'award_justification')
+            ->where('status', 'finalized')
+            ->orderByDesc('version')
+            ->firstOrFail();
+
         return response()->json([
-            'message' => 'Evidence Vault action is not implemented yet.',
-        ], 501);
+            'data' => [
+                'bundle_id' => (string) $bundle->id,
+                'checksum' => $bundle->checksum,
+                'manifest' => $bundle->manifest,
+            ],
+        ]);
     }
 
     /**
@@ -165,6 +208,23 @@ final class EvidenceVaultController extends Controller
             'checksum' => $supportingEvidence->checksum,
             'uploaded_by' => $supportingEvidence->uploaded_by,
             'uploaded_at' => $supportingEvidence->uploaded_at?->toAtomString(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function bundleData(EvidenceBundle $bundle): array
+    {
+        return [
+            'id' => (string) $bundle->id,
+            'rfq_id' => (string) $bundle->rfq_id,
+            'type' => $bundle->type,
+            'status' => $bundle->status,
+            'version' => $bundle->version,
+            'checksum' => $bundle->checksum,
+            'finalized_at' => $bundle->finalized_at?->toAtomString(),
+            'manifest' => $bundle->manifest,
         ];
     }
 }

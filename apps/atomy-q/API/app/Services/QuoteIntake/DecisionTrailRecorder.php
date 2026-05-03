@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Services\QuoteIntake;
 
-use App\Models\DecisionTrailEntry;
 use InvalidArgumentException;
+
 use Illuminate\Support\Facades\DB;
+
+use App\Models\DecisionTrailEntry;
 
 /**
  * Records buyer-visible quote-normalization decisions in the RFQ decision trail.
@@ -88,6 +90,26 @@ final readonly class DecisionTrailRecorder implements DecisionTrailRecorderInter
             comparisonRunId: $comparisonRunId,
             eventType: 'award_signed_off',
             summary: $summary,
+        );
+    }
+
+    public function recordEvidencePackFinalized(
+        string $tenantId,
+        string $rfqId,
+        string $bundleId,
+        string $checksum,
+        string $actorId,
+    ): DecisionTrailEntry {
+        return $this->record(
+            tenantId: $tenantId,
+            rfqId: $rfqId,
+            comparisonRunId: $rfqId,
+            eventType: 'evidence_pack_finalized',
+            summary: [
+                'bundle_id' => $bundleId,
+                'checksum' => $checksum,
+                'actor_id' => $actorId,
+            ],
         );
     }
 
@@ -215,8 +237,8 @@ final readonly class DecisionTrailRecorder implements DecisionTrailRecorderInter
         string $comparisonRunId,
         string $eventType,
         array $summary,
-    ): void {
-        DB::transaction(static function () use ($tenantId, $rfqId, $comparisonRunId, $eventType, $summary): void {
+    ): DecisionTrailEntry {
+        return DB::transaction(static function () use ($tenantId, $rfqId, $comparisonRunId, $eventType, $summary): DecisionTrailEntry {
             $previous = DecisionTrailEntry::query()
                 ->where('tenant_id', $tenantId)
                 ->where('comparison_run_id', $comparisonRunId)
@@ -231,7 +253,7 @@ final readonly class DecisionTrailRecorder implements DecisionTrailRecorderInter
             $payloadHash = hash('sha256', $payloadJson);
             $entryHash = hash('sha256', $previousHash . $payloadHash . $sequence);
 
-            DecisionTrailEntry::query()->create([
+            return DecisionTrailEntry::query()->create([
                 'tenant_id' => $tenantId,
                 'comparison_run_id' => $comparisonRunId,
                 'rfq_id' => $rfqId,

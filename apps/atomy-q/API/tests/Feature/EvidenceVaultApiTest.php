@@ -650,6 +650,114 @@ final class EvidenceVaultApiTest extends ApiTestCase
             ->assertJsonFragment(['code' => 'AWARD_SIGNOFF_MISSING']);
     }
 
+    public function testAwardPackFinalizationRejectsNotReadyRfq(): void
+    {
+        [$user, $rfq] = $this->seedUserAndRfq();
+
+        $response = $this->postJson(
+            '/api/v1/rfqs/' . $rfq->id . '/evidence-vault/award-pack/finalize',
+            [],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id)
+        );
+
+        $response->assertStatus(422);
+        $response->assertJsonPath('message', 'Evidence pack is not ready for finalization.');
+        $response->assertJsonFragment(['code' => 'FINAL_COMPARISON_MISSING']);
+    }
+
+    public function testAwardPackFinalizationCreatesImmutableManifest(): void
+    {
+        [$user, $rfq] = $this->seedUserAndRfq();
+        $this->completeEvidenceRfq($user, $rfq);
+
+        $response = $this->postJson(
+            '/api/v1/rfqs/' . $rfq->id . '/evidence-vault/award-pack/finalize',
+            [],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id)
+        );
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.status', 'finalized');
+        $response->assertJsonPath('data.type', 'award_justification');
+        $response->assertJsonPath('data.version', 1);
+        $response->assertJsonPath('data.manifest.rfq.id', (string) $rfq->id);
+        $response->assertJsonPath('data.manifest.rfq.title', 'Evidence RFQ');
+
+        $bundleId = (string) $response->json('data.id');
+        $checksum = (string) $response->json('data.checksum');
+
+        $this->assertDatabaseHas('evidence_bundles', [
+            'id' => $bundleId,
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'type' => 'award_justification',
+            'status' => 'finalized',
+            'version' => 1,
+            'checksum' => $checksum,
+        ]);
+        $this->assertDatabaseHas('decision_trail_entries', [
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'event_type' => 'evidence_pack_finalized',
+        ]);
+
+        $bundle = EvidenceBundle::query()->findOrFail($bundleId);
+        self::assertNotNull($bundle->finalized_at);
+        self::assertSame($checksum, hash('sha256', json_encode($bundle->manifest, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)));
+        self::assertSame(4, $bundle->items()->count());
+
+        $firstManifest = $bundle->manifest;
+
+        $secondResponse = $this->postJson(
+            '/api/v1/rfqs/' . $rfq->id . '/evidence-vault/award-pack/finalize',
+            [],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id)
+        );
+
+        $secondResponse->assertCreated();
+        $secondResponse->assertJsonPath('data.version', 2);
+
+        $bundle->refresh();
+        self::assertSame('superseded', $bundle->status);
+        self::assertSame($firstManifest, $bundle->manifest);
+        $this->assertDatabaseHas('evidence_bundles', [
+            'id' => (string) $secondResponse->json('data.id'),
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'status' => 'finalized',
+            'version' => 2,
+        ]);
+    }
+
+    public function testAwardPackExportReturnsLatestFinalizedManifest(): void
+    {
+        [$user, $rfq] = $this->seedUserAndRfq();
+        $this->completeEvidenceRfq($user, $rfq);
+
+        $this->postJson(
+            '/api/v1/rfqs/' . $rfq->id . '/evidence-vault/award-pack/finalize',
+            [],
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id)
+        )->assertCreated();
+
+        $response = $this->getJson(
+            '/api/v1/rfqs/' . $rfq->id . '/evidence-vault/award-pack/export',
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id)
+        );
+
+        $bundle = EvidenceBundle::query()
+            ->where('tenant_id', $user->tenant_id)
+            ->where('rfq_id', $rfq->id)
+            ->where('status', 'finalized')
+            ->firstOrFail();
+
+        $response->assertOk();
+        $response->assertJsonPath('data.bundle_id', (string) $bundle->id);
+        $response->assertJsonPath('data.checksum', $bundle->checksum);
+        $response->assertJsonPath('data.manifest.rfq.id', (string) $rfq->id);
+        $response->assertJsonPath('data.manifest.bundle.version', 1);
+    }
+
     public function testSupportingEvidenceUploadStoresFileAndMetadata(): void
     {
         Storage::fake('local');
@@ -1035,5 +1143,102 @@ final class EvidenceVaultApiTest extends ApiTestCase
         ]);
 
         return [$user, $rfq];
+    }
+
+    /**
+     * @return array{comparison_run: ComparisonRun, approval: Approval, award: Award}
+     */
+    private function completeEvidenceRfq(User $user, Rfq $rfq): array
+    {
+        QuoteSubmission::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'vendor_name' => 'Complete Supplier',
+            'uploaded_by' => $user->id,
+            'file_path' => 'quotes/complete-supplier.pdf',
+            'file_type' => 'application/pdf',
+            'original_filename' => 'complete-supplier.pdf',
+            'status' => 'ready',
+            'submitted_at' => now(),
+            'parsed_at' => now(),
+            'line_items_count' => 2,
+            'warnings_count' => 0,
+            'errors_count' => 0,
+        ]);
+
+        $comparisonRun = ComparisonRun::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'name' => 'Final comparison',
+            'is_preview' => false,
+            'created_by' => $user->id,
+            'request_payload' => [],
+            'matrix_payload' => ['rows' => 1],
+            'scoring_payload' => ['winner' => 'Complete Supplier'],
+            'approval_payload' => [],
+            'response_payload' => [],
+            'readiness_payload' => [],
+            'status' => 'final',
+            'version' => 1,
+        ]);
+
+        $approval = Approval::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'comparison_run_id' => $comparisonRun->id,
+            'type' => 'award_approval',
+            'status' => 'approved',
+            'requested_by' => $user->id,
+            'requested_at' => now(),
+            'amount' => 12345.67,
+            'currency' => 'USD',
+            'level' => 1,
+            'approved_at' => now(),
+            'approved_by' => $user->id,
+        ]);
+
+        $vendor = Vendor::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'legal_name' => 'Complete Supplier LLC',
+            'display_name' => 'Complete Supplier',
+            'country_of_registration' => 'US',
+            'primary_contact_name' => 'Complete Contact',
+            'primary_contact_email' => 'complete-supplier@example.com',
+            'status' => 'approved',
+        ]);
+
+        $award = Award::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'comparison_run_id' => $comparisonRun->id,
+            'vendor_id' => $vendor->id,
+            'status' => 'signed_off',
+            'amount' => 12345.67,
+            'currency' => 'USD',
+            'split_details' => [],
+            'signoff_at' => now(),
+            'signed_off_by' => $user->id,
+        ]);
+
+        foreach (['quote_sources', 'final_comparison', 'approval_trail', 'award_signoff'] as $index => $eventType) {
+            DecisionTrailEntry::query()->create([
+                'tenant_id' => $user->tenant_id,
+                'comparison_run_id' => $comparisonRun->id,
+                'rfq_id' => $rfq->id,
+                'sequence' => $index + 1,
+                'event_type' => $eventType,
+                'summary_payload' => ['code' => $eventType],
+                'payload_hash' => hash('sha256', $eventType . '-payload'),
+                'previous_hash' => $index === 0 ? str_repeat('0', 64) : hash('sha256', ((string) $index) . '-entry'),
+                'entry_hash' => hash('sha256', $eventType . '-entry'),
+                'occurred_at' => now()->addSeconds($index),
+            ]);
+        }
+
+        return [
+            'comparison_run' => $comparisonRun,
+            'approval' => $approval,
+            'award' => $award,
+        ];
     }
 }
