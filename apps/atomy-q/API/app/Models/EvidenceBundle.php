@@ -20,15 +20,21 @@ class EvidenceBundle extends Model
 
     protected $fillable = [
         'tenant_id',
-        'name',
-        'description',
+        'rfq_id',
+        'comparison_run_id',
+        'approval_id',
+        'award_id',
+        'type',
         'status',
+        'version',
         'manifest',
+        'checksum',
         'finalized_at',
         'created_by',
     ];
 
     protected $casts = [
+        'version' => 'integer',
         'manifest' => 'array',
         'finalized_at' => 'datetime',
         'created_at' => 'datetime',
