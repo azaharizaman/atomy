@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Feature\Api;
 
 use App\Models\Rfq;
+use App\Models\RfqLineItem;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -74,6 +75,16 @@ final class RfqLifecycleIdempotencyTest extends ApiTestCase
             'title' => 'Alpha source RFQ',
             'status' => 'draft',
         ]);
+        RfqLineItem::query()->create([
+            'tenant_id' => $tenantId,
+            'rfq_id' => (string) $rfq->id,
+            'description' => 'Pump seal kit',
+            'quantity' => 2,
+            'uom' => 'EA',
+            'unit_price' => 100,
+            'currency' => 'USD',
+            'sort_order' => 1,
+        ]);
 
         $headers = $this->authHeaders($tenantId, (string) $user->id, 'alpha-duplicate-replay-key');
 
@@ -84,6 +95,13 @@ final class RfqLifecycleIdempotencyTest extends ApiTestCase
         $second->assertCreated();
         $this->assertSame($first->json('data.id'), $second->json('data.id'));
         $this->assertDatabaseCount('rfqs', 2);
+        $this->assertDatabaseCount('rfq_line_items', 2);
+        $this->assertSame(
+            1,
+            RfqLineItem::query()
+                ->where('rfq_id', (string) $first->json('data.id'))
+                ->count(),
+        );
     }
 
     public function test_bulk_action_replays_same_result_for_same_idempotency_key(): void
