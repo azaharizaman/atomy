@@ -16,6 +16,15 @@ vi.mock('@/hooks/use-rfq', () => ({
   useRfq: () => ({ data: { title: 'RFQ-1' }, isLoading: false }),
 }));
 
+vi.mock('@/hooks/use-evidence-vault', () => ({
+  useEvidenceVault: () => ({ data: undefined, isLoading: true, isError: false, error: null }),
+  useEvidenceVaultMutations: () => ({
+    uploadSupportingEvidence: { mutate: vi.fn(), isPending: false },
+    finalizeAwardPack: { mutate: vi.fn(), isPending: false },
+    exportAwardPack: { mutate: vi.fn(), isPending: false },
+  }),
+}));
+
 import ReportingPage from './reporting/page';
 import SettingsPage from './settings/page';
 import SettingsUsersPage from './settings/users/page';
@@ -66,8 +75,8 @@ describe('alpha deferred routes', () => {
 
   it('renders the live RFQ documents shell when routed directly', async () => {
     await renderDeferredRoute(<RfqDocumentsPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
-    expect(screen.getByRole('heading', { name: 'Documents' })).toBeInTheDocument();
-    expect(screen.getByText('Vault and attachments for this RFQ')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Evidence Vault' })).toBeInTheDocument();
+    expect(screen.getByText('Loading RFQ evidence readiness')).toBeInTheDocument();
   });
 
   it('renders the live RFQ risk page when routed directly', async () => {
