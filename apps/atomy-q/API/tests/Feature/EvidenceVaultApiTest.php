@@ -32,6 +32,27 @@ final class EvidenceVaultApiTest extends ApiTestCase
         return $app;
     }
 
+    public function testGenericDocumentsRoutesAreRemoved(): void
+    {
+        [$user] = $this->seedUserAndRfq();
+
+        $this->getJson('/api/v1/documents', $this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->assertNotFound();
+    }
+
+    public function testEvidenceVaultSummaryEndpointIsRfqScoped(): void
+    {
+        [$user, $rfq] = $this->seedUserAndRfq();
+
+        $this->getJson(
+            '/api/v1/rfqs/' . $rfq->id . '/evidence-vault',
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id)
+        )
+            ->assertOk()
+            ->assertJsonPath('data.rfq.id', $rfq->id)
+            ->assertJsonPath('data.award_pack.status', 'not_ready');
+    }
+
     public function testEvidenceBundlePersistsRfqScopedManifestItemsAndSupportingEvidence(): void
     {
         [$user, $rfq] = $this->seedUserAndRfq();

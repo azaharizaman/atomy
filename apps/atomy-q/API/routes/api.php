@@ -30,7 +30,7 @@ declare(strict_types=1);
 |   §17 - Award Decision                   (awards)              → 12 endpoints
 |   §18 - PO/Contract Handoff              (handoffs)            → 6 endpoints
 |   §19 - Decision Trail                   (decision-trail)     → 4 endpoints
-|   §20 - Documents & Evidence Vault       (documents)          → 10 endpoints
+|   §20 - RFQ Evidence Vault               (rfqs.*\/evidence-vault) → 4 endpoints
 |   §21 - Reports & Analytics              (reports)             → 14 endpoints
 |   §22 - Integrations & API Monitor       (integrations)       → 11 endpoints
 |   §23 - Users & Access Management       (users)               → 10 endpoints
@@ -53,7 +53,7 @@ use App\Http\Controllers\Api\V1\AwardController;
 use App\Http\Controllers\Api\V1\ComparisonRunController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\DecisionTrailController;
-use App\Http\Controllers\Api\V1\DocumentController;
+use App\Http\Controllers\Api\V1\EvidenceVaultController;
 use App\Http\Controllers\Api\V1\HandoffController;
 use App\Http\Controllers\Api\V1\IntegrationController;
 use App\Http\Controllers\Api\V1\NegotiationController;
@@ -161,6 +161,14 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
                 ->middleware('idempotency')
                 ->name('v1.rfqs.invitations.remind');
         });
+    });
+
+    // --- Section 20: RFQ Evidence Vault (4 endpoints) ---
+    Route::prefix('rfqs/{rfqId}/evidence-vault')->group(function (): void {
+        Route::get('/', [EvidenceVaultController::class, 'show']);
+        Route::post('supporting-evidence', [EvidenceVaultController::class, 'storeSupportingEvidence']);
+        Route::post('award-pack/finalize', [EvidenceVaultController::class, 'finalizeAwardPack']);
+        Route::get('award-pack/export', [EvidenceVaultController::class, 'exportAwardPack']);
     });
 
     // --- Section 4: RFQ Templates (7 endpoints) ---
@@ -362,22 +370,6 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::post('verify', [DecisionTrailController::class, 'verify']);
         Route::post('export', [DecisionTrailController::class, 'export']);
         Route::get('{id}', [DecisionTrailController::class, 'show']);
-    });
-
-    // --- Section 20: Documents & Evidence Vault (10 endpoints) ---
-    Route::prefix('documents')->group(function (): void {
-        Route::get('/', [DocumentController::class, 'index']);
-        Route::get('{id}', [DocumentController::class, 'show']);
-        Route::get('{id}/download', [DocumentController::class, 'download']);
-        Route::get('{id}/preview', [DocumentController::class, 'preview']);
-    });
-    Route::prefix('evidence-bundles')->group(function (): void {
-        Route::get('/', [DocumentController::class, 'bundles']);
-        Route::post('/', [DocumentController::class, 'createBundle']);
-        Route::get('{id}', [DocumentController::class, 'showBundle']);
-        Route::post('{id}/add-document', [DocumentController::class, 'addDocumentToBundle']);
-        Route::post('{id}/finalize', [DocumentController::class, 'finalizeBundle']);
-        Route::get('{id}/export', [DocumentController::class, 'exportBundle']);
     });
 
     // --- Section 21: Reports & Analytics (14 endpoints) ---
