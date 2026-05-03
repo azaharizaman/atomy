@@ -6,6 +6,11 @@ export type ClientOptions = {
 
 /**
  * ComparisonFinalizeRequest
+ *
+ * Validates final comparison requests against the authenticated tenant RFQ scope.
+ *
+ * The RFQ existence rule is tenant-qualified when tenant context is present so
+ * finalization cannot target another tenant's sourcing event.
  */
 export type ComparisonFinalizeRequest = {
     rfq_id: string;
@@ -13,6 +18,11 @@ export type ComparisonFinalizeRequest = {
 
 /**
  * ComparisonPreviewRequest
+ *
+ * Validates comparison preview requests only when tenant context is available.
+ *
+ * Missing tenant context fails authorization, and the RFQ lookup uses an
+ * impossible tenant when absent to avoid accidentally validating global RFQ ids.
  */
 export type ComparisonPreviewRequest = {
     rfq_id: string;
@@ -20,6 +30,11 @@ export type ComparisonPreviewRequest = {
 
 /**
  * ManualNormalizationSourceLineRequest
+ *
+ * Validates buyer-created or buyer-edited normalization source lines.
+ *
+ * PATCH requests preserve omitted fields while create requests require the
+ * source description and reason; `other` reasons must carry an explanatory note.
  */
 export type ManualNormalizationSourceLineRequest = {
     source_description: string;
@@ -41,6 +56,12 @@ export type MessageBag = {
 
 /**
  * NormalizationOverrideRequest
+ *
+ * Validates buyer override payloads for normalized quote source lines.
+ *
+ * Override data is intentionally partial so omitted fields are not interpreted
+ * as clearing existing normalized values. The extra validator preserves the
+ * business rule that custom reasons require a note.
  */
 export type NormalizationOverrideRequest = {
     reason_code: 'supplier_document_mismatch' | 'rfq_mapping_incorrect' | 'quantity_or_uom_correction' | 'price_correction' | 'manual_entry_required' | 'other';
@@ -56,6 +77,11 @@ export type NormalizationOverrideRequest = {
 
 /**
  * NormalizationResolveConflictRequest
+ *
+ * Validates manual conflict-resolution actions for quote normalization.
+ *
+ * Resolution data is required only for actions that need buyer-supplied mapping,
+ * split/merge, price, or UOM detail; accept/mark actions can remain data-free.
  */
 export type NormalizationResolveConflictRequest = {
     resolution: 'accept_extracted_value' | 'remap_to_rfq_line' | 'split_line' | 'merge_lines' | 'mark_not_quoted' | 'override_price' | 'override_uom';
@@ -71,6 +97,11 @@ export type NormalizationResolveConflictRequest = {
 
 /**
  * QuoteSubmissionStatusRequest
+ *
+ * Restricts quote submission status changes to known intake states.
+ *
+ * These values mirror the upload, extraction, normalization, review, readiness,
+ * acceptance, and failure states used by the quote-ingestion pipeline.
  */
 export type QuoteSubmissionStatusRequest = {
     status: 'uploaded' | 'extracting' | 'extracted' | 'normalizing' | 'needs_review' | 'ready' | 'accepted' | 'failed';
@@ -78,6 +109,11 @@ export type QuoteSubmissionStatusRequest = {
 
 /**
  * QuoteSubmissionUploadRequest
+ *
+ * Validates quote upload metadata and the supplier document file.
+ *
+ * Tenant ownership is enforced by the consuming service/controller; this request
+ * only validates the RFQ/vendor identifiers and attached file shape.
  */
 export type QuoteSubmissionUploadRequest = {
     rfq_id: string;
@@ -88,6 +124,11 @@ export type QuoteSubmissionUploadRequest = {
 
 /**
  * RegisterCompanyRequest
+ *
+ * Validates self-service tenant registration and owner bootstrap input.
+ *
+ * Tenant codes are constrained to URL-safe account identifiers; currency,
+ * locale, and timezone are accepted as optional tenant defaults.
  */
 export type RegisterCompanyRequest = {
     tenant_code: string;
@@ -102,6 +143,11 @@ export type RegisterCompanyRequest = {
 
 /**
  * RfqBulkActionRequest
+ *
+ * Validates bulk RFQ lifecycle actions against the supported transition set.
+ *
+ * Distinct RFQ identifiers prevent duplicate work inside the tenant-scoped bulk
+ * close/cancel operation.
  */
 export type RfqBulkActionRequest = {
     action: 'close' | 'cancel';
@@ -110,6 +156,11 @@ export type RfqBulkActionRequest = {
 
 /**
  * RfqDraftRequest
+ *
+ * Validates partial RFQ draft updates without treating omitted fields as null.
+ *
+ * Project references are tenant-qualified when authentication context is present
+ * so a draft cannot be linked to another tenant's project.
  */
 export type RfqDraftRequest = {
     title?: string;
@@ -128,9 +179,25 @@ export type RfqDraftRequest = {
 
 /**
  * RfqStatusTransitionRequest
+ *
+ * Validates requested RFQ status transitions against the sourcing domain values.
+ *
+ * The transition policy is enforced after validation; this request only rejects
+ * unknown statuses before domain orchestration runs.
  */
 export type RfqStatusTransitionRequest = {
     status: 'draft' | 'published' | 'closed' | 'awarded' | 'cancelled';
+};
+
+/**
+ * StoreSupportingEvidenceRequest
+ */
+export type StoreSupportingEvidenceRequest = {
+    reason: string;
+    file: Blob | File;
+    vendor_id?: string | null;
+    quote_submission_id?: string | null;
+    award_id?: string | null;
 };
 
 /**
@@ -635,7 +702,7 @@ export type ApprovalShowResponses = {
             assignee: string | '—';
             requested_at: string;
             rfq_number: string;
-            notes: string | null;
+            notes: string;
             comparison_run: {
                 id: string;
                 name: string;
@@ -1197,16 +1264,16 @@ export type AwardIndexResponses = {
             rfq_id: string;
             rfq_title: string;
             rfq_number: string;
-            comparison_run_id: string | null;
+            comparison_run_id: string;
             vendor_id: string;
             vendor_name: string;
             status: string;
             amount: string | null;
             currency: string;
-            split_details: Array<unknown> | null | Array<string>;
-            protest_id: string | null;
+            split_details: string | Array<string>;
+            protest_id: string;
             signoff_at: string;
-            signed_off_by: string | null;
+            signed_off_by: string;
             comparison: {
                 vendors: Array<unknown>;
             };
@@ -1270,16 +1337,16 @@ export type AwardStoreResponses = {
             rfq_id: string;
             rfq_title: string;
             rfq_number: string;
-            comparison_run_id: string | null;
+            comparison_run_id: string;
             vendor_id: string;
             vendor_name: string;
             status: string;
             amount: string | null;
             currency: string;
-            split_details: Array<unknown> | null | Array<string>;
-            protest_id: string | null;
+            split_details: string | Array<string>;
+            protest_id: string;
             signoff_at: string;
-            signed_off_by: string | null;
+            signed_off_by: string;
             comparison: {
                 vendors: Array<unknown>;
             };
@@ -1470,16 +1537,16 @@ export type AwardUpdateSplitResponses = {
             rfq_id: string;
             rfq_title: string;
             rfq_number: string;
-            comparison_run_id: string | null;
+            comparison_run_id: string;
             vendor_id: string;
             vendor_name: string;
             status: string;
             amount: string | null;
             currency: string;
-            split_details: Array<unknown> | null | Array<string>;
-            protest_id: string | null;
+            split_details: string | Array<string>;
+            protest_id: string;
             signoff_at: string;
-            signed_off_by: string | null;
+            signed_off_by: string;
             comparison: {
                 vendors: Array<unknown>;
             };
@@ -1608,16 +1675,16 @@ export type AwardResolveProtestResponses = {
             rfq_id: string;
             rfq_title: string;
             rfq_number: string;
-            comparison_run_id: string | null;
+            comparison_run_id: string;
             vendor_id: string;
             vendor_name: string;
             status: string;
             amount: string | null;
             currency: string;
-            split_details: Array<unknown> | null | Array<string>;
-            protest_id: string | null;
+            split_details: string | Array<string>;
+            protest_id: string;
             signoff_at: string;
-            signed_off_by: string | null;
+            signed_off_by: string;
             comparison: {
                 vendors: Array<unknown>;
             };
@@ -1651,16 +1718,16 @@ export type AwardSignoffResponses = {
             rfq_id: string;
             rfq_title: string;
             rfq_number: string;
-            comparison_run_id: string | null;
+            comparison_run_id: string;
             vendor_id: string;
             vendor_name: string;
             status: string;
             amount: string | null;
             currency: string;
-            split_details: Array<unknown> | null | Array<string>;
-            protest_id: string | null;
+            split_details: string | Array<string>;
+            protest_id: string;
             signoff_at: string;
-            signed_off_by: string | null;
+            signed_off_by: string;
             comparison: {
                 vendors: Array<unknown>;
             };
@@ -1746,9 +1813,9 @@ export type ComparisonRunPreviewResponses = {
             rfq_id: string;
             status: 'preview';
             is_preview: boolean;
-            matrix: Array<unknown> | null;
-            readiness: Array<unknown> | null;
-            approval: Array<unknown> | null;
+            matrix: string;
+            readiness: string;
+            approval: string;
             ai_overlay: {
                 feature_key: 'comparison_ai_overlay';
                 capability_group: 'comparison_intelligence';
@@ -2317,214 +2384,259 @@ export type DecisionTrailShowResponses = {
 
 export type DecisionTrailShowResponse = DecisionTrailShowResponses[keyof DecisionTrailShowResponses];
 
-export type DocumentIndexData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/documents';
-};
-
-export type DocumentIndexResponses = {
-    200: {
-        data: Array<string>;
-        meta: {
-            current_page: {
-                [key: string]: unknown;
-            } | null;
-            per_page: {
-                [key: string]: unknown;
-            } | null;
-            total: number;
-        };
-    };
-};
-
-export type DocumentIndexResponse = DocumentIndexResponses[keyof DocumentIndexResponses];
-
-export type DocumentShowData = {
+export type EvidenceVaultShowData = {
     body?: never;
     path: {
-        id: string;
+        rfqId: string;
     };
     query?: never;
-    url: '/documents/{id}';
+    url: '/rfqs/{rfqId}/evidence-vault';
 };
 
-export type DocumentShowResponses = {
+export type EvidenceVaultShowResponses = {
     200: {
         data: {
-            id: string;
-            name: 'Stub document';
-            type: 'pdf';
-            created_at: string;
+            rfq: {
+                id: string;
+                title: string;
+                rfq_number: string;
+            };
+            award_pack: {
+                status: 'draft_ready' | 'not_ready' | 'finalized';
+                bundle_id: string | null;
+                version: string;
+                finalized_at: string;
+                checksum: string;
+            };
+            readiness: {
+                ready: boolean;
+                blockers: Array<{
+                    code: 'FINAL_COMPARISON_MISSING';
+                    message: 'Finalize and freeze the RFQ comparison before preparing the evidence pack.';
+                } | {
+                    code: 'QUOTE_SOURCE_MISSING';
+                    message: 'At least one ready quote source is required for the evidence pack.';
+                } | {
+                    code: 'NORMALIZATION_CONFLICT_UNRESOLVED';
+                    message: 'Resolve all quote normalization conflicts before finalization.';
+                } | {
+                    code: 'APPROVAL_DECISION_MISSING';
+                    message: 'Record an approved award decision before finalization.';
+                } | {
+                    code: 'AWARD_MISSING';
+                    message: 'Create the award record before preparing the evidence pack.';
+                } | {
+                    code: 'AWARD_SIGNOFF_MISSING';
+                    message: 'Sign off the award before finalizing the evidence pack.';
+                } | {
+                    code: 'DECISION_TRAIL_INCOMPLETE';
+                    message: 'Complete the RFQ decision trail entries for quote sources, comparison, approval, and signoff.';
+                }>;
+            };
+            timeline: [
+                {
+                    code: string;
+                    label: string;
+                    status: 'recorded';
+                    occurred_at: string;
+                },
+                {
+                    code: 'approval_trail';
+                    label: 'Approval decision';
+                    status: 'complete' | 'missing';
+                    occurred_at: string;
+                },
+                {
+                    code: 'award_signoff';
+                    label: 'Award signoff';
+                    status: 'missing' | 'complete';
+                    occurred_at: string;
+                }
+            ];
+            sections: [
+                {
+                    code: 'quote_sources';
+                    label: 'Quote sources';
+                    status: 'complete' | 'missing';
+                    items: [
+                        {
+                            label: 'Ready quote submissions';
+                            count: number;
+                        }
+                    ];
+                },
+                {
+                    code: 'final_comparison';
+                    label: 'Final comparison';
+                    status: 'complete' | 'missing';
+                    items: Array<string> | [
+                        {
+                            id: string;
+                            status: string;
+                        }
+                    ];
+                },
+                {
+                    code: 'approval_trail';
+                    label: 'Approval trail';
+                    status: 'complete' | 'missing';
+                    items: Array<string> | [
+                        {
+                            id: string;
+                            status: string;
+                        }
+                    ];
+                },
+                {
+                    code: 'award_signoff';
+                    label: 'Award signoff';
+                    status: 'complete' | 'missing';
+                    items: Array<string> | [
+                        {
+                            id: string;
+                            status: string;
+                        }
+                    ];
+                }
+            ];
+            actions: {
+                can_finalize: string;
+                can_export: boolean;
+                can_upload_supporting_evidence: boolean;
+            };
         };
     };
 };
 
-export type DocumentShowResponse = DocumentShowResponses[keyof DocumentShowResponses];
+export type EvidenceVaultShowResponse = EvidenceVaultShowResponses[keyof EvidenceVaultShowResponses];
 
-export type DocumentDownloadData = {
-    body?: never;
+export type EvidenceVaultStoreSupportingEvidenceData = {
+    body: StoreSupportingEvidenceRequest;
     path: {
-        id: string;
+        rfqId: string;
     };
     query?: never;
-    url: '/documents/{id}/download';
+    url: '/rfqs/{rfqId}/evidence-vault/supporting-evidence';
 };
 
-export type DocumentDownloadResponses = {
-    200: {
-        data: {
-            download_url: string;
-            expires_at: string;
+export type EvidenceVaultStoreSupportingEvidenceErrors = {
+    /**
+     * Validation error
+     */
+    422: {
+        /**
+         * Errors overview.
+         */
+        message: string;
+        /**
+         * A detailed description of each field that failed validation.
+         */
+        errors: {
+            [key: string]: Array<string>;
         };
     };
-};
-
-export type DocumentDownloadResponse = DocumentDownloadResponses[keyof DocumentDownloadResponses];
-
-export type DocumentPreviewData = {
-    body?: never;
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/documents/{id}/preview';
-};
-
-export type DocumentPreviewResponses = {
-    200: {
-        data: {
-            preview_url: string;
-        };
+    500: {
+        message: 'Could not store supporting evidence.';
     };
 };
 
-export type DocumentPreviewResponse = DocumentPreviewResponses[keyof DocumentPreviewResponses];
+export type EvidenceVaultStoreSupportingEvidenceError = EvidenceVaultStoreSupportingEvidenceErrors[keyof EvidenceVaultStoreSupportingEvidenceErrors];
 
-export type DocumentBundlesData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/evidence-bundles';
-};
-
-export type DocumentBundlesResponses = {
-    200: {
-        data: Array<string>;
-        meta: {
-            current_page: {
-                [key: string]: unknown;
-            } | null;
-            per_page: {
-                [key: string]: unknown;
-            } | null;
-            total: number;
-        };
-    };
-};
-
-export type DocumentBundlesResponse = DocumentBundlesResponses[keyof DocumentBundlesResponses];
-
-export type DocumentCreateBundleData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/evidence-bundles';
-};
-
-export type DocumentCreateBundleResponses = {
+export type EvidenceVaultStoreSupportingEvidenceResponses = {
     201: {
         data: {
-            id: 'stub-bundle-id';
-            name: 'Stub bundle';
-            status: 'draft';
+            id: string;
+            rfq_id: string;
+            reason: string;
+            original_filename: string;
+            file_type: string;
+            storage_path: string;
+            checksum: string;
+            uploaded_by: string;
+            uploaded_at: string;
         };
     };
 };
 
-export type DocumentCreateBundleResponse = DocumentCreateBundleResponses[keyof DocumentCreateBundleResponses];
+export type EvidenceVaultStoreSupportingEvidenceResponse = EvidenceVaultStoreSupportingEvidenceResponses[keyof EvidenceVaultStoreSupportingEvidenceResponses];
 
-export type DocumentShowBundleData = {
+export type EvidenceVaultFinalizeAwardPackData = {
     body?: never;
     path: {
-        id: string;
+        rfqId: string;
     };
     query?: never;
-    url: '/evidence-bundles/{id}';
+    url: '/rfqs/{rfqId}/evidence-vault/award-pack/finalize';
 };
 
-export type DocumentShowBundleResponses = {
-    200: {
+export type EvidenceVaultFinalizeAwardPackErrors = {
+    /**
+     * Validation error
+     */
+    422: {
+        /**
+         * Errors overview.
+         */
+        message: string;
+        /**
+         * A detailed description of each field that failed validation.
+         */
+        errors: {
+            [key: string]: Array<string>;
+        };
+    };
+    500: {
+        message: 'Could not finalize evidence pack.';
+    };
+};
+
+export type EvidenceVaultFinalizeAwardPackError = EvidenceVaultFinalizeAwardPackErrors[keyof EvidenceVaultFinalizeAwardPackErrors];
+
+export type EvidenceVaultFinalizeAwardPackResponses = {
+    201: {
         data: {
             id: string;
-            name: 'Stub bundle';
-            documents: Array<string>;
+            rfq_id: string;
+            type: string;
+            status: string;
+            version: string;
+            checksum: string;
+            finalized_at: string;
+            manifest: string;
         };
     };
 };
 
-export type DocumentShowBundleResponse = DocumentShowBundleResponses[keyof DocumentShowBundleResponses];
+export type EvidenceVaultFinalizeAwardPackResponse = EvidenceVaultFinalizeAwardPackResponses[keyof EvidenceVaultFinalizeAwardPackResponses];
 
-export type DocumentAddDocumentToBundleData = {
+export type EvidenceVaultExportAwardPackData = {
     body?: never;
     path: {
-        id: string;
+        rfqId: string;
     };
     query?: never;
-    url: '/evidence-bundles/{id}/add-document';
+    url: '/rfqs/{rfqId}/evidence-vault/award-pack/export';
 };
 
-export type DocumentAddDocumentToBundleResponses = {
+export type EvidenceVaultExportAwardPackErrors = {
+    500: {
+        message: 'Could not export evidence pack.';
+    };
+};
+
+export type EvidenceVaultExportAwardPackError = EvidenceVaultExportAwardPackErrors[keyof EvidenceVaultExportAwardPackErrors];
+
+export type EvidenceVaultExportAwardPackResponses = {
     200: {
         data: {
             bundle_id: string;
-            document_id: 'stub-document-id';
+            checksum: string;
+            manifest: string;
         };
     };
 };
 
-export type DocumentAddDocumentToBundleResponse = DocumentAddDocumentToBundleResponses[keyof DocumentAddDocumentToBundleResponses];
-
-export type DocumentFinalizeBundleData = {
-    body?: never;
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/evidence-bundles/{id}/finalize';
-};
-
-export type DocumentFinalizeBundleResponses = {
-    200: {
-        data: {
-            id: string;
-            status: 'finalized';
-        };
-    };
-};
-
-export type DocumentFinalizeBundleResponse = DocumentFinalizeBundleResponses[keyof DocumentFinalizeBundleResponses];
-
-export type DocumentExportBundleData = {
-    body?: never;
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/evidence-bundles/{id}/export';
-};
-
-export type DocumentExportBundleResponses = {
-    200: {
-        data: {
-            download_url: string;
-            expires_at: string;
-        };
-    };
-};
-
-export type DocumentExportBundleResponse = DocumentExportBundleResponses[keyof DocumentExportBundleResponses];
+export type EvidenceVaultExportAwardPackResponse = EvidenceVaultExportAwardPackResponses[keyof EvidenceVaultExportAwardPackResponses];
 
 export type HandoffIndexData = {
     body?: never;
@@ -3203,11 +3315,11 @@ export type NormalizationOverrideResponses = {
             quote_submission_id: string;
             vendor_id: string;
             vendor_name: string;
-            source_description: string | null;
+            source_description: string;
             source_quantity: string | null;
-            source_uom: string | null;
+            source_uom: string;
             source_unit_price: string | null;
-            rfq_line_item_id: string | null;
+            rfq_line_item_id: string;
             rfq_line_description: string;
             rfq_line_quantity: string | null;
             rfq_line_uom: string;
@@ -3235,15 +3347,15 @@ export type NormalizationOverrideResponses = {
             latest_override: {
                 [key: string]: unknown;
             } | null;
-            sort_order: number;
+            sort_order: string;
             confidence: 'high' | 'medium' | 'low';
             conflict_count: number;
             blocking_issue_count: number;
             has_blocking_issue: boolean;
             quote_submission_status: string;
             ai_confidence: string | null;
-            taxonomy_code: string | null;
-            mapping_version: string | null;
+            taxonomy_code: string;
+            mapping_version: string;
         };
         meta: {
             has_blocking_issues: boolean;
@@ -4085,23 +4197,23 @@ export type QuoteSubmissionIndexResponses = {
         data: Array<{
             id: string;
             rfq_id: string;
-            vendor_id: string | null;
-            vendor_name: string | null;
-            uploaded_by: string | null;
+            vendor_id: string;
+            vendor_name: string;
+            uploaded_by: string;
             status: string;
-            file_path: string | null;
-            file_type: string | null;
-            original_filename: string | null;
+            file_path: string;
+            file_type: string;
+            original_filename: string;
             blocking_issue_count: number;
             submitted_at: string;
-            error_code: string | null;
-            error_message: string | null;
+            error_code: string;
+            error_message: string;
             processing_started_at: string;
             processing_completed_at: string;
             parsed_at: string;
-            retry_count: number;
-            line_items_count: number | null;
-            confidence: string | null;
+            retry_count: string;
+            line_items_count: string;
+            confidence: string;
             ai_status: {
                 extraction: {
                     feature_key: 'quote_document_extraction';
@@ -4168,23 +4280,23 @@ export type QuoteSubmissionUploadResponses = {
         data: {
             id: string;
             rfq_id: string;
-            vendor_id: string | null;
-            vendor_name: string | null;
-            uploaded_by: string | null;
+            vendor_id: string;
+            vendor_name: string;
+            uploaded_by: string;
             status: string;
-            file_path: string | null;
-            file_type: string | null;
-            original_filename: string | null;
+            file_path: string;
+            file_type: string;
+            original_filename: string;
             blocking_issue_count: number;
             submitted_at: string;
-            error_code: string | null;
-            error_message: string | null;
+            error_code: string;
+            error_message: string;
             processing_started_at: string;
             processing_completed_at: string;
             parsed_at: string;
-            retry_count: number;
-            line_items_count: number | null;
-            confidence: string | null;
+            retry_count: string;
+            line_items_count: string;
+            confidence: string;
             ai_status: {
                 extraction: {
                     feature_key: 'quote_document_extraction';
@@ -4393,12 +4505,12 @@ export type QuoteSubmissionUpdateSourceLineResponses = {
         data: {
             id: string;
             quote_submission_id: string;
-            rfq_line_item_id: string | null;
-            source_description: string | null;
+            rfq_line_item_id: string;
+            source_description: string;
             source_quantity: string | null;
-            source_uom: string | null;
+            source_uom: string;
             source_unit_price: string | null;
-            sort_order: number;
+            sort_order: string;
             origin: string;
             provenance: string | {
                 origin: 'manual';
@@ -4407,7 +4519,7 @@ export type QuoteSubmissionUpdateSourceLineResponses = {
             ai_confidence: null;
             taxonomy_code: null;
             mapping_version: null;
-            raw_data: Array<unknown> | null | Array<string>;
+            raw_data: string | Array<string>;
         };
         meta: string;
     };
@@ -4456,7 +4568,42 @@ export type QuoteSubmissionReparseResponses = {
     202: {
         data: {
             id: string;
-            status: 'extracting';
+            rfq_id: string;
+            vendor_id: string;
+            vendor_name: string;
+            uploaded_by: string;
+            status: string;
+            file_path: string;
+            file_type: string;
+            original_filename: string;
+            blocking_issue_count: number;
+            submitted_at: string;
+            error_code: string;
+            error_message: string;
+            processing_started_at: string;
+            processing_completed_at: string;
+            parsed_at: string;
+            retry_count: string;
+            line_items_count: string;
+            confidence: string;
+            ai_status: {
+                extraction: {
+                    feature_key: 'quote_document_extraction';
+                    status: string | 'unavailable';
+                    available: boolean;
+                    manual_action_required: boolean;
+                    reason_codes: string | Array<string>;
+                    provider_provenance: null;
+                };
+                normalization: {
+                    feature_key: 'normalization_suggestions';
+                    status: string | 'unavailable';
+                    available: boolean;
+                    manual_action_required: boolean;
+                    reason_codes: string | Array<string>;
+                    provider_provenance: null;
+                };
+            };
         };
     } | {
         data: {
@@ -4715,10 +4862,7 @@ export type ReportExportData = {
 
 export type ReportExportResponses = {
     200: {
-        data: {
-            download_url: 'https://example.com/reports/export-stub';
-            expires_at: string;
-        };
+        [key: string]: unknown;
     };
 };
 
@@ -4733,16 +4877,7 @@ export type ReportRunsData = {
 
 export type ReportRunsResponses = {
     200: {
-        data: Array<string>;
-        meta: {
-            current_page: {
-                [key: string]: unknown;
-            } | null;
-            per_page: {
-                [key: string]: unknown;
-            } | null;
-            total: number;
-        };
+        [key: string]: unknown;
     };
 };
 
@@ -4759,10 +4894,7 @@ export type ReportDownloadRunData = {
 
 export type ReportDownloadRunResponses = {
     200: {
-        data: {
-            download_url: string;
-            expires_at: string;
-        };
+        [key: string]: unknown;
     };
 };
 
@@ -4777,16 +4909,7 @@ export type ReportSchedulesData = {
 
 export type ReportSchedulesResponses = {
     200: {
-        data: Array<string>;
-        meta: {
-            current_page: {
-                [key: string]: unknown;
-            } | null;
-            per_page: {
-                [key: string]: unknown;
-            } | null;
-            total: number;
-        };
+        [key: string]: unknown;
     };
 };
 
@@ -4800,11 +4923,8 @@ export type ReportCreateScheduleData = {
 };
 
 export type ReportCreateScheduleResponses = {
-    201: {
-        data: {
-            id: 'stub-schedule-id';
-            frequency: 'weekly';
-        };
+    200: {
+        [key: string]: unknown;
     };
 };
 
@@ -4820,10 +4940,9 @@ export type ReportDestroyScheduleData = {
 };
 
 export type ReportDestroyScheduleResponses = {
-    /**
-     * No content
-     */
-    204: Array<string>;
+    200: {
+        [key: string]: unknown;
+    };
 };
 
 export type ReportDestroyScheduleResponse = ReportDestroyScheduleResponses[keyof ReportDestroyScheduleResponses];
@@ -4839,10 +4958,7 @@ export type ReportUpdateScheduleData = {
 
 export type ReportUpdateScheduleResponses = {
     200: {
-        data: {
-            id: string;
-            frequency: 'weekly';
-        };
+        [key: string]: unknown;
     };
 };
 
@@ -4859,10 +4975,7 @@ export type ReportRunScheduleNowData = {
 
 export type ReportRunScheduleNowResponses = {
     200: {
-        data: {
-            run_id: 'stub-run-id';
-            status: 'queued';
-        };
+        [key: string]: unknown;
     };
 };
 
@@ -4951,14 +5064,14 @@ export type RfqIndexResponses = {
             rfq_number: string;
             title: string;
             status: string;
-            project_id: string | null;
+            project_id: string;
             owner: {
                 id: string;
                 name: string;
                 email: string;
             } | null;
             deadline: string;
-            category: string | null;
+            category: string;
             estimated_value: string;
             estValue: string;
             savings_percentage: string;
@@ -5147,7 +5260,7 @@ export type RfqUpdateData = {
         description?: string | null;
         category?: string | null;
         department?: string | null;
-        project_id?: string | null;
+        project_id?: number | null;
         estimated_value?: number | null;
         savings_percentage?: number | null;
         submission_deadline?: string;
@@ -5192,7 +5305,7 @@ export type RfqUpdateResponses = {
             rfq_number: string;
             title: string;
             status: string;
-            project_id: string | null;
+            project_id: string;
         };
     };
 };
@@ -5353,9 +5466,9 @@ export type RfqUpdateStatusResponses = {
             tenant_id: string;
             rfq_number: string;
             title: string;
-            description: string | null;
+            description: string;
             status: string;
-            project_id: string | null;
+            project_id: string;
             project_name: string | null;
             estimated_value: string;
             savings_percentage: string;
@@ -5364,8 +5477,8 @@ export type RfqUpdateStatusResponses = {
             expected_award_at: string;
             technical_review_due_at: string;
             financial_review_due_at: string;
-            payment_terms: string | null;
-            evaluation_method: string | null;
+            payment_terms: string;
+            evaluation_method: string;
             created_at: string;
             updated_at: string;
         };
@@ -5452,9 +5565,9 @@ export type RfqSaveDraftResponses = {
             tenant_id: string;
             rfq_number: string;
             title: string;
-            description: string | null;
+            description: string;
             status: string;
-            project_id: string | null;
+            project_id: string;
             project_name: string | null;
             estimated_value: string;
             savings_percentage: string;
@@ -5463,8 +5576,8 @@ export type RfqSaveDraftResponses = {
             expected_award_at: string;
             technical_review_due_at: string;
             financial_review_due_at: string;
-            payment_terms: string | null;
-            evaluation_method: string | null;
+            payment_terms: string;
+            evaluation_method: string;
             created_at: string;
             updated_at: string;
         };
@@ -5535,7 +5648,8 @@ export type RfqStoreLineItemResponses = {
             uom: string;
             unit_price: string;
             currency: string;
-            sort_order: number;
+            specifications: string;
+            sort_order: string;
         };
     };
 };
@@ -5601,6 +5715,7 @@ export type RfqUpdateLineItemResponses = {
             uom: string;
             unit_price: string;
             currency: string;
+            specifications: string;
             sort_order: string;
         };
     };
@@ -5856,18 +5971,32 @@ export type RiskComplianceEscalateData = {
     url: '/risk-items/{id}/escalate';
 };
 
+export type RiskComplianceEscalateErrors = {
+    /**
+     * Not found
+     */
+    404: {
+        /**
+         * Error overview.
+         */
+        message: string;
+    };
+};
+
+export type RiskComplianceEscalateError = RiskComplianceEscalateErrors[keyof RiskComplianceEscalateErrors];
+
 export type RiskComplianceEscalateResponses = {
     200: {
         data: {
             id: string;
-            rfq_id: string | null;
+            rfq_id: string;
             severity: string;
             title: string;
-            description: string | null;
-            source: string | null;
+            description: string;
+            source: string;
             status: string;
             resolved_at: string;
-            resolved_by: string | null;
+            resolved_by: string;
             updated_at: string;
         };
     };
@@ -5884,18 +6013,32 @@ export type RiskComplianceExceptionData = {
     url: '/risk-items/{id}/exception';
 };
 
+export type RiskComplianceExceptionErrors = {
+    /**
+     * Not found
+     */
+    404: {
+        /**
+         * Error overview.
+         */
+        message: string;
+    };
+};
+
+export type RiskComplianceExceptionError = RiskComplianceExceptionErrors[keyof RiskComplianceExceptionErrors];
+
 export type RiskComplianceExceptionResponses = {
     200: {
         data: {
             id: string;
-            rfq_id: string | null;
+            rfq_id: string;
             severity: string;
             title: string;
-            description: string | null;
-            source: string | null;
+            description: string;
+            source: string;
             status: string;
             resolved_at: string;
-            resolved_by: string | null;
+            resolved_by: string;
             updated_at: string;
         };
     };
@@ -6496,7 +6639,7 @@ export type TaskIndexResponses = {
             title: string;
             status: string;
             due_date: string;
-            project_id: string | null;
+            project_id: string;
         }>;
     };
 };
@@ -6507,7 +6650,7 @@ export type V1TasksStoreData = {
     body: {
         title: string;
         description?: string;
-        project_id?: string | null;
+        project_id?: number | null;
         priority?: 'low' | 'medium' | 'high' | 'critical';
         due_date?: string | null;
         assignee_ids?: Array<string>;
@@ -6621,7 +6764,7 @@ export type TaskShowResponses = {
             predecessor_ids: string;
             due_date: string;
             completed_at: string;
-            project_id: string | null;
+            project_id: string;
         };
     };
 };
@@ -7094,9 +7237,9 @@ export type VendorIndexResponses = {
             primary_contact_phone: string | null;
             status: string;
             approval_record: {
-                approved_by_user_id: string | null;
+                approved_by_user_id: string;
                 approved_at: string;
-                approval_note: string | null;
+                approval_note: string;
             } | null;
             created_at: string;
             updated_at: string;
@@ -7185,9 +7328,9 @@ export type VendorShowResponses = {
             primary_contact_phone: string | null;
             status: string;
             approval_record: {
-                approved_by_user_id: string | null;
+                approved_by_user_id: string;
                 approved_at: string;
-                approval_note: string | null;
+                approval_note: string;
             } | null;
             created_at: string;
             updated_at: string;
@@ -7250,9 +7393,9 @@ export type VendorUpdateResponses = {
             primary_contact_phone: string | null;
             status: string;
             approval_record: {
-                approved_by_user_id: string | null;
+                approved_by_user_id: string;
                 approved_at: string;
-                approval_note: string | null;
+                approval_note: string;
             } | null;
             created_at: string;
             updated_at: string;
@@ -7495,7 +7638,7 @@ export type VendorGovernanceSanctionsHistoryResponses = {
             vendor_id: string;
             history: Array<string>;
             screening_status: 'manual_review_required' | 'completed';
-            reason_code: 'sanctions_provider_not_configured' | null;
+            reason_code: 'no_evidence_found' | null;
         };
     };
 };
@@ -7586,8 +7729,8 @@ export type VendorGovernanceUpdateDueDiligenceResponses = {
                 observed_at: string;
                 expires_at: string;
                 review_status: string;
-                reviewed_by: string | null;
-                notes: string | null;
+                reviewed_by: string;
+                notes: string;
             };
         };
     };
@@ -7816,9 +7959,9 @@ export type VendorStatusUpdateResponses = {
             primary_contact_phone: string | null;
             status: string;
             approval_record: {
-                approved_by_user_id: string | null;
+                approved_by_user_id: string;
                 approved_at: string;
-                approval_note: string | null;
+                approval_note: string;
             } | null;
             created_at: string;
             updated_at: string;

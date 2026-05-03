@@ -1,5 +1,14 @@
 # Implementation Summary - Atomy-Q Backend API
 
+## 2026-05-03 RFQ Evidence Vault
+
+- Removed the generic document API contract and replaced it with RFQ-scoped Evidence Vault endpoints for summary/readiness, supporting evidence upload, award-pack finalization, and award-pack export.
+- Evidence Vault readiness now assembles award justification evidence from quote submissions, normalization state, final comparison, approvals, awards, signoff, decision-trail entries, and buyer-uploaded supporting evidence.
+- Finalized award packs store immutable manifests with checksums and supersede older versions when regenerated.
+- Verification:
+  - `cd apps/atomy-q/API && php artisan test --filter EvidenceVaultApiTest` -> PASS.
+  - `cd apps/atomy-q/API && DB_CONNECTION=sqlite DB_DATABASE=':memory:' php artisan scramble:export --path=../openapi/openapi.json` -> PASS.
+
 ## 2026-05-02 AI Provider Check Command
 
 - Added `php artisan atomy:ai-provider-check` as the safe operator readiness check for configured AI providers, with JSON output and endpoint-group filtering for targeted diagnostics.

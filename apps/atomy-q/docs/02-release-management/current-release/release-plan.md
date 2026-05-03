@@ -27,7 +27,7 @@ Controlling readiness contract:
 
 ## Approved Scope-Inclusion Proposal
 
-The RFQ-local Evidence Vault is approved as an alpha feature proposal, but it is not release-supported until implementation and verification are complete.
+The RFQ-local Evidence Vault is approved as an alpha feature and is locally implemented for alpha. It remains subject to the final Task 9 release gate and must not be represented as externally release-ready until the broader alpha checklist records PostgreSQL, staging mocks-off smoke, disclosure, and sign-off evidence.
 
 Design:
 - [`2026-05-03-atomy-q-rfq-evidence-vault-alpha-design.md`](../../../../../docs/superpowers/specs/2026-05-03-atomy-q-rfq-evidence-vault-alpha-design.md)
@@ -36,7 +36,7 @@ Scope rule:
 - The feature is RFQ workspace only.
 - Top-level `/documents` and generic document API endpoints are redundant for Atomy-Q and should be removed rather than promoted.
 - The alpha capability is an award justification evidence pack over quote, normalization, comparison, approval, award, signoff, and decision-trail evidence.
-- If the feature is not implemented before external alpha, it remains deferred and must not be represented as supported.
+- RFQ Evidence Vault is supported when API/WEB evidence-vault tests, OpenAPI export, generated client, WEB build, and staging smoke evidence are green.
 
 ## Completed Tasks
 

@@ -1394,10 +1394,7 @@
                                                     "type": "string"
                                                 },
                                                 "notes": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "comparison_run": {
                                                     "type": [
@@ -3155,10 +3152,7 @@
                                                         "type": "string"
                                                     },
                                                     "comparison_run_id": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "vendor_id": {
                                                         "type": "string"
@@ -3181,11 +3175,7 @@
                                                     "split_details": {
                                                         "anyOf": [
                                                             {
-                                                                "type": "array",
-                                                                "items": {}
-                                                            },
-                                                            {
-                                                                "type": "null"
+                                                                "type": "string"
                                                             },
                                                             {
                                                                 "type": "array",
@@ -3199,19 +3189,13 @@
                                                         ]
                                                     },
                                                     "protest_id": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "signoff_at": {
                                                         "type": "string"
                                                     },
                                                     "signed_off_by": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "comparison": {
                                                         "type": "object",
@@ -3356,10 +3340,7 @@
                                                     "type": "string"
                                                 },
                                                 "comparison_run_id": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "vendor_id": {
                                                     "type": "string"
@@ -3382,11 +3363,7 @@
                                                 "split_details": {
                                                     "anyOf": [
                                                         {
-                                                            "type": "array",
-                                                            "items": {}
-                                                        },
-                                                        {
-                                                            "type": "null"
+                                                            "type": "string"
                                                         },
                                                         {
                                                             "type": "array",
@@ -3400,19 +3377,13 @@
                                                     ]
                                                 },
                                                 "protest_id": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "signoff_at": {
                                                     "type": "string"
                                                 },
                                                 "signed_off_by": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "comparison": {
                                                     "type": "object",
@@ -4029,10 +4000,7 @@
                                                     "type": "string"
                                                 },
                                                 "comparison_run_id": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "vendor_id": {
                                                     "type": "string"
@@ -4055,11 +4023,7 @@
                                                 "split_details": {
                                                     "anyOf": [
                                                         {
-                                                            "type": "array",
-                                                            "items": {}
-                                                        },
-                                                        {
-                                                            "type": "null"
+                                                            "type": "string"
                                                         },
                                                         {
                                                             "type": "array",
@@ -4073,19 +4037,13 @@
                                                     ]
                                                 },
                                                 "protest_id": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "signoff_at": {
                                                     "type": "string"
                                                 },
                                                 "signed_off_by": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "comparison": {
                                                     "type": "object",
@@ -4410,10 +4368,7 @@
                                                     "type": "string"
                                                 },
                                                 "comparison_run_id": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "vendor_id": {
                                                     "type": "string"
@@ -4436,11 +4391,7 @@
                                                 "split_details": {
                                                     "anyOf": [
                                                         {
-                                                            "type": "array",
-                                                            "items": {}
-                                                        },
-                                                        {
-                                                            "type": "null"
+                                                            "type": "string"
                                                         },
                                                         {
                                                             "type": "array",
@@ -4454,19 +4405,13 @@
                                                     ]
                                                 },
                                                 "protest_id": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "signoff_at": {
                                                     "type": "string"
                                                 },
                                                 "signed_off_by": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "comparison": {
                                                     "type": "object",
@@ -4570,10 +4515,7 @@
                                                     "type": "string"
                                                 },
                                                 "comparison_run_id": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "vendor_id": {
                                                     "type": "string"
@@ -4596,11 +4538,7 @@
                                                 "split_details": {
                                                     "anyOf": [
                                                         {
-                                                            "type": "array",
-                                                            "items": {}
-                                                        },
-                                                        {
-                                                            "type": "null"
+                                                            "type": "string"
                                                         },
                                                         {
                                                             "type": "array",
@@ -4614,19 +4552,13 @@
                                                     ]
                                                 },
                                                 "protest_id": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "signoff_at": {
                                                     "type": "string"
                                                 },
                                                 "signed_off_by": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "comparison": {
                                                     "type": "object",
@@ -4813,25 +4745,13 @@
                                                     "type": "boolean"
                                                 },
                                                 "matrix": {
-                                                    "type": [
-                                                        "array",
-                                                        "null"
-                                                    ],
-                                                    "items": {}
+                                                    "type": "string"
                                                 },
                                                 "readiness": {
-                                                    "type": [
-                                                        "array",
-                                                        "null"
-                                                    ],
-                                                    "items": {}
+                                                    "type": "string"
                                                 },
                                                 "approval": {
-                                                    "type": [
-                                                        "array",
-                                                        "null"
-                                                    ],
-                                                    "items": {}
+                                                    "type": "string"
                                                 },
                                                 "ai_overlay": {
                                                     "anyOf": [
@@ -6838,13 +6758,21 @@
                 }
             }
         },
-        "/documents": {
+        "/rfqs/{rfqId}/evidence-vault": {
             "get": {
-                "operationId": "document.index",
-                "description": "GET /documents\nQuery: type, rfq_id, vendor_id, tags, page, per_page",
-                "summary": "List documents",
+                "operationId": "evidenceVault.show",
                 "tags": [
-                    "Document"
+                    "EvidenceVault"
+                ],
+                "parameters": [
+                    {
+                        "name": "rfqId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
                 ],
                 "responses": {
                     "200": {
@@ -6855,43 +6783,567 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            },
-                                            "minItems": 0,
-                                            "maxItems": 0,
-                                            "additionalItems": false
-                                        },
-                                        "meta": {
                                             "type": "object",
                                             "properties": {
-                                                "current_page": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
+                                                "rfq": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "string"
+                                                        },
+                                                        "title": {
+                                                            "type": "string"
+                                                        },
+                                                        "rfq_number": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "id",
+                                                        "title",
+                                                        "rfq_number"
                                                     ]
                                                 },
-                                                "per_page": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
+                                                "award_pack": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "status": {
+                                                            "type": "string",
+                                                            "enum": [
+                                                                "draft_ready",
+                                                                "not_ready",
+                                                                "finalized"
+                                                            ]
+                                                        },
+                                                        "bundle_id": {
+                                                            "type": [
+                                                                "string",
+                                                                "null"
+                                                            ]
+                                                        },
+                                                        "version": {
+                                                            "type": "string"
+                                                        },
+                                                        "finalized_at": {
+                                                            "type": "string"
+                                                        },
+                                                        "checksum": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "status",
+                                                        "bundle_id",
+                                                        "version",
+                                                        "finalized_at",
+                                                        "checksum"
                                                     ]
                                                 },
-                                                "total": {
-                                                    "type": "integer"
+                                                "readiness": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "ready": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "blockers": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "code": {
+                                                                                "type": "string",
+                                                                                "const": "FINAL_COMPARISON_MISSING"
+                                                                            },
+                                                                            "message": {
+                                                                                "type": "string",
+                                                                                "const": "Finalize and freeze the RFQ comparison before preparing the evidence pack."
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "code",
+                                                                            "message"
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "code": {
+                                                                                "type": "string",
+                                                                                "const": "QUOTE_SOURCE_MISSING"
+                                                                            },
+                                                                            "message": {
+                                                                                "type": "string",
+                                                                                "const": "At least one ready quote source is required for the evidence pack."
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "code",
+                                                                            "message"
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "code": {
+                                                                                "type": "string",
+                                                                                "const": "NORMALIZATION_CONFLICT_UNRESOLVED"
+                                                                            },
+                                                                            "message": {
+                                                                                "type": "string",
+                                                                                "const": "Resolve all quote normalization conflicts before finalization."
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "code",
+                                                                            "message"
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "code": {
+                                                                                "type": "string",
+                                                                                "const": "APPROVAL_DECISION_MISSING"
+                                                                            },
+                                                                            "message": {
+                                                                                "type": "string",
+                                                                                "const": "Record an approved award decision before finalization."
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "code",
+                                                                            "message"
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "code": {
+                                                                                "type": "string",
+                                                                                "const": "AWARD_MISSING"
+                                                                            },
+                                                                            "message": {
+                                                                                "type": "string",
+                                                                                "const": "Create the award record before preparing the evidence pack."
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "code",
+                                                                            "message"
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "code": {
+                                                                                "type": "string",
+                                                                                "const": "AWARD_SIGNOFF_MISSING"
+                                                                            },
+                                                                            "message": {
+                                                                                "type": "string",
+                                                                                "const": "Sign off the award before finalizing the evidence pack."
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "code",
+                                                                            "message"
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "code": {
+                                                                                "type": "string",
+                                                                                "const": "DECISION_TRAIL_INCOMPLETE"
+                                                                            },
+                                                                            "message": {
+                                                                                "type": "string",
+                                                                                "const": "Complete the RFQ decision trail entries for quote sources, comparison, approval, and signoff."
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "code",
+                                                                            "message"
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "ready",
+                                                        "blockers"
+                                                    ]
+                                                },
+                                                "timeline": {
+                                                    "type": "array",
+                                                    "prefixItems": [
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "code": {
+                                                                    "type": "string"
+                                                                },
+                                                                "label": {
+                                                                    "type": "string"
+                                                                },
+                                                                "status": {
+                                                                    "type": "string",
+                                                                    "const": "recorded"
+                                                                },
+                                                                "occurred_at": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "code",
+                                                                "label",
+                                                                "status",
+                                                                "occurred_at"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "code": {
+                                                                    "type": "string",
+                                                                    "const": "approval_trail"
+                                                                },
+                                                                "label": {
+                                                                    "type": "string",
+                                                                    "const": "Approval decision"
+                                                                },
+                                                                "status": {
+                                                                    "type": "string",
+                                                                    "enum": [
+                                                                        "complete",
+                                                                        "missing"
+                                                                    ]
+                                                                },
+                                                                "occurred_at": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "code",
+                                                                "label",
+                                                                "status",
+                                                                "occurred_at"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "code": {
+                                                                    "type": "string",
+                                                                    "const": "award_signoff"
+                                                                },
+                                                                "label": {
+                                                                    "type": "string",
+                                                                    "const": "Award signoff"
+                                                                },
+                                                                "status": {
+                                                                    "type": "string",
+                                                                    "enum": [
+                                                                        "missing",
+                                                                        "complete"
+                                                                    ]
+                                                                },
+                                                                "occurred_at": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "code",
+                                                                "label",
+                                                                "status",
+                                                                "occurred_at"
+                                                            ]
+                                                        }
+                                                    ],
+                                                    "minItems": 3,
+                                                    "maxItems": 3,
+                                                    "additionalItems": false
+                                                },
+                                                "sections": {
+                                                    "type": "array",
+                                                    "prefixItems": [
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "code": {
+                                                                    "type": "string",
+                                                                    "const": "quote_sources"
+                                                                },
+                                                                "label": {
+                                                                    "type": "string",
+                                                                    "const": "Quote sources"
+                                                                },
+                                                                "status": {
+                                                                    "type": "string",
+                                                                    "enum": [
+                                                                        "complete",
+                                                                        "missing"
+                                                                    ]
+                                                                },
+                                                                "items": {
+                                                                    "type": "array",
+                                                                    "prefixItems": [
+                                                                        {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                                "label": {
+                                                                                    "type": "string",
+                                                                                    "const": "Ready quote submissions"
+                                                                                },
+                                                                                "count": {
+                                                                                    "type": "integer",
+                                                                                    "minimum": 0
+                                                                                }
+                                                                            },
+                                                                            "required": [
+                                                                                "label",
+                                                                                "count"
+                                                                            ]
+                                                                        }
+                                                                    ],
+                                                                    "minItems": 1,
+                                                                    "maxItems": 1,
+                                                                    "additionalItems": false
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "code",
+                                                                "label",
+                                                                "status",
+                                                                "items"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "code": {
+                                                                    "type": "string",
+                                                                    "const": "final_comparison"
+                                                                },
+                                                                "label": {
+                                                                    "type": "string",
+                                                                    "const": "Final comparison"
+                                                                },
+                                                                "status": {
+                                                                    "type": "string",
+                                                                    "enum": [
+                                                                        "complete",
+                                                                        "missing"
+                                                                    ]
+                                                                },
+                                                                "items": {
+                                                                    "anyOf": [
+                                                                        {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "minItems": 0,
+                                                                            "maxItems": 0,
+                                                                            "additionalItems": false
+                                                                        },
+                                                                        {
+                                                                            "type": "array",
+                                                                            "prefixItems": [
+                                                                                {
+                                                                                    "type": "object",
+                                                                                    "properties": {
+                                                                                        "id": {
+                                                                                            "type": "string"
+                                                                                        },
+                                                                                        "status": {
+                                                                                            "type": "string"
+                                                                                        }
+                                                                                    },
+                                                                                    "required": [
+                                                                                        "id",
+                                                                                        "status"
+                                                                                    ]
+                                                                                }
+                                                                            ],
+                                                                            "minItems": 1,
+                                                                            "maxItems": 1,
+                                                                            "additionalItems": false
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "code",
+                                                                "label",
+                                                                "status",
+                                                                "items"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "code": {
+                                                                    "type": "string",
+                                                                    "const": "approval_trail"
+                                                                },
+                                                                "label": {
+                                                                    "type": "string",
+                                                                    "const": "Approval trail"
+                                                                },
+                                                                "status": {
+                                                                    "type": "string",
+                                                                    "enum": [
+                                                                        "complete",
+                                                                        "missing"
+                                                                    ]
+                                                                },
+                                                                "items": {
+                                                                    "anyOf": [
+                                                                        {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "minItems": 0,
+                                                                            "maxItems": 0,
+                                                                            "additionalItems": false
+                                                                        },
+                                                                        {
+                                                                            "type": "array",
+                                                                            "prefixItems": [
+                                                                                {
+                                                                                    "type": "object",
+                                                                                    "properties": {
+                                                                                        "id": {
+                                                                                            "type": "string"
+                                                                                        },
+                                                                                        "status": {
+                                                                                            "type": "string"
+                                                                                        }
+                                                                                    },
+                                                                                    "required": [
+                                                                                        "id",
+                                                                                        "status"
+                                                                                    ]
+                                                                                }
+                                                                            ],
+                                                                            "minItems": 1,
+                                                                            "maxItems": 1,
+                                                                            "additionalItems": false
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "code",
+                                                                "label",
+                                                                "status",
+                                                                "items"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "code": {
+                                                                    "type": "string",
+                                                                    "const": "award_signoff"
+                                                                },
+                                                                "label": {
+                                                                    "type": "string",
+                                                                    "const": "Award signoff"
+                                                                },
+                                                                "status": {
+                                                                    "type": "string",
+                                                                    "enum": [
+                                                                        "complete",
+                                                                        "missing"
+                                                                    ]
+                                                                },
+                                                                "items": {
+                                                                    "anyOf": [
+                                                                        {
+                                                                            "type": "array",
+                                                                            "items": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "minItems": 0,
+                                                                            "maxItems": 0,
+                                                                            "additionalItems": false
+                                                                        },
+                                                                        {
+                                                                            "type": "array",
+                                                                            "prefixItems": [
+                                                                                {
+                                                                                    "type": "object",
+                                                                                    "properties": {
+                                                                                        "id": {
+                                                                                            "type": "string"
+                                                                                        },
+                                                                                        "status": {
+                                                                                            "type": "string"
+                                                                                        }
+                                                                                    },
+                                                                                    "required": [
+                                                                                        "id",
+                                                                                        "status"
+                                                                                    ]
+                                                                                }
+                                                                            ],
+                                                                            "minItems": 1,
+                                                                            "maxItems": 1,
+                                                                            "additionalItems": false
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "code",
+                                                                "label",
+                                                                "status",
+                                                                "items"
+                                                            ]
+                                                        }
+                                                    ],
+                                                    "minItems": 4,
+                                                    "maxItems": 4,
+                                                    "additionalItems": false
+                                                },
+                                                "actions": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "can_finalize": {
+                                                            "type": "string"
+                                                        },
+                                                        "can_export": {
+                                                            "type": "boolean"
+                                                        },
+                                                        "can_upload_supporting_evidence": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "can_finalize",
+                                                        "can_export",
+                                                        "can_upload_supporting_evidence"
+                                                    ]
                                                 }
                                             },
                                             "required": [
-                                                "current_page",
-                                                "per_page",
-                                                "total"
+                                                "rfq",
+                                                "award_pack",
+                                                "readiness",
+                                                "timeline",
+                                                "sections",
+                                                "actions"
                                             ]
                                         }
                                     },
                                     "required": [
-                                        "data",
-                                        "meta"
+                                        "data"
                                     ]
                                 }
                             }
@@ -6900,17 +7352,15 @@
                 }
             }
         },
-        "/documents/{id}": {
-            "get": {
-                "operationId": "document.show",
-                "description": "GET /documents/:id",
-                "summary": "Show a single document",
+        "/rfqs/{rfqId}/evidence-vault/supporting-evidence": {
+            "post": {
+                "operationId": "evidenceVault.storeSupportingEvidence",
                 "tags": [
-                    "Document"
+                    "EvidenceVault"
                 ],
                 "parameters": [
                     {
-                        "name": "id",
+                        "name": "rfqId",
                         "in": "path",
                         "required": true,
                         "schema": {
@@ -6918,8 +7368,18 @@
                         }
                     }
                 ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreSupportingEvidenceRequest"
+                            }
+                        }
+                    }
+                },
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "",
                         "content": {
                             "application/json": {
@@ -6932,23 +7392,41 @@
                                                 "id": {
                                                     "type": "string"
                                                 },
-                                                "name": {
-                                                    "type": "string",
-                                                    "const": "Stub document"
+                                                "rfq_id": {
+                                                    "type": "string"
                                                 },
-                                                "type": {
-                                                    "type": "string",
-                                                    "const": "pdf"
+                                                "reason": {
+                                                    "type": "string"
                                                 },
-                                                "created_at": {
+                                                "original_filename": {
+                                                    "type": "string"
+                                                },
+                                                "file_type": {
+                                                    "type": "string"
+                                                },
+                                                "storage_path": {
+                                                    "type": "string"
+                                                },
+                                                "checksum": {
+                                                    "type": "string"
+                                                },
+                                                "uploaded_by": {
+                                                    "type": "string"
+                                                },
+                                                "uploaded_at": {
                                                     "type": "string"
                                                 }
                                             },
                                             "required": [
                                                 "id",
-                                                "name",
-                                                "type",
-                                                "created_at"
+                                                "rfq_id",
+                                                "reason",
+                                                "original_filename",
+                                                "file_type",
+                                                "storage_path",
+                                                "checksum",
+                                                "uploaded_by",
+                                                "uploaded_at"
                                             ]
                                         }
                                     },
@@ -6958,177 +7436,47 @@
                                 }
                             }
                         }
-                    }
-                }
-            }
-        },
-        "/documents/{id}/download": {
-            "get": {
-                "operationId": "document.download",
-                "description": "GET /documents/:id/download",
-                "summary": "Get document download URL or redirect",
-                "tags": [
-                    "Document"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
+                    },
+                    "500": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "download_url": {
-                                                    "type": "string"
-                                                },
-                                                "expires_at": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "download_url",
-                                                "expires_at"
-                                            ]
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Could not store supporting evidence."
                                         }
                                     },
                                     "required": [
-                                        "data"
+                                        "message"
                                     ]
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
         },
-        "/documents/{id}/preview": {
-            "get": {
-                "operationId": "document.preview",
-                "description": "GET /documents/:id/preview",
-                "summary": "Get document preview URL",
-                "tags": [
-                    "Document"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "preview_url": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "preview_url"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/evidence-bundles": {
-            "get": {
-                "operationId": "document.bundles",
-                "description": "GET /evidence-bundles",
-                "summary": "List evidence bundles",
-                "tags": [
-                    "Document"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            },
-                                            "minItems": 0,
-                                            "maxItems": 0,
-                                            "additionalItems": false
-                                        },
-                                        "meta": {
-                                            "type": "object",
-                                            "properties": {
-                                                "current_page": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
-                                                    ]
-                                                },
-                                                "per_page": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
-                                                    ]
-                                                },
-                                                "total": {
-                                                    "type": "integer"
-                                                }
-                                            },
-                                            "required": [
-                                                "current_page",
-                                                "per_page",
-                                                "total"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "data",
-                                        "meta"
-                                    ]
-                                }
-                            }
-                        }
-                    }
-                }
-            },
+        "/rfqs/{rfqId}/evidence-vault/award-pack/finalize": {
             "post": {
-                "operationId": "document.createBundle",
-                "description": "POST /evidence-bundles",
-                "summary": "Create an evidence bundle",
+                "operationId": "evidenceVault.finalizeAwardPack",
                 "tags": [
-                    "Document"
+                    "EvidenceVault"
+                ],
+                "parameters": [
+                    {
+                        "name": "rfqId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
                 ],
                 "responses": {
                     "201": {
@@ -7142,22 +7490,39 @@
                                             "type": "object",
                                             "properties": {
                                                 "id": {
-                                                    "type": "string",
-                                                    "const": "stub-bundle-id"
+                                                    "type": "string"
                                                 },
-                                                "name": {
-                                                    "type": "string",
-                                                    "const": "Stub bundle"
+                                                "rfq_id": {
+                                                    "type": "string"
+                                                },
+                                                "type": {
+                                                    "type": "string"
                                                 },
                                                 "status": {
-                                                    "type": "string",
-                                                    "const": "draft"
+                                                    "type": "string"
+                                                },
+                                                "version": {
+                                                    "type": "string"
+                                                },
+                                                "checksum": {
+                                                    "type": "string"
+                                                },
+                                                "finalized_at": {
+                                                    "type": "string"
+                                                },
+                                                "manifest": {
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
                                                 "id",
-                                                "name",
-                                                "status"
+                                                "rfq_id",
+                                                "type",
+                                                "status",
+                                                "version",
+                                                "checksum",
+                                                "finalized_at",
+                                                "manifest"
                                             ]
                                         }
                                     },
@@ -7167,84 +7532,41 @@
                                 }
                             }
                         }
-                    }
-                }
-            }
-        },
-        "/evidence-bundles/{id}": {
-            "get": {
-                "operationId": "document.showBundle",
-                "description": "GET /evidence-bundles/:id",
-                "summary": "Show a single evidence bundle",
-                "tags": [
-                    "Document"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
+                    },
+                    "500": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string"
-                                                },
-                                                "name": {
-                                                    "type": "string",
-                                                    "const": "Stub bundle"
-                                                },
-                                                "documents": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    },
-                                                    "minItems": 0,
-                                                    "maxItems": 0,
-                                                    "additionalItems": false
-                                                }
-                                            },
-                                            "required": [
-                                                "id",
-                                                "name",
-                                                "documents"
-                                            ]
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Could not finalize evidence pack."
                                         }
                                     },
                                     "required": [
-                                        "data"
+                                        "message"
                                     ]
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
         },
-        "/evidence-bundles/{id}/add-document": {
-            "post": {
-                "operationId": "document.addDocumentToBundle",
-                "description": "POST /evidence-bundles/:id/add-document",
-                "summary": "Add document to evidence bundle",
+        "/rfqs/{rfqId}/evidence-vault/award-pack/export": {
+            "get": {
+                "operationId": "evidenceVault.exportAwardPack",
                 "tags": [
-                    "Document"
+                    "EvidenceVault"
                 ],
                 "parameters": [
                     {
-                        "name": "id",
+                        "name": "rfqId",
                         "in": "path",
                         "required": true,
                         "schema": {
@@ -7266,14 +7588,17 @@
                                                 "bundle_id": {
                                                     "type": "string"
                                                 },
-                                                "document_id": {
-                                                    "type": "string",
-                                                    "const": "stub-document-id"
+                                                "checksum": {
+                                                    "type": "string"
+                                                },
+                                                "manifest": {
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
                                                 "bundle_id",
-                                                "document_id"
+                                                "checksum",
+                                                "manifest"
                                             ]
                                         }
                                     },
@@ -7283,107 +7608,21 @@
                                 }
                             }
                         }
-                    }
-                }
-            }
-        },
-        "/evidence-bundles/{id}/finalize": {
-            "post": {
-                "operationId": "document.finalizeBundle",
-                "description": "POST /evidence-bundles/:id/finalize",
-                "summary": "Finalize evidence bundle",
-                "tags": [
-                    "Document"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
+                    },
+                    "500": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "const": "finalized"
-                                                }
-                                            },
-                                            "required": [
-                                                "id",
-                                                "status"
-                                            ]
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Could not export evidence pack."
                                         }
                                     },
                                     "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/evidence-bundles/{id}/export": {
-            "get": {
-                "operationId": "document.exportBundle",
-                "description": "GET /evidence-bundles/:id/export",
-                "summary": "Export evidence bundle",
-                "tags": [
-                    "Document"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "download_url": {
-                                                    "type": "string"
-                                                },
-                                                "expires_at": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "download_url",
-                                                "expires_at"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
+                                        "message"
                                     ]
                                 }
                             }
@@ -9074,10 +9313,7 @@
                                                     "type": "string"
                                                 },
                                                 "source_description": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "source_quantity": {
                                                     "type": [
@@ -9086,10 +9322,7 @@
                                                     ]
                                                 },
                                                 "source_uom": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "source_unit_price": {
                                                     "type": [
@@ -9098,10 +9331,7 @@
                                                     ]
                                                 },
                                                 "rfq_line_item_id": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "rfq_line_description": {
                                                     "type": "string"
@@ -9230,7 +9460,7 @@
                                                     "additionalProperties": {}
                                                 },
                                                 "sort_order": {
-                                                    "type": "integer"
+                                                    "type": "string"
                                                 },
                                                 "confidence": {
                                                     "type": "string",
@@ -9261,16 +9491,10 @@
                                                     ]
                                                 },
                                                 "taxonomy_code": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "mapping_version": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
@@ -11175,43 +11399,25 @@
                                                         "type": "string"
                                                     },
                                                     "vendor_id": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "vendor_name": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "uploaded_by": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "status": {
                                                         "type": "string"
                                                     },
                                                     "file_path": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "file_type": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "original_filename": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "blocking_issue_count": {
                                                         "type": "integer"
@@ -11220,16 +11426,10 @@
                                                         "type": "string"
                                                     },
                                                     "error_code": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "error_message": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "processing_started_at": {
                                                         "type": "string"
@@ -11241,19 +11441,13 @@
                                                         "type": "string"
                                                     },
                                                     "retry_count": {
-                                                        "type": "integer"
+                                                        "type": "string"
                                                     },
                                                     "line_items_count": {
-                                                        "type": [
-                                                            "integer",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "confidence": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "ai_status": {
                                                         "type": "object",
@@ -11479,43 +11673,25 @@
                                                     "type": "string"
                                                 },
                                                 "vendor_id": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "vendor_name": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "uploaded_by": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "status": {
                                                     "type": "string"
                                                 },
                                                 "file_path": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "file_type": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "original_filename": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "blocking_issue_count": {
                                                     "type": "integer"
@@ -11524,16 +11700,10 @@
                                                     "type": "string"
                                                 },
                                                 "error_code": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "error_message": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "processing_started_at": {
                                                     "type": "string"
@@ -11545,19 +11715,13 @@
                                                     "type": "string"
                                                 },
                                                 "retry_count": {
-                                                    "type": "integer"
+                                                    "type": "string"
                                                 },
                                                 "line_items_count": {
-                                                    "type": [
-                                                        "integer",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "confidence": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "ai_status": {
                                                     "type": "object",
@@ -12006,16 +12170,10 @@
                                                     "type": "string"
                                                 },
                                                 "rfq_line_item_id": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "source_description": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "source_quantity": {
                                                     "type": [
@@ -12024,10 +12182,7 @@
                                                     ]
                                                 },
                                                 "source_uom": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "source_unit_price": {
                                                     "type": [
@@ -12036,7 +12191,7 @@
                                                     ]
                                                 },
                                                 "sort_order": {
-                                                    "type": "integer"
+                                                    "type": "string"
                                                 },
                                                 "origin": {
                                                     "type": "string"
@@ -12075,11 +12230,7 @@
                                                 "raw_data": {
                                                     "anyOf": [
                                                         {
-                                                            "type": "array",
-                                                            "items": {}
-                                                        },
-                                                        {
-                                                            "type": "null"
+                                                            "type": "string"
                                                         },
                                                         {
                                                             "type": "array",
@@ -12356,14 +12507,201 @@
                                                         "id": {
                                                             "type": "string"
                                                         },
+                                                        "rfq_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "vendor_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "vendor_name": {
+                                                            "type": "string"
+                                                        },
+                                                        "uploaded_by": {
+                                                            "type": "string"
+                                                        },
                                                         "status": {
-                                                            "type": "string",
-                                                            "const": "extracting"
+                                                            "type": "string"
+                                                        },
+                                                        "file_path": {
+                                                            "type": "string"
+                                                        },
+                                                        "file_type": {
+                                                            "type": "string"
+                                                        },
+                                                        "original_filename": {
+                                                            "type": "string"
+                                                        },
+                                                        "blocking_issue_count": {
+                                                            "type": "integer"
+                                                        },
+                                                        "submitted_at": {
+                                                            "type": "string"
+                                                        },
+                                                        "error_code": {
+                                                            "type": "string"
+                                                        },
+                                                        "error_message": {
+                                                            "type": "string"
+                                                        },
+                                                        "processing_started_at": {
+                                                            "type": "string"
+                                                        },
+                                                        "processing_completed_at": {
+                                                            "type": "string"
+                                                        },
+                                                        "parsed_at": {
+                                                            "type": "string"
+                                                        },
+                                                        "retry_count": {
+                                                            "type": "string"
+                                                        },
+                                                        "line_items_count": {
+                                                            "type": "string"
+                                                        },
+                                                        "confidence": {
+                                                            "type": "string"
+                                                        },
+                                                        "ai_status": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "extraction": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "feature_key": {
+                                                                            "type": "string",
+                                                                            "const": "quote_document_extraction"
+                                                                        },
+                                                                        "status": {
+                                                                            "anyOf": [
+                                                                                {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                {
+                                                                                    "type": "string",
+                                                                                    "enum": [
+                                                                                        "unavailable"
+                                                                                    ]
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        "available": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "manual_action_required": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "reason_codes": {
+                                                                            "anyOf": [
+                                                                                {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                {
+                                                                                    "type": "array",
+                                                                                    "items": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "minItems": 0,
+                                                                                    "maxItems": 0,
+                                                                                    "additionalItems": false
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        "provider_provenance": {
+                                                                            "type": "null"
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "feature_key",
+                                                                        "status",
+                                                                        "available",
+                                                                        "manual_action_required",
+                                                                        "reason_codes",
+                                                                        "provider_provenance"
+                                                                    ]
+                                                                },
+                                                                "normalization": {
+                                                                    "type": "object",
+                                                                    "properties": {
+                                                                        "feature_key": {
+                                                                            "type": "string",
+                                                                            "const": "normalization_suggestions"
+                                                                        },
+                                                                        "status": {
+                                                                            "anyOf": [
+                                                                                {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                {
+                                                                                    "type": "string",
+                                                                                    "enum": [
+                                                                                        "unavailable"
+                                                                                    ]
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        "available": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "manual_action_required": {
+                                                                            "type": "boolean"
+                                                                        },
+                                                                        "reason_codes": {
+                                                                            "anyOf": [
+                                                                                {
+                                                                                    "type": "string"
+                                                                                },
+                                                                                {
+                                                                                    "type": "array",
+                                                                                    "items": {
+                                                                                        "type": "string"
+                                                                                    },
+                                                                                    "minItems": 0,
+                                                                                    "maxItems": 0,
+                                                                                    "additionalItems": false
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        "provider_provenance": {
+                                                                            "type": "null"
+                                                                        }
+                                                                    },
+                                                                    "required": [
+                                                                        "feature_key",
+                                                                        "status",
+                                                                        "available",
+                                                                        "manual_action_required",
+                                                                        "reason_codes",
+                                                                        "provider_provenance"
+                                                                    ]
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "extraction",
+                                                                "normalization"
+                                                            ]
                                                         }
                                                     },
                                                     "required": [
                                                         "id",
-                                                        "status"
+                                                        "rfq_id",
+                                                        "vendor_id",
+                                                        "vendor_name",
+                                                        "uploaded_by",
+                                                        "status",
+                                                        "file_path",
+                                                        "file_type",
+                                                        "original_filename",
+                                                        "blocking_issue_count",
+                                                        "submitted_at",
+                                                        "error_code",
+                                                        "error_message",
+                                                        "processing_started_at",
+                                                        "processing_completed_at",
+                                                        "parsed_at",
+                                                        "retry_count",
+                                                        "line_items_count",
+                                                        "confidence",
+                                                        "ai_status"
                                                     ]
                                                 }
                                             },
@@ -13153,28 +13491,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "download_url": {
-                                                    "type": "string",
-                                                    "const": "https://example.com/reports/export-stub"
-                                                },
-                                                "expires_at": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "download_url",
-                                                "expires_at"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
@@ -13196,47 +13513,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            },
-                                            "minItems": 0,
-                                            "maxItems": 0,
-                                            "additionalItems": false
-                                        },
-                                        "meta": {
-                                            "type": "object",
-                                            "properties": {
-                                                "current_page": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
-                                                    ]
-                                                },
-                                                "per_page": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
-                                                    ]
-                                                },
-                                                "total": {
-                                                    "type": "integer"
-                                                }
-                                            },
-                                            "required": [
-                                                "current_page",
-                                                "per_page",
-                                                "total"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "data",
-                                        "meta"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
@@ -13268,27 +13545,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "download_url": {
-                                                    "type": "string"
-                                                },
-                                                "expires_at": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "download_url",
-                                                "expires_at"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
@@ -13310,47 +13567,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            },
-                                            "minItems": 0,
-                                            "maxItems": 0,
-                                            "additionalItems": false
-                                        },
-                                        "meta": {
-                                            "type": "object",
-                                            "properties": {
-                                                "current_page": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
-                                                    ]
-                                                },
-                                                "per_page": {
-                                                    "type": [
-                                                        "object",
-                                                        "null"
-                                                    ]
-                                                },
-                                                "total": {
-                                                    "type": "integer"
-                                                }
-                                            },
-                                            "required": [
-                                                "current_page",
-                                                "per_page",
-                                                "total"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "data",
-                                        "meta"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
@@ -13365,34 +13582,12 @@
                     "Report"
                 ],
                 "responses": {
-                    "201": {
+                    "200": {
                         "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string",
-                                                    "const": "stub-schedule-id"
-                                                },
-                                                "frequency": {
-                                                    "type": "string",
-                                                    "const": "weekly"
-                                                }
-                                            },
-                                            "required": [
-                                                "id",
-                                                "frequency"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
@@ -13424,28 +13619,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string"
-                                                },
-                                                "frequency": {
-                                                    "type": "string",
-                                                    "const": "weekly"
-                                                }
-                                            },
-                                            "required": [
-                                                "id",
-                                                "frequency"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
@@ -13470,18 +13644,12 @@
                     }
                 ],
                 "responses": {
-                    "204": {
-                        "description": "No content",
+                    "200": {
+                        "description": "",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "string"
-                                    },
-                                    "minItems": 0,
-                                    "maxItems": 0,
-                                    "additionalItems": false
+                                    "type": "object"
                                 }
                             }
                         }
@@ -13513,29 +13681,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "run_id": {
-                                                    "type": "string",
-                                                    "const": "stub-run-id"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "const": "queued"
-                                                }
-                                            },
-                                            "required": [
-                                                "run_id",
-                                                "status"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
+                                    "type": "object"
                                 }
                             }
                         }
@@ -13732,10 +13878,7 @@
                                                         "type": "string"
                                                     },
                                                     "project_id": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "owner": {
                                                         "type": [
@@ -13763,10 +13906,7 @@
                                                         "type": "string"
                                                     },
                                                     "category": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     },
                                                     "estimated_value": {
                                                         "type": "string"
@@ -14227,7 +14367,7 @@
                                     },
                                     "project_id": {
                                         "type": [
-                                            "string",
+                                            "integer",
                                             "null"
                                         ]
                                     },
@@ -14321,10 +14461,7 @@
                                                     "type": "string"
                                                 },
                                                 "project_id": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
@@ -14839,19 +14976,13 @@
                                                     "type": "string"
                                                 },
                                                 "description": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "status": {
                                                     "type": "string"
                                                 },
                                                 "project_id": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "project_name": {
                                                     "type": [
@@ -14881,16 +15012,10 @@
                                                     "type": "string"
                                                 },
                                                 "payment_terms": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "evaluation_method": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "created_at": {
                                                     "type": "string"
@@ -15102,19 +15227,13 @@
                                                     "type": "string"
                                                 },
                                                 "description": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "status": {
                                                     "type": "string"
                                                 },
                                                 "project_id": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "project_name": {
                                                     "type": [
@@ -15144,16 +15263,10 @@
                                                     "type": "string"
                                                 },
                                                 "payment_terms": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "evaluation_method": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "created_at": {
                                                     "type": "string"
@@ -15372,8 +15485,11 @@
                                                 "currency": {
                                                     "type": "string"
                                                 },
+                                                "specifications": {
+                                                    "type": "string"
+                                                },
                                                 "sort_order": {
-                                                    "type": "integer"
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
@@ -15384,6 +15500,7 @@
                                                 "uom",
                                                 "unit_price",
                                                 "currency",
+                                                "specifications",
                                                 "sort_order"
                                             ]
                                         }
@@ -15491,6 +15608,9 @@
                                                 "currency": {
                                                     "type": "string"
                                                 },
+                                                "specifications": {
+                                                    "type": "string"
+                                                },
                                                 "sort_order": {
                                                     "type": "string"
                                                 }
@@ -15503,6 +15623,7 @@
                                                 "uom",
                                                 "unit_price",
                                                 "currency",
+                                                "specifications",
                                                 "sort_order"
                                             ]
                                         }
@@ -16299,10 +16420,7 @@
                                                     "type": "string"
                                                 },
                                                 "rfq_id": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "severity": {
                                                     "type": "string"
@@ -16311,16 +16429,10 @@
                                                     "type": "string"
                                                 },
                                                 "description": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "source": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "status": {
                                                     "type": "string"
@@ -16329,10 +16441,7 @@
                                                     "type": "string"
                                                 },
                                                 "resolved_by": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "updated_at": {
                                                     "type": "string"
@@ -16358,6 +16467,9 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
                     }
                 }
             }
@@ -16394,10 +16506,7 @@
                                                     "type": "string"
                                                 },
                                                 "rfq_id": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "severity": {
                                                     "type": "string"
@@ -16406,16 +16515,10 @@
                                                     "type": "string"
                                                 },
                                                 "description": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "source": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "status": {
                                                     "type": "string"
@@ -16424,10 +16527,7 @@
                                                     "type": "string"
                                                 },
                                                 "resolved_by": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 },
                                                 "updated_at": {
                                                     "type": "string"
@@ -16453,6 +16553,9 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
                     }
                 }
             }
@@ -18060,10 +18163,7 @@
                                                         "type": "string"
                                                     },
                                                     "project_id": {
-                                                        "type": [
-                                                            "string",
-                                                            "null"
-                                                        ]
+                                                        "type": "string"
                                                     }
                                                 },
                                                 "required": [
@@ -18119,7 +18219,7 @@
                                     },
                                     "project_id": {
                                         "type": [
-                                            "string",
+                                            "integer",
                                             "null"
                                         ]
                                     },
@@ -18284,10 +18384,7 @@
                                                     "type": "string"
                                                 },
                                                 "project_id": {
-                                                    "type": [
-                                                        "string",
-                                                        "null"
-                                                    ]
+                                                    "type": "string"
                                                 }
                                             },
                                             "required": [
@@ -19388,19 +19485,13 @@
                                                         ],
                                                         "properties": {
                                                             "approved_by_user_id": {
-                                                                "type": [
-                                                                    "string",
-                                                                    "null"
-                                                                ]
+                                                                "type": "string"
                                                             },
                                                             "approved_at": {
                                                                 "type": "string"
                                                             },
                                                             "approval_note": {
-                                                                "type": [
-                                                                    "string",
-                                                                    "null"
-                                                                ]
+                                                                "type": "string"
                                                             }
                                                         },
                                                         "required": [
@@ -19597,19 +19688,13 @@
                                                     ],
                                                     "properties": {
                                                         "approved_by_user_id": {
-                                                            "type": [
-                                                                "string",
-                                                                "null"
-                                                            ]
+                                                            "type": "string"
                                                         },
                                                         "approved_at": {
                                                             "type": "string"
                                                         },
                                                         "approval_note": {
-                                                            "type": [
-                                                                "string",
-                                                                "null"
-                                                            ]
+                                                            "type": "string"
                                                         }
                                                     },
                                                     "required": [
@@ -19768,19 +19853,13 @@
                                                     ],
                                                     "properties": {
                                                         "approved_by_user_id": {
-                                                            "type": [
-                                                                "string",
-                                                                "null"
-                                                            ]
+                                                            "type": "string"
                                                         },
                                                         "approved_at": {
                                                             "type": "string"
                                                         },
                                                         "approval_note": {
-                                                            "type": [
-                                                                "string",
-                                                                "null"
-                                                            ]
+                                                            "type": "string"
                                                         }
                                                     },
                                                     "required": [
@@ -20451,7 +20530,7 @@
                                                         "string",
                                                         "null"
                                                     ],
-                                                    "const": "sanctions_provider_not_configured"
+                                                    "const": "no_evidence_found"
                                                 }
                                             },
                                             "required": [
@@ -20685,16 +20764,10 @@
                                                             "type": "string"
                                                         },
                                                         "reviewed_by": {
-                                                            "type": [
-                                                                "string",
-                                                                "null"
-                                                            ]
+                                                            "type": "string"
                                                         },
                                                         "notes": {
-                                                            "type": [
-                                                                "string",
-                                                                "null"
-                                                            ]
+                                                            "type": "string"
                                                         }
                                                     },
                                                     "required": [
@@ -21288,19 +21361,13 @@
                                                     ],
                                                     "properties": {
                                                         "approved_by_user_id": {
-                                                            "type": [
-                                                                "string",
-                                                                "null"
-                                                            ]
+                                                            "type": "string"
                                                         },
                                                         "approved_at": {
                                                             "type": "string"
                                                         },
                                                         "approval_note": {
-                                                            "type": [
-                                                                "string",
-                                                                "null"
-                                                            ]
+                                                            "type": "string"
                                                         }
                                                     },
                                                     "required": [
@@ -21369,6 +21436,7 @@
         "schemas": {
             "ComparisonFinalizeRequest": {
                 "type": "object",
+                "description": "Validates final comparison requests against the authenticated tenant RFQ scope.\n\nThe RFQ existence rule is tenant-qualified when tenant context is present so\nfinalization cannot target another tenant's sourcing event.",
                 "properties": {
                     "rfq_id": {
                         "type": "string"
@@ -21381,6 +21449,7 @@
             },
             "ComparisonPreviewRequest": {
                 "type": "object",
+                "description": "Validates comparison preview requests only when tenant context is available.\n\nMissing tenant context fails authorization, and the RFQ lookup uses an\nimpossible tenant when absent to avoid accidentally validating global RFQ ids.",
                 "properties": {
                     "rfq_id": {
                         "type": "string"
@@ -21393,6 +21462,7 @@
             },
             "ManualNormalizationSourceLineRequest": {
                 "type": "object",
+                "description": "Validates buyer-created or buyer-edited normalization source lines.\n\nPATCH requests preserve omitted fields while create requests require the\nsource description and reason; `other` reasons must carry an explanatory note.",
                 "properties": {
                     "source_description": {
                         "type": "string",
@@ -21469,6 +21539,7 @@
             },
             "NormalizationOverrideRequest": {
                 "type": "object",
+                "description": "Validates buyer override payloads for normalized quote source lines.\n\nOverride data is intentionally partial so omitted fields are not interpreted\nas clearing existing normalized values. The extra validator preserves the\nbusiness rule that custom reasons require a note.",
                 "properties": {
                     "reason_code": {
                         "type": "string",
@@ -21533,6 +21604,7 @@
             },
             "NormalizationResolveConflictRequest": {
                 "type": "object",
+                "description": "Validates manual conflict-resolution actions for quote normalization.\n\nResolution data is required only for actions that need buyer-supplied mapping,\nsplit/merge, price, or UOM detail; accept/mark actions can remain data-free.",
                 "properties": {
                     "resolution": {
                         "type": "string",
@@ -21593,6 +21665,7 @@
             },
             "QuoteSubmissionStatusRequest": {
                 "type": "object",
+                "description": "Restricts quote submission status changes to known intake states.\n\nThese values mirror the upload, extraction, normalization, review, readiness,\nacceptance, and failure states used by the quote-ingestion pipeline.",
                 "properties": {
                     "status": {
                         "type": "string",
@@ -21615,6 +21688,7 @@
             },
             "QuoteSubmissionUploadRequest": {
                 "type": "object",
+                "description": "Validates quote upload metadata and the supplier document file.\n\nTenant ownership is enforced by the consuming service/controller; this request\nonly validates the RFQ/vendor identifiers and attached file shape.",
                 "properties": {
                     "rfq_id": {
                         "type": "string"
@@ -21644,6 +21718,7 @@
             },
             "RegisterCompanyRequest": {
                 "type": "object",
+                "description": "Validates self-service tenant registration and owner bootstrap input.\n\nTenant codes are constrained to URL-safe account identifiers; currency,\nlocale, and timezone are accepted as optional tenant defaults.",
                 "properties": {
                     "tenant_code": {
                         "type": "string",
@@ -21705,6 +21780,7 @@
             },
             "RfqBulkActionRequest": {
                 "type": "object",
+                "description": "Validates bulk RFQ lifecycle actions against the supported transition set.\n\nDistinct RFQ identifiers prevent duplicate work inside the tenant-scoped bulk\nclose/cancel operation.",
                 "properties": {
                     "action": {
                         "type": "string",
@@ -21729,6 +21805,7 @@
             },
             "RfqDraftRequest": {
                 "type": "object",
+                "description": "Validates partial RFQ draft updates without treating omitted fields as null.\n\nProject references are tenant-qualified when authentication context is present\nso a draft cannot be linked to another tenant's project.",
                 "properties": {
                     "title": {
                         "type": "string",
@@ -21815,6 +21892,7 @@
             },
             "RfqStatusTransitionRequest": {
                 "type": "object",
+                "description": "Validates requested RFQ status transitions against the sourcing domain values.\n\nThe transition policy is enforced after validation; this request only rejects\nunknown statuses before domain orchestration runs.",
                 "properties": {
                     "status": {
                         "type": "string",
@@ -21831,6 +21909,45 @@
                     "status"
                 ],
                 "title": "RfqStatusTransitionRequest"
+            },
+            "StoreSupportingEvidenceRequest": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "minLength": 5,
+                        "maxLength": 2000
+                    },
+                    "file": {
+                        "type": "string",
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "maxLength": 10240
+                    },
+                    "vendor_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "quote_submission_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "award_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "reason",
+                    "file"
+                ],
+                "title": "StoreSupportingEvidenceRequest"
             },
             "VendorStatus": {
                 "type": "string",
