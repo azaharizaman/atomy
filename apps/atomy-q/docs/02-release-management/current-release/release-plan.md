@@ -25,6 +25,19 @@ Required completion criteria:
 Controlling readiness contract:
 - [`2026-04-30-atomy-q-alpha-launch-readiness-design.md`](../../../../../docs/superpowers/specs/2026-04-30-atomy-q-alpha-launch-readiness-design.md)
 
+## Approved Scope-Inclusion Proposal
+
+The RFQ-local Evidence Vault is approved as an alpha feature proposal, but it is not release-supported until implementation and verification are complete.
+
+Design:
+- [`2026-05-03-atomy-q-rfq-evidence-vault-alpha-design.md`](../../../../../docs/superpowers/specs/2026-05-03-atomy-q-rfq-evidence-vault-alpha-design.md)
+
+Scope rule:
+- The feature is RFQ workspace only.
+- Top-level `/documents` and generic document API endpoints are redundant for Atomy-Q and should be removed rather than promoted.
+- The alpha capability is an award justification evidence pack over quote, normalization, comparison, approval, award, signoff, and decision-trail evidence.
+- If the feature is not implemented before external alpha, it remains deferred and must not be represented as supported.
+
 ## Completed Tasks
 
 The following execution work is complete and now treated as historical release evidence:
