@@ -57,6 +57,8 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
 
     public function test_quote_submission_upload_requires_rfq_vendor_and_file(): void
     {
+        Queue::fake();
+
         $user = $this->createUser();
 
         $response = $this->postJson(
@@ -70,6 +72,7 @@ final class QuoteSubmissionWorkflowTest extends ApiTestCase
         $response->assertJsonPath('details.rfq_id.0', 'The rfq id field is required.');
         $response->assertJsonPath('details.vendor_id.0', 'The vendor id field is required.');
         $response->assertJsonPath('details.file.0', 'The file field is required.');
+        Queue::assertNotPushed(ProcessQuoteSubmissionJob::class);
     }
 
     public function test_quote_submission_status_rejects_unsupported_transition(): void

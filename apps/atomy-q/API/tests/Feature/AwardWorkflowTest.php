@@ -743,6 +743,11 @@ final class AwardWorkflowTest extends ApiTestCase
             self::assertSame('signed_off', $award->status);
             self::assertSame('2026-03-30T12:00:00+00:00', $award->signoff_at?->toAtomString());
             self::assertSame($user->id, $award->signed_off_by);
+            $this->assertDatabaseHas('awards', [
+                'id' => (string) $award->id,
+                'tenant_id' => (string) $user->tenant_id,
+                'status' => 'signed_off',
+            ]);
         } finally {
             Carbon::setTestNow();
         }

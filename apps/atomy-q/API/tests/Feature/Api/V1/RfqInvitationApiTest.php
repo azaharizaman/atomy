@@ -104,6 +104,27 @@ final class RfqInvitationApiTest extends ApiTestCase
         return $rfq;
     }
 
+    public function test_invitation_missing_vendor_returns_not_found_and_does_not_create_invitation(): void
+    {
+        $tenantId = (string) Str::ulid();
+        $user = $this->createUser($tenantId);
+        $rfq = $this->createRfq($user);
+
+        $response = $this->postJson(
+            '/api/v1/rfqs/' . $rfq->id . '/invitations',
+            [
+                'vendor_id' => (string) Str::ulid(),
+            ],
+            $this->authHeaders($tenantId, (string) $user->id, 'alpha-invalid-invite-key'),
+        );
+
+        $response->assertNotFound();
+        $this->assertDatabaseMissing('vendor_invitations', [
+            'tenant_id' => $tenantId,
+            'rfq_id' => (string) $rfq->id,
+        ]);
+    }
+
     public function testItRequiresSelectedVendorForInvitationCreation(): void
     {
         $tenantId = (string) Str::ulid();

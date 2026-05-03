@@ -63,12 +63,19 @@ final class RfqLifecycleIdempotencyTest extends ApiTestCase
         return $rfq;
     }
 
-    public function test_duplicate_replays_same_created_rfq_for_same_idempotency_key(): void
+    public function test_duplicate_replay_does_not_create_second_copy(): void
     {
         $tenantId = (string) Str::ulid();
         $user = $this->createUser($tenantId);
-        $rfq = $this->createRfq($user);
-        $headers = $this->authHeaders($tenantId, (string) $user->id, 'duplicate-replay-key');
+        $rfq = Rfq::factory()->create([
+            'tenant_id' => $tenantId,
+            'owner_id' => (string) $user->id,
+            'project_id' => null,
+            'title' => 'Alpha source RFQ',
+            'status' => 'draft',
+        ]);
+
+        $headers = $this->authHeaders($tenantId, (string) $user->id, 'alpha-duplicate-replay-key');
 
         $first = $this->postJson('/api/v1/rfqs/' . $rfq->id . '/duplicate', [], $headers);
         $second = $this->postJson('/api/v1/rfqs/' . $rfq->id . '/duplicate', [], $headers);
