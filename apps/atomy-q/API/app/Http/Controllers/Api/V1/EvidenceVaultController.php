@@ -7,12 +7,17 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
 use App\Models\Rfq;
+use App\Services\EvidenceVault\EvidenceVaultSummaryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 final class EvidenceVaultController extends Controller
 {
     use ExtractsAuthContext;
+
+    public function __construct(private readonly EvidenceVaultSummaryService $summaryService)
+    {
+    }
 
     public function show(Request $request, string $rfqId): JsonResponse
     {
@@ -23,31 +28,7 @@ final class EvidenceVaultController extends Controller
             ->firstOrFail();
 
         return response()->json([
-            'data' => [
-                'rfq' => [
-                    'id' => (string) $rfq->id,
-                    'title' => $rfq->title,
-                    'rfq_number' => $rfq->rfq_number,
-                ],
-                'award_pack' => [
-                    'status' => 'not_ready',
-                    'bundle_id' => null,
-                    'version' => null,
-                    'finalized_at' => null,
-                    'checksum' => null,
-                ],
-                'readiness' => [
-                    'ready' => false,
-                    'blockers' => [],
-                ],
-                'timeline' => [],
-                'sections' => [],
-                'actions' => [
-                    'can_finalize' => false,
-                    'can_export' => false,
-                    'can_upload_supporting_evidence' => true,
-                ],
-            ],
+            'data' => $this->summaryService->summarize($tenantId, $rfq),
         ]);
     }
 
