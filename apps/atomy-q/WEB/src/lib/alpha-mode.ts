@@ -23,6 +23,7 @@ const ALPHA_RFQ_SECTION_IDS = new Set([
   'line-items',
   'vendors',
   'award',
+  'documents',
   'quote-intake',
   'comparison-runs',
   'approvals',

@@ -52,8 +52,8 @@ describe('alpha mode policy', () => {
     expect(isRfqSectionVisibleInAlpha('comparison-runs')).toBe(true);
     expect(isRfqSectionVisibleInAlpha('approvals')).toBe(true);
     expect(isRfqSectionVisibleInAlpha('decision-trail')).toBe(true);
+    expect(isRfqSectionVisibleInAlpha('documents')).toBe(true);
     expect(isRfqSectionVisibleInAlpha('negotiations')).toBe(false);
-    expect(isRfqSectionVisibleInAlpha('documents')).toBe(false);
     expect(isRfqSectionVisibleInAlpha('risk')).toBe(false);
   });
 
@@ -64,7 +64,7 @@ describe('alpha mode policy', () => {
     expect(isDeferredAlphaPath('/settings/users')).toBe(true);
     expect(isDeferredAlphaPath('/settings/integrations')).toBe(true);
     expect(isDeferredAlphaPath('/rfqs/01JABC123/negotiations')).toBe(true);
-    expect(isDeferredAlphaPath('/rfqs/01JABC123/documents')).toBe(true);
+    expect(isDeferredAlphaPath('/rfqs/01JABC123/documents')).toBe(false);
     expect(isDeferredAlphaPath('/rfqs/01JABC123/risk')).toBe(true);
     expect(isDeferredAlphaPath('/rfqs/01JABC123/approvals')).toBe(false);
     expect(isDeferredAlphaPath('/rfqs/01JABC123/overview')).toBe(false);

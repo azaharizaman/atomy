@@ -34,14 +34,13 @@ export const MAIN_NAV_ITEMS: NavItemConfig[] = [
   { id: 'tasks', label: 'Tasks', href: '/tasks', path: '/tasks' },
   { id: 'approvals', label: 'Approvals', href: '/approvals', path: '/approvals' },
   { id: 'vendors', label: 'Vendors', href: '/vendors', path: '/vendors' },
-  { id: 'documents', label: 'Documents', href: '/documents', path: '/documents' },
   { id: 'reporting', label: 'Reports', href: '/reporting', path: '/reporting' },
   { id: 'settings', label: 'Settings', href: '/settings', path: '/settings' },
 ];
 
 export const UNGROUPED_LEADING_MAIN_NAV_IDS = ['dashboard', 'projects', 'requisition'] as const;
 export const INBOX_MAIN_NAV_IDS = ['tasks', 'approvals'] as const;
-export const RECORDS_MAIN_NAV_IDS = ['vendors', 'documents', 'reporting'] as const;
+export const RECORDS_MAIN_NAV_IDS = ['vendors', 'reporting'] as const;
 export const UNGROUPED_TRAILING_MAIN_NAV_IDS = ['settings'] as const;
 
 export const REQUISITION_NAV_ITEMS: RequisitionNavItemConfig[] = [
@@ -88,7 +87,6 @@ const pathToLabel: Record<string, string> = {
   '/rfqs': 'Requisitions',
   '/tasks': 'Tasks',
   '/vendors': 'Vendors',
-  '/documents': 'Documents',
   '/reporting': 'Reports',
   '/approvals': 'Approvals',
   '/settings': 'Settings',
