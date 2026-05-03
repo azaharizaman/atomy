@@ -19,7 +19,9 @@ use App\Models\SupportingEvidence;
 use App\Models\User;
 use App\Models\Vendor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\Feature\Api\ApiTestCase;
 
@@ -643,6 +645,48 @@ final class EvidenceVaultApiTest extends ApiTestCase
             ->assertJsonFragment(['code' => 'FINAL_COMPARISON_MISSING'])
             ->assertJsonFragment(['code' => 'APPROVAL_DECISION_MISSING'])
             ->assertJsonFragment(['code' => 'AWARD_SIGNOFF_MISSING']);
+    }
+
+    public function testSupportingEvidenceUploadStoresFileAndMetadata(): void
+    {
+        Storage::fake('local');
+
+        [$user, $rfq] = $this->seedUserAndRfq();
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/rfqs/' . $rfq->id . '/evidence-vault/supporting-evidence', [
+                'reason' => 'Buyer clarification',
+                'file' => UploadedFile::fake()->create('clarification.pdf', 12, 'application/pdf'),
+            ]);
+
+        $response->assertCreated();
+        $response->assertJsonPath('data.reason', 'Buyer clarification');
+        $response->assertJsonPath('data.original_filename', 'clarification.pdf');
+
+        $storagePath = (string) $response->json('data.storage_path');
+        self::assertNotSame('', $storagePath);
+        Storage::disk('local')->assertExists($storagePath);
+
+        $this->assertDatabaseHas('supporting_evidence', [
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'reason' => 'Buyer clarification',
+        ]);
+    }
+
+    public function testSupportingEvidenceUploadRequiresReasonAndFile(): void
+    {
+        [$user, $rfq] = $this->seedUserAndRfq();
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/rfqs/' . $rfq->id . '/evidence-vault/supporting-evidence', [
+                'reason' => '',
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonPath('error', 'Validation failed');
+        $response->assertJsonPath('details.reason.0', 'The reason field is required.');
+        $response->assertJsonPath('details.file.0', 'The file field is required.');
     }
 
     public function testEvidenceBundlePersistsRfqScopedManifestItemsAndSupportingEvidence(): void
