@@ -51,7 +51,7 @@ final readonly class EvidenceVaultSummaryService
             ->where('tenant_id', $tenantId)
             ->where('rfq_id', $rfqId)
             ->where('is_preview', false)
-            ->whereIn('status', ['finalized', 'frozen'])
+            ->whereIn('status', ['finalized', 'frozen', 'final'])
             ->latest('created_at')
             ->first();
 
@@ -68,12 +68,7 @@ final readonly class EvidenceVaultSummaryService
             ->latest('created_at')
             ->first();
 
-        $signedOffAward = Award::query()
-            ->where('tenant_id', $tenantId)
-            ->where('rfq_id', $rfqId)
-            ->whereNotNull('signoff_at')
-            ->latest('signoff_at')
-            ->first();
+        $signedOffAward = $award?->signoff_at !== null ? $award : null;
 
         $bundle = EvidenceBundle::query()
             ->where('tenant_id', $tenantId)
