@@ -92,13 +92,6 @@ final readonly class EvidenceVaultSummaryService
             ->pluck('event_type')
             ->map(static fn (mixed $eventType): string => (string) $eventType)
             ->all();
-        $completedDecisionTrailCodes = $this->completedDecisionTrailCodes(
-            quoteSubmissionCount: $quoteSubmissions->count(),
-            finalComparison: $finalComparison,
-            approval: $approval,
-            signedOffAward: $signedOffAward,
-            decisionTrailCodes: $decisionTrailCodes,
-        );
 
         $blockers = $this->blockers(
             quoteSubmissionCount: $quoteSubmissions->count(),
@@ -107,13 +100,13 @@ final readonly class EvidenceVaultSummaryService
             approval: $approval,
             award: $award,
             signedOffAward: $signedOffAward,
-            decisionTrailCodes: $completedDecisionTrailCodes,
+            decisionTrailCodes: $decisionTrailCodes,
         );
 
         $ready = $blockers === [];
         $status = $this->awardPackStatus($ready, $bundle);
         $timeline = $this->timeline($finalComparison, $approval, $signedOffAward, $decisionTrailEntries);
-        $sections = $this->sections($quoteSubmissions->count(), $finalComparison, $approval, $signedOffAward, $completedDecisionTrailCodes);
+        $sections = $this->sections($quoteSubmissions->count(), $finalComparison, $approval, $signedOffAward);
 
         return [
             'rfq' => [
@@ -187,47 +180,6 @@ final readonly class EvidenceVaultSummaryService
     }
 
     /**
-     * @param list<string> $decisionTrailCodes
-     * @return list<string>
-     */
-    private function completedDecisionTrailCodes(
-        int $quoteSubmissionCount,
-        ?ComparisonRun $finalComparison,
-        ?Approval $approval,
-        ?Award $signedOffAward,
-        array $decisionTrailCodes,
-    ): array {
-        $completed = [];
-
-        if ($quoteSubmissionCount > 0) {
-            $completed[] = 'quote_sources';
-        }
-
-        if ($finalComparison !== null && $this->hasAny($decisionTrailCodes, ['final_comparison', 'comparison_snapshot_frozen'])) {
-            $completed[] = 'final_comparison';
-        }
-
-        if ($approval !== null && in_array($approval->status, ['approved', 'rejected'], true)) {
-            $completed[] = 'approval_trail';
-        }
-
-        if ($signedOffAward !== null && $this->hasAny($decisionTrailCodes, ['award_signoff', 'award_signed_off'])) {
-            $completed[] = 'award_signoff';
-        }
-
-        return $completed;
-    }
-
-    /**
-     * @param list<string> $haystack
-     * @param list<string> $needles
-     */
-    private function hasAny(array $haystack, array $needles): bool
-    {
-        return array_intersect($needles, $haystack) !== [];
-    }
-
-    /**
      * @return array{code: string, message: string}
      */
     private function blocker(string $code, string $message): array
@@ -287,7 +239,6 @@ final readonly class EvidenceVaultSummaryService
     }
 
     /**
-     * @param list<string> $decisionTrailCodes
      * @return list<array{code: string, label: string, status: string, items: list<array<string, mixed>>}>
      */
     private function sections(
@@ -295,13 +246,12 @@ final readonly class EvidenceVaultSummaryService
         ?ComparisonRun $finalComparison,
         ?Approval $approval,
         ?Award $signedOffAward,
-        array $decisionTrailCodes,
     ): array {
         return [
             [
                 'code' => 'quote_sources',
                 'label' => 'Quote sources',
-                'status' => $quoteSubmissionCount > 0 && in_array('quote_sources', $decisionTrailCodes, true) ? 'complete' : 'missing',
+                'status' => $quoteSubmissionCount > 0 ? 'complete' : 'missing',
                 'items' => [
                     ['label' => 'Ready quote submissions', 'count' => $quoteSubmissionCount],
                 ],
@@ -309,7 +259,7 @@ final readonly class EvidenceVaultSummaryService
             [
                 'code' => 'final_comparison',
                 'label' => 'Final comparison',
-                'status' => $finalComparison !== null && in_array('final_comparison', $decisionTrailCodes, true) ? 'complete' : 'missing',
+                'status' => $finalComparison !== null ? 'complete' : 'missing',
                 'items' => $finalComparison === null ? [] : [
                     ['id' => (string) $finalComparison->id, 'status' => $finalComparison->status],
                 ],
@@ -317,7 +267,7 @@ final readonly class EvidenceVaultSummaryService
             [
                 'code' => 'approval_trail',
                 'label' => 'Approval trail',
-                'status' => $approval?->status === 'approved' && in_array('approval_trail', $decisionTrailCodes, true) ? 'complete' : 'missing',
+                'status' => $approval?->status === 'approved' ? 'complete' : 'missing',
                 'items' => $approval === null ? [] : [
                     ['id' => (string) $approval->id, 'status' => $approval->status],
                 ],
@@ -325,7 +275,7 @@ final readonly class EvidenceVaultSummaryService
             [
                 'code' => 'award_signoff',
                 'label' => 'Award signoff',
-                'status' => $signedOffAward !== null && in_array('award_signoff', $decisionTrailCodes, true) ? 'complete' : 'missing',
+                'status' => $signedOffAward !== null ? 'complete' : 'missing',
                 'items' => $signedOffAward === null ? [] : [
                     ['id' => (string) $signedOffAward->id, 'status' => $signedOffAward->status],
                 ],
