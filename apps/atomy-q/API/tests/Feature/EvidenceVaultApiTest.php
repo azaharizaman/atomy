@@ -197,9 +197,25 @@ final class EvidenceVaultApiTest extends ApiTestCase
             ->assertJsonPath('data.readiness.ready', true)
             ->assertJsonPath('data.actions.can_finalize', true)
             ->assertJsonFragment(['code' => 'quote_sources'])
+            ->assertJsonFragment(['code' => 'normalization_review'])
             ->assertJsonFragment(['code' => 'final_comparison'])
+            ->assertJsonFragment(['code' => 'supporting_evidence'])
             ->assertJsonFragment(['code' => 'approval_trail'])
             ->assertJsonFragment(['code' => 'award_signoff']);
+    }
+
+    public function testEvidenceVaultSummaryBlocksReadyQuoteWithoutSourceFile(): void
+    {
+        [$user, $rfq] = $this->seedUserAndRfq();
+        $this->completeEvidenceRfq($user, $rfq, quoteFilePath: null);
+
+        $this->getJson(
+            '/api/v1/rfqs/' . $rfq->id . '/evidence-vault',
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id)
+        )
+            ->assertOk()
+            ->assertJsonPath('data.readiness.ready', false)
+            ->assertJsonFragment(['code' => 'QUOTE_SOURCE_FILE_MISSING']);
     }
 
     public function testEvidenceVaultSummaryUsesLatestAwardForSignoffReadiness(): void
@@ -688,6 +704,8 @@ final class EvidenceVaultApiTest extends ApiTestCase
         $response->assertJsonPath('data.manifest.summary.award_pack.version', 1);
         $response->assertJsonPath('data.manifest.summary.actions.can_finalize', false);
         $response->assertJsonPath('data.manifest.summary.actions.can_export', true);
+        $response->assertJsonPath('data.manifest.summary.sections.1.code', 'normalization_review');
+        $response->assertJsonPath('data.manifest.summary.sections.3.code', 'supporting_evidence');
 
         $bundleId = (string) $response->json('data.id');
         $checksum = (string) $response->json('data.checksum');
@@ -710,7 +728,11 @@ final class EvidenceVaultApiTest extends ApiTestCase
         $bundle = EvidenceBundle::query()->findOrFail($bundleId);
         self::assertNotNull($bundle->finalized_at);
         self::assertSame($checksum, hash('sha256', json_encode($bundle->manifest, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)));
-        self::assertSame(4, $bundle->items()->count());
+        self::assertSame(6, $bundle->items()->count());
+        self::assertSame(
+            ['approval_trail', 'award_signoff', 'final_comparison', 'normalization_review', 'quote_sources', 'supporting_evidence'],
+            $bundle->items()->orderBy('artifact_kind')->pluck('artifact_kind')->all(),
+        );
         self::assertSame($bundleId, $bundle->manifest['summary']['award_pack']['bundle_id'] ?? null);
 
         $firstManifest = $bundle->manifest;
@@ -1175,14 +1197,14 @@ final class EvidenceVaultApiTest extends ApiTestCase
     /**
      * @return array{comparison_run: ComparisonRun, approval: Approval, award: Award}
      */
-    private function completeEvidenceRfq(User $user, Rfq $rfq): array
+    private function completeEvidenceRfq(User $user, Rfq $rfq, ?string $quoteFilePath = 'quotes/complete-supplier.pdf'): array
     {
-        QuoteSubmission::query()->create([
+        $quote = QuoteSubmission::query()->create([
             'tenant_id' => $user->tenant_id,
             'rfq_id' => $rfq->id,
             'vendor_name' => 'Complete Supplier',
             'uploaded_by' => $user->id,
-            'file_path' => 'quotes/complete-supplier.pdf',
+            'file_path' => $quoteFilePath,
             'file_type' => 'application/pdf',
             'original_filename' => 'complete-supplier.pdf',
             'status' => 'ready',
@@ -1245,6 +1267,20 @@ final class EvidenceVaultApiTest extends ApiTestCase
             'split_details' => [],
             'signoff_at' => now(),
             'signed_off_by' => $user->id,
+        ]);
+
+        SupportingEvidence::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'quote_submission_id' => $quote->id,
+            'award_id' => $award->id,
+            'reason' => 'Buyer clarification retained for audit',
+            'original_filename' => 'buyer-clarification.pdf',
+            'file_type' => 'application/pdf',
+            'storage_path' => 'supporting-evidence/buyer-clarification.pdf',
+            'checksum' => hash('sha256', 'buyer-clarification'),
+            'uploaded_by' => $user->id,
+            'uploaded_at' => now(),
         ]);
 
         foreach (['quote_sources', 'final_comparison', 'approval_trail', 'award_signoff'] as $index => $eventType) {

@@ -105,6 +105,10 @@ Finalization blockers:
 
 Missing quote source file may be waived only with explicit buyer reason and actor attribution. A waiver is evidence, not silent success.
 
+Invariant V1: `draft_ready` and finalization require every ready/final quote included in the RFQ evidence pack to retain a non-empty source file path, unless a recorded waiver is represented as evidence.
+
+Invariant V2: Summary sections and finalized manifests must include Quote Sources, Normalization Review, Final Comparison, Approval Trail, Award and Signoff, and Supporting Evidence, even when an optional section has zero items.
+
 AI/provider unavailable must not block manual evidence assembly when deterministic/manual evidence exists. The Vault should disclose unavailable AI provenance truthfully and continue using stored workflow evidence.
 
 ## Evidence Sources
@@ -209,6 +213,13 @@ Manifest contents:
 - generated actor.
 
 Finalized manifests are immutable. If evidence changes after finalization, create a new bundle version and mark the old pack `superseded`.
+
+## Backprop Log
+
+| ID | Date | Cause | Guard |
+|---|---|---|---|
+| B1 | 2026-05-03 | Summary readiness counted ready quotes without checking retained source files. | V1 |
+| B2 | 2026-05-03 | Summary/finalization emitted only four evidence sections, omitting normalization review and supporting evidence from the manifest. | V2 |
 
 ## API Design
 
@@ -316,4 +327,3 @@ Before design-partner alpha can claim Evidence Vault support:
 - staging smoke must include evidence pack readiness or finalization if this feature is part of the launch claim.
 
 If implementation is not completed before external alpha, this feature must remain deferred and must not be marketed as supported.
-

@@ -12,6 +12,7 @@ use App\Models\EvidenceBundle;
 use App\Models\NormalizationConflict;
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
+use App\Models\SupportingEvidence;
 
 final readonly class EvidenceVaultSummaryService
 {
@@ -35,6 +36,10 @@ final readonly class EvidenceVaultSummaryService
             ->whereIn('status', ['ready', 'final'])
             ->latest('created_at')
             ->get();
+
+        $missingQuoteSourceFileCount = $quoteSubmissions
+            ->filter(static fn (QuoteSubmission $quote): bool => trim((string) ($quote->file_path ?? '')) === '')
+            ->count();
 
         $unresolvedConflictCount = NormalizationConflict::query()
             ->where('normalization_conflicts.tenant_id', $tenantId)
@@ -70,6 +75,13 @@ final readonly class EvidenceVaultSummaryService
 
         $signedOffAward = $award?->signoff_at !== null ? $award : null;
 
+        $supportingEvidence = SupportingEvidence::query()
+            ->where('tenant_id', $tenantId)
+            ->where('rfq_id', $rfqId)
+            ->latest('uploaded_at')
+            ->latest('created_at')
+            ->get();
+
         $bundle = EvidenceBundle::query()
             ->where('tenant_id', $tenantId)
             ->where('rfq_id', $rfqId)
@@ -90,6 +102,7 @@ final readonly class EvidenceVaultSummaryService
 
         $blockers = $this->blockers(
             quoteSubmissionCount: $quoteSubmissions->count(),
+            missingQuoteSourceFileCount: $missingQuoteSourceFileCount,
             unresolvedConflictCount: $unresolvedConflictCount,
             finalComparison: $finalComparison,
             approval: $approval,
@@ -101,7 +114,7 @@ final readonly class EvidenceVaultSummaryService
         $ready = $blockers === [];
         $status = $this->awardPackStatus($ready, $bundle);
         $timeline = $this->timeline($finalComparison, $approval, $signedOffAward, $decisionTrailEntries);
-        $sections = $this->sections($quoteSubmissions->count(), $finalComparison, $approval, $signedOffAward);
+        $sections = $this->sections($quoteSubmissions, $unresolvedConflictCount, $finalComparison, $approval, $signedOffAward, $supportingEvidence);
 
         return [
             'rfq' => [
@@ -136,6 +149,7 @@ final readonly class EvidenceVaultSummaryService
      */
     private function blockers(
         int $quoteSubmissionCount,
+        int $missingQuoteSourceFileCount,
         int $unresolvedConflictCount,
         ?ComparisonRun $finalComparison,
         ?Approval $approval,
@@ -151,6 +165,10 @@ final readonly class EvidenceVaultSummaryService
 
         if ($quoteSubmissionCount === 0) {
             $blockers[] = $this->blocker('QUOTE_SOURCE_MISSING', 'At least one ready quote source is required for the evidence pack.');
+        }
+
+        if ($missingQuoteSourceFileCount > 0) {
+            $blockers[] = $this->blocker('QUOTE_SOURCE_FILE_MISSING', 'Every ready quote source must retain its source file before finalization.');
         }
 
         if ($unresolvedConflictCount > 0) {
@@ -234,21 +252,54 @@ final readonly class EvidenceVaultSummaryService
     }
 
     /**
+     * @param iterable<QuoteSubmission> $quoteSubmissions
+     * @param iterable<SupportingEvidence> $supportingEvidence
      * @return list<array{code: string, label: string, status: string, items: list<array<string, mixed>>}>
      */
     private function sections(
-        int $quoteSubmissionCount,
+        iterable $quoteSubmissions,
+        int $unresolvedConflictCount,
         ?ComparisonRun $finalComparison,
         ?Approval $approval,
         ?Award $signedOffAward,
+        iterable $supportingEvidence,
     ): array {
+        $quoteItems = [];
+        foreach ($quoteSubmissions as $quoteSubmission) {
+            $quoteItems[] = [
+                'id' => (string) $quoteSubmission->id,
+                'vendor_name' => $quoteSubmission->vendor_name,
+                'original_filename' => $quoteSubmission->original_filename,
+                'file_path' => $quoteSubmission->file_path,
+                'status' => $quoteSubmission->status,
+            ];
+        }
+
+        $supportingEvidenceItems = [];
+        foreach ($supportingEvidence as $evidence) {
+            $supportingEvidenceItems[] = [
+                'id' => (string) $evidence->id,
+                'reason' => $evidence->reason,
+                'original_filename' => $evidence->original_filename,
+                'storage_path' => $evidence->storage_path,
+                'checksum' => $evidence->checksum,
+                'uploaded_at' => $evidence->uploaded_at?->toAtomString(),
+            ];
+        }
+
         return [
             [
                 'code' => 'quote_sources',
                 'label' => 'Quote sources',
-                'status' => $quoteSubmissionCount > 0 ? 'complete' : 'missing',
+                'status' => $quoteItems !== [] ? 'complete' : 'missing',
+                'items' => $quoteItems,
+            ],
+            [
+                'code' => 'normalization_review',
+                'label' => 'Normalization review',
+                'status' => $unresolvedConflictCount === 0 ? 'complete' : 'blocked',
                 'items' => [
-                    ['label' => 'Ready quote submissions', 'count' => $quoteSubmissionCount],
+                    ['label' => 'Unresolved normalization conflicts', 'count' => $unresolvedConflictCount],
                 ],
             ],
             [
@@ -258,6 +309,12 @@ final readonly class EvidenceVaultSummaryService
                 'items' => $finalComparison === null ? [] : [
                     ['id' => (string) $finalComparison->id, 'status' => $finalComparison->status],
                 ],
+            ],
+            [
+                'code' => 'supporting_evidence',
+                'label' => 'Supporting evidence',
+                'status' => $supportingEvidenceItems === [] ? 'optional' : 'complete',
+                'items' => $supportingEvidenceItems,
             ],
             [
                 'code' => 'approval_trail',

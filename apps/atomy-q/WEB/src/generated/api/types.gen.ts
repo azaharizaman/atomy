@@ -2417,6 +2417,9 @@ export type EvidenceVaultShowResponses = {
                     code: 'QUOTE_SOURCE_MISSING';
                     message: 'At least one ready quote source is required for the evidence pack.';
                 } | {
+                    code: 'QUOTE_SOURCE_FILE_MISSING';
+                    message: 'Every ready quote source must retain its source file before finalization.';
+                } | {
                     code: 'NORMALIZATION_CONFLICT_UNRESOLVED';
                     message: 'Resolve all quote normalization conflicts before finalization.';
                 } | {
@@ -2458,9 +2461,21 @@ export type EvidenceVaultShowResponses = {
                     code: 'quote_sources';
                     label: 'Quote sources';
                     status: 'complete' | 'missing';
+                    items: Array<{
+                        id: string;
+                        vendor_name: string;
+                        original_filename: string;
+                        file_path: string;
+                        status: string;
+                    }>;
+                },
+                {
+                    code: 'normalization_review';
+                    label: 'Normalization review';
+                    status: 'complete' | 'blocked';
                     items: [
                         {
-                            label: 'Ready quote submissions';
+                            label: 'Unresolved normalization conflicts';
                             count: number;
                         }
                     ];
@@ -2475,6 +2490,19 @@ export type EvidenceVaultShowResponses = {
                             status: string;
                         }
                     ];
+                },
+                {
+                    code: 'supporting_evidence';
+                    label: 'Supporting evidence';
+                    status: 'optional' | 'complete';
+                    items: Array<{
+                        id: string;
+                        reason: string;
+                        original_filename: string;
+                        storage_path: string;
+                        checksum: string;
+                        uploaded_at: string;
+                    }>;
                 },
                 {
                     code: 'approval_trail';

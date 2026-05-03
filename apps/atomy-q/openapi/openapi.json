@@ -6888,6 +6888,23 @@
                                                                         "properties": {
                                                                             "code": {
                                                                                 "type": "string",
+                                                                                "const": "QUOTE_SOURCE_FILE_MISSING"
+                                                                            },
+                                                                            "message": {
+                                                                                "type": "string",
+                                                                                "const": "Every ready quote source must retain its source file before finalization."
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "code",
+                                                                            "message"
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "code": {
+                                                                                "type": "string",
                                                                                 "const": "NORMALIZATION_CONFLICT_UNRESOLVED"
                                                                             },
                                                                             "message": {
@@ -7090,13 +7107,69 @@
                                                                 },
                                                                 "items": {
                                                                     "type": "array",
+                                                                    "items": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "id": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "vendor_name": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "original_filename": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "file_path": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "status": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "id",
+                                                                            "vendor_name",
+                                                                            "original_filename",
+                                                                            "file_path",
+                                                                            "status"
+                                                                        ]
+                                                                    }
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "code",
+                                                                "label",
+                                                                "status",
+                                                                "items"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "code": {
+                                                                    "type": "string",
+                                                                    "const": "normalization_review"
+                                                                },
+                                                                "label": {
+                                                                    "type": "string",
+                                                                    "const": "Normalization review"
+                                                                },
+                                                                "status": {
+                                                                    "type": "string",
+                                                                    "enum": [
+                                                                        "complete",
+                                                                        "blocked"
+                                                                    ]
+                                                                },
+                                                                "items": {
+                                                                    "type": "array",
                                                                     "prefixItems": [
                                                                         {
                                                                             "type": "object",
                                                                             "properties": {
                                                                                 "label": {
                                                                                     "type": "string",
-                                                                                    "const": "Ready quote submissions"
+                                                                                    "const": "Unresolved normalization conflicts"
                                                                                 },
                                                                                 "count": {
                                                                                     "type": "integer",
@@ -7174,6 +7247,66 @@
                                                                             "additionalItems": false
                                                                         }
                                                                     ]
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "code",
+                                                                "label",
+                                                                "status",
+                                                                "items"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "code": {
+                                                                    "type": "string",
+                                                                    "const": "supporting_evidence"
+                                                                },
+                                                                "label": {
+                                                                    "type": "string",
+                                                                    "const": "Supporting evidence"
+                                                                },
+                                                                "status": {
+                                                                    "type": "string",
+                                                                    "enum": [
+                                                                        "optional",
+                                                                        "complete"
+                                                                    ]
+                                                                },
+                                                                "items": {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "object",
+                                                                        "properties": {
+                                                                            "id": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "reason": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "original_filename": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "storage_path": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "checksum": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "uploaded_at": {
+                                                                                "type": "string"
+                                                                            }
+                                                                        },
+                                                                        "required": [
+                                                                            "id",
+                                                                            "reason",
+                                                                            "original_filename",
+                                                                            "storage_path",
+                                                                            "checksum",
+                                                                            "uploaded_at"
+                                                                        ]
+                                                                    }
                                                                 }
                                                             },
                                                             "required": [
@@ -7308,8 +7441,8 @@
                                                             ]
                                                         }
                                                     ],
-                                                    "minItems": 4,
-                                                    "maxItems": 4,
+                                                    "minItems": 6,
+                                                    "maxItems": 6,
                                                     "additionalItems": false
                                                 },
                                                 "actions": {

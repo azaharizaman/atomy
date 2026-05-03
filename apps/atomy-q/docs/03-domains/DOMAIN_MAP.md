@@ -16,13 +16,13 @@ This is the route inventory for the implemented Atomy-Q frontend. Behavior rules
 | Access and onboarding | `/login`, `/register-company`, `/forgot-password`, `/reset-password` | active | Public auth and onboarding flows. |
 | Dashboard shell | `/` | active | Main landing page and workspace entry point. |
 | Requisition | `/rfqs`, `/rfqs/new` | active | RFQ list, filtering, and creation. |
-| RFQ workspace | `/rfqs/[rfqId]/overview`, `/details`, `/line-items`, `/vendors`, `/quote-intake`, `/comparison-runs`, `/award`, `/approvals`, `/decision-trail`, `/quote-intake/[quoteId]/normalize`, `/comparison-runs/[runId]` | active | Workspace layout with the Active Record Menu and RFQ record context. |
-| Deferred RFQ sections | `/rfqs/[rfqId]/documents`, `/negotiations`, `/risk` | alpha-deferred | Present in routing, hidden by alpha mode. |
+| RFQ workspace | `/rfqs/[rfqId]/overview`, `/details`, `/line-items`, `/vendors`, `/quote-intake`, `/comparison-runs`, `/award`, `/approvals`, `/decision-trail`, `/documents`, `/quote-intake/[quoteId]/normalize`, `/comparison-runs/[runId]` | active | Workspace layout with the Active Record Menu and RFQ record context. `/documents` is the RFQ Evidence Vault, not a generic document library. |
+| Deferred RFQ sections | `/rfqs/[rfqId]/negotiations`, `/risk` | alpha-deferred | Present in routing, hidden by alpha mode. |
 | RFQ section stub | `/rfqs/[rfqId]/[section]` | scaffolded | Navigation parity only. |
 | Projects | `/projects`, `/projects/[projectId]` | feature-flagged | Controlled by `useFeatureFlags().projects`. |
 | Task Inbox | `/tasks` | feature-flagged | Controlled by `useFeatureFlags().tasks`. |
 | Approval Queue | `/approvals`, `/approvals/[id]` | active | Global approval list and detail views. |
-| Documents | `/documents` | alpha-deferred | Top-level document surface. |
+| Documents | `/documents` | alpha-deferred | Top-level generic document surface is intentionally deferred/removed from alpha navigation; RFQ evidence belongs in `/rfqs/[rfqId]/documents`. |
 | Reporting | `/reporting` | alpha-deferred | Top-level reporting surface. |
 | Settings | `/settings`, `/settings/users`, `/settings/scoring-policies`, `/settings/templates`, `/settings/integrations`, `/settings/feature-flags` | alpha-deferred | Workspace administration surface. |
 

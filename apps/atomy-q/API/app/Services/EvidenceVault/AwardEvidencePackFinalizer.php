@@ -223,7 +223,9 @@ final readonly class AwardEvidencePackFinalizer
     {
         return match ($sectionCode) {
             'quote_sources' => 'quote_submission',
+            'normalization_review' => 'normalization_review',
             'final_comparison' => 'comparison_run',
+            'supporting_evidence' => 'supporting_evidence',
             'approval_trail' => 'approval',
             'award_signoff' => 'award',
             default => 'evidence_summary',

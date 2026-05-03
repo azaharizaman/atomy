@@ -16,7 +16,7 @@ If the auth store has no valid authenticated session:
 If `NEXT_PUBLIC_ALPHA_MODE=true`:
 - The dashboard nav only keeps the alpha-visible top-level entries
 - `Documents`, `Reporting`, `Settings`, and `Approval Queue` disappear from the main nav
-- The RFQ workspace hides alpha-deferred record links such as `Documents`, `Negotiations`, and `Risk & Compliance`
+- The RFQ workspace hides alpha-deferred record links such as `Negotiations` and `Risk & Compliance`; `Documents` remains visible as the RFQ Evidence Vault
 - `Documents`, `Reporting`, and `Settings` pages render the shared deferred screen instead of their normal content
 
 ## Rule 003 - Projects Feature Toggles Cross-Domain Links
@@ -97,4 +97,3 @@ If a feature-flagged domain is disabled:
 - The shell hides the entry point first
 - The route page should avoid fetching data it cannot render
 - Any cross-link into that domain should be removed or downgraded to plain text
-
