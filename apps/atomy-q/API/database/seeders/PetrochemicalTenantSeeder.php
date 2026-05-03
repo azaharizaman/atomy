@@ -7,9 +7,13 @@ namespace Database\Seeders;
 use App\Models\Approval;
 use App\Models\Award;
 use App\Models\ComparisonRun;
+use App\Models\DecisionTrailEntry;
+use App\Models\NormalizationConflict;
+use App\Models\NormalizationSourceLine;
 use App\Models\Project;
 use App\Models\ProjectAcl;
 use App\Models\QuoteSubmission;
+use App\Models\RiskItem;
 use App\Models\Rfq;
 use App\Models\RfqLineItem;
 use App\Models\Tenant;
@@ -803,7 +807,7 @@ final class PetrochemicalTenantSeeder extends Seeder
         string $status,
         int $rfqIndex,
         int $quoteIndex,
-    ): void {
+    ): QuoteSubmission {
         $submittedAt = $this->now->copy()->subDays($quoteIndex % 6);
         $processingStartedAt = null;
         $processingCompletedAt = null;
@@ -834,6 +838,19 @@ final class PetrochemicalTenantSeeder extends Seeder
             $processingCompletedAt = $parsedAt?->copy()->addMinutes(1);
         }
 
+        $hasReviewableNormalization = in_array(
+            $status,
+            ["ready", "needs_review"],
+            true,
+        );
+
+        if ($hasReviewableNormalization) {
+            $lineItemsCount = RfqLineItem::query()
+                ->where("tenant_id", $this->tenantId)
+                ->where("rfq_id", $rfq->id)
+                ->count();
+        }
+
         if ($status === "ready") {
             $confidence = round(
                 72.0 +
@@ -842,12 +859,12 @@ final class PetrochemicalTenantSeeder extends Seeder
                         27.0,
                 2,
             );
-            $lineItemsCount = 3 + ((($rfqIndex + $quoteIndex) * 7) % 23);
             $warningsCount = (($rfqIndex + $quoteIndex) * 5) % 3;
         }
 
         if ($status === "needs_review") {
             $warningsCount = 2 + ($quoteIndex % 3);
+            $confidence = round(54.0 + (($rfqIndex + $quoteIndex) % 12), 2);
         }
 
         if ($status === "failed") {
@@ -872,7 +889,7 @@ final class PetrochemicalTenantSeeder extends Seeder
 
         $storagePath = $this->copyFixtureIntoQuoteStorage($entry);
 
-        QuoteSubmission::query()->create([
+        $submission = QuoteSubmission::query()->create([
             "id" => (string) Str::ulid(),
             "tenant_id" => $this->tenantId,
             "rfq_id" => $rfq->id,
@@ -894,6 +911,133 @@ final class PetrochemicalTenantSeeder extends Seeder
             "processing_completed_at" => $processingCompletedAt,
             "parsed_at" => $parsedAt,
             "retry_count" => $retryCount,
+        ]);
+
+        if ($hasReviewableNormalization) {
+            $this->seedNormalizationSourceLines(
+                $submission,
+                $rfqIndex,
+                $quoteIndex,
+                $status,
+            );
+        }
+
+        if (in_array($status, ["needs_review", "failed"], true)) {
+            $this->seedQuoteRiskItem($submission, $status);
+        }
+
+        return $submission;
+    }
+
+    private function seedNormalizationSourceLines(
+        QuoteSubmission $submission,
+        int $rfqIndex,
+        int $quoteIndex,
+        string $status,
+    ): void {
+        $lineItems = RfqLineItem::query()
+            ->where("tenant_id", $this->tenantId)
+            ->where("rfq_id", $submission->rfq_id)
+            ->orderBy("sort_order")
+            ->get();
+
+        foreach ($lineItems as $position => $lineItem) {
+            $variance =
+                1.0 +
+                (($quoteIndex - 1) * 0.035) +
+                (($position % 5) - 2) * 0.006;
+            $sourceUnitPrice = round((float) $lineItem->unit_price * $variance, 4);
+            $confidence = $status === "ready"
+                ? round(0.82 + (($position + $quoteIndex) % 12) / 100, 2)
+                : round(0.55 + (($position + $quoteIndex) % 9) / 100, 2);
+
+            $sourceLine = NormalizationSourceLine::query()->create([
+                "id" => (string) Str::ulid(),
+                "tenant_id" => $this->tenantId,
+                "quote_submission_id" => $submission->id,
+                "rfq_line_item_id" => $lineItem->id,
+                "source_vendor" => $submission->vendor_name,
+                "source_description" => (string) $lineItem->description,
+                "source_quantity" => $lineItem->quantity,
+                "source_uom" => (string) $lineItem->uom,
+                "source_unit_price" => $sourceUnitPrice,
+                "raw_data" => [
+                    "provenance" => [
+                        "origin" => "seed_fixture_pdf",
+                        "business_context" => "petrochemical_supplier_quote",
+                    ],
+                    "provider_provenance" => [
+                        "origin" => "deterministic_seed_fixture",
+                        "provider" => "atomy_seed_catalog",
+                        "confidence" => $confidence,
+                        "rfq_index" => $rfqIndex,
+                        "quote_index" => $quoteIndex,
+                    ],
+                    "provider_suggested" => [
+                        "source_description" => (string) $lineItem->description,
+                        "rfq_line_item_id" => (string) $lineItem->id,
+                        "quantity" => (string) $lineItem->quantity,
+                        "uom" => (string) $lineItem->uom,
+                        "unit_price" => number_format($sourceUnitPrice, 4, ".", ""),
+                    ],
+                ],
+                "ai_confidence" => $confidence,
+                "taxonomy_code" => sprintf(
+                    "NFC-%s-%02d",
+                    strtoupper(substr((string) $lineItem->uom, 0, 3)),
+                    ($rfqIndex + $position) % 97,
+                ),
+                "mapping_version" => "seed-v2",
+                "sort_order" => (int) $lineItem->sort_order,
+            ]);
+
+            if ($status === "needs_review" && $position === 0) {
+                NormalizationConflict::query()->create([
+                    "id" => (string) Str::ulid(),
+                    "tenant_id" => $this->tenantId,
+                    "normalization_source_line_id" => $sourceLine->id,
+                    "conflict_type" => "LOW_CONFIDENCE_MAPPING",
+                    "resolution" => null,
+                    "resolved_at" => null,
+                    "resolved_by" => null,
+                ]);
+            }
+
+            if ($status === "needs_review" && $position === 1) {
+                NormalizationConflict::query()->create([
+                    "id" => (string) Str::ulid(),
+                    "tenant_id" => $this->tenantId,
+                    "normalization_source_line_id" => $sourceLine->id,
+                    "conflict_type" => "UOM_REVIEWED",
+                    "resolution" => "accepted_as_supplier_specific_packaging",
+                    "resolved_at" => $this->now->copy()->subHours(18),
+                    "resolved_by" => $this->userIds[0],
+                ]);
+            }
+        }
+    }
+
+    private function seedQuoteRiskItem(
+        QuoteSubmission $submission,
+        string $status,
+    ): void {
+        RiskItem::query()->create([
+            "id" => (string) Str::ulid(),
+            "tenant_id" => $this->tenantId,
+            "rfq_id" => $submission->rfq_id,
+            "severity" => $status === "failed" ? "high" : "medium",
+            "title" => $status === "failed"
+                ? "Quote extraction failed"
+                : "Quote normalization requires buyer review",
+            "description" => sprintf(
+                "%s submitted by %s requires procurement follow-up before comparison readiness.",
+                (string) $submission->original_filename,
+                (string) $submission->vendor_name,
+            ),
+            "source" => "quote_submission",
+            "status" => "open",
+            "resolved_at" => null,
+            "resolved_by" => null,
         ]);
     }
 
@@ -949,6 +1093,9 @@ final class PetrochemicalTenantSeeder extends Seeder
             return;
         }
 
+        $snapshot = $this->comparisonSnapshotPayload($rfq, $quotes);
+        $matrix = $this->comparisonMatrixPayload($quotes);
+
         // Create preview comparison run
         $runPreview = ComparisonRun::query()->create([
             "id" => (string) Str::ulid(),
@@ -960,11 +1107,14 @@ final class PetrochemicalTenantSeeder extends Seeder
             "is_preview" => true,
             "created_by" => $this->userIds[0],
             "request_payload" => ["rfq_id" => $rfq->id, "phase" => "preview"],
-            "matrix_payload" => ["rows" => []],
+            "matrix_payload" => $matrix,
             "scoring_payload" => ["vendors" => []],
             "approval_payload" => [],
-            "response_payload" => ["status" => "preview"],
-            "readiness_payload" => ["ready_quotes" => $quotes->count()],
+            "response_payload" => ["status" => "preview", "snapshot" => $snapshot],
+            "readiness_payload" => $this->comparisonReadinessPayload(
+                isReady: true,
+                isPreviewOnly: true,
+            ),
             "status" => "draft",
             "version" => 1,
             "expires_at" => $this->now->copy()->addDays(3),
@@ -972,7 +1122,6 @@ final class PetrochemicalTenantSeeder extends Seeder
 
         // Create final comparison run
         $scores = [];
-        $matrix = [];
         foreach ($quotes->values() as $idx => $q) {
             $total =
                 58 +
@@ -989,11 +1138,6 @@ final class PetrochemicalTenantSeeder extends Seeder
                 "delivery_score" => round(min(99.0, $total - 2), 2),
                 "technical_score" => round(min(99.0, $total + 3 - $idx), 2),
             ];
-            $matrix[] = [
-                "quote_id" => $q->id,
-                "vendor" => $q->vendor_name,
-                "normalized_total" => round($total * 1200, 2),
-            ];
         }
 
         $runFinal = ComparisonRun::query()->create([
@@ -1006,20 +1150,38 @@ final class PetrochemicalTenantSeeder extends Seeder
             "is_preview" => false,
             "created_by" => $this->userIds[0],
             "request_payload" => ["rfq_id" => $rfq->id, "phase" => "final"],
-            "matrix_payload" => ["rows" => $matrix, "locked" => true],
+            "matrix_payload" => $matrix,
             "scoring_payload" => ["vendors" => $scores, "ranked" => true],
             "approval_payload" => ["policy_id" => $this->scoringPolicyId],
             "response_payload" => [
-                "snapshot" => [
-                    "rfq_id" => $rfq->id,
-                    "quote_ids" => $quotes->pluck("id")->all(),
-                ],
+                "snapshot" => $snapshot,
             ],
-            "readiness_payload" => ["all_ready" => true],
+            "readiness_payload" => $this->comparisonReadinessPayload(
+                isReady: true,
+                isPreviewOnly: false,
+            ),
             "status" => "final",
             "version" => 1,
             "expires_at" => null,
         ]);
+
+        $this->appendDecisionTrailEntry(
+            tenantId: $this->tenantId,
+            rfqId: (string) $rfq->id,
+            comparisonRunId: (string) $runFinal->id,
+            eventType: "comparison_snapshot_frozen",
+            summary: [
+                "comparison_run_id" => (string) $runFinal->id,
+                "ready_quote_count" => $quotes->count(),
+                "normalized_line_count" => NormalizationSourceLine::query()
+                    ->where("tenant_id", $this->tenantId)
+                    ->whereIn("quote_submission_id", $quotes->pluck("id")->all())
+                    ->count(),
+                "scoring_policy_id" => $this->scoringPolicyId,
+                "artifact_origin" => "deterministic_fact",
+            ],
+            occurredAt: $this->now->copy()->subDays(3),
+        );
 
         // Create approval
         $approved = $kind === "awarded";
@@ -1089,6 +1251,37 @@ final class PetrochemicalTenantSeeder extends Seeder
                     "signed_off_by" => $this->userIds[0],
                 ]);
 
+                $this->appendDecisionTrailEntry(
+                    tenantId: $this->tenantId,
+                    rfqId: (string) $rfq->id,
+                    comparisonRunId: (string) $runFinal->id,
+                    eventType: "award_created",
+                    summary: [
+                        "award_id" => (string) $award->id,
+                        "vendor_id" => (string) $winnerQuote->vendor_id,
+                        "comparison_run_id" => (string) $runFinal->id,
+                        "amount" => $amount,
+                        "currency" => "USD",
+                        "actor_id" => $this->userIds[0],
+                    ],
+                    occurredAt: $this->now->copy()->subDays(2),
+                );
+
+                $this->appendDecisionTrailEntry(
+                    tenantId: $this->tenantId,
+                    rfqId: (string) $rfq->id,
+                    comparisonRunId: (string) $runFinal->id,
+                    eventType: "award_signed_off",
+                    summary: [
+                        "award_id" => (string) $award->id,
+                        "vendor_id" => (string) $winnerQuote->vendor_id,
+                        "comparison_run_id" => (string) $runFinal->id,
+                        "signed_off_by" => $this->userIds[0],
+                        "signed_off_at" => $this->now->toAtomString(),
+                    ],
+                    occurredAt: $this->now->copy()->subDay(),
+                );
+
                 // Seed handoff
                 DB::table("handoffs")->insert([
                     "id" => (string) Str::ulid(),
@@ -1105,5 +1298,198 @@ final class PetrochemicalTenantSeeder extends Seeder
                 ]);
             }
         }
+    }
+
+    private function comparisonSnapshotPayload(Rfq $rfq, mixed $quotes): array
+    {
+        $quoteIds = $quotes->pluck("id")->all();
+        $sourceLines = NormalizationSourceLine::query()
+            ->with("quoteSubmission")
+            ->where("tenant_id", $this->tenantId)
+            ->whereIn("quote_submission_id", $quoteIds)
+            ->orderBy("rfq_line_item_id")
+            ->orderBy("quote_submission_id")
+            ->orderBy("sort_order")
+            ->get();
+
+        $currencyMeta = [];
+        foreach ($sourceLines as $line) {
+            if ($line->rfq_line_item_id !== null) {
+                $currencyMeta[(string) $line->rfq_line_item_id] = "USD";
+            }
+        }
+
+        return [
+            "rfq_id" => (string) $rfq->id,
+            "rfq_number" => (string) $rfq->rfq_number,
+            "rfq_version" => 1,
+            "quote_ids" => array_values(array_map("strval", $quoteIds)),
+            "normalized_lines" => $sourceLines
+                ->map(
+                    static fn(NormalizationSourceLine $line): array => [
+                        "rfq_line_item_id" => $line->rfq_line_item_id !== null
+                            ? (string) $line->rfq_line_item_id
+                            : "",
+                        "source_description" => (string) ($line->source_description ?? ""),
+                        "source_line_id" => (string) $line->id,
+                        "quote_submission_id" => (string) $line->quote_submission_id,
+                        "vendor_id" => $line->quoteSubmission?->vendor_id !== null
+                            ? (string) $line->quoteSubmission->vendor_id
+                            : null,
+                        "source_unit_price" => $line->source_unit_price !== null
+                            ? (string) $line->source_unit_price
+                            : null,
+                        "source_uom" => $line->source_uom !== null
+                            ? (string) $line->source_uom
+                            : null,
+                        "source_quantity" => $line->source_quantity !== null
+                            ? (string) $line->source_quantity
+                            : null,
+                    ],
+                )
+                ->values()
+                ->all(),
+            "resolutions" => NormalizationConflict::query()
+                ->where("tenant_id", $this->tenantId)
+                ->whereIn(
+                    "normalization_source_line_id",
+                    $sourceLines->pluck("id")->all(),
+                )
+                ->whereNotNull("resolution")
+                ->orderBy("created_at")
+                ->get()
+                ->map(
+                    static fn(NormalizationConflict $conflict): array => [
+                        "normalization_conflict_id" => (string) $conflict->id,
+                        "normalization_source_line_id" => (string) $conflict->normalization_source_line_id,
+                        "conflict_type" => (string) $conflict->conflict_type,
+                        "resolution" => (string) $conflict->resolution,
+                        "resolved_at" => $conflict->resolved_at?->toAtomString(),
+                    ],
+                )
+                ->values()
+                ->all(),
+            "currency_meta" => $currencyMeta,
+            "vendors" => $quotes
+                ->map(
+                    static fn(QuoteSubmission $quote): array => [
+                        "vendor_id" => (string) $quote->vendor_id,
+                        "vendor_name" => (string) $quote->vendor_name,
+                        "quote_submission_id" => (string) $quote->id,
+                    ],
+                )
+                ->values()
+                ->all(),
+        ];
+    }
+
+    private function comparisonMatrixPayload(mixed $quotes): array
+    {
+        $sourceLines = NormalizationSourceLine::query()
+            ->with("quoteSubmission")
+            ->where("tenant_id", $this->tenantId)
+            ->whereIn("quote_submission_id", $quotes->pluck("id")->all())
+            ->whereNotNull("rfq_line_item_id")
+            ->orderBy("rfq_line_item_id")
+            ->orderBy("source_unit_price")
+            ->get();
+
+        $clusters = $sourceLines
+            ->groupBy(static fn(NormalizationSourceLine $line): string => (string) $line->rfq_line_item_id)
+            ->map(function ($lines, string $rfqLineItemId): array {
+                $offers = $lines
+                    ->map(
+                        static fn(NormalizationSourceLine $line): array => [
+                            "vendor_id" => $line->quoteSubmission?->vendor_id !== null
+                                ? (string) $line->quoteSubmission->vendor_id
+                                : "",
+                            "rfq_line_id" => $rfqLineItemId,
+                            "taxonomy_code" => (string) ($line->taxonomy_code ?? "NFC-SEED"),
+                            "normalized_unit_price" => (float) $line->source_unit_price,
+                            "normalized_quantity" => (float) $line->source_quantity,
+                            "ai_confidence" => (float) ($line->ai_confidence ?? 0.75),
+                        ],
+                    )
+                    ->values();
+
+                $prices = $offers->pluck("normalized_unit_price")->all();
+                $recommended = $offers
+                    ->sortBy("normalized_unit_price")
+                    ->first();
+
+                return [
+                    "cluster_key" => "rfq:" . $rfqLineItemId,
+                    "basis" => "rfq_line_item",
+                    "offers" => $offers->all(),
+                    "statistics" => [
+                        "min_normalized_unit_price" => round(min($prices), 4),
+                        "max_normalized_unit_price" => round(max($prices), 4),
+                        "avg_normalized_unit_price" => round(
+                            array_sum($prices) / max(1, count($prices)),
+                            4,
+                        ),
+                    ],
+                    "recommendation" => [
+                        "recommended_vendor_id" =>
+                            (string) ($recommended["vendor_id"] ?? ""),
+                        "reason" => "Lowest normalized unit price in seeded petrochemical comparison.",
+                    ],
+                ];
+            })
+            ->values()
+            ->all();
+
+        return ["clusters" => $clusters];
+    }
+
+    private function comparisonReadinessPayload(
+        bool $isReady,
+        bool $isPreviewOnly,
+    ): array {
+        return [
+            "is_ready" => $isReady,
+            "is_preview_only" => $isPreviewOnly,
+            "blockers" => [],
+            "warnings" => [],
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $summary
+     */
+    private function appendDecisionTrailEntry(
+        string $tenantId,
+        string $rfqId,
+        string $comparisonRunId,
+        string $eventType,
+        array $summary,
+        Carbon $occurredAt,
+    ): void {
+        $previous = DecisionTrailEntry::query()
+            ->where("tenant_id", $tenantId)
+            ->where("comparison_run_id", $comparisonRunId)
+            ->orderByDesc("sequence")
+            ->first();
+
+        $sequence = max(1, ((int) ($previous?->sequence ?? 0)) + 1);
+        $previousHash =
+            $previous?->entry_hash ?? hash("sha256", "genesis:" . $comparisonRunId);
+        $payloadJson = json_encode($summary, JSON_THROW_ON_ERROR);
+        $payloadHash = hash("sha256", $payloadJson);
+        $entryHash = hash("sha256", $previousHash . $payloadHash . $sequence);
+
+        DecisionTrailEntry::query()->create([
+            "id" => (string) Str::ulid(),
+            "tenant_id" => $tenantId,
+            "comparison_run_id" => $comparisonRunId,
+            "rfq_id" => $rfqId,
+            "sequence" => $sequence,
+            "event_type" => $eventType,
+            "summary_payload" => $summary,
+            "payload_hash" => $payloadHash,
+            "previous_hash" => $previousHash,
+            "entry_hash" => $entryHash,
+            "occurred_at" => $occurredAt,
+        ]);
     }
 }
