@@ -8,7 +8,7 @@
 
 ## Purpose
 
-This matrix defines which API and WEB tests count as Atomy-Q alpha release evidence. Smoke-only route checks are listed as smoke-only and do not count as feature coverage.
+Only this matrix defines which API and WEB tests count as Atomy-Q alpha release evidence. Smoke-only route checks are listed as smoke-only and do not count as feature coverage.
 
 Status values:
 
