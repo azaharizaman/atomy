@@ -682,6 +682,12 @@ final class EvidenceVaultApiTest extends ApiTestCase
         $response->assertJsonPath('data.version', 1);
         $response->assertJsonPath('data.manifest.rfq.id', (string) $rfq->id);
         $response->assertJsonPath('data.manifest.rfq.title', 'Evidence RFQ');
+        $response->assertJsonPath('data.manifest.bundle.status', 'finalized');
+        $response->assertJsonPath('data.manifest.bundle.version', 1);
+        $response->assertJsonPath('data.manifest.summary.award_pack.status', 'finalized');
+        $response->assertJsonPath('data.manifest.summary.award_pack.version', 1);
+        $response->assertJsonPath('data.manifest.summary.actions.can_finalize', false);
+        $response->assertJsonPath('data.manifest.summary.actions.can_export', true);
 
         $bundleId = (string) $response->json('data.id');
         $checksum = (string) $response->json('data.checksum');
@@ -705,6 +711,7 @@ final class EvidenceVaultApiTest extends ApiTestCase
         self::assertNotNull($bundle->finalized_at);
         self::assertSame($checksum, hash('sha256', json_encode($bundle->manifest, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)));
         self::assertSame(4, $bundle->items()->count());
+        self::assertSame($bundleId, $bundle->manifest['summary']['award_pack']['bundle_id'] ?? null);
 
         $firstManifest = $bundle->manifest;
 
@@ -720,6 +727,19 @@ final class EvidenceVaultApiTest extends ApiTestCase
         $bundle->refresh();
         self::assertSame('superseded', $bundle->status);
         self::assertSame($firstManifest, $bundle->manifest);
+        self::assertSame([1, 2], EvidenceBundle::query()
+            ->where('tenant_id', $user->tenant_id)
+            ->where('rfq_id', $rfq->id)
+            ->where('type', 'award_justification')
+            ->orderBy('version')
+            ->pluck('version')
+            ->all());
+        self::assertSame(1, EvidenceBundle::query()
+            ->where('tenant_id', $user->tenant_id)
+            ->where('rfq_id', $rfq->id)
+            ->where('type', 'award_justification')
+            ->where('status', 'finalized')
+            ->count());
         $this->assertDatabaseHas('evidence_bundles', [
             'id' => (string) $secondResponse->json('data.id'),
             'tenant_id' => $user->tenant_id,
@@ -756,6 +776,13 @@ final class EvidenceVaultApiTest extends ApiTestCase
         $response->assertJsonPath('data.checksum', $bundle->checksum);
         $response->assertJsonPath('data.manifest.rfq.id', (string) $rfq->id);
         $response->assertJsonPath('data.manifest.bundle.version', 1);
+        $response->assertJsonPath('data.manifest.bundle.id', (string) $bundle->id);
+        $response->assertJsonPath('data.manifest.bundle.status', 'finalized');
+        $response->assertJsonPath('data.manifest.bundle.checksum_algorithm', 'sha256');
+        $response->assertJsonPath('data.manifest.summary.award_pack.bundle_id', (string) $bundle->id);
+        $response->assertJsonPath('data.manifest.summary.award_pack.status', 'finalized');
+        $response->assertJsonPath('data.manifest.summary.actions.can_finalize', false);
+        $response->assertJsonPath('data.manifest.summary.actions.can_export', true);
     }
 
     public function testSupportingEvidenceUploadStoresFileAndMetadata(): void

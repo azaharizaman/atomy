@@ -29,6 +29,7 @@ return new class extends Migration
             $table->index(['tenant_id', 'rfq_id']);
             $table->index(['tenant_id', 'status']);
             $table->index(['tenant_id', 'rfq_id', 'status']);
+            $table->unique(['tenant_id', 'rfq_id', 'type', 'version'], 'evidence_bundles_rfq_type_version_unique');
         });
     }
 

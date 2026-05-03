@@ -19,6 +19,7 @@ use App\Services\EvidenceVault\AwardEvidencePackFinalizer;
 use App\Services\EvidenceVault\EvidencePackNotReadyException;
 use App\Services\EvidenceVault\EvidenceVaultSummaryService;
 use App\Services\EvidenceVault\SupportingEvidenceStorageService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -115,6 +116,12 @@ final class EvidenceVaultController extends Controller
                     'evidence' => $exception->blockers(),
                 ],
             ], 422);
+        } catch (Throwable $throwable) {
+            report($throwable);
+
+            return response()->json([
+                'message' => 'Could not finalize evidence pack.',
+            ], 500);
         }
 
         return response()->json([
@@ -130,13 +137,23 @@ final class EvidenceVaultController extends Controller
             ->whereKey($rfqId)
             ->firstOrFail();
 
-        $bundle = EvidenceBundle::query()
-            ->where('tenant_id', $tenantId)
-            ->where('rfq_id', $rfqId)
-            ->where('type', 'award_justification')
-            ->where('status', 'finalized')
-            ->orderByDesc('version')
-            ->firstOrFail();
+        try {
+            $bundle = EvidenceBundle::query()
+                ->where('tenant_id', $tenantId)
+                ->where('rfq_id', $rfqId)
+                ->where('type', 'award_justification')
+                ->where('status', 'finalized')
+                ->orderByDesc('version')
+                ->firstOrFail();
+        } catch (ModelNotFoundException $exception) {
+            throw $exception;
+        } catch (Throwable $throwable) {
+            report($throwable);
+
+            return response()->json([
+                'message' => 'Could not export evidence pack.',
+            ], 500);
+        }
 
         return response()->json([
             'data' => [

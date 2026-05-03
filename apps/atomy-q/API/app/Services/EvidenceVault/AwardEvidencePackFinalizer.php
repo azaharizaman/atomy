@@ -6,13 +6,12 @@ namespace App\Services\EvidenceVault;
 
 use RuntimeException;
 
-use Illuminate\Support\Facades\DB;
-
 use App\Models\EvidenceBundle;
 use App\Models\EvidenceBundleItem;
 use App\Models\Rfq;
 use App\Models\User;
 use App\Services\QuoteIntake\DecisionTrailRecorder;
+use Illuminate\Support\Facades\DB;
 
 final readonly class AwardEvidencePackFinalizer
 {
@@ -24,15 +23,21 @@ final readonly class AwardEvidencePackFinalizer
 
     public function finalize(string $tenantId, Rfq $rfq, User $actor): EvidenceBundle
     {
-        $summary = $this->summaryService->summarize($tenantId, $rfq);
-        $readiness = $summary['readiness'] ?? [];
+        return DB::transaction(function () use ($tenantId, $rfq, $actor): EvidenceBundle {
+            $lockedRfq = Rfq::query()
+                ->where('tenant_id', $tenantId)
+                ->whereKey($rfq->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        if (($readiness['ready'] ?? false) !== true) {
-            throw new EvidencePackNotReadyException($this->blockers($readiness));
-        }
+            $summary = $this->summaryService->summarize($tenantId, $lockedRfq);
+            $readiness = $summary['readiness'] ?? [];
 
-        return DB::transaction(function () use ($tenantId, $rfq, $actor, $summary): EvidenceBundle {
-            $rfqId = (string) $rfq->id;
+            if (($readiness['ready'] ?? false) !== true) {
+                throw new EvidencePackNotReadyException($this->blockers($readiness));
+            }
+
+            $rfqId = (string) $lockedRfq->id;
             $version = $this->nextVersion($tenantId, $rfqId);
             $comparisonRunId = $this->sectionItemId($summary, 'final_comparison');
             $approvalId = $this->sectionItemId($summary, 'approval_trail');
@@ -61,6 +66,13 @@ final readonly class AwardEvidencePackFinalizer
             ]);
 
             $includedAt = now();
+            $finalizedSummary = $this->finalizedSummary(
+                summary: $summary,
+                bundleId: (string) $bundle->id,
+                version: $version,
+                finalizedAt: $includedAt->toAtomString(),
+            );
+
             foreach ($this->includedSources($summary) as $source) {
                 EvidenceBundleItem::query()->create([
                     'tenant_id' => $tenantId,
@@ -82,9 +94,12 @@ final readonly class AwardEvidencePackFinalizer
                     'type' => 'award_justification',
                     'version' => $version,
                     'status' => 'finalized',
+                    'finalized_at' => $includedAt->toAtomString(),
+                    'checksum_algorithm' => 'sha256',
                 ],
-                'rfq' => $summary['rfq'],
-                'summary' => $summary,
+                'rfq' => $finalizedSummary['rfq'],
+                'summary' => $finalizedSummary,
+                'actions' => $finalizedSummary['actions'],
                 'generated' => [
                     'actor_id' => (string) $actor->id,
                     'at' => $includedAt->toAtomString(),
@@ -110,6 +125,29 @@ final readonly class AwardEvidencePackFinalizer
 
             return $bundle->refresh();
         });
+    }
+
+    /**
+     * @param array<string, mixed> $summary
+     * @return array<string, mixed>
+     */
+    private function finalizedSummary(array $summary, string $bundleId, int $version, string $finalizedAt): array
+    {
+        $summary['award_pack'] = array_replace($summary['award_pack'] ?? [], [
+            'status' => 'finalized',
+            'bundle_id' => $bundleId,
+            'version' => $version,
+            'finalized_at' => $finalizedAt,
+            'checksum_source' => 'evidence_bundles.checksum',
+        ]);
+        unset($summary['award_pack']['checksum']);
+
+        $summary['actions'] = array_replace($summary['actions'] ?? [], [
+            'can_finalize' => false,
+            'can_export' => true,
+        ]);
+
+        return $summary;
     }
 
     private function nextVersion(string $tenantId, string $rfqId): int
