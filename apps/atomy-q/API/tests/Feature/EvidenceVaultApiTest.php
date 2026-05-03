@@ -40,14 +40,12 @@ final class EvidenceVaultApiTest extends ApiTestCase
             'tenant_id' => $user->tenant_id,
             'rfq_id' => $rfq->id,
             'type' => 'award_justification',
-            'status' => 'draft',
-            'version' => 1,
             'manifest' => ['rfq_id' => $rfq->id],
             'checksum' => null,
             'created_by' => $user->id,
         ]);
 
-        EvidenceBundleItem::query()->create([
+        $item = EvidenceBundleItem::query()->create([
             'tenant_id' => $user->tenant_id,
             'evidence_bundle_id' => $bundle->id,
             'source_type' => 'quote_submission',
@@ -58,7 +56,7 @@ final class EvidenceVaultApiTest extends ApiTestCase
             'included_at' => now(),
         ]);
 
-        SupportingEvidence::query()->create([
+        $supportingEvidence = SupportingEvidence::query()->create([
             'tenant_id' => $user->tenant_id,
             'rfq_id' => $rfq->id,
             'reason' => 'Clarification email from buyer',
@@ -84,6 +82,19 @@ final class EvidenceVaultApiTest extends ApiTestCase
             'rfq_id' => $rfq->id,
             'reason' => 'Clarification email from buyer',
         ]);
+
+        $bundle->refresh();
+        $item->refresh();
+        $supportingEvidence->refresh();
+
+        $this->assertSame('draft', $bundle->status);
+        $this->assertSame(1, $bundle->version);
+        $this->assertIsArray($bundle->manifest);
+        $this->assertIsArray($item->metadata);
+        $this->assertSame(1, $bundle->items()->count());
+        $this->assertTrue($item->bundle->is($bundle));
+        $this->assertTrue($supportingEvidence->rfq->is($rfq));
+        $this->assertTrue($supportingEvidence->uploader->is($user));
     }
 
     /**

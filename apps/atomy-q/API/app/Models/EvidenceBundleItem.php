@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EvidenceBundleItem extends Model
 {
@@ -36,4 +37,12 @@ class EvidenceBundleItem extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * @return BelongsTo<EvidenceBundle, $this>
+     */
+    public function bundle(): BelongsTo
+    {
+        return $this->belongsTo(EvidenceBundle::class, 'evidence_bundle_id');
+    }
 }
