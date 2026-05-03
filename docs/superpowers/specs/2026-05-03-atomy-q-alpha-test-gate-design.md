@@ -17,7 +17,7 @@ This design defines an alpha-first test expansion. It does not attempt to harden
 
 ## Non-Goals
 
-- Exhaustively backfill feature coverage for all account, settings, reports, integrations, handoffs, notifications, and document vault routes.
+- Exhaustively backfill feature coverage for all account, settings, reports, integrations, handoffs, notifications, top-level document library routes, and generic document-management routes.
 - Replace all existing tests.
 - Treat mocked WEB E2E as release evidence.
 - Add backward compatibility tests for legacy behavior.
@@ -35,6 +35,7 @@ The alpha gate covers these capabilities:
 - Comparison preview, finalization, matrix, readiness, and AI overlay.
 - Approval summary, approve, reject, history, and AI summary evidence.
 - Award creation, guidance, signoff, debrief, and repeat-action behavior.
+- RFQ Evidence Vault readiness, supporting evidence upload, award-pack finalization, manifest export, and generic Documents route removal.
 - Decision trail evidence for irreversible or AI-assisted decisions.
 - WEB alpha journeys for the same flow against the real local Laravel API.
 
@@ -80,6 +81,7 @@ Priority API domains:
 - Comparison runs.
 - Approvals.
 - Awards.
+- RFQ Evidence Vault.
 - Decision trail.
 
 ## API Shared Contract Layer
@@ -108,7 +110,7 @@ For alpha mutations with idempotency middleware or multi-write behavior:
 - Failed validation or business rule paths must not dispatch jobs, send mail, write files, or record success-state audit/decision evidence.
 - Irreversible actions such as signoff and award/debrief finalization must behave predictably on repeat.
 
-Priority mutations include RFQ creation, RFQ duplicate, RFQ bulk action, invitations, vendor recommendations, quote source lines, vendor creation, sanctions screening, comparison finalization, approval decisions, and award signoff/debrief.
+Priority mutations include RFQ creation, RFQ duplicate, RFQ bulk action, invitations, vendor recommendations, quote source lines, vendor creation, sanctions screening, comparison finalization, approval decisions, award signoff/debrief, RFQ Evidence Vault supporting evidence upload, and RFQ Evidence Vault award-pack finalization.
 
 ## WEB Unit And Hook Layer
 
@@ -140,6 +142,7 @@ Required alpha journeys:
 - Preview or finalize comparison.
 - Perform approval action.
 - Create or inspect award, signoff, and debrief behavior.
+- Open the RFQ Evidence Vault and verify readiness, blockers, or finalized export state.
 - Verify decision trail evidence appears for AI-assisted or irreversible actions.
 
 Mocked Playwright remains available for UI-only regression checks, but cannot satisfy release-gate evidence.
@@ -212,6 +215,7 @@ The implementation plan should refine exact commands from the current scripts an
 - Idempotent alpha mutations prove no duplicate records or duplicate side effects.
 - Multi-write alpha mutations prove no partial persistence on failure.
 - Decision trail or audit expectations are tested for comparison, approval, award, and AI-assisted decisions.
+- RFQ Evidence Vault tests prove RFQ scoping, wrong-tenant `404`, blocker reporting, supporting evidence storage behavior, manifest finalization, export, immutable finalized evidence, and generic Documents route removal.
 - Job, mail, storage, and AI side effects are asserted on success and failure where applicable.
 - WEB alpha hooks or adapters have live-mode success, transport failure, undefined payload, malformed payload, and empty-state coverage where applicable.
 - Playwright alpha release-gate tests run against the real local API with `NEXT_PUBLIC_USE_MOCKS=false`.

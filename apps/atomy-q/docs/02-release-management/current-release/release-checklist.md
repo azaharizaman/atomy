@@ -34,6 +34,14 @@ The strongest current local regression signal is the 2026-05-03 PostgreSQL-backe
 - `cd apps/atomy-q/API && php artisan atomy:verify-storage-disk --disk=s3 --path-prefix=alpha-storage-smoke`: PASS.
 - Release impact: local engineering gates are green for this branch, including the RFQ Evidence Vault scope. This still does not close deployed staging smoke, customer/operator disclosure, or required sign-offs.
 
+## Alpha Test Gate Checklist
+
+- [ ] Alpha test gate passed:
+  - API: `php artisan test --group=alpha-gate`
+  - WEB unit: `npm run test:unit`
+  - WEB real-API E2E: `NEXT_PUBLIC_USE_MOCKS=false npm run test:e2e:ci -- tests/alpha-gate-real-api.spec.ts`
+  - Matrix: `apps/atomy-q/docs/05-qa/alpha-test-matrix.md`
+
 ## Superseding Readiness Assessment - 2026-04-30
 
 This assessment was captured while drafting the superseding alpha launch readiness design. It does not replace a final Task 9 evidence run, but it identifies current no-go signals that must be closed or superseded by newer evidence.

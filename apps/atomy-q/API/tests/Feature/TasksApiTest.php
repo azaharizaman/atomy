@@ -12,8 +12,10 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+#[Group('alpha-gate')]
 class TasksApiTest extends TestCase
 {
     use RefreshDatabase;

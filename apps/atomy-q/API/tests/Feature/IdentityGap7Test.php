@@ -18,8 +18,10 @@ use Nexus\Identity\Contracts\SessionManagerInterface;
 use Illuminate\Support\Str;
 use Nexus\Identity\Contracts\MfaVerificationServiceInterface;
 use Nexus\Identity\ValueObjects\WebAuthnAuthenticationOptions;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\TestCase;
 
+#[Group('alpha-gate')]
 final class IdentityGap7Test extends TestCase
 {
     use RefreshDatabase;

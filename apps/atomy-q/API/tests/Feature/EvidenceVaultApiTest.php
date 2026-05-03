@@ -26,8 +26,10 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Mockery;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\Feature\Api\ApiTestCase;
 
+#[Group('alpha-gate')]
 final class EvidenceVaultApiTest extends ApiTestCase
 {
     use RefreshDatabase;
