@@ -87,6 +87,7 @@ const pathToLabel: Record<string, string> = {
   '/rfqs': 'Requisitions',
   '/tasks': 'Tasks',
   '/vendors': 'Vendors',
+  '/documents': 'Documents',
   '/reporting': 'Reports',
   '/approvals': 'Approvals',
   '/settings': 'Settings',

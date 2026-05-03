@@ -69,8 +69,16 @@ function requiredText(value: unknown, field: string): string {
   return text;
 }
 
-function optionalText(value: unknown): string | null {
-  return value === undefined || value === null ? null : String(value);
+function optionalText(value: unknown, field: string): string | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  if (typeof value !== 'string' || value.trim() === '') {
+    throw new Error(`Invalid evidence vault response: ${field} must be a non-empty string or null.`);
+  }
+
+  return value;
 }
 
 function optionalNumber(value: unknown, field: string): number | null {
@@ -78,7 +86,15 @@ function optionalNumber(value: unknown, field: string): number | null {
     return null;
   }
 
-  const number = Number(value);
+  if (typeof value !== 'number' && typeof value !== 'string') {
+    throw new Error(`Invalid evidence vault response: ${field} must be numeric.`);
+  }
+
+  if (typeof value === 'string' && !/^[+-]?(?:\d+|\d+\.\d+|\.\d+)$/.test(value.trim())) {
+    throw new Error(`Invalid evidence vault response: ${field} must be numeric.`);
+  }
+
+  const number = typeof value === 'number' ? value : Number(value.trim());
   if (!Number.isFinite(number)) {
     throw new Error(`Invalid evidence vault response: ${field} must be numeric.`);
   }
@@ -113,7 +129,7 @@ function normalizeTimelineItem(
     code: requiredText(row.code, `timeline[${index}].code`),
     label: requiredText(row.label, `timeline[${index}].label`),
     status: requiredText(row.status, `timeline[${index}].status`),
-    occurred_at: optionalText(row.occurred_at),
+    occurred_at: optionalText(row.occurred_at, `timeline[${index}].occurred_at`),
   };
 }
 
@@ -157,15 +173,15 @@ function normalizeEvidenceVaultSummary(payload: unknown): EvidenceVaultSummary {
   return {
     rfq: {
       id: requiredText(rfq.id, 'rfq.id'),
-      title: optionalText(rfq.title),
-      rfq_number: optionalText(rfq.rfq_number),
+      title: optionalText(rfq.title, 'rfq.title'),
+      rfq_number: optionalText(rfq.rfq_number, 'rfq.rfq_number'),
     },
     award_pack: {
       status: status as EvidenceVaultSummary['award_pack']['status'],
-      bundle_id: optionalText(awardPack.bundle_id),
+      bundle_id: optionalText(awardPack.bundle_id, 'award_pack.bundle_id'),
       version: optionalNumber(awardPack.version, 'award_pack.version'),
-      finalized_at: optionalText(awardPack.finalized_at),
-      checksum: optionalText(awardPack.checksum),
+      finalized_at: optionalText(awardPack.finalized_at, 'award_pack.finalized_at'),
+      checksum: optionalText(awardPack.checksum, 'award_pack.checksum'),
     },
     readiness: {
       ready: readiness.ready === true,
@@ -189,11 +205,11 @@ function normalizeSupportingEvidence(payload: unknown): SupportingEvidenceResult
     rfq_id: requiredText(row.rfq_id, 'rfq_id'),
     reason: requiredText(row.reason, 'reason'),
     original_filename: requiredText(row.original_filename, 'original_filename'),
-    file_type: optionalText(row.file_type),
+    file_type: optionalText(row.file_type, 'file_type'),
     storage_path: requiredText(row.storage_path, 'storage_path'),
     checksum: requiredText(row.checksum, 'checksum'),
     uploaded_by: requiredText(row.uploaded_by, 'uploaded_by'),
-    uploaded_at: optionalText(row.uploaded_at),
+    uploaded_at: optionalText(row.uploaded_at, 'uploaded_at'),
   };
 }
 
@@ -206,8 +222,8 @@ function normalizeEvidenceBundle(payload: unknown): EvidenceBundleResult {
     type: requiredText(row.type, 'type'),
     status: requiredText(row.status, 'status'),
     version: optionalNumber(row.version, 'version'),
-    checksum: optionalText(row.checksum),
-    finalized_at: optionalText(row.finalized_at),
+    checksum: optionalText(row.checksum, 'checksum'),
+    finalized_at: optionalText(row.finalized_at, 'finalized_at'),
     manifest: row.manifest ?? null,
   };
 }
@@ -217,7 +233,7 @@ function normalizeEvidenceVaultExport(payload: unknown): EvidenceVaultExportResu
 
   return {
     bundle_id: requiredText(row.bundle_id, 'bundle_id'),
-    checksum: optionalText(row.checksum),
+    checksum: optionalText(row.checksum, 'checksum'),
     manifest: row.manifest ?? null,
   };
 }

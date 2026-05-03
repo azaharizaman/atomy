@@ -1,5 +1,5 @@
 import React from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, screen } from '@testing-library/react';
 import { renderPageWithProviders } from '@/test/utils';
 
@@ -79,14 +79,23 @@ function mockEvidenceVault(summary: EvidenceVaultSummary) {
   vi.mocked(useEvidenceVaultMutations).mockReturnValue({
     uploadSupportingEvidence: { mutate: vi.fn(), isPending: false },
     finalizeAwardPack: { mutate: vi.fn(), isPending: false },
-    exportAwardPack: { mutate: vi.fn(), isPending: false },
+    exportAwardPack: { mutateAsync: vi.fn().mockResolvedValue({ manifest: { rfq: { id: 'rfq-1' } } }), isPending: false },
   } as unknown as UseEvidenceVaultMutationsReturn);
 }
 
 describe('RfqEvidenceVaultPage', () => {
+  const createObjectURL = vi.fn(() => 'blob:evidence-pack');
+  const revokeObjectURL = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.stubGlobal('URL', { createObjectURL, revokeObjectURL });
     mockEvidenceVault(blockedSummary);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it('renders blockers and disables finalization when evidence is not ready', async () => {
@@ -105,6 +114,24 @@ describe('RfqEvidenceVaultPage', () => {
 
     expect(await screen.findByText('Evidence pack finalized')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /export evidence pack/i })).toBeEnabled();
+  });
+
+  it('downloads the finalized manifest when export succeeds', async () => {
+    mockEvidenceVault(finalizedSummary);
+    const appendChild = vi.spyOn(document.body, 'appendChild');
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    const remove = vi.spyOn(HTMLAnchorElement.prototype, 'remove').mockImplementation(() => undefined);
+
+    await renderPageWithProviders(<RfqDocumentsPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /export evidence pack/i }));
+
+    expect(await screen.findByText('Evidence pack finalized')).toBeInTheDocument();
+    expect(createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
+    expect(appendChild).toHaveBeenCalled();
+    expect(click).toHaveBeenCalled();
+    expect(remove).toHaveBeenCalled();
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:evidence-pack');
   });
 
   it('opens the supporting evidence drawer fields', async () => {

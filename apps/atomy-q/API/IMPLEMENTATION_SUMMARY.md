@@ -299,7 +299,7 @@ All **203 endpoints** from `API_ENDPOINTS.md` are registered. The quote lifecycl
 | 17 | Award Decision | 7 | `AwardController` |
 | 18 | PO/Contract Handoff | 6 | `HandoffController` |
 | 19 | Decision Trail | 4 | `DecisionTrailController` |
-| 20 | Documents & Evidence | 10 | `DocumentController` |
+| 20 | RFQ Evidence Vault | 4 | `EvidenceVaultController` |
 | 21 | Reports & Analytics | 11 | `ReportController` |
 | 22 | Integrations | 11 | `IntegrationController` |
 | 23 | Users & Access | 10 | `UserController` |
@@ -307,7 +307,7 @@ All **203 endpoints** from `API_ENDPOINTS.md` are registered. The quote lifecycl
 | 25 | Notifications | 5 | `NotificationController` |
 | 26 | Search | 1 | `SearchController` |
 | 27 | User Settings (Account) | 14 | `AccountController` |
-| | **Total** | **203** | **27 controllers** |
+| | **Total** | **197** | **27 controllers** |
 
 ## Nexus Packages Integrated
 
@@ -340,7 +340,7 @@ All **203 endpoints** from `API_ENDPOINTS.md` are registered. The quote lifecycl
 
 ## Database Tables (26)
 
-`users`, `rfqs`, `rfq_line_items`, `rfq_templates`, `vendor_invitations`, `requisition_selected_vendors`, `quote_submissions`, `normalization_source_lines`, `normalization_conflicts`, `comparison_runs`, `scoring_models`, `scoring_policies`, `scenarios`, `approvals`, `approval_history`, `negotiation_rounds`, `awards`, `handoffs`, `decision_trail_entries`, `evidence_bundles`, `report_schedules`, `report_runs`, `integrations`, `integration_jobs`, `notifications`, `risk_items`
+`users`, `rfqs`, `rfq_line_items`, `rfq_templates`, `vendor_invitations`, `requisition_selected_vendors`, `quote_submissions`, `normalization_source_lines`, `normalization_conflicts`, `comparison_runs`, `scoring_models`, `scoring_policies`, `scenarios`, `approvals`, `approval_history`, `negotiation_rounds`, `awards`, `handoffs`, `decision_trail_entries`, `evidence_bundles`, `evidence_bundle_items`, `supporting_evidence`, `report_schedules`, `report_runs`, `integrations`, `integration_jobs`, `notifications`, `risk_items`
 
 All tables include `tenant_id` (indexed) for multi-tenant isolation.
 

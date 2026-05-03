@@ -42,6 +42,7 @@ final class EvidenceVaultApiTest extends ApiTestCase
             'prefix' => '',
             'foreign_key_constraints' => true,
         ]);
+        $app['config']->set('filesystems.default', 'local');
 
         return $app;
     }
@@ -160,7 +161,7 @@ final class EvidenceVaultApiTest extends ApiTestCase
             'signed_off_by' => $user->id,
         ]);
 
-        foreach (['quote_sources', 'final_comparison', 'approval_trail', 'award_signoff'] as $index => $eventType) {
+        foreach (['comparison_snapshot_frozen', 'award_created', 'award_signed_off'] as $index => $eventType) {
             DecisionTrailEntry::query()->create([
                 'tenant_id' => $user->tenant_id,
                 'comparison_run_id' => $comparisonRun->id,
@@ -307,7 +308,7 @@ final class EvidenceVaultApiTest extends ApiTestCase
         ]);
         $pendingAward->forceFill(['created_at' => now()->addMinute()])->save();
 
-        foreach (['quote_sources', 'final_comparison', 'approval_trail', 'award_signoff'] as $index => $eventType) {
+        foreach (['comparison_snapshot_frozen', 'award_created', 'award_signed_off'] as $index => $eventType) {
             DecisionTrailEntry::query()->create([
                 'tenant_id' => $user->tenant_id,
                 'comparison_run_id' => $comparisonRun->id,
@@ -447,7 +448,7 @@ final class EvidenceVaultApiTest extends ApiTestCase
             'signed_off_by' => $user->id,
         ]);
 
-        foreach (['quote_sources', 'final_comparison', 'approval_trail', 'award_signoff'] as $index => $eventType) {
+        foreach (['comparison_snapshot_frozen', 'award_created', 'award_signed_off'] as $index => $eventType) {
             DecisionTrailEntry::query()->create([
                 'tenant_id' => $user->tenant_id,
                 'comparison_run_id' => $comparisonRun->id,
@@ -558,7 +559,7 @@ final class EvidenceVaultApiTest extends ApiTestCase
             'signed_off_by' => $user->id,
         ]);
 
-        foreach (['quote_sources', 'final_comparison', 'award_signoff'] as $index => $eventType) {
+        foreach (['comparison_snapshot_frozen', 'award_signed_off'] as $index => $eventType) {
             DecisionTrailEntry::query()->create([
                 'tenant_id' => $user->tenant_id,
                 'comparison_run_id' => $comparisonRun->id,
@@ -684,7 +685,7 @@ final class EvidenceVaultApiTest extends ApiTestCase
     public function testAwardPackFinalizationCreatesImmutableManifest(): void
     {
         [$user, $rfq] = $this->seedUserAndRfq();
-        $this->completeEvidenceRfq($user, $rfq);
+        $fixtures = $this->completeEvidenceRfq($user, $rfq);
 
         $response = $this->postJson(
             '/api/v1/rfqs/' . $rfq->id . '/evidence-vault/award-pack/finalize',
@@ -722,6 +723,7 @@ final class EvidenceVaultApiTest extends ApiTestCase
         $this->assertDatabaseHas('decision_trail_entries', [
             'tenant_id' => $user->tenant_id,
             'rfq_id' => $rfq->id,
+            'comparison_run_id' => $fixtures['comparison_run']->id,
             'event_type' => 'evidence_pack_finalized',
         ]);
 
@@ -733,6 +735,17 @@ final class EvidenceVaultApiTest extends ApiTestCase
             ['approval_trail', 'award_signoff', 'final_comparison', 'normalization_review', 'quote_sources', 'supporting_evidence'],
             $bundle->items()->orderBy('artifact_kind')->pluck('artifact_kind')->all(),
         );
+        $this->assertDatabaseHas('evidence_bundle_items', [
+            'evidence_bundle_id' => $bundleId,
+            'artifact_kind' => 'quote_sources',
+            'storage_path' => 'quotes/complete-supplier.pdf',
+        ]);
+        $this->assertDatabaseHas('evidence_bundle_items', [
+            'evidence_bundle_id' => $bundleId,
+            'artifact_kind' => 'supporting_evidence',
+            'storage_path' => 'supporting-evidence/buyer-clarification.pdf',
+            'checksum' => hash('sha256', 'buyer-clarification'),
+        ]);
         self::assertSame($bundleId, $bundle->manifest['summary']['award_pack']['bundle_id'] ?? null);
 
         $firstManifest = $bundle->manifest;
@@ -837,6 +850,25 @@ final class EvidenceVaultApiTest extends ApiTestCase
             'storage_path' => $storagePath,
             'checksum' => $checksum,
         ]);
+    }
+
+    public function testSupportingEvidenceUploadUsesConfiguredFilesystemDisk(): void
+    {
+        config()->set('filesystems.default', 'evidence-vault-test');
+        Storage::fake('evidence-vault-test');
+
+        [$user, $rfq] = $this->seedUserAndRfq();
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/rfqs/' . $rfq->id . '/evidence-vault/supporting-evidence', [
+                'reason' => 'Buyer clarification',
+                'file' => UploadedFile::fake()->create('clarification.pdf', 12, 'application/pdf'),
+            ]);
+
+        $response->assertCreated();
+
+        $storagePath = (string) $response->json('data.storage_path');
+        Storage::disk('evidence-vault-test')->assertExists($storagePath);
     }
 
     public function testSupportingEvidenceUploadRequiresReasonAndFile(): void
@@ -1304,7 +1336,7 @@ final class EvidenceVaultApiTest extends ApiTestCase
             'uploaded_at' => now(),
         ]);
 
-        foreach (['quote_sources', 'final_comparison', 'approval_trail', 'award_signoff'] as $index => $eventType) {
+        foreach (['comparison_snapshot_frozen', 'award_created', 'award_signed_off'] as $index => $eventType) {
             DecisionTrailEntry::query()->create([
                 'tenant_id' => $user->tenant_id,
                 'comparison_run_id' => $comparisonRun->id,

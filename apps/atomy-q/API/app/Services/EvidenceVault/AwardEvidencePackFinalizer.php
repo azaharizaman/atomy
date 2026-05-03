@@ -42,6 +42,11 @@ final readonly class AwardEvidencePackFinalizer
             $comparisonRunId = $this->sectionItemId($summary, 'final_comparison');
             $approvalId = $this->sectionItemId($summary, 'approval_trail');
             $awardId = $this->sectionItemId($summary, 'award_signoff');
+            if ($comparisonRunId === null) {
+                throw new EvidencePackNotReadyException([
+                    $this->blocker('FINAL_COMPARISON_MISSING', 'Finalize and freeze the RFQ comparison before preparing the evidence pack.'),
+                ]);
+            }
 
             EvidenceBundle::query()
                 ->where('tenant_id', $tenantId)
@@ -81,8 +86,8 @@ final readonly class AwardEvidencePackFinalizer
                     'source_id' => $source['source_id'],
                     'artifact_kind' => $source['artifact_kind'],
                     'label' => $source['label'],
-                    'storage_path' => null,
-                    'checksum' => null,
+                    'storage_path' => $source['storage_path'],
+                    'checksum' => $source['checksum'],
                     'metadata' => $source['metadata'],
                     'included_at' => $includedAt,
                 ]);
@@ -118,6 +123,7 @@ final readonly class AwardEvidencePackFinalizer
             $this->decisionTrailRecorder->recordEvidencePackFinalized(
                 tenantId: $tenantId,
                 rfqId: $rfqId,
+                comparisonRunId: $comparisonRunId,
                 bundleId: (string) $bundle->id,
                 checksum: $checksum,
                 actorId: (string) $actor->id,
@@ -194,8 +200,19 @@ final readonly class AwardEvidencePackFinalizer
     }
 
     /**
+     * @return array{code: string, message: string}
+     */
+    private function blocker(string $code, string $message): array
+    {
+        return [
+            'code' => $code,
+            'message' => $message,
+        ];
+    }
+
+    /**
      * @param array<string, mixed> $summary
-     * @return list<array{source_type: string, source_id: string|null, artifact_kind: string, label: string, metadata: array<string, mixed>}>
+     * @return list<array{source_type: string, source_id: string|null, artifact_kind: string, label: string, storage_path: string|null, checksum: string|null, metadata: array<string, mixed>}>
      */
     private function includedSources(array $summary): array
     {
@@ -207,16 +224,83 @@ final readonly class AwardEvidencePackFinalizer
             }
 
             $code = (string) ($section['code'] ?? 'unknown');
-            $sources[] = [
-                'source_type' => $this->sourceType($code),
-                'source_id' => $this->sectionItemId($summary, $code),
-                'artifact_kind' => $code,
-                'label' => (string) ($section['label'] ?? $code),
-                'metadata' => $section,
-            ];
+            $items = array_values(array_filter(
+                $section['items'] ?? [],
+                static fn (mixed $item): bool => is_array($item),
+            ));
+
+            foreach ($items as $item) {
+                $sources[] = [
+                    'source_type' => $this->sourceType($code),
+                    'source_id' => $this->artifactSourceId($item),
+                    'artifact_kind' => $code,
+                    'label' => $this->artifactLabel($section, $item, $code),
+                    'storage_path' => $this->artifactStoragePath($item),
+                    'checksum' => $this->artifactChecksum($item),
+                    'metadata' => [
+                        'section_code' => $code,
+                        'section_label' => $section['label'] ?? $code,
+                        'section_status' => $section['status'] ?? null,
+                        'artifact' => $item,
+                    ],
+                ];
+            }
         }
 
         return $sources;
+    }
+
+    /**
+     * @param array<string, mixed> $item
+     */
+    private function artifactSourceId(array $item): ?string
+    {
+        $id = $item['id'] ?? null;
+
+        return is_scalar($id) && trim((string) $id) !== '' ? (string) $id : null;
+    }
+
+    /**
+     * @param array<string, mixed> $section
+     * @param array<string, mixed> $item
+     */
+    private function artifactLabel(array $section, array $item, string $sectionCode): string
+    {
+        foreach (['original_filename', 'label', 'vendor_name', 'status'] as $key) {
+            $value = $item[$key] ?? null;
+            if (is_scalar($value) && trim((string) $value) !== '') {
+                return (string) $value;
+            }
+        }
+
+        $sectionLabel = $section['label'] ?? null;
+
+        return is_scalar($sectionLabel) && trim((string) $sectionLabel) !== '' ? (string) $sectionLabel : $sectionCode;
+    }
+
+    /**
+     * @param array<string, mixed> $item
+     */
+    private function artifactStoragePath(array $item): ?string
+    {
+        foreach (['storage_path', 'file_path'] as $key) {
+            $value = $item[$key] ?? null;
+            if (is_scalar($value) && trim((string) $value) !== '') {
+                return (string) $value;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<string, mixed> $item
+     */
+    private function artifactChecksum(array $item): ?string
+    {
+        $checksum = $item['checksum'] ?? null;
+
+        return is_scalar($checksum) && trim((string) $checksum) !== '' ? (string) $checksum : null;
     }
 
     private function sourceType(string $sectionCode): string

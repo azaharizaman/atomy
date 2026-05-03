@@ -43,6 +43,12 @@ function statusTone(status: string): string {
   return 'border-slate-200 bg-slate-50 text-slate-600';
 }
 
+function downloadFileName(rfqNumber: string): string {
+  const safeRfqNumber = rfqNumber.trim().replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '');
+
+  return `${safeRfqNumber || 'rfq'}-evidence-pack.json`;
+}
+
 function StatusPill({ status }: { status: string }) {
   return (
     <span className={['rounded-full border px-2 py-0.5 text-[11px] font-semibold', statusTone(status)].join(' ')}>
@@ -175,6 +181,7 @@ function EvidenceVaultPageContent({ rfqId }: { rfqId: string }) {
   const summaryQuery = useEvidenceVault(rfqId);
   const { uploadSupportingEvidence, finalizeAwardPack, exportAwardPack } = useEvidenceVaultMutations(rfqId);
   const [isAttachOpen, setIsAttachOpen] = React.useState(false);
+  const [exportError, setExportError] = React.useState<string | null>(null);
 
   const summary = summaryQuery.data;
   const title = summary?.rfq.title ?? rfq?.title ?? 'RFQ evidence vault';
@@ -182,6 +189,25 @@ function EvidenceVaultPageContent({ rfqId }: { rfqId: string }) {
 
   function handleSupportingEvidenceUpload(input: { reason: string; file: File }): void {
     uploadSupportingEvidence.mutate(input);
+  }
+
+  async function handleExportEvidencePack(): Promise<void> {
+    setExportError(null);
+
+    try {
+      const result = await exportAwardPack.mutateAsync();
+      const blob = new Blob([JSON.stringify(result.manifest, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = downloadFileName(rfqNumber);
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : 'Unable to export evidence pack.');
+    }
   }
 
   return (
@@ -211,7 +237,9 @@ function EvidenceVaultPageContent({ rfqId }: { rfqId: string }) {
               <Button
                 loading={exportAwardPack.isPending}
                 disabled={!summary.actions.can_export}
-                onClick={() => exportAwardPack.mutate()}
+                onClick={() => {
+                  void handleExportEvidencePack();
+                }}
               >
                 Export evidence pack
               </Button>
@@ -229,6 +257,12 @@ function EvidenceVaultPageContent({ rfqId }: { rfqId: string }) {
       {summaryQuery.isError && (
         <SectionCard title="Evidence Vault unavailable" subtitle="The RFQ evidence summary could not be loaded">
           <p className="text-sm text-red-600">{summaryQuery.error instanceof Error ? summaryQuery.error.message : 'Unable to load evidence vault.'}</p>
+        </SectionCard>
+      )}
+
+      {exportError !== null && (
+        <SectionCard title="Export unavailable" subtitle="The finalized evidence pack could not be exported">
+          <p className="text-sm text-red-600">{exportError}</p>
         </SectionCard>
       )}
 

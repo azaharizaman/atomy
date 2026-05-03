@@ -16,11 +16,13 @@ use App\Models\SupportingEvidence;
 
 final readonly class EvidenceVaultSummaryService
 {
-    private const REQUIRED_DECISION_TRAIL_CODES = [
-        'quote_sources',
-        'final_comparison',
-        'approval_trail',
-        'award_signoff',
+    /**
+     * Event types emitted by DecisionTrailRecorder for the deterministic RFQ award trail.
+     */
+    private const REQUIRED_DECISION_TRAIL_EVENT_TYPES = [
+        'comparison_snapshot_frozen',
+        'award_created',
+        'award_signed_off',
     ];
 
     /**
@@ -92,6 +94,7 @@ final readonly class EvidenceVaultSummaryService
         $decisionTrailEntries = DecisionTrailEntry::query()
             ->where('tenant_id', $tenantId)
             ->where('rfq_id', $rfqId)
+            ->orderBy('occurred_at')
             ->orderBy('sequence')
             ->get();
 
@@ -185,8 +188,8 @@ final readonly class EvidenceVaultSummaryService
             $blockers[] = $this->blocker('AWARD_SIGNOFF_MISSING', 'Sign off the award before finalizing the evidence pack.');
         }
 
-        if (array_diff(self::REQUIRED_DECISION_TRAIL_CODES, $decisionTrailCodes) !== []) {
-            $blockers[] = $this->blocker('DECISION_TRAIL_INCOMPLETE', 'Complete the RFQ decision trail entries for quote sources, comparison, approval, and signoff.');
+        if (array_diff(self::REQUIRED_DECISION_TRAIL_EVENT_TYPES, $decisionTrailCodes) !== []) {
+            $blockers[] = $this->blocker('DECISION_TRAIL_INCOMPLETE', 'Complete the RFQ decision trail entries for comparison snapshot, award creation, and award signoff.');
         }
 
         return $blockers;

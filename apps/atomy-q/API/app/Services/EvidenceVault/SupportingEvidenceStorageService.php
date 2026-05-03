@@ -8,6 +8,7 @@ use App\Models\Rfq;
 use App\Models\SupportingEvidence;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -35,7 +36,8 @@ final class SupportingEvidenceStorageService
             $originalName,
         );
 
-        $disk = Storage::disk('local');
+        $diskName = trim((string) config('filesystems.default', 'local'));
+        $disk = Storage::disk($diskName === '' ? 'local' : $diskName);
         $storedPath = $disk->putFileAs('', $file, $path);
         if ($storedPath === false) {
             throw new RuntimeException('Supporting evidence file could not be stored.');
@@ -66,8 +68,11 @@ final class SupportingEvidenceStorageService
         } catch (Throwable $throwable) {
             try {
                 $disk->delete($storedPath);
-            } catch (Throwable) {
-                // Preserve the original storage/database failure for the caller.
+            } catch (Throwable $cleanupThrowable) {
+                Log::warning('Supporting evidence cleanup failed after storage/database failure.', [
+                    'stored_path' => $storedPath,
+                    'exception' => $cleanupThrowable,
+                ]);
             }
 
             throw $throwable;

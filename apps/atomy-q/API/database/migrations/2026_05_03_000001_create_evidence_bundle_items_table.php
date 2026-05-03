@@ -26,6 +26,10 @@ return new class extends Migration
 
             $table->index(['tenant_id', 'evidence_bundle_id']);
             $table->index(['tenant_id', 'source_type', 'source_id']);
+            $table->foreign('evidence_bundle_id')
+                ->references('id')
+                ->on('evidence_bundles')
+                ->cascadeOnDelete();
         });
     }
 

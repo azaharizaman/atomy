@@ -96,6 +96,7 @@ final readonly class DecisionTrailRecorder implements DecisionTrailRecorderInter
     public function recordEvidencePackFinalized(
         string $tenantId,
         string $rfqId,
+        string $comparisonRunId,
         string $bundleId,
         string $checksum,
         string $actorId,
@@ -103,9 +104,10 @@ final readonly class DecisionTrailRecorder implements DecisionTrailRecorderInter
         return $this->record(
             tenantId: $tenantId,
             rfqId: $rfqId,
-            comparisonRunId: $rfqId,
+            comparisonRunId: $comparisonRunId,
             eventType: 'evidence_pack_finalized',
             summary: [
+                'comparison_run_id' => $comparisonRunId,
                 'bundle_id' => $bundleId,
                 'checksum' => $checksum,
                 'actor_id' => $actorId,
