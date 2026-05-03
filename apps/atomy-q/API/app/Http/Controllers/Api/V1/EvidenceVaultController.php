@@ -7,14 +7,19 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Api\V1\Concerns\ExtractsAuthContext;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSupportingEvidenceRequest;
+use App\Models\Award;
+use App\Models\QuoteSubmission;
 use App\Models\Rfq;
 use App\Models\SupportingEvidence;
 use App\Models\User;
+use App\Models\Vendor;
 use App\Services\EvidenceVault\EvidenceVaultSummaryService;
 use App\Services\EvidenceVault\SupportingEvidenceStorageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 
 final class EvidenceVaultController extends Controller
 {
@@ -58,18 +63,22 @@ final class EvidenceVaultController extends Controller
             abort(422, 'The file field is required.');
         }
 
-        $supportingEvidence = $this->supportingEvidenceStorage->store(
-            $tenantId,
-            $rfq,
-            $actor,
-            $file,
-            (string) $validated['reason'],
-            [
-                'vendor_id' => $validated['vendor_id'] ?? null,
-                'quote_submission_id' => $validated['quote_submission_id'] ?? null,
-                'award_id' => $validated['award_id'] ?? null,
-            ],
-        );
+        $relations = $this->validatedSupportingEvidenceRelations($tenantId, $rfq, $validated);
+
+        try {
+            $supportingEvidence = $this->supportingEvidenceStorage->store(
+                $tenantId,
+                $rfq,
+                $actor,
+                $file,
+                (string) $validated['reason'],
+                $relations,
+            );
+        } catch (Throwable) {
+            return response()->json([
+                'message' => 'Could not store supporting evidence.',
+            ], 500);
+        }
 
         return response()->json([
             'data' => $this->supportingEvidenceData($supportingEvidence),
@@ -91,6 +100,51 @@ final class EvidenceVaultController extends Controller
         return response()->json([
             'message' => 'Evidence Vault action is not implemented yet.',
         ], 501);
+    }
+
+    /**
+     * @param array<string, mixed> $validated
+     * @return array{vendor_id?: string|null, quote_submission_id?: string|null, award_id?: string|null}
+     *
+     * @throws ValidationException
+     */
+    private function validatedSupportingEvidenceRelations(string $tenantId, Rfq $rfq, array $validated): array
+    {
+        $relations = [
+            'vendor_id' => $validated['vendor_id'] ?? null,
+            'quote_submission_id' => $validated['quote_submission_id'] ?? null,
+            'award_id' => $validated['award_id'] ?? null,
+        ];
+        $errors = [];
+
+        if ($relations['vendor_id'] !== null && !Vendor::query()
+            ->where('tenant_id', $tenantId)
+            ->whereKey((string) $relations['vendor_id'])
+            ->exists()) {
+            $errors['vendor_id'] = ['The selected vendor is invalid for this tenant.'];
+        }
+
+        if ($relations['quote_submission_id'] !== null && !QuoteSubmission::query()
+            ->where('tenant_id', $tenantId)
+            ->where('rfq_id', $rfq->id)
+            ->whereKey((string) $relations['quote_submission_id'])
+            ->exists()) {
+            $errors['quote_submission_id'] = ['The selected quote submission is invalid for this RFQ.'];
+        }
+
+        if ($relations['award_id'] !== null && !Award::query()
+            ->where('tenant_id', $tenantId)
+            ->where('rfq_id', $rfq->id)
+            ->whereKey((string) $relations['award_id'])
+            ->exists()) {
+            $errors['award_id'] = ['The selected award is invalid for this RFQ.'];
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        return $relations;
     }
 
     /**

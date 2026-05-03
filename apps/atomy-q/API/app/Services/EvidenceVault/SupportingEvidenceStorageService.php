@@ -11,6 +11,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
+use Throwable;
 
 final class SupportingEvidenceStorageService
 {
@@ -34,27 +35,38 @@ final class SupportingEvidenceStorageService
             $originalName,
         );
 
-        $storedPath = Storage::disk('local')->putFileAs('', $file, $path);
+        $disk = Storage::disk('local');
+        $storedPath = $disk->putFileAs('', $file, $path);
         if ($storedPath === false) {
             throw new RuntimeException('Supporting evidence file could not be stored.');
         }
 
-        $checksum = hash('sha256', Storage::disk('local')->get($storedPath));
+        try {
+            $checksum = hash('sha256', $disk->get($storedPath));
 
-        return SupportingEvidence::query()->create([
-            'tenant_id' => $tenantId,
-            'rfq_id' => $rfq->id,
-            'vendor_id' => $relations['vendor_id'] ?? null,
-            'quote_submission_id' => $relations['quote_submission_id'] ?? null,
-            'award_id' => $relations['award_id'] ?? null,
-            'reason' => $reason,
-            'original_filename' => $file->getClientOriginalName(),
-            'file_type' => $file->getMimeType(),
-            'storage_path' => $storedPath,
-            'checksum' => $checksum,
-            'uploaded_by' => $actor->id,
-            'uploaded_at' => now(),
-        ]);
+            return SupportingEvidence::query()->create([
+                'tenant_id' => $tenantId,
+                'rfq_id' => $rfq->id,
+                'vendor_id' => $relations['vendor_id'] ?? null,
+                'quote_submission_id' => $relations['quote_submission_id'] ?? null,
+                'award_id' => $relations['award_id'] ?? null,
+                'reason' => $reason,
+                'original_filename' => $file->getClientOriginalName(),
+                'file_type' => $file->getMimeType(),
+                'storage_path' => $storedPath,
+                'checksum' => $checksum,
+                'uploaded_by' => $actor->id,
+                'uploaded_at' => now(),
+            ]);
+        } catch (Throwable $throwable) {
+            try {
+                $disk->delete($storedPath);
+            } catch (Throwable) {
+                // Preserve the original storage/database failure for the caller.
+            }
+
+            throw $throwable;
+        }
     }
 
     private function sanitizeOriginalName(string $name): string

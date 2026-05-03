@@ -18,11 +18,13 @@ use App\Models\RfqLineItem;
 use App\Models\SupportingEvidence;
 use App\Models\User;
 use App\Models\Vendor;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Mockery;
 use Tests\Feature\Api\ApiTestCase;
 
 final class EvidenceVaultApiTest extends ApiTestCase
@@ -665,12 +667,17 @@ final class EvidenceVaultApiTest extends ApiTestCase
 
         $storagePath = (string) $response->json('data.storage_path');
         self::assertNotSame('', $storagePath);
+        self::assertStringStartsWith('supporting-evidence/' . $user->tenant_id . '/' . $rfq->id . '/', $storagePath);
         Storage::disk('local')->assertExists($storagePath);
+        $checksum = hash('sha256', Storage::disk('local')->get($storagePath));
+        $response->assertJsonPath('data.checksum', $checksum);
 
         $this->assertDatabaseHas('supporting_evidence', [
             'tenant_id' => $user->tenant_id,
             'rfq_id' => $rfq->id,
             'reason' => 'Buyer clarification',
+            'storage_path' => $storagePath,
+            'checksum' => $checksum,
         ]);
     }
 
@@ -687,6 +694,157 @@ final class EvidenceVaultApiTest extends ApiTestCase
         $response->assertJsonPath('error', 'Validation failed');
         $response->assertJsonPath('details.reason.0', 'The reason field is required.');
         $response->assertJsonPath('details.file.0', 'The file field is required.');
+    }
+
+    public function testSupportingEvidenceUploadRejectsCrossRfqOrWrongTenantQuoteSubmission(): void
+    {
+        Storage::fake('local');
+
+        [$user, $rfq] = $this->seedUserAndRfq();
+        $sameTenantOtherRfq = Rfq::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_number' => 'RFQ-EV-OTHER-' . Str::lower((string) Str::ulid()),
+            'title' => 'Other Evidence RFQ',
+            'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
+            'status' => 'closed',
+        ]);
+        $crossRfqQuote = QuoteSubmission::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $sameTenantOtherRfq->id,
+            'vendor_name' => 'Cross RFQ Supplier',
+            'uploaded_by' => $user->id,
+            'file_path' => 'quotes/cross-rfq.pdf',
+            'file_type' => 'application/pdf',
+            'original_filename' => 'cross-rfq.pdf',
+            'status' => 'ready',
+            'submitted_at' => now(),
+            'parsed_at' => now(),
+            'line_items_count' => 1,
+            'warnings_count' => 0,
+            'errors_count' => 0,
+        ]);
+        [, $otherRfq] = $this->seedUserAndRfq();
+        $otherRfqQuote = QuoteSubmission::query()->create([
+            'tenant_id' => $otherRfq->tenant_id,
+            'rfq_id' => $otherRfq->id,
+            'vendor_name' => 'Wrong Tenant Supplier',
+            'uploaded_by' => $user->id,
+            'file_path' => 'quotes/wrong-tenant.pdf',
+            'file_type' => 'application/pdf',
+            'original_filename' => 'wrong-tenant.pdf',
+            'status' => 'ready',
+            'submitted_at' => now(),
+            'parsed_at' => now(),
+            'line_items_count' => 1,
+            'warnings_count' => 0,
+            'errors_count' => 0,
+        ]);
+
+        foreach ([$crossRfqQuote, $otherRfqQuote] as $quoteSubmission) {
+            $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+                ->post('/api/v1/rfqs/' . $rfq->id . '/evidence-vault/supporting-evidence', [
+                    'reason' => 'Buyer clarification',
+                    'quote_submission_id' => $quoteSubmission->id,
+                    'file' => UploadedFile::fake()->create('clarification.pdf', 12, 'application/pdf'),
+                ]);
+
+            $response->assertStatus(422);
+            $response->assertJsonPath('error', 'Validation failed');
+            $response->assertJsonPath('details.quote_submission_id.0', 'The selected quote submission is invalid for this RFQ.');
+            $this->assertDatabaseMissing('supporting_evidence', [
+                'rfq_id' => $rfq->id,
+                'quote_submission_id' => $quoteSubmission->id,
+            ]);
+        }
+    }
+
+    public function testSupportingEvidenceUploadRejectsWrongRfqAward(): void
+    {
+        Storage::fake('local');
+
+        [$user, $rfq] = $this->seedUserAndRfq();
+        [, $otherRfq] = $this->seedUserAndRfq();
+        $vendor = Vendor::query()->create([
+            'tenant_id' => $otherRfq->tenant_id,
+            'legal_name' => 'Award Supplier LLC',
+            'display_name' => 'Award Supplier',
+            'country_of_registration' => 'US',
+            'primary_contact_name' => 'Award Contact',
+            'primary_contact_email' => 'award-supplier@example.com',
+            'status' => 'approved',
+        ]);
+        $wrongRfqAward = Award::query()->create([
+            'tenant_id' => $otherRfq->tenant_id,
+            'rfq_id' => $otherRfq->id,
+            'vendor_id' => $vendor->id,
+            'status' => 'pending',
+            'amount' => 10,
+            'currency' => 'USD',
+            'split_details' => [],
+        ]);
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/rfqs/' . $rfq->id . '/evidence-vault/supporting-evidence', [
+                'reason' => 'Buyer clarification',
+                'award_id' => $wrongRfqAward->id,
+                'file' => UploadedFile::fake()->create('clarification.pdf', 12, 'application/pdf'),
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonPath('error', 'Validation failed');
+        $response->assertJsonPath('details.award_id.0', 'The selected award is invalid for this RFQ.');
+        $this->assertDatabaseMissing('supporting_evidence', [
+            'rfq_id' => $rfq->id,
+            'award_id' => $wrongRfqAward->id,
+        ]);
+    }
+
+    public function testSupportingEvidenceUploadReturnsSafeErrorWhenStorageFails(): void
+    {
+        [$user, $rfq] = $this->seedUserAndRfq();
+
+        $disk = Mockery::mock(Filesystem::class);
+        $disk->shouldReceive('putFileAs')->once()->andReturn(false);
+        Storage::shouldReceive('disk')->with('local')->once()->andReturn($disk);
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/rfqs/' . $rfq->id . '/evidence-vault/supporting-evidence', [
+                'reason' => 'Buyer clarification',
+                'file' => UploadedFile::fake()->create('clarification.pdf', 12, 'application/pdf'),
+            ]);
+
+        $response->assertStatus(500);
+        $response->assertJsonPath('message', 'Could not store supporting evidence.');
+        $this->assertDatabaseMissing('supporting_evidence', [
+            'rfq_id' => $rfq->id,
+            'reason' => 'Buyer clarification',
+        ]);
+    }
+
+    public function testSupportingEvidenceStorageDeletesFileWhenChecksumReadFails(): void
+    {
+        [$user, $rfq] = $this->seedUserAndRfq();
+
+        $storedPath = 'supporting-evidence/' . $user->tenant_id . '/' . $rfq->id . '/stored-clarification.pdf';
+        $disk = Mockery::mock(Filesystem::class);
+        $disk->shouldReceive('putFileAs')->once()->andReturn($storedPath);
+        $disk->shouldReceive('get')->once()->with($storedPath)->andThrow(\RuntimeException::class, 'read failed');
+        $disk->shouldReceive('delete')->once()->with($storedPath)->andReturn(true);
+        Storage::shouldReceive('disk')->with('local')->andReturn($disk);
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/rfqs/' . $rfq->id . '/evidence-vault/supporting-evidence', [
+                'reason' => 'Buyer clarification',
+                'file' => UploadedFile::fake()->create('clarification.pdf', 12, 'application/pdf'),
+            ]);
+
+        $response->assertStatus(500);
+        $response->assertJsonPath('message', 'Could not store supporting evidence.');
+        $this->assertDatabaseMissing('supporting_evidence', [
+            'rfq_id' => $rfq->id,
+            'storage_path' => $storedPath,
+        ]);
     }
 
     public function testEvidenceBundlePersistsRfqScopedManifestItemsAndSupportingEvidence(): void
