@@ -7449,7 +7449,7 @@
                                                     "type": "object",
                                                     "properties": {
                                                         "can_finalize": {
-                                                            "type": "string"
+                                                            "type": "boolean"
                                                         },
                                                         "can_export": {
                                                             "type": "boolean"

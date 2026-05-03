@@ -20,7 +20,7 @@ final class StoreSupportingEvidenceRequest extends FormRequest
     {
         return [
             'reason' => ['required', 'string', 'min:5', 'max:2000'],
-            'file' => ['required', 'file', 'max:10240'],
+            'file' => ['required', 'file', 'mimes:pdf,doc,docx,xls,xlsx,png,jpg,jpeg', 'max:10240'],
             'vendor_id' => ['nullable', 'string'],
             'quote_submission_id' => ['nullable', 'string'],
             'award_id' => ['nullable', 'string'],

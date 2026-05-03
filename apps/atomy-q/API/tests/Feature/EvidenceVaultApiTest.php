@@ -854,6 +854,27 @@ final class EvidenceVaultApiTest extends ApiTestCase
         $response->assertJsonPath('details.file.0', 'The file field is required.');
     }
 
+    public function testSupportingEvidenceUploadRejectsUnsupportedFileType(): void
+    {
+        Storage::fake('local');
+
+        [$user, $rfq] = $this->seedUserAndRfq();
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/rfqs/' . $rfq->id . '/evidence-vault/supporting-evidence', [
+                'reason' => 'Buyer clarification',
+                'file' => UploadedFile::fake()->create('malicious.exe', 12, 'application/x-msdownload'),
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonPath('error', 'Validation failed');
+        $response->assertJsonPath(
+            'details.file.0',
+            'The file field must be a file of type: pdf, doc, docx, xls, xlsx, png, jpg, jpeg.',
+        );
+        $this->assertDatabaseCount('supporting_evidence', 0);
+    }
+
     public function testSupportingEvidenceUploadRejectsSameTenantVendorNotSelectedForRfq(): void
     {
         Storage::fake('local');

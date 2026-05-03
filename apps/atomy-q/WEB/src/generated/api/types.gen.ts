@@ -2528,7 +2528,7 @@ export type EvidenceVaultShowResponses = {
                 }
             ];
             actions: {
-                can_finalize: string;
+                can_finalize: boolean;
                 can_export: boolean;
                 can_upload_supporting_evidence: boolean;
             };

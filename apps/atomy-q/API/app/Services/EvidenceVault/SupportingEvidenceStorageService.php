@@ -42,7 +42,12 @@ final class SupportingEvidenceStorageService
         }
 
         try {
-            $checksum = hash('sha256', $disk->get($storedPath));
+            $contents = $disk->get($storedPath);
+            if (! is_string($contents)) {
+                throw new RuntimeException('Supporting evidence file could not be read after storage.');
+            }
+
+            $checksum = hash('sha256', $contents);
 
             return SupportingEvidence::query()->create([
                 'tenant_id' => $tenantId,

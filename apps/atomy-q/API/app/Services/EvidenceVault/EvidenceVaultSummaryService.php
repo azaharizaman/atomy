@@ -136,7 +136,7 @@ final readonly class EvidenceVaultSummaryService
             'timeline' => $timeline,
             'sections' => $sections,
             'actions' => [
-                'can_finalize' => $ready && $status !== 'finalized',
+                'can_finalize' => (bool) ($ready && $status !== 'finalized'),
                 'can_export' => $status === 'finalized',
                 'can_upload_supporting_evidence' => true,
             ],
