@@ -17,7 +17,7 @@ const RFQ_SECTION_LABELS: Record<string, string> = {
   negotiations: 'Negotiations',
   award: 'Award',
   risk: 'Risk & Compliance',
-  documents: 'Documents',
+  documents: 'Evidence Vault',
   'decision-trail': 'Decision Trail',
 };
 

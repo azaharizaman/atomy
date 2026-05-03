@@ -50,7 +50,7 @@ export function ActiveRecordMenu({ record }: { record: ActiveRfqRecord }) {
     { id: 'comparison-runs', label: 'Comparison Runs', href: `${rfqBase}/comparison-runs`, icon: <GitCompareArrows size={14} /> },
     { id: 'approvals', label: 'Approvals', href: `${rfqBase}/approvals`, icon: <ShieldCheck size={14} />, badge: approvalsBadge },
     { id: 'negotiations', label: 'Negotiations', href: `${rfqBase}/negotiations`, icon: <HandCoins size={14} /> },
-    { id: 'documents', label: 'Documents', href: `${rfqBase}/documents`, icon: <FolderArchive size={14} /> },
+    { id: 'documents', label: 'Evidence Vault', href: `${rfqBase}/documents`, icon: <FolderArchive size={14} /> },
     { id: 'risk', label: 'Risk & Compliance', href: `${rfqBase}/risk`, icon: <ShieldAlert size={14} />, statusDot: 'green' as const },
     { id: 'decision-trail', label: 'Decision Trail', href: `${rfqBase}/decision-trail`, icon: <List size={14} /> },
   ];

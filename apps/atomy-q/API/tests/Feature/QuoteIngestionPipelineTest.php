@@ -290,6 +290,7 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
     {
         config()->set('atomy.ai.mode', 'provider');
         config()->set('atomy.ai.endpoints.document.uri', '');
+        config()->set('atomy.ai.endpoints.normalization.uri', '');
         config()->set('atomy.quote_intelligence.mode', 'deterministic');
         $this->resetQuoteIntelligenceBindings();
 

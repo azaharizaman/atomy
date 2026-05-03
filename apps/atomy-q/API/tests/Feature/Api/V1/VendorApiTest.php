@@ -258,7 +258,7 @@ final class VendorApiTest extends ApiTestCase
 
         $this->assertDatabaseHas('vendors', [
             'id' => $vendor->id,
-            'tenant_id' => strtolower($tenantId),
+            'tenant_id' => $tenantId,
             'status' => 'approved',
             'approved_by_user_id' => (string) $user->id,
             'approval_note' => 'Approved after compliance review',

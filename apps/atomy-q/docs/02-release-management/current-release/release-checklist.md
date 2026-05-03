@@ -14,7 +14,25 @@ Task 1 rectification is **green locally as of 2026-04-15**. The WEB lint/build/u
 
 The original baseline captured in this document was **not release-ready**. Those failure details are retained as historical context underneath the current evidence.
 
-The strongest current regression signal is the 2026-05-01 SQLite alpha API matrix pass, but the required PostgreSQL posture is **not satisfied** because PostgreSQL on `127.0.0.1:5433` refused connections. The release remains internal alpha only until PostgreSQL matrix evidence, staging smoke, disclosure, and sign-offs are recorded.
+The strongest current local regression signal is the 2026-05-03 PostgreSQL-backed Task 9 engineering gate pass on `alpha/feature-document`. The release remains internal alpha only until deployed staging smoke, disclosure, and sign-offs are recorded.
+
+## Latest Task 9 Local Engineering Gate Evidence - 2026-05-03
+
+- Operator: Codex.
+- Branch: `alpha/feature-document`.
+- Local API environment: `APP_ENV=local`, `DB_CONNECTION=pgsql`, `DB_HOST=127.0.0.1`, `DB_PORT=5433`, `DB_DATABASE=atomy_dev`.
+- Local WEB environment: `NEXT_PUBLIC_USE_MOCKS=false`, `NEXT_PUBLIC_AI_MODE=provider`.
+- `cd apps/atomy-q/API && php artisan migrate:fresh --seed`: PASS against PostgreSQL.
+- `cd apps/atomy-q/WEB && npm run lint`: PASS with 8 existing warnings and 0 errors.
+- `cd apps/atomy-q/WEB && npm run build`: PASS.
+- `cd apps/atomy-q/WEB && npm run test:unit`: PASS. 72 files, 290 tests.
+- `cd apps/atomy-q/API && php artisan test --filter "RegisterCompanyTest|AuthTest|RfqLifecycleMutationTest|RfqInvitationReminderTest|QuoteSubmissionWorkflowTest|QuoteIngestionPipelineTest|QuoteIngestionIntelligenceTest|NormalizationReviewWorkflowTest|ComparisonRunWorkflowTest|ComparisonSnapshotWorkflowTest|AwardWorkflowTest|VendorWorkflowTest|IdentityGap7Test|OperationalApprovalApiTest|ProjectAclTest|DashboardReportAiSummaryApiTest|RiskComplianceAiInsightsApiTest|VendorGovernanceApiTest|VendorRecommendationApiTest|VendorRecommendationAiGateTest|AiStatusApiTest|EvidenceVaultApiTest"`: PASS. 199 tests, 1316 assertions.
+- `cd apps/atomy-q/API && php artisan test`: PASS. 657 tests, 2426 assertions.
+- `cd apps/atomy-q/API && DB_CONNECTION=sqlite DB_DATABASE=':memory:' APP_URL=http://localhost:8000 php artisan scramble:export --path=../openapi/openapi.json`: PASS. PostgreSQL-backed Scramble export was not used because Scramble schema generation attempted a DB connection that failed under the export command; runtime migrations and tests were verified against PostgreSQL separately.
+- `jq empty apps/atomy-q/openapi/openapi.json`: PASS.
+- `cd apps/atomy-q/WEB && npm run generate:api`: PASS.
+- `cd apps/atomy-q/API && php artisan atomy:verify-storage-disk --disk=s3 --path-prefix=alpha-storage-smoke`: PASS.
+- Release impact: local engineering gates are green for this branch, including the RFQ Evidence Vault scope. This still does not close deployed staging smoke, customer/operator disclosure, or required sign-offs.
 
 ## Superseding Readiness Assessment - 2026-04-30
 
@@ -48,8 +66,8 @@ Current status from this assessment: **internal alpha only / no external design-
 - Inventory command: `rg -n "href=|router\.push|routes|Route::" apps/atomy-q/WEB/src apps/atomy-q/API/routes apps/atomy-q/API/app/Http/Controllers/Api/V1`: PASS. The inventory confirms exposed WEB navigation, RFQ workspace links, and API route groups remain classifiable under the alpha surface policy.
 - Classification result:
   - Alpha-supported visible top-level WEB surfaces: Dashboard, Requisitions, Vendors.
-  - Alpha-supported RFQ workspace surfaces: overview, details, line items, vendors, award, quote intake, comparison runs, approvals, decision trail.
-  - Intentionally hidden/deferred WEB surfaces: top-level Documents, Reporting, Settings shell, RFQ negotiations, RFQ documents. Settings Users & Roles remains reachable directly as the minimal A5 supporting surface.
+  - Alpha-supported RFQ workspace surfaces: overview, details, line items, vendors, award, quote intake, comparison runs, approvals, decision trail, Evidence Vault.
+  - Intentionally hidden/deferred WEB surfaces: top-level Documents, Reporting, Settings shell, RFQ negotiations, RFQ risk. Settings Users & Roles remains reachable directly as the minimal A5 supporting surface.
   - Supporting API surfaces remain authenticated and tenant-scoped; non-navigation API groups are not external design-partner navigation surfaces.
 - Verification: `cd apps/atomy-q/WEB && NEXT_PUBLIC_ALPHA_MODE=true npx playwright test tests/dashboard-nav.spec.ts tests/screen-smoke.spec.ts`: PASS. 3 tests passed.
 - Release impact: A4 surface classification remains closed locally under the superseding spec. This does not close staging evidence or PostgreSQL API matrix gates.
@@ -123,6 +141,20 @@ Current status from this assessment: **internal alpha only / no external design-
 - Golden-path smoke result: pending; requires a true staging mocks-off run against deployed WEB and API origins.
 
 If a true staging mocks-off smoke has not been completed, design-partner readiness is not yet earned and the release remains internal alpha only.
+
+## Latest RFQ Evidence Vault Support Evidence - 2026-05-03
+
+This section records local implementation evidence for the RFQ-local Evidence Vault alpha scope inclusion. It does not replace Task 9 PostgreSQL matrix, deployed mocks-off staging smoke, disclosure, or sign-off evidence.
+
+- Scope: RFQ workspace only. Top-level Documents and generic document API endpoints are removed from the product contract; `/rfqs/{rfqId}/documents` now renders the RFQ Evidence Vault workspace.
+- API contract: `GET /rfqs/{rfqId}/evidence-vault`, `POST /rfqs/{rfqId}/evidence-vault/supporting-evidence`, `POST /rfqs/{rfqId}/evidence-vault/award-pack/finalize`, and `GET /rfqs/{rfqId}/evidence-vault/award-pack/export`.
+- Local verification:
+  - `cd apps/atomy-q/API && php artisan test --filter EvidenceVaultApiTest`: PASS.
+  - `cd apps/atomy-q/API && DB_CONNECTION=sqlite DB_DATABASE=':memory:' php artisan scramble:export --path=../openapi/openapi.json`: PASS.
+  - `cd apps/atomy-q/WEB && npm run generate:api`: PASS.
+  - `cd apps/atomy-q/WEB && npx vitest run src/components/alpha/alpha-deferred-screen.test.tsx 'src/app/(dashboard)/deferred-routes.test.tsx' 'src/app/(dashboard)/rfqs/[rfqId]/documents/page.test.tsx'`: PASS.
+  - `cd apps/atomy-q/WEB && npm run build`: PASS.
+- Release impact: RFQ Evidence Vault is locally supported for alpha scope, but external design-partner readiness is still governed by the superseding final release gate.
 
 ## Latest Provider Quote Fixture Support Evidence - 2026-04-25
 
