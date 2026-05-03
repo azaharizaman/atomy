@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Console\Commands\GenerateSeedQuotationFixturesCommand;
 use App\Adapters\Ai\AiRuntimeStatusAdapter;
 use App\Adapters\Ai\AtomyAiCapabilityCatalog;
 use App\Adapters\Ai\ConfiguredAiEndpointRegistry;
@@ -1055,6 +1056,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                GenerateSeedQuotationFixturesCommand::class,
+            ]);
+        }
+
         Scramble::configure()->withDocumentTransformers([
             IdempotencyErrorCodesDocumentTransformer::class,
         ]);

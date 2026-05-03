@@ -1,0 +1,51 @@
+%PDF-1.4
+% seed quotation fixture
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 376 >>
+stream
+BT
+/F1 12 Tf
+50 760 Td
+(Atomy-Q seed quotation fixture) Tj
+0 -16 Td
+(Business key: rfq-027/vendor-00) Tj
+0 -16 Td
+(RFQ: Oxygen analyzer cells - reformer feed) Tj
+0 -16 Td
+(Vendor: Hayward Tyler \(IMO\) Pumps) Tj
+0 -16 Td
+(Status profile: ready) Tj
+0 -16 Td
+(Commercial total \(USD\): 7700.00) Tj
+0 -16 Td
+(Payment terms: Net 45 EOM) Tj
+0 -16 Td
+(Delivery lead: 6 weeks) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000034 00000 n 
+0000000083 00000 n 
+0000000140 00000 n 
+0000000266 00000 n 
+0000000692 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+762
+%%EOF

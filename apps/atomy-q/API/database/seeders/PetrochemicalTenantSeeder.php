@@ -16,6 +16,8 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\VendorInvitation;
+use App\Support\SeedData\Quotations\PetrochemicalSeedQuotationCatalog;
+use App\Support\SeedData\Quotations\SeedQuotationManifest;
 use Database\Factories\ProjectFactory;
 use Database\Factories\QuoteSubmissionFactory;
 use Database\Factories\UserFactory;
@@ -23,6 +25,7 @@ use Database\Factories\VendorFactory;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
@@ -49,6 +52,9 @@ final class PetrochemicalTenantSeeder extends Seeder
     private string $scoringModelId = "";
 
     private string $scoringPolicyId = "";
+
+    /** @var array<string, array<string, mixed>>|null */
+    private ?array $seedQuotationManifestEntries = null;
 
     public function run(): void
     {
@@ -852,21 +858,31 @@ final class PetrochemicalTenantSeeder extends Seeder
             $errorsCount = 2;
         }
 
+        $businessKey = PetrochemicalSeedQuotationCatalog::businessKey(
+            $rfqIndex,
+            $quoteIndex,
+        );
+        $entry = $this->seedQuotationManifestEntries()[$businessKey] ?? null;
+
+        if (!is_array($entry)) {
+            throw new \RuntimeException(
+                "Missing seed quotation fixture for [{$businessKey}].",
+            );
+        }
+
+        $storagePath = $this->copyFixtureIntoQuoteStorage($entry);
+
         QuoteSubmission::query()->create([
             "id" => (string) Str::ulid(),
             "tenant_id" => $this->tenantId,
             "rfq_id" => $rfq->id,
             "vendor_id" => $vendor->id,
-            "vendor_name" => $vendor->display_name,
+            "vendor_name" => (string) $entry["vendor_name"],
             "uploaded_by" => $rfq->owner_id,
             "status" => $status,
-            "file_path" =>
-                "/uploads/quotes/" . $rfq->id . "-" . $quoteIndex . ".pdf",
-            "file_type" => "application/pdf",
-            "original_filename" =>
-                "Quote_" .
-                preg_replace("/\W+/", "_", $vendor->legal_name) .
-                ".pdf",
+            "file_path" => $storagePath,
+            "file_type" => (string) $entry["file_type"],
+            "original_filename" => (string) $entry["original_filename"],
             "submitted_at" => $submittedAt,
             "confidence" => $confidence,
             "line_items_count" => $lineItemsCount,
@@ -879,6 +895,43 @@ final class PetrochemicalTenantSeeder extends Seeder
             "parsed_at" => $parsedAt,
             "retry_count" => $retryCount,
         ]);
+    }
+
+    /**
+     * @param array<string, mixed> $entry
+     */
+    private function copyFixtureIntoQuoteStorage(array $entry): string
+    {
+        $pdfPath = (string) ($entry["pdf_path"] ?? "");
+
+        if ($pdfPath === "") {
+            throw new \RuntimeException(
+                "Seed quotation fixture manifest entry is missing [pdf_path].",
+            );
+        }
+
+        $source = base_path("database/seed-data/quotations/" . $pdfPath);
+        $target = "quote-submissions/" . basename($pdfPath);
+
+        Storage::disk("local")->put($target, (string) file_get_contents($source));
+
+        return $target;
+    }
+
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    private function seedQuotationManifestEntries(): array
+    {
+        if ($this->seedQuotationManifestEntries !== null) {
+            return $this->seedQuotationManifestEntries;
+        }
+
+        $manifest = SeedQuotationManifest::read(
+            base_path("database/seed-data/quotations/manifest.json"),
+        );
+
+        return $this->seedQuotationManifestEntries = $manifest["entries"];
     }
 
     private function seedComparisonApprovalAward(
