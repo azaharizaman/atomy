@@ -57,7 +57,7 @@ if (process.env.OPENROUTER_E2E_CALL_GAP_SECONDS === undefined && openRouterCallG
 process.env.NEXT_PUBLIC_USE_MOCKS ??= 'false';
 process.env.NEXT_PUBLIC_API_URL ??= 'http://localhost:8000/api/v1';
 process.env.E2E_API_URL ??= process.env.NEXT_PUBLIC_API_URL;
-process.env.E2E_EMAIL ??= 'user1@nordfjord.example.com';
+process.env.E2E_EMAIL ??= 'user1@example.com';
 process.env.E2E_PASSWORD ??= 'secret';
 process.env.ATOMY_SEED_TENANT_ID ??= '01KKH77M4R0V8QZ1M8NB3XWWWQ';
 process.env.SOURCING_RECOMMENDATION_RFQ_ID ??= '01KQ87MJTA2P2W77CM10Q728RV';
