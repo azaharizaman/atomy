@@ -21,6 +21,7 @@ use App\Models\Vendor;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -696,6 +697,92 @@ final class EvidenceVaultApiTest extends ApiTestCase
         $response->assertJsonPath('details.file.0', 'The file field is required.');
     }
 
+    public function testSupportingEvidenceUploadRejectsSameTenantVendorNotSelectedForRfq(): void
+    {
+        Storage::fake('local');
+
+        [$user, $rfq] = $this->seedUserAndRfq();
+        $vendor = Vendor::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'legal_name' => 'Unselected Supplier LLC',
+            'display_name' => 'Unselected Supplier',
+            'country_of_registration' => 'US',
+            'primary_contact_name' => 'Unselected Contact',
+            'primary_contact_email' => 'unselected-supplier@example.com',
+            'status' => 'approved',
+        ]);
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/rfqs/' . $rfq->id . '/evidence-vault/supporting-evidence', [
+                'reason' => 'Buyer clarification',
+                'vendor_id' => $vendor->id,
+                'file' => UploadedFile::fake()->create('clarification.pdf', 12, 'application/pdf'),
+            ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonPath('error', 'Validation failed');
+        $response->assertJsonPath('details.vendor_id.0', 'The selected vendor is invalid for this RFQ.');
+        $this->assertDatabaseMissing('supporting_evidence', [
+            'rfq_id' => $rfq->id,
+            'vendor_id' => $vendor->id,
+        ]);
+    }
+
+    public function testSupportingEvidenceUploadAcceptsSelectedVendorForRfq(): void
+    {
+        Storage::fake('local');
+
+        [$user, $rfq] = $this->seedUserAndRfq();
+        $vendor = Vendor::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'legal_name' => 'Selected Supplier LLC',
+            'display_name' => 'Selected Supplier',
+            'country_of_registration' => 'US',
+            'primary_contact_name' => 'Selected Contact',
+            'primary_contact_email' => 'selected-supplier@example.com',
+            'status' => 'approved',
+        ]);
+        DB::table('tenants')->insert([
+            'id' => $user->tenant_id,
+            'code' => 'selected-' . Str::lower((string) Str::ulid()),
+            'name' => 'Selected Tenant ' . Str::lower((string) Str::ulid()),
+            'email' => 'selected-tenant@example.com',
+            'status' => 'active',
+            'timezone' => 'UTC',
+            'locale' => 'en',
+            'currency' => 'USD',
+            'storage_used' => 0,
+            'onboarding_progress' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        DB::table('requisition_selected_vendors')->insert([
+            'id' => (string) Str::ulid(),
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'vendor_id' => $vendor->id,
+            'selected_by_user_id' => $user->id,
+            'selected_at' => now(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->withHeaders($this->authHeaders((string) $user->tenant_id, (string) $user->id))
+            ->post('/api/v1/rfqs/' . $rfq->id . '/evidence-vault/supporting-evidence', [
+                'reason' => 'Buyer clarification',
+                'vendor_id' => $vendor->id,
+                'file' => UploadedFile::fake()->create('clarification.pdf', 12, 'application/pdf'),
+            ]);
+
+        $response->assertCreated();
+        $this->assertDatabaseHas('supporting_evidence', [
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'vendor_id' => $vendor->id,
+            'reason' => 'Buyer clarification',
+        ]);
+    }
+
     public function testSupportingEvidenceUploadRejectsCrossRfqOrWrongTenantQuoteSubmission(): void
     {
         Storage::fake('local');
@@ -764,9 +851,16 @@ final class EvidenceVaultApiTest extends ApiTestCase
         Storage::fake('local');
 
         [$user, $rfq] = $this->seedUserAndRfq();
-        [, $otherRfq] = $this->seedUserAndRfq();
+        $sameTenantOtherRfq = Rfq::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_number' => 'RFQ-EV-AWARD-' . Str::lower((string) Str::ulid()),
+            'title' => 'Other Award RFQ',
+            'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
+            'status' => 'closed',
+        ]);
         $vendor = Vendor::query()->create([
-            'tenant_id' => $otherRfq->tenant_id,
+            'tenant_id' => $user->tenant_id,
             'legal_name' => 'Award Supplier LLC',
             'display_name' => 'Award Supplier',
             'country_of_registration' => 'US',
@@ -775,8 +869,8 @@ final class EvidenceVaultApiTest extends ApiTestCase
             'status' => 'approved',
         ]);
         $wrongRfqAward = Award::query()->create([
-            'tenant_id' => $otherRfq->tenant_id,
-            'rfq_id' => $otherRfq->id,
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $sameTenantOtherRfq->id,
             'vendor_id' => $vendor->id,
             'status' => 'pending',
             'amount' => 10,

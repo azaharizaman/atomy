@@ -9,10 +9,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSupportingEvidenceRequest;
 use App\Models\Award;
 use App\Models\QuoteSubmission;
+use App\Models\RequisitionSelectedVendor;
 use App\Models\Rfq;
 use App\Models\SupportingEvidence;
 use App\Models\User;
-use App\Models\Vendor;
 use App\Services\EvidenceVault\EvidenceVaultSummaryService;
 use App\Services\EvidenceVault\SupportingEvidenceStorageService;
 use Illuminate\Http\JsonResponse;
@@ -74,7 +74,9 @@ final class EvidenceVaultController extends Controller
                 (string) $validated['reason'],
                 $relations,
             );
-        } catch (Throwable) {
+        } catch (Throwable $throwable) {
+            report($throwable);
+
             return response()->json([
                 'message' => 'Could not store supporting evidence.',
             ], 500);
@@ -117,11 +119,12 @@ final class EvidenceVaultController extends Controller
         ];
         $errors = [];
 
-        if ($relations['vendor_id'] !== null && !Vendor::query()
+        if ($relations['vendor_id'] !== null && !RequisitionSelectedVendor::query()
             ->where('tenant_id', $tenantId)
-            ->whereKey((string) $relations['vendor_id'])
+            ->where('rfq_id', $rfq->id)
+            ->where('vendor_id', (string) $relations['vendor_id'])
             ->exists()) {
-            $errors['vendor_id'] = ['The selected vendor is invalid for this tenant.'];
+            $errors['vendor_id'] = ['The selected vendor is invalid for this RFQ.'];
         }
 
         if ($relations['quote_submission_id'] !== null && !QuoteSubmission::query()
