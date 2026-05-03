@@ -242,6 +242,38 @@ Any change that can affect the alpha journey must have at least one of:
 
 The stronger the alpha impact, the more layers of verification are required.
 
+## Alpha Release Gate
+
+The alpha release gate is the minimum automated evidence set for the buyer procurement alpha journey.
+
+API release evidence:
+
+```bash
+cd apps/atomy-q/API
+php artisan migrate:fresh --seed
+php artisan test --group=alpha-gate
+```
+
+WEB release evidence:
+
+```bash
+cd apps/atomy-q/WEB
+npm run test:unit
+NEXT_PUBLIC_USE_MOCKS=false npm run test:e2e:ci -- tests/alpha-gate-real-api.spec.ts
+```
+
+Root release evidence, when available:
+
+```bash
+npm run test:e2e:laravel
+```
+
+Mocked WEB E2E tests are fast regression checks. They do not count as alpha release evidence unless the same journey also passes with `NEXT_PUBLIC_USE_MOCKS=false` against the real local Laravel API.
+
+The alpha matrix lives at `apps/atomy-q/docs/05-qa/alpha-test-matrix.md`. It must mark each capability as `behavioral`, `contract`, `smoke-only`, `missing`, or `deferred`.
+
+RFQ Evidence Vault is included in the alpha release gate. Top-level Documents and generic document-library behavior remain deferred unless a future approved scope reintroduces them.
+
 ## Change Class Verification Matrix
 
 ### C1: Cosmetic
