@@ -35,10 +35,6 @@ function validSummaryPayload(overrides: Record<string, unknown> = {}) {
 }
 
 describe('normalizeEvidenceVaultSummary', () => {
-  beforeEach(() => {
-    fetchLiveOrFailMock.mockReset();
-  });
-
   it('accepts numeric strings for optional numeric fields', () => {
     const summary = normalizeEvidenceVaultSummary(validSummaryPayload({
       award_pack: {
@@ -69,6 +65,12 @@ describe('normalizeEvidenceVaultSummary', () => {
         checksum: 'abc123',
       },
     }))).toThrow('award_pack.version must be numeric');
+  });
+});
+
+describe('useEvidenceVault', () => {
+  beforeEach(() => {
+    fetchLiveOrFailMock.mockReset();
   });
 
   it('uses the live Evidence Vault response when the payload is valid', async () => {

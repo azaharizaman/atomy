@@ -80,6 +80,9 @@ test.describe('alpha-gate real API journey', () => {
 
     await page.goto(`/rfqs/${encodeURIComponent(String(rfqId))}/documents`);
     await expect(page.getByRole('heading', { level: 1, name: 'Evidence Vault' })).toBeVisible({ timeout: 15000 });
+    // Fresh RFQ defaults are locked by EvidenceVaultApiTest::testEvidenceVaultSummaryEndpointIsRfqScoped
+    // and ::testEvidenceVaultSummaryReportsReadinessBlockers: uploads stay available, finalization is blocked,
+    // and the Final Comparison section is rendered even before evidence is complete.
     await expect(page.getByRole('button', { name: /attach supporting evidence/i })).toBeEnabled();
     await expect(page.getByRole('button', { name: /finalize award pack/i })).toBeDisabled();
     await expect(page.getByText(/final comparison/i).first()).toBeVisible();

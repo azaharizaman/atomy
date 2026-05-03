@@ -458,7 +458,7 @@ public function test_award_signoff_repeat_is_stable_for_alpha_gate(): void
         'status' => 'pending',
     ]);
 
-    $headers = $this->authHeaders((string) $user->id, $tenantId);
+    $headers = $this->authHeaders($tenantId, (string) $user->id);
 
     $first = $this->postJson('/api/v1/awards/' . $award->id . '/signoff', [], $headers);
     $second = $this->postJson('/api/v1/awards/' . $award->id . '/signoff', [], $headers);
