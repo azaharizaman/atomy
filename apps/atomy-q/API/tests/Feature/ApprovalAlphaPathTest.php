@@ -20,8 +20,10 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\Feature\Api\ApiTestCase;
 
+#[Group('alpha-gate')]
 final class ApprovalAlphaPathTest extends ApiTestCase
 {
     use RefreshDatabase;

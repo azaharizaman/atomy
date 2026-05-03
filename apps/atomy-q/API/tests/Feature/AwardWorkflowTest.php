@@ -25,8 +25,10 @@ use Illuminate\Support\Str;
 use Nexus\IntelligenceOperations\DTOs\AiCapabilityStatus;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSnapshot;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\Feature\Api\ApiTestCase;
 
+#[Group('alpha-gate')]
 final class AwardWorkflowTest extends ApiTestCase
 {
     use RefreshDatabase;

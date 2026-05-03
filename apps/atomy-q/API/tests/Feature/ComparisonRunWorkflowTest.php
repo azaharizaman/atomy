@@ -29,8 +29,10 @@ use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
 use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterface;
 use Nexus\QuotationIntelligence\Contracts\SemanticMapperInterface;
 use Nexus\QuotationIntelligence\Exceptions\DocumentAccessDeniedException;
+use PHPUnit\Framework\Attributes\Group;
 use Tests\Feature\Api\ApiTestCase;
 
+#[Group('alpha-gate')]
 final class ComparisonRunWorkflowTest extends ApiTestCase
 {
     use RefreshDatabase;

@@ -9,7 +9,9 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\Group;
 
+#[Group('alpha-gate')]
 final class RfqLifecycleIdempotencyTest extends ApiTestCase
 {
     use RefreshDatabase;
