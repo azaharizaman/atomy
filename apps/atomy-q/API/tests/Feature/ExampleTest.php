@@ -46,7 +46,7 @@ class ExampleTest extends TestCase
     public function test_api_dashboard_kpis_returns_success_with_jwt(): void
     {
         $user = $this->createUser();
-        
+
         /** @var JwtServiceInterface $jwtService */
         $jwtService = app(JwtServiceInterface::class);
         $token = $jwtService->issueAccessToken((string) $user->id, (string) $user->tenant_id);
@@ -55,13 +55,14 @@ class ExampleTest extends TestCase
             'Authorization' => 'Bearer ' . $token,
         ]);
 
-        // Dashboard KPIs currently returns a stub 200 response
         $response->assertStatus(200);
         $response->assertJsonStructure([
-            'active_rfqs',
-            'pending_approvals',
-            'total_savings',
-            'avg_cycle_time_days',
+            'data' => [
+                'active_rfqs',
+                'pending_approvals',
+                'total_savings',
+                'avg_cycle_time_days',
+            ],
         ]);
     }
 

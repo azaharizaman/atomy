@@ -14,7 +14,25 @@ Task 1 rectification is **green locally as of 2026-04-15**. The WEB lint/build/u
 
 The original baseline captured in this document was **not release-ready**. Those failure details are retained as historical context underneath the current evidence.
 
-The strongest current regression signal is the 2026-05-01 SQLite alpha API matrix pass, but the required PostgreSQL posture is **not satisfied** because PostgreSQL on `127.0.0.1:5433` refused connections. The release remains internal alpha only until PostgreSQL matrix evidence, staging smoke, disclosure, and sign-offs are recorded.
+The strongest current local regression signal is the 2026-05-03 PostgreSQL-backed Task 9 engineering gate pass on `alpha/feature-document`. The release remains internal alpha only until deployed staging smoke, disclosure, and sign-offs are recorded.
+
+## Latest Task 9 Local Engineering Gate Evidence - 2026-05-03
+
+- Operator: Codex.
+- Branch: `alpha/feature-document`.
+- Local API environment: `APP_ENV=local`, `DB_CONNECTION=pgsql`, `DB_HOST=127.0.0.1`, `DB_PORT=5433`, `DB_DATABASE=atomy_dev`.
+- Local WEB environment: `NEXT_PUBLIC_USE_MOCKS=false`, `NEXT_PUBLIC_AI_MODE=provider`.
+- `cd apps/atomy-q/API && php artisan migrate:fresh --seed`: PASS against PostgreSQL.
+- `cd apps/atomy-q/WEB && npm run lint`: PASS with 8 existing warnings and 0 errors.
+- `cd apps/atomy-q/WEB && npm run build`: PASS.
+- `cd apps/atomy-q/WEB && npm run test:unit`: PASS. 72 files, 290 tests.
+- `cd apps/atomy-q/API && php artisan test --filter "RegisterCompanyTest|AuthTest|RfqLifecycleMutationTest|RfqInvitationReminderTest|QuoteSubmissionWorkflowTest|QuoteIngestionPipelineTest|QuoteIngestionIntelligenceTest|NormalizationReviewWorkflowTest|ComparisonRunWorkflowTest|ComparisonSnapshotWorkflowTest|AwardWorkflowTest|VendorWorkflowTest|IdentityGap7Test|OperationalApprovalApiTest|ProjectAclTest|DashboardReportAiSummaryApiTest|RiskComplianceAiInsightsApiTest|VendorGovernanceApiTest|VendorRecommendationApiTest|VendorRecommendationAiGateTest|AiStatusApiTest|EvidenceVaultApiTest"`: PASS. 199 tests, 1316 assertions.
+- `cd apps/atomy-q/API && php artisan test`: PASS. 657 tests, 2426 assertions.
+- `cd apps/atomy-q/API && DB_CONNECTION=sqlite DB_DATABASE=':memory:' APP_URL=http://localhost:8000 php artisan scramble:export --path=../openapi/openapi.json`: PASS. PostgreSQL-backed Scramble export was not used because Scramble schema generation attempted a DB connection that failed under the export command; runtime migrations and tests were verified against PostgreSQL separately.
+- `jq empty apps/atomy-q/openapi/openapi.json`: PASS.
+- `cd apps/atomy-q/WEB && npm run generate:api`: PASS.
+- `cd apps/atomy-q/API && php artisan atomy:verify-storage-disk --disk=s3 --path-prefix=alpha-storage-smoke`: PASS.
+- Release impact: local engineering gates are green for this branch, including the RFQ Evidence Vault scope. This still does not close deployed staging smoke, customer/operator disclosure, or required sign-offs.
 
 ## Superseding Readiness Assessment - 2026-04-30
 

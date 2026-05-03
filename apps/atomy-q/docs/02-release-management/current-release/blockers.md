@@ -12,12 +12,12 @@ Use [`2026-04-30-atomy-q-alpha-launch-readiness-design.md`](../../../../../docs/
 - `A4`: non-alpha surfaces are hidden or explicitly deferred for alpha.
 - `A5`: minimal tenant-scoped users/roles flow is shipped for alpha.
 - `A6`: OpenAPI export and generated WEB client alignment evidence exists locally.
+- `A9`: current branch local engineering readiness is re-established under the superseding spec as of 2026-05-03.
 
 ## Still Open Until Task 9 Closes
 
 - `A7`: staging operations readiness is not complete until a true deployed mocks-off smoke is recorded.
 - `A8`: release evidence fragmentation is reduced by the new docs structure, but the final alpha release decision still depends on Task 9 completion and explicit sign-off.
-- `A9`: current branch readiness must be re-established under the superseding spec because 2026-04-30 local evidence found WEB lint/build failures and API golden-path/AI truthfulness failures.
 - `A10`: release posture must be selected and disclosed as AI-enabled alpha or manual-continuity alpha; ambiguous AI availability is not acceptable.
 - `A11`: manual continuity and human-in-the-loop review must be verified as permanent product requirements, not alpha-only fallback behavior.
 
