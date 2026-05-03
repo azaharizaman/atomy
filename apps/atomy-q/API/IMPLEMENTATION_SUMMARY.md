@@ -1,5 +1,11 @@
 # Implementation Summary - Atomy-Q Backend API
 
+## 2026-05-03 Seed Quotation Fixture Pipeline
+
+- Added `php artisan atomy:generate-seed-quotation-fixtures` to generate a deterministic petrochemical quotation fixture set under `database/seed-data/quotations/`.
+- Added a committed `manifest.json` plus canonical text-bearing PDF fixtures keyed by stable business keys that mirror the seeded petrochemical RFQ/quote matrix.
+- `PetrochemicalTenantSeeder` now reuses those canonical fixtures, copies them into local `quote-submissions/...` storage during seeding, and persists manifest-derived file metadata instead of ad hoc `/uploads/quotes/...` paths.
+
 ## 2026-05-03 RFQ Evidence Vault
 
 - Removed the generic document API contract and replaced it with RFQ-scoped Evidence Vault endpoints for summary/readiness, supporting evidence upload, award-pack finalization, and award-pack export.
