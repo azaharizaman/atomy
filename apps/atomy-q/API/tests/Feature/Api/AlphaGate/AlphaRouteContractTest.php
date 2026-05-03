@@ -12,7 +12,7 @@ use Tests\Feature\Api\ApiTestCase;
 #[Group('alpha-gate')]
 final class AlphaRouteContractTest extends ApiTestCase
 {
-    #[DataProvider('protectedAlphaReadRoutes')]
+    #[DataProvider('protectedAlphaRoutes')]
     public function test_protected_alpha_routes_reject_missing_token(string $method, string $uri): void
     {
         $response = $this->json($method, $uri);
@@ -21,7 +21,7 @@ final class AlphaRouteContractTest extends ApiTestCase
         $response->assertJsonFragment(['error' => 'Authentication required']);
     }
 
-    #[DataProvider('protectedAlphaReadRoutes')]
+    #[DataProvider('protectedAlphaRoutes')]
     public function test_protected_alpha_routes_reject_invalid_token(string $method, string $uri): void
     {
         $response = $this->json($method, $uri, [], [
@@ -32,7 +32,7 @@ final class AlphaRouteContractTest extends ApiTestCase
         $response->assertJsonFragment(['error' => 'Invalid or expired token']);
     }
 
-    #[DataProvider('protectedAlphaReadRoutes')]
+    #[DataProvider('protectedAlphaRoutes')]
     public function test_protected_alpha_routes_reject_missing_tenant_context(string $method, string $uri): void
     {
         $jwt = app(JwtServiceInterface::class);
@@ -58,7 +58,7 @@ final class AlphaRouteContractTest extends ApiTestCase
     /**
      * @return array<string, array{0: string, 1: string}>
      */
-    public static function protectedAlphaReadRoutes(): array
+    public static function protectedAlphaRoutes(): array
     {
         return [
             'dashboard kpis' => ['GET', '/api/v1/dashboard/kpis'],
@@ -69,6 +69,10 @@ final class AlphaRouteContractTest extends ApiTestCase
             'comparison list' => ['GET', '/api/v1/comparison-runs'],
             'approval list' => ['GET', '/api/v1/approvals'],
             'award list' => ['GET', '/api/v1/awards'],
+            'rfq evidence vault summary' => ['GET', '/api/v1/rfqs/rfq-alpha/evidence-vault'],
+            'rfq evidence vault supporting evidence upload' => ['POST', '/api/v1/rfqs/rfq-alpha/evidence-vault/supporting-evidence'],
+            'rfq evidence vault finalize' => ['POST', '/api/v1/rfqs/rfq-alpha/evidence-vault/award-pack/finalize'],
+            'rfq evidence vault export' => ['GET', '/api/v1/rfqs/rfq-alpha/evidence-vault/award-pack/export'],
             'decision trail list' => ['GET', '/api/v1/decision-trail'],
             'project list' => ['GET', '/api/v1/projects'],
             'task list' => ['GET', '/api/v1/tasks'],

@@ -10,6 +10,19 @@
 
 ---
 
+## Change Impact After Main Update
+
+`origin/main` now includes RFQ Evidence Vault as an approved alpha feature. The original plan treated Evidence Vault and generic Documents as deferred, which is no longer accurate.
+
+Required plan changes:
+
+- RFQ-scoped Evidence Vault is now part of the alpha gate.
+- Top-level/global Documents and generic document-library behavior remain deferred.
+- `tests/Feature/EvidenceVaultApiTest.php` must be included in the PHPUnit `alpha-gate` group.
+- Shared API contract coverage must include RFQ Evidence Vault protected routes.
+- WEB live-mode coverage should prioritize `src/hooks/use-evidence-vault.ts` because it already normalizes live API payloads and fails loudly on malformed data.
+- The real-API Playwright alpha journey should include `/rfqs/{rfqId}/documents` when a seeded RFQ is available.
+
 ## Files And Responsibilities
 
 - Create `apps/atomy-q/docs/05-qa/alpha-test-matrix.md`: alpha coverage source of truth with capability, API routes, WEB evidence, status, gaps, commands, and deferrals.
@@ -24,9 +37,10 @@
   - `apps/atomy-q/API/tests/Feature/ComparisonRunWorkflowTest.php`
   - `apps/atomy-q/API/tests/Feature/ApprovalAlphaPathTest.php`
   - `apps/atomy-q/API/tests/Feature/AwardWorkflowTest.php`
+  - `apps/atomy-q/API/tests/Feature/EvidenceVaultApiTest.php`
   - `apps/atomy-q/API/tests/Feature/ProjectAclTest.php`
   - `apps/atomy-q/API/tests/Feature/TasksApiTest.php`
-- Create `apps/atomy-q/WEB/src/hooks/__tests__/alphaLiveMode.test.tsx` if alpha hook tests do not already exist near the relevant hooks.
+- Create or modify WEB hook tests near the relevant alpha hooks, prioritizing `apps/atomy-q/WEB/src/hooks/use-evidence-vault.test.ts` for RFQ Evidence Vault live-mode normalization.
 - Modify or create `apps/atomy-q/WEB/tests/alpha-gate-real-api.spec.ts`: real-API Playwright release-gate journey.
 - Modify `apps/atomy-q/docs/04-engineering/standards/testing-strategy.md`: document the alpha gate and release-evidence distinction.
 - Modify root `package.json` only if there is no existing command that starts WEB and Laravel together for real-API E2E.
@@ -80,6 +94,7 @@ Status values:
 | Comparison | `POST /api/v1/comparison-runs/preview`, `POST /api/v1/comparison-runs/final`, `GET /api/v1/comparison-runs/{id}/matrix`, `GET /api/v1/comparison-runs/{id}/readiness`, `GET /api/v1/comparison-runs/{id}/overlay` | Comparison workspace | `tests/Feature/ComparisonRunWorkflowTest.php` | Mark gate tests; ensure rollback/no-partial-persistence and decision trail assertions are grouped | `php artisan test --group=alpha-gate` | `behavioral` |
 | Approvals | `GET /api/v1/approvals`, `GET /api/v1/approvals/{id}`, `POST /api/v1/approvals/{id}/approve`, `POST /api/v1/approvals/{id}/reject`, `GET /api/v1/approvals/{id}/summary`, `POST /api/v1/approvals/{id}/summary/generate` | Approval screen | `tests/Feature/ApprovalAlphaPathTest.php` | Add no-success-artifact-on-failure assertion if missing | `php artisan test --group=alpha-gate` | `behavioral` |
 | Awards | `POST /api/v1/awards`, `POST /api/v1/awards/{id}/signoff`, `POST /api/v1/awards/{id}/debrief/{vendorId}`, `GET /api/v1/awards/{id}/guidance`, `POST /api/v1/awards/{id}/guidance/generate` | Award/signoff/debrief screens | `tests/Feature/AwardWorkflowTest.php` | Mark gate tests; assert repeat signoff/debrief idempotence in grouped tests | `php artisan test --group=alpha-gate` | `behavioral` |
+| RFQ Evidence Vault | `GET /api/v1/rfqs/{id}/evidence-vault`, `POST /api/v1/rfqs/{id}/evidence-vault/supporting-evidence`, `POST /api/v1/rfqs/{id}/evidence-vault/award-pack/finalize`, `GET /api/v1/rfqs/{id}/evidence-vault/award-pack/export`; removed generic `GET /api/v1/documents` and `GET /api/v1/evidence-bundles` | RFQ workspace Evidence Vault at `/rfqs/{rfqId}/documents` | `tests/Feature/EvidenceVaultApiTest.php`, `src/hooks/use-evidence-vault.test.ts`, `src/app/(dashboard)/rfqs/[rfqId]/documents/page.test.tsx` | Mark API tests with `alpha-gate`; include Evidence Vault routes in shared contract tests; add WEB live-mode valid, undefined, malformed, empty, and transport-failure cases; add real-API Playwright assertion when seeded RFQ is available | `php artisan test --group=alpha-gate`; `npx vitest run src/hooks/use-evidence-vault.test.ts src/app/(dashboard)/rfqs/[rfqId]/documents/page.test.tsx` | `behavioral` |
 | Decision trail evidence | `GET /api/v1/decision-trail`, `GET /api/v1/decision-trail/{id}` | Decision trail panels | Multiple workflow tests | Add matrix references to exact workflow assertions after grouping | `php artisan test --group=alpha-gate` | `behavioral` |
 
 ## Deferred After Alpha Gate
@@ -91,7 +106,7 @@ Status values:
 | Integrations and API monitor | Operational surface, not buyer alpha path | Add external integration fake/error tests in post-alpha hardening |
 | Handoffs | PO/contract handoff is not release-gate path for current alpha | Add workflow, retry, and external failure tests in post-alpha hardening |
 | Notifications | Covered only where alpha jobs/mail matter | Add notification list/read/clear feature tests in post-alpha hardening |
-| Evidence vault and generic documents | Alpha decision evidence is tested through workflows | Add upload/download/preview/storage cleanup tests in post-alpha hardening |
+| Top-level Documents and generic document library | Alpha supports only RFQ-scoped Evidence Vault, not a global document-management surface | Add global document-library CRUD/download/preview tests only if a later approved scope reintroduces that product surface |
 ```
 
 - [ ] **Step 2: Verify the document has no placeholder language**
@@ -139,7 +154,7 @@ use Tests\Feature\Api\ApiTestCase;
 #[Group('alpha-gate')]
 final class AlphaRouteContractTest extends ApiTestCase
 {
-    #[DataProvider('protectedAlphaReadRoutes')]
+    #[DataProvider('protectedAlphaRoutes')]
     public function test_protected_alpha_routes_reject_missing_token(string $method, string $uri): void
     {
         $response = $this->json($method, $uri);
@@ -148,7 +163,7 @@ final class AlphaRouteContractTest extends ApiTestCase
         $response->assertJsonFragment(['error' => 'Authentication required']);
     }
 
-    #[DataProvider('protectedAlphaReadRoutes')]
+    #[DataProvider('protectedAlphaRoutes')]
     public function test_protected_alpha_routes_reject_invalid_token(string $method, string $uri): void
     {
         $response = $this->json($method, $uri, [], [
@@ -159,7 +174,7 @@ final class AlphaRouteContractTest extends ApiTestCase
         $response->assertJsonFragment(['error' => 'Invalid or expired token']);
     }
 
-    #[DataProvider('protectedAlphaReadRoutes')]
+    #[DataProvider('protectedAlphaRoutes')]
     public function test_protected_alpha_routes_reject_missing_tenant_context(string $method, string $uri): void
     {
         $jwt = app(JwtServiceInterface::class);
@@ -185,7 +200,7 @@ final class AlphaRouteContractTest extends ApiTestCase
     /**
      * @return array<string, array{0: string, 1: string}>
      */
-    public static function protectedAlphaReadRoutes(): array
+    public static function protectedAlphaRoutes(): array
     {
         return [
             'dashboard kpis' => ['GET', '/api/v1/dashboard/kpis'],
@@ -196,6 +211,10 @@ final class AlphaRouteContractTest extends ApiTestCase
             'comparison list' => ['GET', '/api/v1/comparison-runs'],
             'approval list' => ['GET', '/api/v1/approvals'],
             'award list' => ['GET', '/api/v1/awards'],
+            'rfq evidence vault summary' => ['GET', '/api/v1/rfqs/rfq-alpha/evidence-vault'],
+            'rfq evidence vault supporting evidence upload' => ['POST', '/api/v1/rfqs/rfq-alpha/evidence-vault/supporting-evidence'],
+            'rfq evidence vault finalize' => ['POST', '/api/v1/rfqs/rfq-alpha/evidence-vault/award-pack/finalize'],
+            'rfq evidence vault export' => ['GET', '/api/v1/rfqs/rfq-alpha/evidence-vault/award-pack/export'],
             'decision trail list' => ['GET', '/api/v1/decision-trail'],
             'project list' => ['GET', '/api/v1/projects'],
             'task list' => ['GET', '/api/v1/tasks'],
@@ -259,6 +278,7 @@ git commit -m "test(api): add alpha route contract gate"
 - Modify: `apps/atomy-q/API/tests/Feature/ComparisonRunWorkflowTest.php`
 - Modify: `apps/atomy-q/API/tests/Feature/ApprovalAlphaPathTest.php`
 - Modify: `apps/atomy-q/API/tests/Feature/AwardWorkflowTest.php`
+- Modify: `apps/atomy-q/API/tests/Feature/EvidenceVaultApiTest.php`
 - Modify: `apps/atomy-q/API/tests/Feature/ProjectAclTest.php`
 - Modify: `apps/atomy-q/API/tests/Feature/TasksApiTest.php`
 
@@ -318,6 +338,7 @@ for file in \
   tests/Feature/ComparisonRunWorkflowTest.php \
   tests/Feature/ApprovalAlphaPathTest.php \
   tests/Feature/AwardWorkflowTest.php \
+  tests/Feature/EvidenceVaultApiTest.php \
   tests/Feature/ProjectAclTest.php \
   tests/Feature/TasksApiTest.php; do php -l "$file"; done
 ```
@@ -338,6 +359,7 @@ git add \
   apps/atomy-q/API/tests/Feature/ComparisonRunWorkflowTest.php \
   apps/atomy-q/API/tests/Feature/ApprovalAlphaPathTest.php \
   apps/atomy-q/API/tests/Feature/AwardWorkflowTest.php \
+  apps/atomy-q/API/tests/Feature/EvidenceVaultApiTest.php \
   apps/atomy-q/API/tests/Feature/ProjectAclTest.php \
   apps/atomy-q/API/tests/Feature/TasksApiTest.php
 git commit -m "test(api): tag alpha behavioral coverage"
@@ -495,7 +517,8 @@ git commit -m "test(api): backfill alpha mutation invariants"
 ### Task 5: Add WEB Live-Mode Unit Coverage
 
 **Files:**
-- Create or modify: `apps/atomy-q/WEB/src/hooks/__tests__/alphaLiveMode.test.tsx`
+- Modify: `apps/atomy-q/WEB/src/hooks/use-evidence-vault.test.ts`
+- Create or modify: `apps/atomy-q/WEB/src/hooks/__tests__/alphaLiveMode.test.tsx` only if no hook-local test file exists for the selected hook.
 - Reference: `apps/atomy-q/WEB/src/test/setup.ts`
 - Reference: `apps/atomy-q/WEB/src/test/utils.tsx`
 - Reference: `apps/atomy-q/WEB/src/hooks`
@@ -509,11 +532,11 @@ cd apps/atomy-q/WEB
 rg -n "NEXT_PUBLIC_USE_MOCKS|fetch\\(|axios|useQuery|quote|normalization|comparison|approval|award|rfq" src/hooks src/lib src/store
 ```
 
-Expected: list of hooks/adapters that consume alpha API data. Choose the hook or adapter currently used by quote intake, normalization, or comparison screens first.
+Expected: list of hooks/adapters that consume alpha API data. Because RFQ Evidence Vault is now an alpha feature, choose `use-evidence-vault.ts` first unless current code shows it already has all required live-mode cases.
 
 - [ ] **Step 2: Write a failing live-mode malformed-payload test**
 
-Create `apps/atomy-q/WEB/src/hooks/__tests__/alphaLiveMode.test.tsx` if no closer hook-specific test exists. Use the existing hook name from Step 1. The test must mock the transport response, set live mode, and assert malformed payload produces an error/unavailable state rather than success.
+Extend `apps/atomy-q/WEB/src/hooks/use-evidence-vault.test.ts` if it remains the closest hook-specific test. Create `apps/atomy-q/WEB/src/hooks/__tests__/alphaLiveMode.test.tsx` only if the selected hook has no closer test. The test must mock the transport response, set live mode, and assert malformed payload produces an error/unavailable state rather than success.
 
 Template for a hook that uses global `fetch`:
 
@@ -636,7 +659,7 @@ Expected: pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add apps/atomy-q/WEB/src/hooks/__tests__/alphaLiveMode.test.tsx
+git add apps/atomy-q/WEB/src/hooks/use-evidence-vault.test.ts apps/atomy-q/WEB/src/hooks/__tests__/alphaLiveMode.test.tsx
 git commit -m "test(web): add alpha live-mode hook coverage"
 ```
 
@@ -650,6 +673,7 @@ git commit -m "test(web): add alpha live-mode hook coverage"
 - Reference: `apps/atomy-q/WEB/tests/alpha-playwright-bootstrap.ts`
 - Reference: `apps/atomy-q/WEB/tests/rfq-lifecycle-e2e.spec.ts`
 - Reference: `apps/atomy-q/WEB/tests/provider-quote-e2e.spec.ts`
+- Reference: `apps/atomy-q/WEB/src/app/(dashboard)/rfqs/[rfqId]/documents/page.tsx`
 
 - [ ] **Step 1: Inspect existing bootstrap helpers**
 
@@ -692,11 +716,18 @@ test.describe('alpha-gate real API journey', () => {
 
     await page.goto('/awards');
     await expect(page.getByText(/award/i).first()).toBeVisible();
+
+    const firstRfqLink = page.getByRole('link', { name: /rfq|request for quotation/i }).first();
+    if (await firstRfqLink.isVisible().catch(() => false)) {
+      await firstRfqLink.click();
+      await page.getByRole('link', { name: /evidence vault/i }).click();
+      await expect(page.getByRole('heading', { name: /evidence vault/i })).toBeVisible();
+    }
   });
 });
 ```
 
-If the project uses different route paths or helper names, update the imports and paths to match the existing Playwright specs. Keep `test.skip(process.env.NEXT_PUBLIC_USE_MOCKS === 'true', ...)` so this spec cannot accidentally count mock mode as release evidence.
+If the project uses different route paths, helper names, or seeded RFQ selectors, update the imports and paths to match the existing Playwright specs. Keep `test.skip(process.env.NEXT_PUBLIC_USE_MOCKS === 'true', ...)` so this spec cannot accidentally count mock mode as release evidence. The Evidence Vault assertion may be seeded-RFQ dependent, but it should be included whenever the local alpha seed provides an RFQ workspace route.
 
 - [ ] **Step 3: Run the spec in real-API mode**
 
