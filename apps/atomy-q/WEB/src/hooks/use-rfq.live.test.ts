@@ -46,6 +46,8 @@ describe('useRfq (live mode)', () => {
         status: 'active',
         vendors_count: 2,
         quotes_count: 1,
+        estimated_value: '1250000.50',
+        currency: 'USD',
       },
     });
     const { useRfq } = await import('@/hooks/use-rfq');
@@ -56,6 +58,7 @@ describe('useRfq (live mode)', () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data?.id).toBe('rfq-1');
     expect(result.current.data?.title).toBe('Live RFQ');
+    expect(result.current.data?.estValue).toBe('$1,250,000.50');
   });
 
   it('throws when the live API resolves to undefined', async () => {

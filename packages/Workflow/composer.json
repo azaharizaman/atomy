@@ -1,5 +1,5 @@
 {
-    "name": "nexus/workflow",
+    "name": "azaharizaman/nexus-workflow",
     "description": "Framework-agnostic workflow engine for Nexus ERP monorepo",
     "type": "library",
     "license": "MIT",

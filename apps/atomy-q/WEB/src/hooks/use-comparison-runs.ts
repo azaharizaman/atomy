@@ -5,6 +5,7 @@ import { fetchLiveOrFail } from '@/lib/api-live';
 
 export interface ComparisonRunRow {
   id: string;
+  displayIdentifier: string;
   rfq_id: string;
   date: string;
   type: 'preview' | 'final';
@@ -65,6 +66,7 @@ function normalizeComparisonRuns(payload: unknown): ComparisonRunRow[] {
     const date = requireTextField(row.created_at ?? row.createdAt, 'date', index);
     return {
       id,
+      displayIdentifier: String(row.display_identifier ?? row.displayIdentifier ?? row.name ?? id),
       rfq_id: requireTextField(row.rfq_id, 'rfq_id', index),
       name: requireTextField(row.name, 'name', index),
       date,

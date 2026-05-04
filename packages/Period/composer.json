@@ -1,5 +1,5 @@
 {
-    "name": "nexus/period",
+    "name": "azaharizaman/nexus-period",
     "description": "Nexus Period Management Package - Framework-agnostic fiscal period management",
     "type": "library",
     "license": "MIT",

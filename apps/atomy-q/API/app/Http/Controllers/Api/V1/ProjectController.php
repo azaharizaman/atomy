@@ -10,6 +10,7 @@ use App\Models\Project as ProjectModel;
 use App\Models\ProjectAcl;
 use App\Models\Rfq;
 use App\Models\Task as TaskModel;
+use App\Models\User;
 use App\Services\Project\ProjectService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -83,6 +84,7 @@ final class ProjectController extends Controller
             ->get()
             ->map(fn (ProjectModel $p) => [
                 'id' => $p->id,
+                'display_identifier' => $p->display_identifier,
                 'name' => $p->name,
                 'status' => $p->status,
                 'client_id' => $p->client_id,
@@ -128,6 +130,7 @@ final class ProjectController extends Controller
             $response = response()->json([
                 'data' => [
                     'id' => $project->id,
+                    'display_identifier' => $project->name,
                     'name' => $project->name,
                     'status' => $project->status->value,
                     'client_id' => $project->clientId,
@@ -162,6 +165,7 @@ final class ProjectController extends Controller
         return response()->json([
             'data' => [
                 'id' => $project->id,
+                'display_identifier' => $project->name,
                 'name' => $project->name,
                 'status' => $project->status->value,
                 'client_id' => $project->clientId,
@@ -226,6 +230,7 @@ final class ProjectController extends Controller
         return response()->json([
             'data' => [
                 'id' => $updated->id,
+                'display_identifier' => $updated->name,
                 'name' => $updated->name,
                 'status' => $updated->status->value,
                 'client_id' => $updated->clientId,
@@ -315,6 +320,7 @@ final class ProjectController extends Controller
             ->get()
             ->map(fn (Rfq $r) => [
                 'id' => $r->id,
+                'display_identifier' => $r->display_identifier,
                 'rfq_number' => $r->rfq_number,
                 'title' => $r->title,
                 'status' => $r->status,
@@ -335,6 +341,7 @@ final class ProjectController extends Controller
             ->get()
             ->map(fn (TaskModel $t) => [
                 'id' => $t->id,
+                'display_identifier' => $t->display_identifier,
                 'title' => $t->title,
                 'status' => $t->status,
                 'due_date' => $t->due_date?->format(DATE_ATOM),
@@ -404,8 +411,13 @@ final class ProjectController extends Controller
         $rows = ProjectAcl::query()
             ->where('tenant_id', $tenantId)
             ->where('project_id', $id)
+            ->with('user')
             ->get(['user_id', 'role'])
-            ->map(fn (ProjectAcl $row) => ['user_id' => $row->user_id, 'role' => $row->role])
+            ->map(fn (ProjectAcl $row) => [
+                'user_id' => $row->user_id,
+                'user_display_identifier' => $row->user?->display_identifier ?? (string) $row->user_id,
+                'role' => $row->role,
+            ])
             ->values()
             ->all();
         return response()->json(['data' => ['roles' => $rows]]);
@@ -446,8 +458,13 @@ final class ProjectController extends Controller
         $rows = ProjectAcl::query()
             ->where('tenant_id', $tenantId)
             ->where('project_id', $id)
+            ->with('user')
             ->get(['user_id', 'role'])
-            ->map(fn (ProjectAcl $row) => ['user_id' => $row->user_id, 'role' => $row->role])
+            ->map(fn (ProjectAcl $row) => [
+                'user_id' => $row->user_id,
+                'user_display_identifier' => $row->user?->display_identifier ?? (string) $row->user_id,
+                'role' => $row->role,
+            ])
             ->values()
             ->all();
         return response()->json(['data' => ['roles' => $rows]]);

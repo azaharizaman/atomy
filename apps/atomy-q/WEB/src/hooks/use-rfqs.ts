@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { fetchLiveOrFail } from '@/lib/api-live';
+import { formatCurrencyValue } from '@/lib/format-currency';
 
 export const RFQ_STATUSES = {
   ACTIVE: 'active',
@@ -21,12 +22,14 @@ export const isValidRfqStatus = (status: unknown): status is RfqStatus =>
 
 export interface RfqListItem {
   id: string;
+  displayIdentifier: string;
   title: string;
   status: RfqStatus;
   owner?: { name?: string; email?: string };
   deadline?: string;
   category?: string;
   estValue?: string;
+  currency?: string;
   savings?: string;
   vendorsCount?: number;
   quotesCount?: number;
@@ -137,14 +140,18 @@ function normalizeRfqsPayload(payload: unknown): RfqListItem[] {
         : null;
     const ownerNameVal = String(owner?.name ?? r.owner_name ?? '');
     const ownerEmailVal = String(owner?.email ?? r.owner_email ?? '');
+    const title = normalizeString(r.title ?? r.name) ?? 'Untitled';
+    const currency = normalizeString(r.currency ?? r.tenant_currency ?? r.currency_code) ?? 'USD';
     return {
       id: normalizeString(r.id ?? r.rfqId ?? r.code) ?? '',
-      title: normalizeString(r.title ?? r.name) ?? 'Untitled',
+      displayIdentifier: normalizeString(r.display_identifier ?? r.displayIdentifier) ?? normalizeString(r.rfq_number ?? r.rfqNumber) ?? title,
+      title,
       status: isValidRfqStatus(r.status) ? r.status : RFQ_STATUSES.ACTIVE,
       owner: ownerNameVal || ownerEmailVal ? { name: ownerNameVal, email: ownerEmailVal } : undefined,
       deadline: normalizeString(r.deadline ?? r.submissionDeadline ?? r.deadlineLabel),
       category: normalizeString(r.category),
-      estValue: normalizeString(r.estValue ?? r.estimated_value ?? r.estimatedValue),
+      estValue: formatCurrencyValue(normalizeString(r.estValue ?? r.estimated_value ?? r.estimatedValue), currency),
+      currency,
       savings: normalizeString(r.savings),
       vendorsCount: parseOptionalNumber(r.vendorsCount ?? r.vendors_count),
       quotesCount: parseOptionalNumber(r.quotesCount ?? r.quotes_count),

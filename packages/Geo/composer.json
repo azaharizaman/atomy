@@ -1,5 +1,5 @@
 {
-    "name": "nexus/geo",
+    "name": "azaharizaman/nexus-geo",
     "description": "Framework-agnostic geographic and location services for the Nexus ERP system with cost-optimized geocoding and geospatial calculations",
     "type": "library",
     "license": "MIT",
@@ -26,7 +26,7 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "suggest": {
-        "nexus/connector": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/party": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-connector": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-party": "Optional integration dependency; currently not referenced by package src."
     }
 }

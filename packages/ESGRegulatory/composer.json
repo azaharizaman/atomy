@@ -1,5 +1,5 @@
 {
-    "name": "nexus/esg-regulatory",
+    "name": "azaharizaman/nexus-esg-regulatory",
     "description": "Regulatory framework mapping engine for ESG metrics.",
     "type": "library",
     "license": "proprietary",

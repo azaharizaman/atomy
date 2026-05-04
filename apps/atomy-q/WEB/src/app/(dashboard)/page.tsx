@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation';
 import { AiNarrativePanel } from '@/components/ai/ai-narrative-panel';
 import { useDashboardAiSummary } from '@/hooks/use-dashboard-ai-summary';
 import { fetchLiveOrFail } from '@/lib/api-live';
+import { formatCompactCurrency } from '@/lib/format-compact-metric';
 import {
   ActivitySummaryCard,
   type ActivitySummaryItem,
@@ -33,9 +34,31 @@ import {
 type DashboardKpis = {
   active_rfqs?: number;
   pending_approvals?: number;
+  quote_intake_count?: number;
+  awards_in_flight?: number;
   total_savings?: string | number;
   avg_cycle_time_days?: string | number;
 };
+
+type DashboardKpisResponse = DashboardKpis | {
+  data?: DashboardKpis;
+};
+
+function isDashboardKpisWrapper(response: DashboardKpisResponse): response is { data?: DashboardKpis } {
+  return 'data' in response;
+}
+
+function unwrapDashboardKpis(response: DashboardKpisResponse | null | undefined): DashboardKpis {
+  if (!response) {
+    return {};
+  }
+
+  if (isDashboardKpisWrapper(response)) {
+    return response.data ?? {};
+  }
+
+  return response;
+}
 
 type DashboardActivityRaw = {
   id?: string | number;
@@ -56,14 +79,14 @@ export default function DashboardPage() {
     queryKey: ['dashboard', 'kpis'],
     queryFn: async () => {
       try {
-        const data = await fetchLiveOrFail<DashboardKpis>('/dashboard/kpis');
-        return data;
+        const data = await fetchLiveOrFail<DashboardKpisResponse>('/dashboard/kpis');
+        return unwrapDashboardKpis(data);
       } catch (e) {
         console.error('Failed to load KPIs:', e);
         return {
           active_rfqs: 12,
           pending_approvals: 5,
-          total_savings: '$1.2M',
+          total_savings: 1_200_000,
           avg_cycle_time_days: '14 days',
         } satisfies DashboardKpis;
       }
@@ -98,14 +121,12 @@ export default function DashboardPage() {
   const pipeline = {
     active: Number(kpis?.active_rfqs ?? 0),
     pending: Number(kpis?.pending_approvals ?? 0),
-    intake: 0,
-    awards: 0,
+    intake: Number(kpis?.quote_intake_count ?? 0),
+    awards: Number(kpis?.awards_in_flight ?? 0),
   };
 
   const savingsValue =
-    typeof kpis?.total_savings === 'number'
-      ? `$${kpis.total_savings.toLocaleString('en-US')}`
-      : kpis?.total_savings ?? '$0';
+    formatCompactCurrency(kpis?.total_savings ?? 0, 'USD');
 
   const approvals: PendingApprovalItem[] = [];
 
@@ -150,9 +171,10 @@ export default function DashboardPage() {
         onGenerate={dashboardAiSummary.generate ?? undefined}
         isGenerating={dashboardAiSummary.isGenerating}
         canGenerate={dashboardAiSummary.canGenerate}
+        hideWhenEmpty
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-4">
         {[
           { label: 'Active RFQs', count: pipeline.active, icon: <FileText size={16} /> },
           { label: 'Pending Approvals', count: pipeline.pending, icon: <CheckCircle2 size={16} /> },
@@ -161,7 +183,7 @@ export default function DashboardPage() {
         ].map((item, index) => (
           <div
             key={item.label}
-            className="animate-fade-up"
+            className="h-full animate-fade-up"
             style={{ animationDelay: `${index * 80}ms` }}
           >
             <PipelineStatCard
@@ -174,8 +196,8 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1.3fr,1fr]">
-        <div className="animate-fade-up" style={{ animationDelay: '120ms' }}>
+      <div className="grid items-stretch gap-4 lg:grid-cols-[1.3fr,1fr]">
+        <div className="h-full animate-fade-up" style={{ animationDelay: '120ms' }}>
           <SavingsHighlightCard
             title="YTD Savings"
             value={isLoadingKpis ? '...' : String(savingsValue)}
@@ -183,7 +205,7 @@ export default function DashboardPage() {
             trend={undefined}
           />
         </div>
-        <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_1px_3px_0_rgba(0,0,0,0.06)] animate-fade-up" style={{ animationDelay: '200ms' }}>
+        <div className="h-full rounded-lg border border-slate-200 bg-white p-5 shadow-[0_1px_3px_0_rgba(0,0,0,0.06)] animate-fade-up" style={{ animationDelay: '200ms' }}>
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-slate-800">Spend Trend</h3>
             <div className="text-xs text-slate-400">Last 6 months</div>
@@ -203,27 +225,27 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.1fr,1fr,1fr]">
-        <div className="animate-fade-up" style={{ animationDelay: '260ms' }}>
+      <div className="grid items-stretch gap-4 xl:grid-cols-[1.1fr,1fr,1fr]">
+        <div className="h-full animate-fade-up" style={{ animationDelay: '260ms' }}>
           <PendingApprovalsCard
             items={approvals}
             onItemClick={(id) => router.push(`/rfqs?approval=${encodeURIComponent(id)}`)}
             onViewAll={() => router.push('/rfqs')}
           />
         </div>
-        <div className="animate-fade-up" style={{ animationDelay: '320ms' }}>
+        <div className="h-full animate-fade-up" style={{ animationDelay: '320ms' }}>
           <ActivitySummaryCard
             items={activity ?? []}
             onViewAll={() => router.push('/rfqs')}
             className={isLoadingActivity ? 'opacity-60' : ''}
           />
         </div>
-        <div className="animate-fade-up" style={{ animationDelay: '380ms' }}>
+        <div className="h-full animate-fade-up" style={{ animationDelay: '380ms' }}>
           <CategoryBreakdownCard items={categories} />
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1.1fr,1.3fr]">
+      <div className="grid items-stretch gap-4 lg:grid-cols-[1.1fr,1.3fr]">
         <div className="space-y-3">
           <h3 className="text-sm font-semibold text-slate-800">SLA Alerts</h3>
           {alerts.length === 0 ? (
@@ -245,7 +267,7 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid items-stretch gap-3 sm:grid-cols-2">
           {quickActions.map(action => (
             <QuickActionCard
               key={action.id}

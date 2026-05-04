@@ -1,9 +1,16 @@
 {
-    "name": "nexus/content",
+    "name": "azaharizaman/nexus-content",
     "description": "Framework-agnostic knowledge base and content management package with versioning, workflow, and multi-language support",
     "type": "library",
     "license": "MIT",
-    "keywords": ["content", "cms", "knowledge-base", "versioning", "articles", "documentation"],
+    "keywords": [
+        "content",
+        "cms",
+        "knowledge-base",
+        "versioning",
+        "articles",
+        "documentation"
+    ],
     "authors": [
         {
             "name": "Nexus Development Team",

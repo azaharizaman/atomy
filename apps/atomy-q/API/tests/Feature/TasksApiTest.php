@@ -79,6 +79,43 @@ class TasksApiTest extends TestCase
         $response->assertJsonPath('data', []);
     }
 
+    public function test_tasks_index_returns_display_identifier_and_project_display_identifier(): void
+    {
+        $this->withTasksEnabled();
+        $tenantId = (string) Str::ulid();
+        $user = $this->createUser($tenantId);
+
+        $project = ProjectModel::query()->create([
+            'tenant_id' => $tenantId,
+            'name' => 'Pump Upgrade',
+            'client_id' => 'client-1',
+            'start_date' => now(),
+            'end_date' => now()->addMonth(),
+            'project_manager_id' => (string) Str::ulid(),
+            'status' => 'planning',
+        ]);
+        ProjectAcl::query()->create([
+            'project_id' => $project->id,
+            'user_id' => $user->id,
+            'role' => 'viewer',
+            'tenant_id' => $tenantId,
+        ]);
+
+        TaskModel::query()->create([
+            'tenant_id' => $tenantId,
+            'title' => 'Review supplier quote',
+            'status' => 'pending',
+            'priority' => 'medium',
+            'project_id' => $project->id,
+        ]);
+
+        $response = $this->getJson('/api/v1/tasks', $this->authHeaders((string) $user->id, $tenantId));
+
+        $response->assertOk();
+        $response->assertJsonPath('data.0.display_identifier', 'Review supplier quote');
+        $response->assertJsonPath('data.0.project_display_identifier', 'Pump Upgrade');
+    }
+
     public function test_tasks_index_returns_401_without_auth(): void
     {
         $this->withTasksEnabled();

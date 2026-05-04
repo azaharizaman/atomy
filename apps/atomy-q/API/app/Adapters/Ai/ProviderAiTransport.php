@@ -125,7 +125,10 @@ final readonly class ProviderAiTransport implements ProviderAiTransportInterface
                 ],
             );
 
-            throw new AiTransportFailedException(sprintf('AI endpoint [%s] returned an unsuccessful response.', $endpointGroup));
+            throw new AiTransportFailedException(
+                sprintf('AI endpoint [%s] returned an unsuccessful response.', $endpointGroup),
+                $lastReasonCode,
+            );
         }
 
         $data = $response->json();

@@ -1,5 +1,5 @@
 {
-    "name": "nexus/payment-recurring",
+    "name": "azaharizaman/nexus-payment-recurring",
     "description": "Payment recurring extension providing subscription billing, usage-based billing, and recurring payment management",
     "type": "library",
     "license": "MIT",
@@ -19,7 +19,7 @@
         }
     ],
     "require": {
-        "nexus/common": "^1.0",
+        "azaharizaman/nexus-common": "^1.0",
         "php": "^8.3",
         "psr/log": "^3.0"
     },
@@ -44,7 +44,7 @@
         "sort-packages": true
     },
     "suggest": {
-        "nexus/payment": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/scheduler": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-payment": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-scheduler": "Optional integration dependency; currently not referenced by package src."
     }
 }

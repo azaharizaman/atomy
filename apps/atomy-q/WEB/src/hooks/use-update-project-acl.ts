@@ -10,7 +10,9 @@ export interface UpdateProjectAclPayload {
   roles: Array<{ user_id: string; role: ProjectAclRole }>;
 }
 
-function toApiPayload(entries: ProjectAclEntry[]): UpdateProjectAclPayload {
+type ProjectAclMutationEntry = Pick<ProjectAclEntry, 'userId' | 'role'>;
+
+function toApiPayload(entries: ProjectAclMutationEntry[]): UpdateProjectAclPayload {
   return {
     roles: entries.map((e) => ({
       user_id: e.userId,
@@ -23,7 +25,7 @@ export function useUpdateProjectAcl(projectId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (entries: ProjectAclEntry[]): Promise<ProjectAclEntry[]> => {
+    mutationFn: async (entries: ProjectAclMutationEntry[]): Promise<ProjectAclEntry[]> => {
       const { data } = await api.put(`/projects/${encodeURIComponent(projectId)}/acl`, toApiPayload(entries));
       const raw = (data?.data ?? data) as Record<string, unknown> | null;
       const roles = (raw?.roles ?? raw?.data) as unknown;
@@ -50,6 +52,7 @@ export function useUpdateProjectAcl(projectId: string) {
 
           return {
             userId: String(r.user_id ?? ''),
+            userDisplayIdentifier: String(r.user_display_identifier ?? r.userDisplayIdentifier ?? r.user_id ?? ''),
             role,
           };
         })
@@ -60,4 +63,3 @@ export function useUpdateProjectAcl(projectId: string) {
     },
   });
 }
-

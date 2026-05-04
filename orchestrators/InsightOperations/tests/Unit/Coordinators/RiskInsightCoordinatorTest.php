@@ -104,4 +104,35 @@ final class RiskInsightCoordinatorTest extends TestCase
             $result["data"]["ai_insights"]["reason_codes"],
         );
     }
+
+    public function test_generate_preserves_provider_failure_reason_codes(): void
+    {
+        $factsPort = new RiskFactsFake();
+        $cachePort = new InMemoryArtifactCache();
+        $availabilityPort = new AvailableAiFake();
+        $narrativePort = new ReasonedFailingNarrativePort(
+            "provider_quota_exceeded",
+        );
+
+        $coordinator = new RiskInsightCoordinator(
+            $factsPort,
+            $factsPort,
+            $cachePort,
+            $availabilityPort,
+            $narrativePort,
+            new NullLogger(),
+            new FactHasher(),
+        );
+
+        $result = $coordinator
+            ->generate("tenant-a", "rfq-1", "actor-1")
+            ->toResponseArray();
+
+        self::assertSame(1, $narrativePort->calls);
+        self::assertFalse($result["data"]["ai_insights"]["available"]);
+        self::assertSame(
+            ["provider_quota_exceeded"],
+            $result["data"]["ai_insights"]["reason_codes"],
+        );
+    }
 }

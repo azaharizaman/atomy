@@ -131,7 +131,7 @@ describe('ApprovalsListPage', () => {
     await renderPageWithProviders(<ApprovalsListPage params={Promise.resolve({ rfqId: 'rfq-1' })} />);
 
     expect(await screen.findByRole('heading', { name: 'AI summary aid' })).toBeInTheDocument();
-    expect(screen.getAllByText('approval-1').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Review contract exceptions.').length).toBeGreaterThan(0);
     expect(screen.getAllByText(/approval can proceed with the frozen comparison evidence/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/view raw provider payload/i)).toBeInTheDocument();
     expect(screen.getAllByText(/openrouter/i).length).toBeGreaterThan(0);
@@ -182,6 +182,6 @@ describe('ApprovalsListPage', () => {
 
     expect(await screen.findByRole('heading', { name: 'AI summary aid' })).toBeInTheDocument();
     expect(screen.getByText('Approval AI summary unavailable')).toBeInTheDocument();
-    expect(screen.getByText('approval-1')).toBeInTheDocument();
+    expect(screen.getByText('Review contract exceptions.')).toBeInTheDocument();
   });
 });

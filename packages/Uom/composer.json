@@ -1,5 +1,5 @@
 {
-    "name": "nexus/uom",
+    "name": "azaharizaman/nexus-uom",
     "description": "Framework-agnostic Unit of Measurement (UoM) management and conversion engine for the Nexus ERP system",
     "type": "library",
     "license": "MIT",

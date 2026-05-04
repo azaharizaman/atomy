@@ -1,5 +1,5 @@
 {
-    "name": "nexus/idempotency",
+    "name": "azaharizaman/nexus-idempotency",
     "description": "Domain-level idempotency: command deduplication and replay-safe results (Layer 1).",
     "type": "library",
     "license": "MIT",

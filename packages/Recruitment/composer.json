@@ -1,9 +1,15 @@
 {
-    "name": "nexus/recruitment",
+    "name": "azaharizaman/nexus-recruitment",
     "description": "Job posting, applicant tracking, interviews, and hiring decision engine for talent acquisition",
     "type": "library",
     "license": "MIT",
-    "keywords": ["hrm", "recruitment", "hiring", "applicant-tracking", "interviews"],
+    "keywords": [
+        "hrm",
+        "recruitment",
+        "hiring",
+        "applicant-tracking",
+        "interviews"
+    ],
     "require": {
         "php": "^8.3"
     },

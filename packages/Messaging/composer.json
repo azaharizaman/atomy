@@ -1,5 +1,5 @@
 {
-    "name": "nexus/messaging",
+    "name": "azaharizaman/nexus-messaging",
     "description": "Channel-agnostic, immutable communication record management for Email, SMS, Chat, Webhooks with protocol abstraction",
     "type": "library",
     "license": "MIT",

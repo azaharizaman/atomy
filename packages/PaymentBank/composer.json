@@ -1,5 +1,5 @@
 {
-    "name": "nexus/payment-bank",
+    "name": "azaharizaman/nexus-payment-bank",
     "description": "Payment bank extension providing direct bank integrations for real-time payments, open banking (PSD2), and bank account verification",
     "type": "library",
     "license": "MIT",
@@ -19,8 +19,8 @@
         }
     ],
     "require": {
-        "nexus/common": "*@dev",
-        "nexus/crypto": "*@dev",
+        "azaharizaman/nexus-common": "*@dev",
+        "azaharizaman/nexus-crypto": "*@dev",
         "php": "^8.3",
         "psr/log": "^3.0"
     },
@@ -30,9 +30,9 @@
         "friendsofphp/php-cs-fixer": "^3.0"
     },
     "suggest": {
-        "nexus/connector": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/payment": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/payment-rails": "For ACH/Wire transmission via bank rails"
+        "azaharizaman/nexus-connector": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-payment": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-payment-rails": "For ACH/Wire transmission via bank rails"
     },
     "autoload": {
         "psr-4": {

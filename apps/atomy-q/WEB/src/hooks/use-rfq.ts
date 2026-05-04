@@ -3,11 +3,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { fetchLiveOrFail } from '@/lib/api-live';
+import { formatCurrencyValue } from '@/lib/format-currency';
 import { type RfqStatus, isValidRfqStatus } from '@/hooks/use-rfqs';
 import { isObject, toText, unwrapResponse } from '@/hooks/normalize-utils';
 
 export interface RfqDetail {
   id: string;
+  displayIdentifier: string;
   title: string;
   description?: string | null;
   status: RfqStatus;
@@ -15,6 +17,7 @@ export interface RfqDetail {
   vendorsCount?: number;
   quotesCount?: number;
   estValue?: string;
+  currency?: string;
   savings?: string;
   projectId?: string | null;
   projectName?: string | null;
@@ -74,8 +77,11 @@ function normalizeRfq(payload: unknown): RfqDetail {
   }
 
   const est = raw.estValue ?? raw.estimated_value ?? raw.estimatedValue;
+  const currency = toText(raw.currency ?? raw.tenant_currency ?? raw.currency_code) ?? 'USD';
+  const rfqNumber = raw.rfq_number != null ? String(raw.rfq_number) : undefined;
   return {
     id,
+    displayIdentifier: toText(raw.display_identifier ?? raw.displayIdentifier) ?? rfqNumber ?? title,
     title,
     description:
       raw.description === null || raw.description === undefined
@@ -85,10 +91,11 @@ function normalizeRfq(payload: unknown): RfqDetail {
             return s === '' ? null : s;
           })(),
     status: rawStatus,
-    rfq_number: raw.rfq_number != null ? String(raw.rfq_number) : undefined,
+    rfq_number: rfqNumber,
     vendorsCount: parseMaybeNumber(raw.vendorsCount ?? raw.vendors_count),
     quotesCount: parseMaybeNumber(raw.quotesCount ?? raw.quotes_count),
-    estValue: est !== null && est !== undefined ? String(est) : undefined,
+    estValue: formatCurrencyValue(typeof est === 'number' ? est : toText(est), currency),
+    currency,
     savings: raw.savings != null ? String(raw.savings) : undefined,
     projectId: (raw.project_id ?? raw.projectId) as string | null | undefined,
     projectName: (raw.project_name ?? raw.projectName) as string | null | undefined,

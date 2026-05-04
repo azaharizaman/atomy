@@ -5,6 +5,7 @@ import { fetchLiveOrFail } from '@/lib/api-live';
 
 export interface ProjectListItem {
   id: string;
+  displayIdentifier: string;
   name: string;
   status?: string;
   clientId?: string;
@@ -29,15 +30,19 @@ function normalizeProjectsPayload(payload: unknown): ProjectListItem[] {
 
   return list
     .filter((raw: unknown): raw is Record<string, unknown> => !!raw && typeof raw === 'object')
-    .map((raw) => ({
-      id: String(raw.id ?? ''),
-      name: String(raw.name ?? raw.title ?? 'Untitled'),
-      status: raw.status ? String(raw.status) : undefined,
-      clientId: (raw.client_id ?? raw.clientId) as string | undefined,
-      clientName: (raw.client_name ?? raw.clientName) as string | undefined,
-      startDate: (raw.start_date ?? raw.startDate) as string | undefined,
-      endDate: (raw.end_date ?? raw.endDate) as string | undefined,
-    }))
+    .map((raw) => {
+      const name = String(raw.name ?? raw.title ?? 'Untitled');
+      return {
+        id: String(raw.id ?? ''),
+        displayIdentifier: String(raw.display_identifier ?? raw.displayIdentifier ?? name),
+        name,
+        status: raw.status ? String(raw.status) : undefined,
+        clientId: (raw.client_id ?? raw.clientId) as string | undefined,
+        clientName: (raw.client_name ?? raw.clientName) as string | undefined,
+        startDate: (raw.start_date ?? raw.startDate) as string | undefined,
+        endDate: (raw.end_date ?? raw.endDate) as string | undefined,
+      };
+    })
     .filter((p) => p.id);
 }
 

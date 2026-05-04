@@ -1,5 +1,5 @@
 {
-    "name": "nexus/payroll",
+    "name": "azaharizaman/nexus-payroll",
     "description": "Country-agnostic atomic payroll engine for Nexus ERP",
     "type": "library",
     "license": "MIT",

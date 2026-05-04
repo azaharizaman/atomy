@@ -1,5 +1,5 @@
 {
-    "name": "nexus/accounting",
+    "name": "azaharizaman/nexus-accounting",
     "description": "Nexus Accounting Package - Financial statement generation, period close, consolidation, and variance analysis",
     "type": "library",
     "license": "MIT",

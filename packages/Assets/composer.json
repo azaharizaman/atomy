@@ -1,5 +1,5 @@
 {
-    "name": "nexus/assets",
+    "name": "azaharizaman/nexus-assets",
     "description": "Framework-agnostic fixed asset management with progressive delivery (SB\u2192MB\u2192LE)",
     "type": "library",
     "license": "MIT",
@@ -9,22 +9,22 @@
         }
     },
     "require": {
-        "nexus/period": "*@dev",
-        "nexus/setting": "*@dev",
+        "azaharizaman/nexus-period": "*@dev",
+        "azaharizaman/nexus-setting": "*@dev",
         "php": "^8.3",
         "psr/log": "^3.0"
     },
     "suggest": {
-        "nexus/accounting": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/audit": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/audit-logger": "Comprehensive audit trail for asset changes and transfers",
-        "nexus/document": "Attach purchase orders, invoices, photos, and maintenance records to assets",
-        "nexus/event-stream": "Event sourcing for asset lifecycle replay (recommended for audited environments)",
-        "nexus/inventory": "LocationInterface for advanced asset tracking (Tier 2/3)",
-        "nexus/product": "For barcode/QR code asset tag generation (Tier 3)",
-        "nexus/sequencing": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/uom": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/workflow": "Multi-level approval workflows for asset disposal and revaluation"
+        "azaharizaman/nexus-accounting": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-audit": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-audit-logger": "Comprehensive audit trail for asset changes and transfers",
+        "azaharizaman/nexus-document": "Attach purchase orders, invoices, photos, and maintenance records to assets",
+        "azaharizaman/nexus-event-stream": "Event sourcing for asset lifecycle replay (recommended for audited environments)",
+        "azaharizaman/nexus-inventory": "LocationInterface for advanced asset tracking (Tier 2/3)",
+        "azaharizaman/nexus-product": "For barcode/QR code asset tag generation (Tier 3)",
+        "azaharizaman/nexus-sequencing": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-uom": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-workflow": "Multi-level approval workflows for asset disposal and revaluation"
     },
     "minimum-stability": "dev",
     "prefer-stable": true

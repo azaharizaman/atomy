@@ -4,6 +4,7 @@ import React from 'react';
 import { AlertTriangle, ChevronRight, Clock, TrendingUp } from 'lucide-react';
 import { Card } from '@/components/ds/Card';
 import { Button } from '@/components/ds/Button';
+import { formatCompactCount, formatCompactCurrency } from '@/lib/format-compact-metric';
 
 // ─── Pipeline Stat Card ───────────────────────────────────────────────────────
 
@@ -20,7 +21,7 @@ export function PipelineStatCard({ label, count, icon, onClick, className = '' }
     <div
       onClick={onClick}
       className={[
-        'flex items-center justify-between p-4 rounded-lg border border-slate-200 bg-white shadow-[0_1px_3px_0_rgba(0,0,0,0.06)]',
+        'flex h-full items-center justify-between p-4 rounded-lg border border-slate-200 bg-white shadow-[0_1px_3px_0_rgba(0,0,0,0.06)]',
         onClick ? 'cursor-pointer hover:border-indigo-300 hover:shadow-sm transition-all' : '',
         className,
       ].join(' ')}
@@ -28,7 +29,7 @@ export function PipelineStatCard({ label, count, icon, onClick, className = '' }
       <div className="flex items-center gap-3">
         {icon && <div className="text-slate-400">{icon}</div>}
         <div>
-          <p className="text-2xl font-semibold text-slate-900">{count}</p>
+          <p className="text-2xl font-semibold text-slate-900">{formatCompactCount(count)}</p>
           <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{label}</p>
         </div>
       </div>
@@ -51,7 +52,7 @@ interface SavingsHighlightCardProps {
 export function SavingsHighlightCard({ title, value, subtitle, trend, onClick, className = '' }: SavingsHighlightCardProps) {
   const trendUp = trend && trend.value > 0;
   return (
-    <Card padding="lg" onClick={onClick} className={className}>
+    <Card padding="lg" onClick={onClick} className={['h-full', className].join(' ')}>
       <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">{title}</p>
       <p className="text-3xl font-bold text-slate-900">{value}</p>
       {subtitle && <p className="text-sm text-slate-500 mt-1">{subtitle}</p>}
@@ -101,7 +102,7 @@ export function SLAAlertCard({ title, rfqId, timeRemaining, urgency = 'medium', 
       <AlertTriangle size={18} className={['shrink-0 mt-0.5', s.icon].join(' ')} />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-slate-900">{title}</p>
-        <p className="text-xs text-slate-500 mt-0.5 font-mono">{rfqId}</p>
+        <p className="text-xs text-slate-500 mt-0.5">{rfqId}</p>
         <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-600">
           <Clock size={12} />
           <span>{timeRemaining}</span>
@@ -134,7 +135,7 @@ interface ActivitySummaryCardProps {
 export function ActivitySummaryCard({ items, title = 'Recent Activity', maxItems = 5, onViewAll, className = '' }: ActivitySummaryCardProps) {
   const shown = items.slice(0, maxItems);
   return (
-    <Card padding="none" className={className}>
+    <Card padding="none" className={['h-full', className].join(' ')}>
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
         <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
         {onViewAll && (
@@ -149,7 +150,7 @@ export function ActivitySummaryCard({ items, title = 'Recent Activity', maxItems
             <p className="text-sm text-slate-700">{item.actor} {item.action}</p>
             <p className="text-[11px] text-slate-400 mt-0.5">
               {item.timestamp}
-              {item.rfqId && <span className="font-mono ml-1">{item.rfqId}</span>}
+              {item.rfqId && <span className="ml-1">{item.rfqId}</span>}
             </p>
           </li>
         ))}
@@ -178,7 +179,7 @@ interface PendingApprovalsCardProps {
 
 export function PendingApprovalsCard({ items, onItemClick, onViewAll, className = '' }: PendingApprovalsCardProps) {
   return (
-    <Card padding="none" className={className}>
+    <Card padding="none" className={['h-full', className].join(' ')}>
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
         <h3 className="text-sm font-semibold text-slate-800">Pending Approvals</h3>
         {onViewAll && (
@@ -198,7 +199,7 @@ export function PendingApprovalsCard({ items, onItemClick, onViewAll, className 
               <div>
                 <p className="text-sm font-medium text-slate-900">{item.rfqTitle}</p>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  <span className="font-mono">{item.rfqId}</span> · {item.type} · {item.assignee}
+                  {item.type} · {item.assignee}
                 </p>
               </div>
               <span className="text-[11px] text-slate-400 shrink-0">{item.submittedAt}</span>
@@ -231,7 +232,7 @@ export function CategoryBreakdownCard({ items, title = 'By Category', maxItems =
   const shown = items.slice(0, maxItems);
   const maxPct = Math.max(...shown.map(i => i.pct), 1);
   return (
-    <Card padding="none" className={className}>
+    <Card padding="none" className={['h-full', className].join(' ')}>
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
         <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
         {onViewAll && (
@@ -245,7 +246,7 @@ export function CategoryBreakdownCard({ items, title = 'By Category', maxItems =
           <div key={item.category}>
             <div className="flex items-center justify-between text-xs mb-1">
               <span className="font-medium text-slate-700">{item.category}</span>
-              <span className="text-slate-500">{item.estValue} · {item.count} RFQs</span>
+              <span className="text-slate-500">{formatCompactCurrency(item.estValue)} · {formatCompactCount(item.count)} RFQs</span>
             </div>
             <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
               <div
@@ -273,7 +274,7 @@ interface QuickActionCardProps {
 
 export function QuickActionCard({ icon, title, description, actionLabel, onAction, className = '' }: QuickActionCardProps) {
   return (
-    <Card padding="md" onClick={onAction} className={className}>
+    <Card padding="md" onClick={onAction} className={['h-full', className].join(' ')}>
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
           {icon}

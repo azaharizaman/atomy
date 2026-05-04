@@ -1,5 +1,5 @@
 {
-    "name": "nexus/feature-flags",
+    "name": "azaharizaman/nexus-feature-flags",
     "description": "Production-grade feature flag management with context-based evaluation, percentage rollout, and kill switches",
     "type": "library",
     "license": "MIT",
@@ -26,8 +26,8 @@
         "phpunit/phpunit": "^10.0"
     },
     "suggest": {
-        "nexus/telemetry": "For telemetry tracking and performance metrics",
-        "nexus/audit-logger": "For audit trail of flag definition changes"
+        "azaharizaman/nexus-telemetry": "For telemetry tracking and performance metrics",
+        "azaharizaman/nexus-audit-logger": "For audit trail of flag definition changes"
     },
     "autoload": {
         "psr-4": {

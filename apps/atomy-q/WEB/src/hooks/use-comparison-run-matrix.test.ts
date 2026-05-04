@@ -32,6 +32,7 @@ describe('useComparisonRunMatrix', () => {
                 offers: [
                   {
                     vendor_id: 'vendor-1',
+                    vendor_display_identifier: 'Alpha Supplies',
                     rfq_line_id: 'line-1',
                     taxonomy_code: 'PUMP',
                     normalized_unit_price: 110.5,
@@ -46,6 +47,7 @@ describe('useComparisonRunMatrix', () => {
                 },
                 recommendation: {
                   recommended_vendor_id: 'vendor-1',
+                  recommended_vendor_display_identifier: 'Alpha Supplies',
                   reason: 'lowest_normalized_unit_price',
                 },
               },
@@ -71,6 +73,7 @@ describe('useComparisonRunMatrix', () => {
           offers: [
             {
               vendorId: 'vendor-1',
+              vendorDisplayIdentifier: 'Alpha Supplies',
               rfqLineId: 'line-1',
               taxonomyCode: 'PUMP',
               normalizedUnitPrice: 110.5,
@@ -85,6 +88,7 @@ describe('useComparisonRunMatrix', () => {
           },
           recommendation: {
             recommendedVendorId: 'vendor-1',
+            recommendedVendorDisplayIdentifier: 'Alpha Supplies',
             reason: 'lowest_normalized_unit_price',
           },
         },

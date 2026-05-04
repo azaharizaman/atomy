@@ -1,9 +1,15 @@
 {
-    "name": "nexus/performance-review",
+    "name": "azaharizaman/nexus-performance-review",
     "description": "Appraisal cycles, KPIs, competency scoring, and rating calculations for employee performance management",
     "type": "library",
     "license": "MIT",
-    "keywords": ["hrm", "performance", "appraisal", "kpi", "rating"],
+    "keywords": [
+        "hrm",
+        "performance",
+        "appraisal",
+        "kpi",
+        "rating"
+    ],
     "require": {
         "php": "^8.3"
     },

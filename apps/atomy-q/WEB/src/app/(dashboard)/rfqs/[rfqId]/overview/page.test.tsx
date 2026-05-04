@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { act, screen } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { renderWithProviders } from '@/test/utils';
 
@@ -103,8 +103,70 @@ describe('RfqOverviewPage', () => {
     expect(screen.getByText('Next step')).toBeInTheDocument();
     expect(screen.getByText('Schedule')).toBeInTheDocument();
     expect(screen.getByText('Quotes received')).toBeInTheDocument();
-    expect(screen.getByText('Approval status')).toBeInTheDocument();
+    expect(screen.getByText('Pending approvals')).toBeInTheDocument();
     expect(screen.getByText('Activity timeline')).toBeInTheDocument();
     expect(screen.getByText(/No activity yet\./i)).toBeInTheDocument();
+  });
+
+  it('uses numeric primary values and equal-height wrappers for RFQ KPI cards', async () => {
+    mockUseRfqOverview.mockReturnValue({
+      data: {
+        rfq: {
+          id: 'rfq-2',
+          rfq_number: 'RFQ-0002',
+          title: 'Compressor Package',
+          status: 'active',
+          submission_deadline: '2026-04-30T10:00:00Z',
+          vendors_count: 8,
+          quotes_count: 6,
+        },
+        expected_quotes: 8,
+        normalization: {
+          accepted_count: 3,
+          total_quotes: 6,
+          progress_pct: 50,
+          uploaded_count: 6,
+          needs_review_count: 3,
+          ready_count: 3,
+        },
+        comparison_runs_count: 3,
+        comparison: {
+          id: 'run-3',
+          name: 'Final comparison',
+          status: 'locked',
+          is_preview: false,
+          created_at: '2026-04-29T10:00:00Z',
+        },
+        approvals: {
+          pending_count: 2,
+          approved_count: 1,
+          rejected_count: 0,
+          overall: 'pending',
+        },
+        activity: [],
+      },
+      isLoading: false,
+      isError: false,
+      error: undefined,
+    });
+
+    await act(async () => {
+      renderWithProviders(
+        <Suspense fallback={null}>
+          <RfqOverviewPage params={Promise.resolve({ rfqId: 'rfq-2' })} />
+        </Suspense>,
+      );
+    });
+
+    const comparisonLink = screen.getByRole('link', { name: /comparison runs/i });
+    expect(comparisonLink).toHaveClass('h-full');
+    expect(within(comparisonLink).getByText('3')).toBeInTheDocument();
+    expect(within(comparisonLink).getByText('Latest run available')).toBeInTheDocument();
+    expect(within(comparisonLink).getByText('locked')).toBeInTheDocument();
+
+    const approvalLink = screen.getByRole('link', { name: /pending approvals/i });
+    expect(approvalLink).toHaveClass('h-full');
+    expect(within(approvalLink).getByText('2')).toBeInTheDocument();
+    expect(within(approvalLink).getByText('Action required')).toBeInTheDocument();
   });
 });

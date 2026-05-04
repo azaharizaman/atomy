@@ -1,5 +1,5 @@
 {
-    "name": "nexus/query-engine",
+    "name": "azaharizaman/nexus-query-engine",
     "description": "High-performance framework-agnostic query execution and data aggregation engine for the Nexus ERP system",
     "type": "library",
     "license": "MIT",

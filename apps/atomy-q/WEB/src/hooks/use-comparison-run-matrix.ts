@@ -6,6 +6,7 @@ import { isObject, toText, unwrapResponse } from '@/hooks/normalize-utils';
 
 export interface ComparisonRunMatrixOffer {
   vendorId: string;
+  vendorDisplayIdentifier: string;
   rfqLineId: string;
   taxonomyCode: string;
   normalizedUnitPrice: number;
@@ -24,6 +25,7 @@ export interface ComparisonRunMatrixCluster {
   };
   recommendation: {
     recommendedVendorId: string;
+    recommendedVendorDisplayIdentifier: string;
     reason: string;
   };
 }
@@ -64,6 +66,7 @@ function normalizeOffer(payload: unknown, index: number): ComparisonRunMatrixOff
 
   return {
     vendorId,
+    vendorDisplayIdentifier: toText(payload.vendor_display_identifier ?? payload.vendorDisplayIdentifier) ?? vendorId,
     rfqLineId,
     taxonomyCode,
     normalizedUnitPrice,
@@ -124,6 +127,9 @@ function normalizeCluster(payload: unknown, index: number): ComparisonRunMatrixC
     },
     recommendation: {
       recommendedVendorId,
+      recommendedVendorDisplayIdentifier: toText(
+        payload.recommendation.recommended_vendor_display_identifier ?? payload.recommendation.recommendedVendorDisplayIdentifier,
+      ) ?? recommendedVendorId,
       reason,
     },
   };

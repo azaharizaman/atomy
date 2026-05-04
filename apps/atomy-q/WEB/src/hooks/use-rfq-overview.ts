@@ -62,6 +62,7 @@ export interface RfqOverviewData {
   expected_quotes: number;
   normalization: RfqOverviewNormalization;
   comparison: RfqOverviewComparison | null;
+  comparison_runs_count: number;
   approvals: RfqOverviewApprovals;
   activity: RfqOverviewActivityItem[];
 }
@@ -170,6 +171,7 @@ function normalizeOverviewPayload(payload: unknown): RfqOverviewData {
           created_at: comp.created_at as string | null,
         }
       : null,
+    comparison_runs_count: Number(d?.comparison_runs_count ?? d?.comparisonRunsCount ?? (comp ? 1 : 0)),
     approvals: {
       pending_count: Number(app?.pending_count ?? 0),
       approved_count: Number(app?.approved_count ?? 0),

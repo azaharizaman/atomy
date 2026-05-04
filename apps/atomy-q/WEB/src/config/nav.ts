@@ -46,7 +46,7 @@ export const UNGROUPED_TRAILING_MAIN_NAV_IDS = ['settings'] as const;
 export const REQUISITION_NAV_ITEMS: RequisitionNavItemConfig[] = [
   { id: 'draft', label: 'Draft', href: '/rfqs?status=draft', path: '/rfqs', countKey: 'draft' },
   { id: 'pending', label: 'Pending Approval', href: '/rfqs?status=pending', path: '/rfqs', countKey: 'pending' },
-  { id: 'active', label: 'Active (Live RFQ)', href: '/rfqs', path: '/rfqs', countKey: 'active' },
+  { id: 'active', label: 'Active (Live RFQ)', href: '/rfqs?status=active', path: '/rfqs', countKey: 'active' },
   { id: 'awarded', label: 'Awarded', href: '/rfqs?status=awarded', path: '/rfqs', countKey: 'awarded' },
   { id: 'closed', label: 'Closed', href: '/rfqs?status=closed', path: '/rfqs', countKey: 'closed' },
   { id: 'archived', label: 'Archived', href: '/rfqs?status=archived', path: '/rfqs', countKey: 'archived' },

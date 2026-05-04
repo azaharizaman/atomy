@@ -1,5 +1,5 @@
 {
-    "name": "nexus/currency",
+    "name": "azaharizaman/nexus-currency",
     "description": "Framework-agnostic ISO 4217-compliant currency management and exchange rate engine for the Nexus ERP system",
     "type": "library",
     "license": "MIT",
@@ -10,7 +10,7 @@
         }
     ],
     "require": {
-        "nexus/common": "*@dev",
+        "azaharizaman/nexus-common": "*@dev",
         "php": "^8.3",
         "psr/log": "^3.0"
     },
@@ -30,6 +30,6 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "suggest": {
-        "nexus/accounting": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-accounting": "Optional integration dependency; currently not referenced by package src."
     }
 }

@@ -1,9 +1,15 @@
 {
-    "name": "nexus/disciplinary",
+    "name": "azaharizaman/nexus-disciplinary",
     "description": "Employee misconduct reporting, case management, warnings, sanctions, and policy enforcement",
     "type": "library",
     "license": "MIT",
-    "keywords": ["hrm", "disciplinary", "case-management", "sanctions", "misconduct"],
+    "keywords": [
+        "hrm",
+        "disciplinary",
+        "case-management",
+        "sanctions",
+        "misconduct"
+    ],
     "require": {
         "php": "^8.3"
     },

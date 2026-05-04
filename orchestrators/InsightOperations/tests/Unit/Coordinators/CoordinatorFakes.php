@@ -108,6 +108,35 @@ final class FailingNarrativePort implements InsightNarrativePortInterface
     }
 }
 
+final class ReasonedFailingNarrativePort implements InsightNarrativePortInterface
+{
+    public int $calls = 0;
+
+    public function __construct(private readonly string $reasonCode) {}
+
+    public function generate(
+        string $featureKey,
+        string $tenantId,
+        string $subjectType,
+        string $actorId,
+        array $facts,
+    ): AiArtifactDto {
+        $this->calls++;
+
+        throw new class ($this->reasonCode) extends \RuntimeException {
+            public function __construct(private readonly string $reasonCode)
+            {
+                parent::__construct("provider unavailable");
+            }
+
+            public function reasonCode(): string
+            {
+                return $this->reasonCode;
+            }
+        };
+    }
+}
+
 final class FailingGovernanceNarrativePort implements
     GovernanceNarrativePortInterface
 {

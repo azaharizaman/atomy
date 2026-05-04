@@ -1,5 +1,5 @@
 {
-    "name": "nexus/general-ledger",
+    "name": "azaharizaman/nexus-general-ledger",
     "description": "Atomic package for general ledger management - central transaction hub for all financial entries, ledger account management, transaction recording, balance calculation, and trial balance generation",
     "type": "library",
     "license": "MIT",
@@ -11,7 +11,7 @@
     ],
     "require": {
         "brick/math": "^0.12",
-        "nexus/common": "^1.0",
+        "azaharizaman/nexus-common": "^1.0",
         "php": "^8.3"
     },
     "require-dev": {
@@ -30,8 +30,8 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "suggest": {
-        "nexus/chart-of-account": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/journal-entry": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/period": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-chart-of-account": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-journal-entry": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-period": "Optional integration dependency; currently not referenced by package src."
     }
 }

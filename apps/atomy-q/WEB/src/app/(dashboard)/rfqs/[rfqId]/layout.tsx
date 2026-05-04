@@ -33,6 +33,10 @@ function getPrimaryActionLabel(status: RfqStatus): string {
   }
 }
 
+function isRfqOverviewPath(pathname: string): boolean {
+  return pathname.split('/').filter(Boolean).at(-1) === 'overview';
+}
+
 export default function RfqWorkspaceLayout({ children, params }: { children: React.ReactNode; params: Promise<{ rfqId: string }> }) {
   const pathname = usePathname();
   const [railExpanded, setRailExpanded] = React.useState(false);
@@ -42,10 +46,12 @@ export default function RfqWorkspaceLayout({ children, params }: { children: Rea
   const { data: rfq, isLoading, isError, error } = useRfq(rfqId);
   const { data: flags, isLoading: flagsLoading } = useFeatureFlags();
   const projectsLinkEnabled = flags?.projects === true;
+  const insightsSidebarExpanded = isRfqOverviewPath(pathname);
 
   const record = rfq
     ? {
         id: rfq.id,
+        displayIdentifier: rfq.displayIdentifier,
         title: rfq.title,
         status: rfq.status,
         vendorsCount: rfq.vendorsCount ?? 0,
@@ -92,7 +98,7 @@ export default function RfqWorkspaceLayout({ children, params }: { children: Rea
           {!isLoading && !record && isError && (
             <div className="w-[360px] shrink-0 bg-white border-r border-slate-200 overflow-y-auto">
               <div className="px-4 pt-4 pb-4 border-b border-slate-200">
-                <div className="text-xs font-mono text-slate-400">{rfqId}</div>
+                <div className="text-xs font-semibold text-slate-500">{rfqId}</div>
                 <div className="text-sm font-semibold text-slate-900">Unable to load this RFQ</div>
               </div>
               <div className="p-4">
@@ -145,7 +151,7 @@ export default function RfqWorkspaceLayout({ children, params }: { children: Rea
                   </div>
                 </div>
               </div>
-              <RfqInsightsSidebar rfqId={rfqId} />
+              <RfqInsightsSidebar rfqId={rfqId} defaultExpanded={insightsSidebarExpanded} />
             </div>
           </div>
         </div>

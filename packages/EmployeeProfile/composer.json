@@ -1,5 +1,5 @@
 {
-    "name": "nexus/employee-profile",
+    "name": "azaharizaman/nexus-employee-profile",
     "description": "Employee Profile Domain Package - Pure business logic for employee management",
     "type": "library",
     "license": "MIT",

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import axios from 'axios';
 
 import { AiStatusChip } from '@/components/ai/ai-status-chip';
 import { AiUnavailableCallout } from '@/components/ai/ai-unavailable-callout';
@@ -8,6 +9,11 @@ import { SectionCard } from '@/components/ds/Card';
 import { Button } from '@/components/ds/Button';
 import { useAiStatus } from '@/hooks/use-ai-status';
 import type { AiNarrativeSummary } from '@/hooks/use-ai-narrative-summary';
+import { AI_DERIVED_CHROME } from '@/lib/ai-derived-style';
+
+function isExpectedUnavailableError(error: Error): boolean {
+  return axios.isAxiosError(error) && error.response?.status === 404;
+}
 
 function hashText(value: string): string {
   let hash = 0;
@@ -73,6 +79,7 @@ export interface AiNarrativePanelProps {
   isGenerating?: boolean;
   canGenerate?: boolean;
   generateLabel?: string;
+  hideWhenEmpty?: boolean;
 }
 
 export function AiNarrativePanel({
@@ -89,10 +96,11 @@ export function AiNarrativePanel({
   isGenerating = false,
   canGenerate = true,
   generateLabel,
+  hideWhenEmpty = false,
 }: AiNarrativePanelProps) {
   const aiStatus = useAiStatus();
   React.useEffect(() => {
-    if (isError && error instanceof Error) {
+    if (isError && error instanceof Error && !isExpectedUnavailableError(error)) {
       console.error('AI narrative panel error', error);
     }
   }, [error, isError]);
@@ -104,6 +112,10 @@ export function AiNarrativePanel({
   const showUnavailableMessage = aiStatus.shouldShowUnavailableMessage(featureKey);
   const messageKey = aiStatus.messageKeyForFeature(featureKey);
   const hasAvailableSummary = summary?.available === true;
+  if (hideWhenEmpty && !hasAvailableSummary && !isLoading && !showUnavailableMessage && !isError) {
+    return null;
+  }
+
   const bullets = Array.isArray(summary?.bullets) ? summary.bullets : [];
   const bulletCounts = new Map<string, number>();
   const generationLabel = isGenerating
@@ -130,7 +142,7 @@ export function AiNarrativePanel({
     <SectionCard
       title={title}
       subtitle={subtitle}
-      className={className}
+      className={[hasAvailableSummary ? AI_DERIVED_CHROME : '', className].join(' ')}
       actions={hasAvailableSummary || onGenerate ? actions : null}
     >
       {hasAvailableSummary ? (

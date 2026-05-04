@@ -1,5 +1,5 @@
 {
-    "name": "nexus/common",
+    "name": "azaharizaman/nexus-common",
     "description": "Shared domain primitives, contracts, and value objects for Nexus packages",
     "type": "library",
     "license": "MIT",

@@ -1,5 +1,5 @@
 {
-    "name": "nexus/shift-management",
+    "name": "azaharizaman/nexus-shift-management",
     "description": "Shift Management Domain Package - Pure business logic for shift operations",
     "type": "library",
     "license": "MIT",

@@ -97,6 +97,60 @@ final class RfqCountsTest extends ApiTestCase
             ->assertJsonPath('data.published', 1);
     }
 
+    public function test_active_filter_matches_active_nav_count_bucket(): void
+    {
+        $tenantId = (string) Str::ulid();
+
+        /** @var User $user */
+        $user = User::query()->create([
+            'tenant_id' => $tenantId,
+            'email' => 'rfq-active-' . Str::lower((string) Str::ulid()) . '@example.com',
+            'name' => 'RFQ Owner',
+            'password_hash' => Hash::make('p'),
+            'role' => 'admin',
+            'status' => 'active',
+            'timezone' => 'UTC',
+            'locale' => 'en',
+            'email_verified_at' => now(),
+        ]);
+
+        Rfq::query()->create([
+            'tenant_id' => $tenantId,
+            'rfq_number' => 'RFQ-ACTIVE-PUBLISHED',
+            'title' => 'Published live RFQ',
+            'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
+            'status' => 'published',
+        ]);
+        Rfq::query()->create([
+            'tenant_id' => $tenantId,
+            'rfq_number' => 'RFQ-ACTIVE-LEGACY',
+            'title' => 'Active live RFQ',
+            'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
+            'status' => 'active',
+        ]);
+        Rfq::query()->create([
+            'tenant_id' => $tenantId,
+            'rfq_number' => 'RFQ-ACTIVE-DRAFT',
+            'title' => 'Draft RFQ',
+            'owner_id' => $user->id,
+            'submission_deadline' => now()->addDays(14),
+            'status' => 'draft',
+        ]);
+
+        $headers = $this->authHeaders($tenantId, (string) $user->id);
+
+        $this->getJson('/api/v1/rfqs/counts', $headers)
+            ->assertOk()
+            ->assertJsonPath('data.active', 2);
+
+        $this->getJson('/api/v1/rfqs?status=active', $headers)
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('meta.total', 2);
+    }
+
     public function test_counts_returns_401_without_auth(): void
     {
         $this->getJson('/api/v1/rfqs/counts')->assertStatus(401);

@@ -44,6 +44,18 @@ class Vendor extends Model
         'updated_at' => 'datetime',
     ];
 
+    public function getDisplayIdentifierAttribute(): string
+    {
+        foreach ([$this->display_name, $this->legal_name, $this->registration_number] as $value) {
+            $identifier = trim((string) $value);
+            if ($identifier !== '') {
+                return $identifier;
+            }
+        }
+
+        return (string) $this->id;
+    }
+
     public function getPrimaryContactPhoneAttribute(mixed $value): ?string
     {
         return self::trimmedOrNull($value);

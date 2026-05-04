@@ -1,9 +1,15 @@
 {
-    "name": "nexus/onboarding",
+    "name": "azaharizaman/nexus-onboarding",
     "description": "Pre-hire to onboarding to probation milestone tracking for new employee integration",
     "type": "library",
     "license": "MIT",
-    "keywords": ["hrm", "onboarding", "probation", "new-hire", "checklist"],
+    "keywords": [
+        "hrm",
+        "onboarding",
+        "probation",
+        "new-hire",
+        "checklist"
+    ],
     "require": {
         "php": "^8.3"
     },

@@ -1,5 +1,5 @@
 {
-    "name": "nexus/account-period-close",
+    "name": "azaharizaman/nexus-account-period-close",
     "description": "Period close validation, closing entry generation, and reopen management",
     "type": "library",
     "license": "MIT",
@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/common": "^1.0"
+        "azaharizaman/nexus-common": "^1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.0"

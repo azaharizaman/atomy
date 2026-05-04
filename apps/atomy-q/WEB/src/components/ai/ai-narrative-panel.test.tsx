@@ -1,5 +1,6 @@
 import React from 'react';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { AxiosError } from 'axios';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
@@ -19,6 +20,7 @@ import { AiNarrativePanel } from './ai-narrative-panel';
 
 describe('AiNarrativePanel', () => {
   beforeEach(() => {
+    vi.restoreAllMocks();
     aiStatusData = {
       shouldHideAiControls: () => false,
       shouldShowUnavailableMessage: () => false,
@@ -27,7 +29,7 @@ describe('AiNarrativePanel', () => {
   });
 
   it('renders the available narrative summary', () => {
-    renderWithProviders(
+    const { container } = renderWithProviders(
       <AiNarrativePanel
         featureKey="insight_intelligence"
         title="AI summary"
@@ -52,6 +54,7 @@ describe('AiNarrativePanel', () => {
     expect(screen.getByText('Spend is stable and cycle time is improving.')).toBeInTheDocument();
     expect(screen.getByText('Vendor response rates are up.')).toBeInTheDocument();
     expect(screen.getByText('AI-derived')).toBeInTheDocument();
+    expect(container.firstElementChild).toHaveClass('shadow-[0_0_0_1px_rgba(168,85,247,0.22),0_12px_30px_rgba(16,185,129,0.14)]');
   });
 
   it('hides the panel when AI controls should be hidden', () => {
@@ -111,6 +114,35 @@ describe('AiNarrativePanel', () => {
     );
 
     expect(screen.getByRole('button', { name: 'Generate' })).toBeEnabled();
+  });
+
+  it('hides empty panels until an insight exists when requested', () => {
+    const { container } = renderWithProviders(
+      <AiNarrativePanel
+        featureKey="insight_intelligence"
+        title="AI summary"
+        summary={null}
+        isLoading={false}
+        isError={false}
+        hideWhenEmpty
+      />,
+    );
+
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('keeps the panel visible while a hidden-empty insight is loading', () => {
+    renderWithProviders(
+      <AiNarrativePanel
+        featureKey="insight_intelligence"
+        title="AI summary"
+        summary={null}
+        isLoading
+        hideWhenEmpty
+      />,
+    );
+
+    expect(screen.getByText('Loading AI summary...')).toBeInTheDocument();
   });
 
   it('disables generate when canGenerate is false', () => {
@@ -213,5 +245,54 @@ describe('AiNarrativePanel', () => {
     expect(screen.getByText('Outside content')).toBeInTheDocument();
     expect(screen.getByText('AI summary unavailable')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Generate' })).toBeEnabled();
+  });
+
+  it('does not log expected 404 unavailable errors', () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const notFoundError = new AxiosError(
+      'Request failed with status code 404',
+      'ERR_BAD_REQUEST',
+      undefined,
+      undefined,
+      {
+        data: { message: 'Not found' },
+        status: 404,
+        statusText: 'Not Found',
+        headers: {},
+        config: { headers: {} },
+      },
+    );
+
+    renderWithProviders(
+      <AiNarrativePanel
+        featureKey="insight_intelligence"
+        title="AI summary"
+        summary={null}
+        isError
+        error={notFoundError}
+        fallbackCopy="AI summary is unavailable."
+      />,
+    );
+
+    expect(screen.getByText('AI summary unavailable')).toBeInTheDocument();
+    expect(consoleError).not.toHaveBeenCalled();
+  });
+
+  it('logs unexpected narrative errors for diagnostics', () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    renderWithProviders(
+      <AiNarrativePanel
+        featureKey="insight_intelligence"
+        title="AI summary"
+        summary={null}
+        isError
+        error={new Error('Unexpected parser failure')}
+        fallbackCopy="AI summary is unavailable."
+      />,
+    );
+
+    expect(screen.getByText('AI summary unavailable')).toBeInTheDocument();
+    expect(consoleError).toHaveBeenCalledWith('AI narrative panel error', expect.any(Error));
   });
 });

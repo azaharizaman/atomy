@@ -63,6 +63,13 @@ class ComparisonRun extends Model
         'updated_at' => 'datetime',
     ];
 
+    public function getDisplayIdentifierAttribute(): string
+    {
+        $identifier = trim((string) $this->name);
+
+        return $identifier !== '' ? $identifier : (string) $this->id;
+    }
+
     /**
      * @return BelongsTo<Rfq, $this>
      */

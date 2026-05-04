@@ -1,5 +1,5 @@
 {
-    "name": "nexus/payment",
+    "name": "azaharizaman/nexus-payment",
     "description": "Framework-agnostic payment domain package providing unified payment entity, instruments, allocations, and event-driven integration for AR/AP/Payroll",
     "type": "library",
     "license": "MIT",
@@ -20,7 +20,7 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/common": "*@dev",
+        "azaharizaman/nexus-common": "*@dev",
         "psr/log": "^3.0",
         "psr/event-dispatcher": "^1.0"
     },

@@ -1,5 +1,5 @@
 {
-    "name": "nexus/tenant",
+    "name": "azaharizaman/nexus-tenant",
     "description": "Framework-agnostic multi-tenancy context and isolation engine for the Nexus ERP system",
     "type": "library",
     "license": "MIT",
@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/common": "*@dev",
+        "azaharizaman/nexus-common": "*@dev",
         "psr/log": "^3.0"
     },
     "require-dev": {

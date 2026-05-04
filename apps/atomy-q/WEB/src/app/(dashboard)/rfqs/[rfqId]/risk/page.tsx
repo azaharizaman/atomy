@@ -29,6 +29,7 @@ function RiskPageContent({ params }: { params: Promise<{ rfqId: string }> }) {
         onGenerate={rfqAiSummary.generate ?? undefined}
         isGenerating={rfqAiSummary.isGenerating}
         canGenerate={rfqAiSummary.canGenerate}
+        hideWhenEmpty
       />
       <SectionCard title="Screening summary">
         <div className="flex items-center gap-2">

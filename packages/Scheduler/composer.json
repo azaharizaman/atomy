@@ -1,5 +1,5 @@
 {
-    "name": "nexus/scheduler",
+    "name": "azaharizaman/nexus-scheduler",
     "description": "Framework-agnostic job scheduling engine for managing future-dated instructions with handler-based execution",
     "type": "library",
     "license": "MIT",

@@ -60,6 +60,7 @@ describe('useComparisonRun', () => {
     expect(mockGet.mock.calls[0][0]).toBe('/comparison-runs/run-42');
     expect(result.current.data).toEqual({
       id: 'run-42',
+      displayIdentifier: 'Final comparison',
       rfqId: 'rfq-9',
       name: 'Final comparison',
       status: 'final',
@@ -71,7 +72,8 @@ describe('useComparisonRun', () => {
             sourceDescription: 'Pump assembly',
             sourceLineId: null,
             quoteSubmissionId: null,
-            vendorId: null,
+          vendorId: null,
+          vendorDisplayIdentifier: null,
             sourceUnitPrice: null,
             sourceUom: null,
             sourceQuantity: null,

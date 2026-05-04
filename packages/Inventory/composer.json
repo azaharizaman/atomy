@@ -1,5 +1,5 @@
 {
-    "name": "nexus/inventory",
+    "name": "azaharizaman/nexus-inventory",
     "description": "Framework-agnostic inventory and stock management for Nexus ERP",
     "type": "library",
     "license": "MIT",
@@ -13,9 +13,9 @@
         "psr/log": "^3.0"
     },
     "suggest": {
-        "nexus/event-stream": "Event sourcing for stock replay and temporal queries (recommended for large enterprises)",
-        "nexus/machine-learning": "Demand forecasting and stock optimization (requires minimum 90 days of historical data)",
-        "nexus/uom": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-event-stream": "Event sourcing for stock replay and temporal queries (recommended for large enterprises)",
+        "azaharizaman/nexus-machine-learning": "Demand forecasting and stock optimization (requires minimum 90 days of historical data)",
+        "azaharizaman/nexus-uom": "Optional integration dependency; currently not referenced by package src."
     },
     "minimum-stability": "dev",
     "prefer-stable": true

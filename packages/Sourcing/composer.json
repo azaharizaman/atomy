@@ -1,11 +1,11 @@
 {
-    "name": "nexus/sourcing",
+    "name": "azaharizaman/nexus-sourcing",
     "description": "Nexus Sourcing Domain Package",
     "type": "library",
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "nexus/vendor": "*@dev"
+        "azaharizaman/nexus-vendor": "*@dev"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.0"

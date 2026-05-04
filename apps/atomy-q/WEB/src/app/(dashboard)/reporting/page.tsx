@@ -35,6 +35,7 @@ export default function ReportingPage() {
         onGenerate={reportingAiSummary.generate ?? undefined}
         isGenerating={reportingAiSummary.isGenerating}
         canGenerate={reportingAiSummary.canGenerate}
+        hideWhenEmpty
       />
 
       <div className="rounded-lg border border-slate-200 bg-white p-8">

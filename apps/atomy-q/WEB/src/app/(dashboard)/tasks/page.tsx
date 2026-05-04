@@ -12,15 +12,9 @@ import { useUpdateTaskStatus, TASK_STATUSES } from '@/hooks/use-update-task-stat
 
 const TASK_COLUMNS: ColumnDef<TaskListItem>[] = [
   {
-    key: 'id',
-    label: 'ID',
-    width: '120px',
-    render: (row) => <span className="font-mono text-xs text-slate-600">{row.id}</span>,
-  },
-  {
     key: 'title',
     label: 'Task',
-    render: (row) => <span className="text-sm font-medium text-slate-800">{row.title}</span>,
+    render: (row) => <span className="text-sm font-medium text-slate-800">{row.displayIdentifier || row.title}</span>,
   },
   {
     key: 'status',
@@ -108,7 +102,7 @@ function TaskDetailDrawer({
             {task.projectId && (
               <div>
                 <div className="text-xs font-medium text-slate-500 mb-1">Project</div>
-                <div className="text-sm text-slate-700 font-mono">{task.projectId}</div>
+                <div className="text-sm text-slate-700">{task.projectDisplayIdentifier ?? 'Linked project'}</div>
               </div>
             )}
           </>

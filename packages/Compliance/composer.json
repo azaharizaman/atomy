@@ -1,5 +1,5 @@
 {
-    "name": "nexus/compliance",
+    "name": "azaharizaman/nexus-compliance",
     "description": "Operational compliance engine for enforcing business rules, SOD (Segregation of Duties), and compliance scheme requirements",
     "type": "library",
     "license": "MIT",

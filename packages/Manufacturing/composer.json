@@ -1,5 +1,5 @@
 {
-    "name": "nexus/manufacturing",
+    "name": "azaharizaman/nexus-manufacturing",
     "description": "Framework-agnostic manufacturing and production management for Nexus ERP - BOM, Work Orders, Routings, MRP, CRP with ML-powered demand forecasting",
     "type": "library",
     "license": "MIT",
@@ -17,13 +17,13 @@
         "phpunit/phpunit": "^11.0"
     },
     "suggest": {
-        "nexus/event-stream": "Event sourcing for production state replay and audit trail",
-        "nexus/inventory": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/machine-learning": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/product": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/uom": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/warehouse": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/workflow": "Advanced work order approval workflows and state machine extensions"
+        "azaharizaman/nexus-event-stream": "Event sourcing for production state replay and audit trail",
+        "azaharizaman/nexus-inventory": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-machine-learning": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-product": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-uom": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-warehouse": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-workflow": "Advanced work order approval workflows and state machine extensions"
     },
     "autoload": {
         "psr-4": {

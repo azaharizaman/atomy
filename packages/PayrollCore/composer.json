@@ -1,5 +1,5 @@
 {
-    "name": "nexus/payroll-core",
+    "name": "azaharizaman/nexus-payroll-core",
     "description": "Payroll Core Domain Package - Pure business logic for payroll operations",
     "type": "library",
     "license": "MIT",

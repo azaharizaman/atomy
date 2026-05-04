@@ -1,5 +1,5 @@
 {
-    "name": "nexus/payment-gateway",
+    "name": "azaharizaman/nexus-payment-gateway",
     "description": "Payment gateway extension providing integrations with Stripe, PayPal, Square, and other online payment processors",
     "type": "library",
     "license": "MIT",
@@ -19,8 +19,8 @@
         }
     ],
     "require": {
-        "nexus/common": "*@dev",
-        "nexus/connector": "*@dev",
+        "azaharizaman/nexus-common": "*@dev",
+        "azaharizaman/nexus-connector": "*@dev",
         "php": "^8.3",
         "psr/event-dispatcher": "^1.0",
         "psr/http-client": "^1.0",
@@ -47,6 +47,6 @@
         "sort-packages": true
     },
     "suggest": {
-        "nexus/payment": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-payment": "Optional integration dependency; currently not referenced by package src."
     }
 }

@@ -38,6 +38,13 @@ class Task extends Model
         'predecessor_ids' => 'array',
     ];
 
+    public function getDisplayIdentifierAttribute(): string
+    {
+        $identifier = trim((string) $this->title);
+
+        return $identifier !== '' ? $identifier : (string) $this->id;
+    }
+
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class, 'project_id');

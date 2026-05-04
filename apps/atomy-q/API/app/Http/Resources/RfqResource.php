@@ -28,6 +28,7 @@ final class RfqResource extends JsonResource
 
         return [
             'id' => $rfq->id,
+            'display_identifier' => $rfq->display_identifier,
             'tenant_id' => $rfq->tenant_id,
             'rfq_number' => $rfq->rfq_number,
             'title' => $rfq->title,

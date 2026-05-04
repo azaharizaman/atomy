@@ -119,13 +119,16 @@ final class TaskController extends Controller
             $query->whereJsonContains('assignee_ids', $assigneeId);
         }
         $items = $query->orderBy('created_at', 'desc')
+            ->with('project')
             ->get()
             ->map(fn (TaskModel $t) => [
                 'id' => $t->id,
+                'display_identifier' => $t->display_identifier,
                 'title' => $t->title,
                 'status' => $t->status,
                 'due_date' => $t->due_date?->format(DATE_ATOM),
                 'project_id' => $t->project_id,
+                'project_display_identifier' => $t->project?->display_identifier,
             ]);
 
         return response()->json(['data' => $items]);
@@ -190,6 +193,7 @@ final class TaskController extends Controller
         $response = response()->json([
             'data' => [
                 'id' => $created->id,
+                'display_identifier' => $created->title,
                 'title' => $created->title,
                 'status' => $created->status->value,
                 'assignee_ids' => $created->assigneeIds,
@@ -211,12 +215,13 @@ final class TaskController extends Controller
             abort(404);
         }
 
-        $model = TaskModel::query()->where('tenant_id', $tenantId)->where('id', $id)->firstOrFail();
+        $model = TaskModel::query()->with('project')->where('tenant_id', $tenantId)->where('id', $id)->firstOrFail();
         $this->assertProjectAclWhenProjectSet($request, $model->project_id);
 
         return response()->json([
             'data' => [
                 'id' => $task->id,
+                'display_identifier' => $task->title,
                 'title' => $task->title,
                 'description' => $task->description,
                 'status' => $task->status->value,
@@ -226,6 +231,7 @@ final class TaskController extends Controller
                 'due_date' => $task->dueDate?->format(DATE_ATOM),
                 'completed_at' => $task->completedAt?->format(DATE_ATOM),
                 'project_id' => $model->project_id,
+                'project_display_identifier' => $model->project?->display_identifier,
             ],
         ]);
     }
@@ -279,6 +285,7 @@ final class TaskController extends Controller
         return response()->json([
             'data' => [
                 'id' => $result->id,
+                'display_identifier' => $result->title,
                 'title' => $result->title,
                 'status' => $result->status->value,
             ],

@@ -5,8 +5,8 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "nexus/common": "*@dev",
-        "nexus/identity": "*@dev",
+        "azaharizaman/nexus-common": "*@dev",
+        "azaharizaman/nexus-identity": "*@dev",
         "psr/log": "^3.0",
         "psr/event-dispatcher": "^1.0"
     },

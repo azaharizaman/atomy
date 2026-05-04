@@ -1,5 +1,5 @@
 {
-    "name": "nexus/audit",
+    "name": "azaharizaman/nexus-audit",
     "description": "Cryptographically-verified, immutable audit engine with hash chains and digital signatures for Nexus ERP",
     "type": "library",
     "license": "MIT",
@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/crypto": "*@dev",
+        "azaharizaman/nexus-crypto": "*@dev",
         "symfony/uid": "^7.0"
     },
     "require-dev": {

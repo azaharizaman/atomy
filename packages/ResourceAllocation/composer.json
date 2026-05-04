@@ -1,11 +1,11 @@
 {
-    "name": "nexus/resource-allocation",
+    "name": "azaharizaman/nexus-resource-allocation",
     "description": "Allocation of capacity (% or hours per user per period), overallocation checks and double-booking prevention. Reusable for projects, HR capacity, shared resources.",
     "type": "library",
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "nexus/common": "*@dev",
+        "azaharizaman/nexus-common": "*@dev",
         "psr/log": "^3.0"
     },
     "require-dev": {

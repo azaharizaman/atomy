@@ -152,10 +152,10 @@ function ApprovalsListPageContent({ rfqId }: { rfqId: string }) {
   const isApprovalSummaryUnavailable = approvalSummary?.available === false || showApprovalSummaryUnavailable;
 
   const columns: ColumnDef<ApprovalRow>[] = [
+    { key: 'type', label: 'Type', width: '140px', render: (row) => <StatusBadge status="pending" label={row.type} /> },
     {
-      key: 'id',
-      label: 'ID',
-      width: '100px',
+      key: 'summary',
+      label: 'Summary',
       render: (row) => (
         <button
           type="button"
@@ -163,14 +163,12 @@ function ApprovalsListPageContent({ rfqId }: { rfqId: string }) {
             e.stopPropagation();
             router.push(`/rfqs/${encodeURIComponent(rfqId)}/approvals/${encodeURIComponent(row.id)}`);
           }}
-          className="text-sm font-medium text-indigo-600 hover:underline"
+          className="text-left text-sm font-medium text-indigo-600 hover:underline"
         >
-          {row.id}
+          {row.summary}
         </button>
       ),
     },
-    { key: 'type', label: 'Type', width: '140px', render: (row) => <StatusBadge status="pending" label={row.type} /> },
-    { key: 'summary', label: 'Summary', render: (row) => <span className="text-sm text-slate-700">{row.summary}</span> },
     { key: 'priority', label: 'Priority', width: '90px', render: (row) => <StatusBadge status="pending" size="xs" label={row.priority} /> },
     { key: 'assignee', label: 'Assignee', width: '120px', render: (row) => <span className="text-sm text-slate-600">{row.assignee}</span> },
   ];

@@ -258,6 +258,7 @@ final class VendorController extends Controller
 
         return [
             'id' => (string) $vendor->id,
+            'display_identifier' => $vendor->display_identifier,
             'legal_name' => (string) $vendor->legal_name,
             'display_name' => (string) $vendor->display_name,
             'registration_number' => (string) $vendor->registration_number,

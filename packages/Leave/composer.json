@@ -1,5 +1,5 @@
 {
-    "name": "nexus/leave-management",
+    "name": "azaharizaman/nexus-leave-management",
     "description": "Leave Management Domain Package - Pure business logic for leave operations",
     "type": "library",
     "license": "MIT",

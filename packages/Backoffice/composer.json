@@ -1,5 +1,5 @@
 {
-    "name": "nexus/backoffice",
+    "name": "azaharizaman/nexus-backoffice",
     "description": "Framework-agnostic company structure, offices, departments, and staff organizational units management package for Nexus ERP",
     "type": "library",
     "license": "MIT",

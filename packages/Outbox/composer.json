@@ -1,5 +1,5 @@
 {
-    "name": "nexus/outbox",
+    "name": "azaharizaman/nexus-outbox",
     "description": "Transactional outbox domain model and publish lifecycle (Layer 1).",
     "type": "library",
     "license": "MIT",

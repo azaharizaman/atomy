@@ -1,5 +1,5 @@
 {
-    "name": "nexus/reporting",
+    "name": "azaharizaman/nexus-reporting",
     "description": "Presentation layer package for generating scheduled, multi-format reports with distribution and retention management",
     "type": "library",
     "license": "MIT",
@@ -11,12 +11,12 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/query-engine": "*@dev",
-        "nexus/export": "*@dev",
-        "nexus/scheduler": "*@dev",
-        "nexus/notifier": "*@dev",
-        "nexus/storage": "*@dev",
-        "nexus/audit-logger": "*@dev",
+        "azaharizaman/nexus-query-engine": "*@dev",
+        "azaharizaman/nexus-export": "*@dev",
+        "azaharizaman/nexus-scheduler": "*@dev",
+        "azaharizaman/nexus-notifier": "*@dev",
+        "azaharizaman/nexus-storage": "*@dev",
+        "azaharizaman/nexus-audit-logger": "*@dev",
         "psr/log": "^3.0",
         "symfony/uid": "^7.0"
     },

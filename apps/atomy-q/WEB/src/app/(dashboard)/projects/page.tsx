@@ -15,13 +15,6 @@ import { useAuthStore } from '@/store/use-auth-store';
 
 const PROJECT_COLUMNS: ColumnDef<ProjectListItem>[] = [
   {
-    key: 'id',
-    label: 'ID',
-    width: '120px',
-    sortable: true,
-    render: (row) => <span className="font-mono text-xs font-medium text-slate-600">{row.id}</span>,
-  },
-  {
     key: 'name',
     label: 'Project',
     sortable: true,

@@ -113,16 +113,16 @@ final class RiskComplianceController extends Controller
     private function rfqExists(string $tenantId, string $rfqId): bool
     {
         return Rfq::query()
-            ->where("tenant_id", strtolower(trim($tenantId)))
-            ->where("id", strtolower(trim($rfqId)))
+            ->whereRaw("lower(tenant_id) = ?", [strtolower(trim($tenantId))])
+            ->whereRaw("lower(id) = ?", [strtolower(trim($rfqId))])
             ->exists();
     }
 
     private function findRiskItem(string $tenantId, string $id): ?RiskItem
     {
         return RiskItem::query()
-            ->where("tenant_id", strtolower(trim($tenantId)))
-            ->where("id", strtolower(trim($id)))
+            ->whereRaw("lower(tenant_id) = ?", [strtolower(trim($tenantId))])
+            ->whereRaw("lower(id) = ?", [strtolower(trim($id))])
             ->first();
     }
 

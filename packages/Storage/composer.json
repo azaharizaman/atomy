@@ -1,5 +1,5 @@
 {
-    "name": "nexus/storage",
+    "name": "azaharizaman/nexus-storage",
     "description": "Framework-agnostic file storage abstraction for the Nexus ERP system",
     "type": "library",
     "license": "MIT",

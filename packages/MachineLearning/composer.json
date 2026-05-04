@@ -1,5 +1,5 @@
 {
-    "name": "nexus/machine-learning",
+    "name": "azaharizaman/nexus-machine-learning",
     "description": "Framework-agnostic machine learning platform for feature extraction, model inference, and predictive analytics with multi-provider support",
     "type": "library",
     "license": "MIT",
