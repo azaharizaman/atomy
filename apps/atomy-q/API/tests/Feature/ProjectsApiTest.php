@@ -77,6 +77,28 @@ class ProjectsApiTest extends TestCase
         $response->assertJsonPath('data', []);
     }
 
+    public function test_projects_index_returns_display_identifier(): void
+    {
+        $this->withProjectsEnabled();
+        $tenantId = (string) Str::ulid();
+        $user = $this->createUser($tenantId);
+
+        ProjectModel::query()->create([
+            'tenant_id' => $tenantId,
+            'name' => 'Warehouse Expansion',
+            'client_id' => 'client-1',
+            'start_date' => now(),
+            'end_date' => now()->addMonth(),
+            'project_manager_id' => (string) Str::ulid(),
+            'status' => 'planning',
+        ]);
+
+        $response = $this->getJson('/api/v1/projects', $this->authHeaders((string) $user->id, $tenantId));
+
+        $response->assertOk();
+        $response->assertJsonPath('data.0.display_identifier', 'Warehouse Expansion');
+    }
+
     public function test_projects_index_returns_401_without_auth(): void
     {
         $this->withProjectsEnabled();

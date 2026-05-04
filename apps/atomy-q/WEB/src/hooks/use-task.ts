@@ -5,12 +5,14 @@ import { api } from '@/lib/api';
 
 export interface TaskDetail {
   id: string;
+  displayIdentifier: string;
   title: string;
   description?: string | null;
   status: string;
   priority?: string;
   dueDate?: string | null;
   projectId?: string | null;
+  projectDisplayIdentifier?: string | null;
   assigneeIds?: string[];
   completedAt?: string | null;
 }
@@ -26,12 +28,14 @@ function normalizeTask(payload: unknown): TaskDetail {
   }
   return {
     id: String(raw?.id ?? ''),
+    displayIdentifier: String(raw?.display_identifier ?? raw?.displayIdentifier ?? raw?.title ?? 'Task'),
     title: String(raw?.title ?? 'Task'),
     description: (raw?.description as string) ?? null,
     status: String(raw?.status ?? 'pending'),
     priority: raw?.priority as string | undefined,
     dueDate: (raw?.due_date as string) ?? null,
     projectId: (raw?.project_id as string) ?? null,
+    projectDisplayIdentifier: raw?.project_display_identifier != null ? String(raw.project_display_identifier) : null,
     assigneeIds: Array.isArray(raw?.assignee_ids) ? (raw.assignee_ids as string[]) : undefined,
     completedAt: (raw?.completed_at as string) ?? null,
   };

@@ -88,4 +88,40 @@ describe('DashboardPage', () => {
     expect(screen.getByText('AI Summary unavailable')).toBeInTheDocument();
     expect(screen.queryByText('Dashboard health is steady.')).not.toBeInTheDocument();
   });
+
+  it('renders KPI cards from the live API data wrapper', async () => {
+    mockUseDashboardAiSummary.mockReturnValue({
+      summary: null,
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    mockFetchLiveOrFail.mockImplementation((endpoint: string) => {
+      if (endpoint === '/dashboard/kpis') {
+        return Promise.resolve({
+          data: {
+            active_rfqs: 44,
+            pending_approvals: 8,
+            quote_intake_count: 40,
+            awards_in_flight: 2,
+            total_savings: 4308228.53,
+          },
+        });
+      }
+
+      return Promise.resolve({ data: [] });
+    });
+
+    renderWithProviders(<DashboardPage />);
+
+    expect(await screen.findByText('44')).toBeInTheDocument();
+    expect(screen.getByText('Active RFQs')).toBeInTheDocument();
+    expect(screen.getByText('8')).toBeInTheDocument();
+    expect(screen.getAllByText('Pending Approvals').length).toBeGreaterThan(0);
+    expect(screen.getByText('40')).toBeInTheDocument();
+    expect(screen.getByText('Quotes In Intake')).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
+    expect(screen.getByText('Awards In Flight')).toBeInTheDocument();
+    expect(screen.getByText('$4,308,228.53')).toBeInTheDocument();
+  });
 });

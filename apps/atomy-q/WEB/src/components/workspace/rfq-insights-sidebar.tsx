@@ -14,6 +14,7 @@ import Link from 'next/link';
 interface RfqInsightsSidebarProps {
   rfqId: string;
   isNewRfq?: boolean;
+  defaultExpanded?: boolean;
 }
 
 interface RfqRiskSummary {
@@ -36,11 +37,15 @@ function PlaceholderCard({ icon, title, message }: { icon: React.ReactNode; titl
   );
 }
 
-export function RfqInsightsSidebar({ rfqId, isNewRfq: explicitIsNewRfq }: RfqInsightsSidebarProps) {
-  const [expanded, setExpanded] = React.useState(true);
+export function RfqInsightsSidebar({ rfqId, isNewRfq: explicitIsNewRfq, defaultExpanded = true }: RfqInsightsSidebarProps) {
+  const [expanded, setExpanded] = React.useState(defaultExpanded);
   const { data: rfq, isLoading: rfqLoading, isError: rfqIsError, error: rfqError } = useRfq(rfqId);
   const { data: overview, isLoading: overviewLoading, isError: overviewIsError, error: overviewError } = useRfqOverview(rfqId);
   const rfqAiSummary = useRfqAiSummary(rfqId);
+
+  React.useEffect(() => {
+    setExpanded(defaultExpanded);
+  }, [defaultExpanded, rfqId]);
 
   const derivedIsNewRfq =
     !rfqLoading &&

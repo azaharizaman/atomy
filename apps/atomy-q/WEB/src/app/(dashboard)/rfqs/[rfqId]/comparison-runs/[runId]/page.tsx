@@ -124,7 +124,7 @@ function SnapshotLinesCard({
                   <td className="px-3 py-2 font-mono text-xs text-slate-700">{line.rfqLineItemId}</td>
                   <td className="px-3 py-2 text-slate-700">{line.sourceDescription}</td>
                   <td className="px-3 py-2 text-slate-600">
-                    {line.vendorId ?? 'Unknown'}
+                    {line.vendorDisplayIdentifier ?? 'Unknown'}
                     {line.quoteSubmissionId ? <span className="block text-xs text-slate-400">{line.quoteSubmissionId}</span> : null}
                   </td>
                   <td className="px-3 py-2 text-slate-600">{line.sourceQuantity ?? '—'}</td>
@@ -182,7 +182,7 @@ function MatrixClusterCard({
         </div>
         <div className="text-right">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Recommended vendor</p>
-          <p className="text-sm font-medium text-slate-800">{cluster.recommendation.recommendedVendorId}</p>
+          <p className="text-sm font-medium text-slate-800">{cluster.recommendation.recommendedVendorDisplayIdentifier}</p>
           <p className="text-xs text-slate-500">{cluster.recommendation.reason}</p>
         </div>
       </div>
@@ -210,7 +210,7 @@ function MatrixClusterCard({
           <tbody>
             {cluster.offers.map((offer) => (
               <tr key={`${cluster.clusterKey}-${offer.vendorId}`} className="border-b border-slate-100">
-                <td className="px-3 py-2 font-medium text-slate-800">{offer.vendorId}</td>
+                <td className="px-3 py-2 font-medium text-slate-800">{offer.vendorDisplayIdentifier}</td>
                 <td className="px-3 py-2 text-slate-600">{offer.rfqLineId}</td>
                 <td className="px-3 py-2 text-slate-600">{formatOptionalFixed(offer.normalizedUnitPrice)}</td>
                 <td className="px-3 py-2 text-slate-600">{formatOptionalFixed(offer.normalizedQuantity)}</td>
@@ -272,7 +272,7 @@ function ComparisonRunDetailPageContent({ rfqId, runId }: { rfqId: string; runId
     <div className="space-y-5">
       <PageHeader
         title={run?.name ?? 'Comparison Run'}
-        subtitle={run?.id ?? runId}
+        subtitle={rfq?.displayIdentifier ?? rfq?.rfq_number ?? rfq?.title ?? 'RFQ'}
         subtitleTestId="run-label"
         actions={
           <Link
@@ -307,8 +307,8 @@ function ComparisonRunDetailPageContent({ rfqId, runId }: { rfqId: string; runId
           <InfoGrid
             cols={2}
             items={[
-              { label: 'Run ID', value: run?.id ?? 'Unavailable' },
-              { label: 'RFQ', value: rfq?.title ?? rfqId },
+              { label: 'Run', value: run?.name ?? 'Unavailable' },
+              { label: 'RFQ', value: rfq?.displayIdentifier ?? rfq?.title ?? rfqId },
               { label: 'Status', value: run?.status ?? 'draft' },
               { label: 'Created', value: <time dateTime={run?.createdAt ?? undefined}>{formatTimestamp(run?.createdAt ?? null)}</time> },
             ]}
@@ -328,7 +328,7 @@ function ComparisonRunDetailPageContent({ rfqId, runId }: { rfqId: string; runId
       <SectionCard
         title="Readiness"
         subtitle="Live readiness status from the comparison workflow."
-        actions={<span className="text-xs text-slate-500">{readiness?.id ?? runId}</span>}
+        actions={<span className="text-xs text-slate-500">{run?.name ?? 'Comparison run'}</span>}
       >
         <div className="grid gap-4 lg:grid-cols-3">
           <ReadinessList title="Blockers" items={readiness?.blockers ?? []} emptyText="No blocking issues." />

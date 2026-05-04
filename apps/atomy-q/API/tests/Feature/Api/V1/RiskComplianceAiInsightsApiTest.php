@@ -186,7 +186,43 @@ final class RiskComplianceAiInsightsApiTest extends ApiTestCase
         self::assertSame(1, $spy->callCount);
         self::assertSame('rfq_ai_insights', $spy->lastRequest?->featureKey);
         self::assertNotEmpty($spy->lastRequest?->facts['risk_items'] ?? []);
-        self::assertSame(strtolower((string) $rfq->id), $spy->lastRequest?->facts['rfq_id'] ?? null);
+        self::assertSame((string) $rfq->id, $spy->lastRequest?->facts['rfq_id'] ?? null);
+    }
+
+    public function testGenerateFindsUppercaseTenantAndRfqIds(): void
+    {
+        $this->bindAiRuntimeStatus([
+            'rfq_ai_insights' => new AiCapabilityStatus(
+                featureKey: 'rfq_ai_insights',
+                capabilityGroup: AiStatusSchema::CAPABILITY_GROUP_INSIGHT_INTELLIGENCE,
+                endpointGroup: AiStatusSchema::ENDPOINT_GROUP_INSIGHT,
+                fallbackUiMode: AiStatusSchema::FALLBACK_UI_MODE_SHOW_MANUAL_CONTINUITY_BANNER,
+                messageKey: 'ai.rfq_ai_insights.available',
+                status: AiStatusSchema::CAPABILITY_STATUS_AVAILABLE,
+                available: true,
+                reasonCodes: ['provider_available'],
+                operatorCritical: false,
+                diagnostics: ['mode' => AiStatusSchema::MODE_PROVIDER],
+            ),
+        ]);
+        $tenantId = 'TENANT-UPPER';
+        $rfq = $this->createRfq($tenantId, [
+            'tenant_id' => $tenantId,
+            'submission_deadline' => now()->subDay(),
+            'closing_date' => now()->addDays(4),
+        ]);
+        $spy = new RiskInsightClientSpy(['headline' => 'Uppercase RFQ generated.']);
+        $this->app->instance(ProviderInsightClientInterface::class, $spy);
+
+        $response = $this->postJson('/api/v1/risk-items/generate', [
+            'rfq_id' => strtolower((string) $rfq->id),
+        ], $this->authHeaders(strtolower($tenantId)));
+
+        $response->assertOk();
+        $response->assertJsonPath('data.ai_insights.available', true);
+        $response->assertJsonPath('data.ai_insights.payload.headline', 'Uppercase RFQ generated.');
+        self::assertSame(1, $spy->callCount);
+        self::assertSame((string) $rfq->id, $spy->lastRequest?->facts['rfq_id'] ?? null);
     }
 
     public function testRiskItemEscalationAndExceptionUpdateTenantScopedRecords(): void

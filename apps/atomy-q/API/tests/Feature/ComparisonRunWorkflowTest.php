@@ -659,6 +659,79 @@ final class ComparisonRunWorkflowTest extends ApiTestCase
         )->assertStatus(404);
     }
 
+    public function test_comparison_run_matrix_returns_vendor_display_identifiers(): void
+    {
+        $user = $this->createUser();
+        [$rfq] = $this->seedReadyComparisonContext($user);
+
+        $run = ComparisonRun::query()->create([
+            'tenant_id' => $user->tenant_id,
+            'rfq_id' => $rfq->id,
+            'name' => 'Final comparison',
+            'description' => null,
+            'idempotency_key' => null,
+            'is_preview' => false,
+            'created_by' => $user->id,
+            'request_payload' => ['rfq_id' => $rfq->id],
+            'matrix_payload' => [
+                'clusters' => [
+                    [
+                        'cluster_key' => 'rfq:line-1',
+                        'basis' => 'rfq_line_id',
+                        'offers' => [
+                            [
+                                'vendor_id' => 'vendor-alpha',
+                                'rfq_line_id' => 'line-1',
+                                'taxonomy_code' => 'PUMP',
+                                'normalized_unit_price' => 100,
+                                'normalized_quantity' => 1,
+                                'ai_confidence' => 1,
+                            ],
+                        ],
+                        'statistics' => [
+                            'min_normalized_unit_price' => 100,
+                            'max_normalized_unit_price' => 100,
+                            'avg_normalized_unit_price' => 100,
+                        ],
+                        'recommendation' => [
+                            'recommended_vendor_id' => 'vendor-alpha',
+                            'reason' => 'lowest_normalized_unit_price',
+                        ],
+                    ],
+                ],
+            ],
+            'scoring_payload' => [],
+            'approval_payload' => [],
+            'response_payload' => [
+                'snapshot' => [
+                    'vendors' => [
+                        [
+                            'vendor_id' => 'vendor-alpha',
+                            'vendor_name' => 'Alpha Supplies',
+                            'quote_submission_id' => 'quote-alpha',
+                        ],
+                    ],
+                ],
+            ],
+            'readiness_payload' => ['is_ready' => true, 'blockers' => [], 'warnings' => []],
+            'status' => 'final',
+            'version' => 1,
+            'expires_at' => null,
+            'discarded_at' => null,
+            'discarded_by' => null,
+        ]);
+
+        $response = $this->getJson(
+            '/api/v1/comparison-runs/' . $run->id . '/matrix',
+            $this->authHeaders((string) $user->tenant_id, (string) $user->id),
+        );
+
+        $response->assertOk();
+        $response->assertJsonPath('data.display_identifier', 'Final comparison');
+        $response->assertJsonPath('data.matrix.clusters.0.offers.0.vendor_display_identifier', 'Alpha Supplies');
+        $response->assertJsonPath('data.matrix.clusters.0.recommendation.recommended_vendor_display_identifier', 'Alpha Supplies');
+    }
+
     public function test_alpha_only_controls_return_explicit_not_supported_response(): void
     {
         $user = $this->createUser();

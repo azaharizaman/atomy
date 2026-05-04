@@ -461,7 +461,7 @@ export default function ProjectDetailPage() {
               size="sm"
               variant="secondary"
               onClick={() => {
-                setAclDraft((prev) => [...prev, { draftId: createAclDraftId(), userId: '', role: 'viewer' }]);
+                setAclDraft((prev) => [...prev, { draftId: createAclDraftId(), userId: '', userDisplayIdentifier: '', role: 'viewer' }]);
                 setAclDirty(true);
               }}
             >
@@ -497,19 +497,32 @@ export default function ProjectDetailPage() {
             <div className="space-y-2">
               {aclDraft.map((entry, idx) => {
                 const role = entry.role;
+                const selectedUser = userOptions.find((user) => user.id === entry.userId);
+                const userLabel = selectedUser?.name ?? selectedUser?.email ?? entry.userDisplayIdentifier;
                 return (
                   <div key={entry.draftId} className="flex flex-col sm:flex-row gap-2 sm:items-center">
-                    <input
-                      aria-label={`User ID ${idx + 1}`}
+                    <select
+                      aria-label={`User ${idx + 1}`}
                       value={entry.userId}
                       onChange={(e) => {
                         const v = e.target.value;
                         setAclDraft((prev) => prev.map((p, i) => (i === idx ? { ...p, userId: v } : p)));
                         setAclDirty(true);
                       }}
-                      placeholder="User ID"
                       className="flex-1 rounded border border-slate-300 px-2 py-1.5 text-sm"
-                    />
+                    >
+                      <option value="" disabled>
+                        Select a user
+                      </option>
+                      {userOptions.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.name ?? user.email} ({user.email})
+                        </option>
+                      ))}
+                      {entry.userId !== '' && !userOptions.some((user) => user.id === entry.userId) ? (
+                        <option value={entry.userId}>{userLabel}</option>
+                      ) : null}
+                    </select>
                     <select
                       aria-label={`Role ${idx + 1}`}
                       value={role}

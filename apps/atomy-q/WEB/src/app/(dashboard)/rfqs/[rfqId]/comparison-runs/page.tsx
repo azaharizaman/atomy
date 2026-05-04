@@ -42,8 +42,8 @@ function ComparisonRunsListContent({ rfqId }: { rfqId: string }) {
       label: 'Run',
       render: (row) => (
         <div className="space-y-0.5">
-          <span className="block text-sm font-medium text-slate-800">{row.name}</span>
-          <span className="block font-mono text-xs text-slate-500">{row.id}</span>
+          <span className="block text-sm font-medium text-slate-800">{row.displayIdentifier || row.name}</span>
+          <span className="block text-xs text-slate-500">{row.type === 'final' ? 'Final run' : 'Preview run'}</span>
         </div>
       ),
     },

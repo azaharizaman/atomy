@@ -101,7 +101,7 @@ export function SLAAlertCard({ title, rfqId, timeRemaining, urgency = 'medium', 
       <AlertTriangle size={18} className={['shrink-0 mt-0.5', s.icon].join(' ')} />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-slate-900">{title}</p>
-        <p className="text-xs text-slate-500 mt-0.5 font-mono">{rfqId}</p>
+        <p className="text-xs text-slate-500 mt-0.5">{rfqId}</p>
         <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-600">
           <Clock size={12} />
           <span>{timeRemaining}</span>
@@ -149,7 +149,7 @@ export function ActivitySummaryCard({ items, title = 'Recent Activity', maxItems
             <p className="text-sm text-slate-700">{item.actor} {item.action}</p>
             <p className="text-[11px] text-slate-400 mt-0.5">
               {item.timestamp}
-              {item.rfqId && <span className="font-mono ml-1">{item.rfqId}</span>}
+              {item.rfqId && <span className="ml-1">{item.rfqId}</span>}
             </p>
           </li>
         ))}
@@ -198,7 +198,7 @@ export function PendingApprovalsCard({ items, onItemClick, onViewAll, className 
               <div>
                 <p className="text-sm font-medium text-slate-900">{item.rfqTitle}</p>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  <span className="font-mono">{item.rfqId}</span> · {item.type} · {item.assignee}
+                  {item.type} · {item.assignee}
                 </p>
               </div>
               <span className="text-[11px] text-slate-400 shrink-0">{item.submittedAt}</span>

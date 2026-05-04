@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ds/Button';
 import { FilterBar, PageHeader } from '@/components/ds/FilterBar';
 import { StatusBadge } from '@/components/ds/Badge';
@@ -33,8 +33,10 @@ function OwnerCell({ name }: { name: string }) {
 
 export default function RfqsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const urlStatus = searchParams.get('status') ?? '';
   const [q, setQ] = React.useState('');
-  const [status, setStatus] = React.useState('');
+  const [status, setStatus] = React.useState(urlStatus);
   const [owner, setOwner] = React.useState('');
   const [category, setCategory] = React.useState('');
   const [projectId, setProjectId] = React.useState('');
@@ -49,6 +51,10 @@ export default function RfqsPage() {
 
   const { data, isLoading } = useRfqs({ q, status, owner, category, page, projectId });
   const { data: projects = [] } = useProjects({ enabled: !flagsLoading && projectsEnabled });
+
+  React.useEffect(() => {
+    setStatus(urlStatus);
+  }, [urlStatus]);
 
   React.useEffect(() => {
     setPage(1);
@@ -82,10 +88,10 @@ export default function RfqsPage() {
   const columns: ColumnDef<RfqListItem>[] = [
     {
       key: 'id',
-      label: 'ID',
+      label: 'RFQ No.',
       width: '90px',
       sortable: true,
-      render: (row) => <span className="font-mono text-xs font-medium text-slate-600">{row.id}</span>,
+      render: (row) => <span className="text-xs font-medium text-slate-600">{row.displayIdentifier}</span>,
     },
     {
       key: 'title',

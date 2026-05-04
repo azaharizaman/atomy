@@ -39,6 +39,13 @@ class Project extends Model
         'completion_percentage' => 'float',
     ];
 
+    public function getDisplayIdentifierAttribute(): string
+    {
+        $identifier = trim((string) $this->name);
+
+        return $identifier !== '' ? $identifier : (string) $this->id;
+    }
+
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class, 'project_id')

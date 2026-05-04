@@ -46,17 +46,19 @@ final readonly class RiskInsightFactsAdapter implements
         string $tenantId,
         string $rfqId,
     ): RiskInsightFactsDto {
-        $tenantId = strtolower(trim($tenantId));
-        $rfqId = strtolower(trim($rfqId));
+        $normalizedTenantId = strtolower(trim($tenantId));
+        $normalizedRfqId = strtolower(trim($rfqId));
         $rfq = Rfq::query()
-            ->where("tenant_id", $tenantId)
-            ->where("id", $rfqId)
+            ->whereRaw("lower(tenant_id) = ?", [$normalizedTenantId])
+            ->whereRaw("lower(id) = ?", [$normalizedRfqId])
             ->first();
 
         if (!$rfq instanceof Rfq) {
             throw (new ModelNotFoundException())->setModel(Rfq::class, [$rfqId]);
         }
 
+        $tenantId = (string) $rfq->tenant_id;
+        $rfqId = (string) $rfq->id;
         $items = [
             ...$this->deadlineRiskItems($rfq),
             ...$this->vendorFindingRiskItems($tenantId, $rfqId),
@@ -99,11 +101,11 @@ final readonly class RiskInsightFactsAdapter implements
         string $itemId,
     ): void {
         $query = RiskItem::query()
-            ->where("tenant_id", strtolower(trim($tenantId)))
-            ->where("id", strtolower(trim($itemId)));
+            ->whereRaw("lower(tenant_id) = ?", [strtolower(trim($tenantId))])
+            ->whereRaw("lower(id) = ?", [strtolower(trim($itemId))]);
 
         if ($rfqId !== "") {
-            $query->where("rfq_id", strtolower(trim($rfqId)));
+            $query->whereRaw("lower(rfq_id) = ?", [strtolower(trim($rfqId))]);
         }
 
         if ($query->update(["status" => "escalated"]) === 0) {
@@ -128,11 +130,11 @@ final readonly class RiskInsightFactsAdapter implements
         string $actorId,
     ): void {
         $query = RiskItem::query()
-            ->where("tenant_id", strtolower(trim($tenantId)))
-            ->where("id", strtolower(trim($itemId)));
+            ->whereRaw("lower(tenant_id) = ?", [strtolower(trim($tenantId))])
+            ->whereRaw("lower(id) = ?", [strtolower(trim($itemId))]);
 
         if ($rfqId !== "") {
-            $query->where("rfq_id", strtolower(trim($rfqId)));
+            $query->whereRaw("lower(rfq_id) = ?", [strtolower(trim($rfqId))]);
         }
 
         if (
@@ -218,7 +220,7 @@ final readonly class RiskInsightFactsAdapter implements
         }
 
         return VendorFinding::query()
-            ->where("tenant_id", $tenantId)
+            ->whereRaw("lower(tenant_id) = ?", [strtolower(trim($tenantId))])
             ->whereIn("vendor_id", $vendorIds)
             ->whereIn("status", ["open", "in_progress"])
             ->whereIn("severity", ["critical", "high", "medium"])
@@ -256,8 +258,8 @@ final readonly class RiskInsightFactsAdapter implements
         string $rfqId,
     ): array {
         return QuoteSubmission::query()
-            ->where("tenant_id", $tenantId)
-            ->where("rfq_id", $rfqId)
+            ->whereRaw("lower(tenant_id) = ?", [strtolower(trim($tenantId))])
+            ->whereRaw("lower(rfq_id) = ?", [strtolower(trim($rfqId))])
             ->whereNotIn("status", ["ready", "completed"])
             ->orderBy("vendor_name")
             ->get()
@@ -297,21 +299,21 @@ final readonly class RiskInsightFactsAdapter implements
 
         $ids = $ids->merge(
             RequisitionSelectedVendor::query()
-                ->where("tenant_id", $tenantId)
-                ->where("rfq_id", $rfqId)
+                ->whereRaw("lower(tenant_id) = ?", [strtolower(trim($tenantId))])
+                ->whereRaw("lower(rfq_id) = ?", [strtolower(trim($rfqId))])
                 ->pluck("vendor_id"),
         );
         $ids = $ids->merge(
             VendorInvitation::query()
-                ->where("tenant_id", $tenantId)
-                ->where("rfq_id", $rfqId)
+                ->whereRaw("lower(tenant_id) = ?", [strtolower(trim($tenantId))])
+                ->whereRaw("lower(rfq_id) = ?", [strtolower(trim($rfqId))])
                 ->whereNotNull("vendor_id")
                 ->pluck("vendor_id"),
         );
         $ids = $ids->merge(
             QuoteSubmission::query()
-                ->where("tenant_id", $tenantId)
-                ->where("rfq_id", $rfqId)
+                ->whereRaw("lower(tenant_id) = ?", [strtolower(trim($tenantId))])
+                ->whereRaw("lower(rfq_id) = ?", [strtolower(trim($rfqId))])
                 ->whereNotNull("vendor_id")
                 ->pluck("vendor_id"),
         );

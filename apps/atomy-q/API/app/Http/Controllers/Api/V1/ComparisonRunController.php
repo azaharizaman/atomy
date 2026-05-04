@@ -71,6 +71,7 @@ final class ComparisonRunController extends Controller
         return response()->json([
             'data' => $runs->map(static fn (ComparisonRun $run) => [
                 'id' => $run->id,
+                'display_identifier' => $run->display_identifier,
                 'rfq_id' => $run->rfq_id,
                 'name' => $run->name,
                 'status' => $run->status,
@@ -106,6 +107,7 @@ final class ComparisonRunController extends Controller
         return response()->json([
             'data' => [
                 'id' => $run->id,
+                'display_identifier' => $run->display_identifier,
                 'rfq_id' => $run->rfq_id,
                 'name' => $run->name,
                 'status' => $run->status,
@@ -386,7 +388,8 @@ final class ComparisonRunController extends Controller
         return response()->json([
             'data' => [
                 'id' => $run->id,
-                'matrix' => $run->matrix_payload ?? [],
+                'display_identifier' => $run->display_identifier,
+                'matrix' => $this->matrixWithDisplayIdentifiers($run),
             ],
         ]);
     }
@@ -463,6 +466,88 @@ final class ComparisonRunController extends Controller
                 'warnings' => $readiness->getWarnings(),
             ],
         ], 422);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function matrixWithDisplayIdentifiers(ComparisonRun $run): array
+    {
+        $matrix = is_array($run->matrix_payload) ? $run->matrix_payload : [];
+        $vendorNames = $this->snapshotVendorNames($run);
+
+        if (! is_array($matrix['clusters'] ?? null)) {
+            return $matrix;
+        }
+
+        foreach ($matrix['clusters'] as &$cluster) {
+            if (! is_array($cluster)) {
+                continue;
+            }
+
+            if (is_array($cluster['offers'] ?? null)) {
+                foreach ($cluster['offers'] as &$offer) {
+                    if (! is_array($offer)) {
+                        continue;
+                    }
+                    $vendorId = isset($offer['vendor_id']) ? (string) $offer['vendor_id'] : '';
+                    $offer['vendor_display_identifier'] = $this->displayIdentifierFor($vendorId, $vendorNames, $offer['vendor_display_identifier'] ?? null);
+                }
+                unset($offer);
+            }
+
+            if (is_array($cluster['recommendation'] ?? null)) {
+                $vendorId = isset($cluster['recommendation']['recommended_vendor_id'])
+                    ? (string) $cluster['recommendation']['recommended_vendor_id']
+                    : '';
+                $cluster['recommendation']['recommended_vendor_display_identifier'] = $this->displayIdentifierFor(
+                    $vendorId,
+                    $vendorNames,
+                    $cluster['recommendation']['recommended_vendor_display_identifier'] ?? null,
+                );
+            }
+        }
+        unset($cluster);
+
+        return $matrix;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function snapshotVendorNames(ComparisonRun $run): array
+    {
+        $snapshot = is_array($run->response_payload) && is_array($run->response_payload['snapshot'] ?? null)
+            ? $run->response_payload['snapshot']
+            : [];
+        $vendors = is_array($snapshot['vendors'] ?? null) ? $snapshot['vendors'] : [];
+        $names = [];
+
+        foreach ($vendors as $vendor) {
+            if (! is_array($vendor)) {
+                continue;
+            }
+            $vendorId = trim((string) ($vendor['vendor_id'] ?? ''));
+            $vendorName = trim((string) ($vendor['vendor_name'] ?? ''));
+            if ($vendorId !== '' && $vendorName !== '') {
+                $names[$vendorId] = $vendorName;
+            }
+        }
+
+        return $names;
+    }
+
+    /**
+     * @param array<string, string> $vendorNames
+     */
+    private function displayIdentifierFor(string $id, array $vendorNames, mixed $existing): string
+    {
+        $identifier = trim((string) $existing);
+        if ($identifier !== '') {
+            return $identifier;
+        }
+
+        return $vendorNames[$id] ?? $id;
     }
 
     private function comparisonWorkflowErrorResponse(QuotationIntelligenceException $exception): JsonResponse

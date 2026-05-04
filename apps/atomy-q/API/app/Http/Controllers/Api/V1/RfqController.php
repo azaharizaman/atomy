@@ -138,6 +138,18 @@ final class RfqController extends Controller
         ], 422);
     }
 
+    /**
+     * @return list<string>
+     */
+    private function statusesForListFilter(string $status): array
+    {
+        return match (trim($status)) {
+            'active' => ['published', 'active'],
+            'archived' => ['cancelled', 'archived'],
+            default => [$status],
+        };
+    }
+
     public function index(Request $request): JsonResponse
     {
         $tenantId = $this->tenantId($request);
@@ -152,7 +164,7 @@ final class RfqController extends Controller
             ->where('tenant_id', $tenantId);
 
         if ($status = $request->query('status')) {
-            $query->where('status', $status);
+            $query->whereIn('status', $this->statusesForListFilter((string) $status));
         }
 
         if ($ownerId = $request->query('ownerId')) {
@@ -202,12 +214,14 @@ final class RfqController extends Controller
 
             return [
                 'id' => $rfq->id,
+                'display_identifier' => $rfq->display_identifier,
                 'rfq_number' => $rfq->rfq_number,
                 'title' => $rfq->title,
                 'status' => $rfq->status,
                 'project_id' => $rfq->project_id,
                 'owner' => $rfq->owner ? [
                     'id' => $rfq->owner->id,
+                    'display_identifier' => $rfq->owner->display_identifier,
                     'name' => $rfq->owner->name,
                     'email' => $rfq->owner->email,
                 ] : null,
@@ -236,7 +250,7 @@ final class RfqController extends Controller
     /**
      * GET /rfqs/counts — tenant-scoped RFQ counts for dashboard nav badges.
      *
-     * Keys align with WEB sidebar filters: active ≈ published, archived ≈ cancelled.
+     * Keys align with WEB sidebar filters: active ≈ published/live, archived ≈ cancelled.
      */
     public function counts(Request $request): JsonResponse
     {
@@ -250,9 +264,11 @@ final class RfqController extends Controller
 
         $draft = (int) ($byStatus['draft'] ?? 0);
         $published = (int) ($byStatus['published'] ?? 0);
+        $legacyActive = (int) ($byStatus['active'] ?? 0);
         $closed = (int) ($byStatus['closed'] ?? 0);
         $awarded = (int) ($byStatus['awarded'] ?? 0);
         $cancelled = (int) ($byStatus['cancelled'] ?? 0);
+        $legacyArchived = (int) ($byStatus['archived'] ?? 0);
 
         return response()->json([
             'data' => [
@@ -261,9 +277,9 @@ final class RfqController extends Controller
                 'closed' => $closed,
                 'awarded' => $awarded,
                 'cancelled' => $cancelled,
-                'active' => $published,
+                'active' => $published + $legacyActive,
                 'pending' => 0,
-                'archived' => $cancelled,
+                'archived' => $cancelled + $legacyArchived,
             ],
         ]);
     }
@@ -356,6 +372,7 @@ final class RfqController extends Controller
         return response()->json([
             'data' => [
                 'id' => $rfq->id,
+                'display_identifier' => $rfq->display_identifier,
                 'rfq_number' => $rfq->rfq_number,
                 'title' => $rfq->title,
                 'description' => $rfq->description,
@@ -471,12 +488,14 @@ final class RfqController extends Controller
             'data' => [
                 'rfq' => [
                     'id' => $rfq->id,
+                    'display_identifier' => $rfq->display_identifier,
                     'rfq_number' => $rfq->rfq_number,
                     'title' => $rfq->title,
                     'description' => $rfq->description,
                     'status' => $rfq->status,
                     'owner' => $rfq->owner ? [
                         'id' => $rfq->owner->id,
+                        'display_identifier' => $rfq->owner->display_identifier,
                         'name' => $rfq->owner->name,
                         'email' => $rfq->owner->email,
                     ] : null,
@@ -703,6 +722,7 @@ final class RfqController extends Controller
         return response()->json([
             'data' => [
                 'id' => $rfq->id,
+                'display_identifier' => $rfq->display_identifier,
                 'rfq_number' => $rfq->rfq_number,
                 'title' => $rfq->title,
                 'status' => $rfq->status,

@@ -16,7 +16,7 @@ import { api } from '@/lib/api';
 describe('useProjectAcl', () => {
   it('fetches ACL roles from /projects/:id/acl', async () => {
     vi.mocked(api.get).mockResolvedValueOnce({
-      data: { data: { roles: [{ user_id: 'u1', role: 'viewer' }] } },
+      data: { data: { roles: [{ user_id: 'u1', user_display_identifier: 'Aina Rahman', role: 'viewer' }] } },
     });
 
     const { Wrapper } = createTestWrapper();
@@ -24,7 +24,6 @@ describe('useProjectAcl', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(api.get).toHaveBeenCalledWith('/projects/p1/acl');
-    expect(result.current.data).toEqual([{ userId: 'u1', role: 'viewer' }]);
+    expect(result.current.data).toEqual([{ userId: 'u1', userDisplayIdentifier: 'Aina Rahman', role: 'viewer' }]);
   });
 });
-

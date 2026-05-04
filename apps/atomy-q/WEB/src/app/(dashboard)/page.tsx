@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation';
 import { AiNarrativePanel } from '@/components/ai/ai-narrative-panel';
 import { useDashboardAiSummary } from '@/hooks/use-dashboard-ai-summary';
 import { fetchLiveOrFail } from '@/lib/api-live';
+import { formatCurrencyValue } from '@/lib/format-currency';
 import {
   ActivitySummaryCard,
   type ActivitySummaryItem,
@@ -33,9 +34,31 @@ import {
 type DashboardKpis = {
   active_rfqs?: number;
   pending_approvals?: number;
+  quote_intake_count?: number;
+  awards_in_flight?: number;
   total_savings?: string | number;
   avg_cycle_time_days?: string | number;
 };
+
+type DashboardKpisResponse = DashboardKpis | {
+  data?: DashboardKpis;
+};
+
+function isDashboardKpisWrapper(response: DashboardKpisResponse): response is { data?: DashboardKpis } {
+  return 'data' in response;
+}
+
+function unwrapDashboardKpis(response: DashboardKpisResponse | null | undefined): DashboardKpis {
+  if (!response) {
+    return {};
+  }
+
+  if (isDashboardKpisWrapper(response)) {
+    return response.data ?? {};
+  }
+
+  return response;
+}
 
 type DashboardActivityRaw = {
   id?: string | number;
@@ -56,8 +79,8 @@ export default function DashboardPage() {
     queryKey: ['dashboard', 'kpis'],
     queryFn: async () => {
       try {
-        const data = await fetchLiveOrFail<DashboardKpis>('/dashboard/kpis');
-        return data;
+        const data = await fetchLiveOrFail<DashboardKpisResponse>('/dashboard/kpis');
+        return unwrapDashboardKpis(data);
       } catch (e) {
         console.error('Failed to load KPIs:', e);
         return {
@@ -98,14 +121,12 @@ export default function DashboardPage() {
   const pipeline = {
     active: Number(kpis?.active_rfqs ?? 0),
     pending: Number(kpis?.pending_approvals ?? 0),
-    intake: 0,
-    awards: 0,
+    intake: Number(kpis?.quote_intake_count ?? 0),
+    awards: Number(kpis?.awards_in_flight ?? 0),
   };
 
   const savingsValue =
-    typeof kpis?.total_savings === 'number'
-      ? `$${kpis.total_savings.toLocaleString('en-US')}`
-      : kpis?.total_savings ?? '$0';
+    formatCurrencyValue(kpis?.total_savings, 'USD') ?? '$0';
 
   const approvals: PendingApprovalItem[] = [];
 

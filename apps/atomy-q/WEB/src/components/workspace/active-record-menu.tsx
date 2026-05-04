@@ -15,6 +15,7 @@ import { MetricChip } from './metric-chip';
 
 export interface ActiveRfqRecord {
   id: string;
+  displayIdentifier: string;
   title: string;
   status: RfqStatus;
   vendorsCount: number;
@@ -67,7 +68,7 @@ export function ActiveRecordMenu({ record }: { record: ActiveRfqRecord }) {
       <div className="px-4 pt-4 pb-4 border-b border-slate-200">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="text-xs font-mono text-slate-400">{record.id}</div>
+            <div className="text-xs font-semibold text-slate-500">{record.displayIdentifier}</div>
             <div className="text-sm font-semibold text-slate-900 truncate">{record.title}</div>
           </div>
           <StatusBadge status={record.status} />

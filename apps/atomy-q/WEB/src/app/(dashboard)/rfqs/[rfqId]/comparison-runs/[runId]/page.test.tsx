@@ -168,7 +168,7 @@ describe('ComparisonRunDetailPage', () => {
     await renderPageWithProviders(<ComparisonRunDetailPage params={Promise.resolve({ rfqId: 'rfq-1', runId: 'run-42' })} />);
 
     expect(await screen.findByRole('heading', { name: 'Final comparison' })).toBeInTheDocument();
-    expect(screen.getByTestId('run-label')).toHaveTextContent('run-42');
+    expect(screen.getByTestId('run-label')).toHaveTextContent('RFQ-2026-0042');
     expect(screen.getByText(/snapshot frozen/i)).toBeInTheDocument();
     expect(screen.getAllByText('Vendor One').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Vendor Two').length).toBeGreaterThan(0);

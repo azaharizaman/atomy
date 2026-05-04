@@ -5,10 +5,12 @@ import { api } from '@/lib/api';
 
 export interface TaskListItem {
   id: string;
+  displayIdentifier: string;
   title: string;
   status: string;
   dueDate?: string | null;
   projectId?: string | null;
+  projectDisplayIdentifier?: string | null;
 }
 
 export interface UseTasksParams {
@@ -25,10 +27,12 @@ function normalizeTasksPayload(payload: unknown): TaskListItem[] {
   if (!Array.isArray(list)) return [];
   return list.map((item: Record<string, unknown>) => ({
     id: String(item?.id ?? ''),
+    displayIdentifier: String(item?.display_identifier ?? item?.displayIdentifier ?? item?.title ?? 'Task'),
     title: String(item?.title ?? 'Task'),
     status: String(item?.status ?? 'pending'),
     dueDate: item?.due_date ? String(item.due_date) : null,
     projectId: (item?.project_id as string) ?? null,
+    projectDisplayIdentifier: item?.project_display_identifier != null ? String(item.project_display_identifier) : null,
   })).filter((t) => t.id);
 }
 

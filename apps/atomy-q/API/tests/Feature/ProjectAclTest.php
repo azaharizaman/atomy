@@ -90,6 +90,7 @@ class ProjectAclTest extends TestCase
         ], $this->authHeaders($user));
         $putResponse->assertStatus(200);
         $putResponse->assertJsonPath('data.roles.0.user_id', $user->id);
+        $putResponse->assertJsonPath('data.roles.0.user_display_identifier', 'Test User');
         $putResponse->assertJsonPath('data.roles.0.role', 'owner');
 
         $this->assertDatabaseHas('project_acl', [

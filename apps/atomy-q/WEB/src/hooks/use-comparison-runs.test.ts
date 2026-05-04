@@ -42,6 +42,7 @@ describe('useComparisonRuns', () => {
     expect(result.current.data).toEqual([
       {
         id: 'run-1',
+        displayIdentifier: 'Final comparison',
         rfq_id: 'rfq-1',
         name: 'Final comparison',
         date: '2026-04-06T08:00:00Z',

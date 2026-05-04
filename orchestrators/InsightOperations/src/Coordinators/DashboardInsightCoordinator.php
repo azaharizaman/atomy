@@ -94,9 +94,11 @@ final readonly class DashboardInsightCoordinator implements
 
             return new InsightResultDto(
                 $facts,
-                $this->unavailable($facts, $sourceFactsHash, [
-                    "provider_unavailable",
-                ]),
+                $this->unavailable(
+                    $facts,
+                    $sourceFactsHash,
+                    $this->providerFailureReasonCodes($e),
+                ),
                 self::ARTIFACT_FIELD,
             );
         }
@@ -149,5 +151,20 @@ final readonly class DashboardInsightCoordinator implements
         $reasonCodes = $this->availabilityPort->reasonCodes(self::FEATURE_KEY);
 
         return $reasonCodes === [] ? ["ai_unavailable"] : $reasonCodes;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function providerFailureReasonCodes(Throwable $exception): array
+    {
+        if (method_exists($exception, "reasonCode")) {
+            $reasonCode = $exception->reasonCode();
+            if (is_string($reasonCode) && trim($reasonCode) !== "") {
+                return [trim($reasonCode)];
+            }
+        }
+
+        return ["provider_unavailable"];
     }
 }

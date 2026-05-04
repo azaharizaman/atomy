@@ -105,6 +105,18 @@ class User extends Model implements UserInterface
         return $this->name;
     }
 
+    public function getDisplayIdentifierAttribute(): string
+    {
+        foreach ([$this->name, $this->email] as $value) {
+            $identifier = trim((string) $value);
+            if ($identifier !== '') {
+                return $identifier;
+            }
+        }
+
+        return (string) $this->id;
+    }
+
     public function getCreatedAt(): \DateTimeInterface
     {
         return $this->created_at;

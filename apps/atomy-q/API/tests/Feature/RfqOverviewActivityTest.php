@@ -198,6 +198,7 @@ final class RfqOverviewActivityTest extends ApiTestCase
         );
 
         $response->assertOk();
+        $response->assertJsonPath('data.rfq.display_identifier', 'RFQ-ACT-0004');
         $response->assertJsonPath('data.expectedQuotes', 0);
         $response->assertJsonPath('data.normalizationProgress', 0);
         $response->assertJsonPath('data.latestComparisonRun', null);

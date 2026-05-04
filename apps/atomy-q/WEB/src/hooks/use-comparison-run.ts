@@ -16,6 +16,7 @@ export interface ComparisonRunSnapshotNormalizedLine {
   sourceLineId: string | null;
   quoteSubmissionId: string | null;
   vendorId: string | null;
+  vendorDisplayIdentifier: string | null;
   sourceUnitPrice: string | null;
   sourceUom: string | null;
   sourceQuantity: string | null;
@@ -38,6 +39,7 @@ export interface ComparisonRunAiOverlay {
 
 export interface ComparisonRunDetail {
   id: string;
+  displayIdentifier: string;
   rfqId: string;
   name: string;
   status: string;
@@ -94,6 +96,7 @@ function normalizeSnapshot(payload: unknown): ComparisonRunSnapshot | null {
       sourceLineId: toText(item.source_line_id ?? item.sourceLineId),
       quoteSubmissionId: toText(item.quote_submission_id ?? item.quoteSubmissionId),
       vendorId: toText(item.vendor_id ?? item.vendorId),
+      vendorDisplayIdentifier: toText(item.vendor_display_identifier ?? item.vendorDisplayIdentifier),
       sourceUnitPrice: toText(item.source_unit_price ?? item.sourceUnitPrice),
       sourceUom: toText(item.source_uom ?? item.sourceUom),
       sourceQuantity: toText(item.source_quantity ?? item.sourceQuantity),
@@ -158,9 +161,14 @@ function normalizeSnapshot(payload: unknown): ComparisonRunSnapshot | null {
 
   const rfqVersion = toRequiredNumber(payload.rfq_version ?? payload.rfqVersion, 'rfq_version');
 
+  const vendorNames = new Map(vendors.map((vendor) => [vendor.vendorId, vendor.vendorName]));
+
   return {
     rfqVersion,
-    normalizedLines,
+    normalizedLines: normalizedLines.map((line) => ({
+      ...line,
+      vendorDisplayIdentifier: line.vendorDisplayIdentifier ?? (line.vendorId ? vendorNames.get(line.vendorId) ?? line.vendorId : null),
+    })),
     resolutions,
     currencyMeta,
     vendors,
@@ -236,6 +244,7 @@ function normalizeComparisonRun(payload: unknown): ComparisonRunDetail {
 
   return {
     id,
+    displayIdentifier: toText(raw.display_identifier ?? raw.displayIdentifier) ?? toText(raw.name) ?? id,
     rfqId,
     name: toText(raw.name) ?? 'Comparison Run',
     status: toText(raw.status) ?? 'draft',

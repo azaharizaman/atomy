@@ -60,6 +60,18 @@ class Rfq extends Model
         'updated_at' => 'datetime',
     ];
 
+    public function getDisplayIdentifierAttribute(): string
+    {
+        foreach ([$this->rfq_number, $this->title] as $value) {
+            $identifier = trim((string) $value);
+            if ($identifier !== '') {
+                return $identifier;
+            }
+        }
+
+        return (string) $this->id;
+    }
+
     /**
      * @return BelongsTo<User, $this>
      */

@@ -8,6 +8,7 @@ const mockUseProjectHealth = vi.fn();
 const mockUseProjectRfqs = vi.fn();
 const mockUseProjectTasks = vi.fn();
 const mockUseProjectAcl = vi.fn();
+const mockUseUsers = vi.fn();
 
 vi.mock('next/navigation', () => ({
   useParams: () => ({ projectId: 'p1' }),
@@ -28,6 +29,9 @@ vi.mock('@/hooks/use-project-tasks', () => ({
 }));
 vi.mock('@/hooks/use-project-acl', () => ({
   useProjectAcl: (...args: unknown[]) => mockUseProjectAcl(...args),
+}));
+vi.mock('@/hooks/use-users', () => ({
+  useUsers: (...args: unknown[]) => mockUseUsers(...args),
 }));
 
 vi.mock('@/hooks/use-feature-flags', () => ({
@@ -55,13 +59,14 @@ describe('ProjectDetailPage ACL', () => {
     mockUseProjectHealth.mockReturnValue({ data: null, isLoading: false, isError: false, error: null });
     mockUseProjectRfqs.mockReturnValue({ data: [], isLoading: false, isError: false, error: null });
     mockUseProjectTasks.mockReturnValue({ data: [], isLoading: false, isError: false, error: null });
-    mockUseProjectAcl.mockReturnValue({ data: [{ userId: 'u1', role: 'viewer' }], isLoading: false, isError: false, error: null });
+    mockUseProjectAcl.mockReturnValue({ data: [{ userId: 'u1', userDisplayIdentifier: 'Aina Rahman', role: 'viewer' }], isLoading: false, isError: false, error: null });
+    mockUseUsers.mockReturnValue({ data: { items: [{ id: 'u2', name: 'Bala Lee', email: 'bala@example.com' }] }, isLoading: false });
 
     renderWithProviders(<ProjectDetailPage />);
 
     expect(screen.getByText(/Project access/i)).toBeInTheDocument();
 
-    const userInput = screen.getByLabelText('User ID 1') as HTMLInputElement;
+    const userInput = screen.getByLabelText('User 1') as HTMLSelectElement;
     fireEvent.change(userInput, { target: { value: 'u2' } });
 
     fireEvent.click(screen.getByRole('button', { name: /save access/i }));
@@ -69,4 +74,3 @@ describe('ProjectDetailPage ACL', () => {
     expect(mockUpdateAclMutate).toHaveBeenCalledWith([{ userId: 'u2', role: 'viewer' }], expect.any(Object));
   });
 });
-

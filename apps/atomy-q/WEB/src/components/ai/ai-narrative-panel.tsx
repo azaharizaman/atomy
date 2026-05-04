@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import axios from 'axios';
 
 import { AiStatusChip } from '@/components/ai/ai-status-chip';
 import { AiUnavailableCallout } from '@/components/ai/ai-unavailable-callout';
@@ -8,6 +9,10 @@ import { SectionCard } from '@/components/ds/Card';
 import { Button } from '@/components/ds/Button';
 import { useAiStatus } from '@/hooks/use-ai-status';
 import type { AiNarrativeSummary } from '@/hooks/use-ai-narrative-summary';
+
+function isExpectedUnavailableError(error: Error): boolean {
+  return axios.isAxiosError(error) && error.response?.status === 404;
+}
 
 function hashText(value: string): string {
   let hash = 0;
@@ -92,7 +97,7 @@ export function AiNarrativePanel({
 }: AiNarrativePanelProps) {
   const aiStatus = useAiStatus();
   React.useEffect(() => {
-    if (isError && error instanceof Error) {
+    if (isError && error instanceof Error && !isExpectedUnavailableError(error)) {
       console.error('AI narrative panel error', error);
     }
   }, [error, isError]);

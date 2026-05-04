@@ -66,35 +66,41 @@ export function normalizeAiNarrativePayload(
         throw new Error("AI narrative payload must be an object.");
     }
 
-    const narrative = pickNarrativeContainer(raw);
-    const featureKey = toText(narrative.feature_key ?? narrative.featureKey);
+    const artifact = pickNarrativeContainer(raw);
+    const narrativePayload = isObject(artifact.payload) ? artifact.payload : artifact;
+    const featureKey = toText(
+        artifact.feature_key ??
+            artifact.featureKey ??
+            narrativePayload.feature_key ??
+            narrativePayload.featureKey,
+    );
     if (featureKey === null) {
         throw new Error("AI narrative payload is missing feature_key.");
     }
 
     const provenance = normalizeProvenance(
-        narrative.provenance ?? raw.provenance,
+        artifact.provenance ?? narrativePayload.provenance ?? raw.provenance,
     );
     const headline = toText(
-        narrative.headline ?? narrative.title ?? narrative.message,
+        narrativePayload.headline ?? narrativePayload.title ?? narrativePayload.message,
     );
-    const summary = toText(narrative.summary ?? narrative.description);
+    const summary = toText(narrativePayload.summary ?? narrativePayload.description);
     const bullets = normalizeStringList(
-        narrative.bullets ??
-            narrative.key_points ??
-            narrative.keyPoints ??
-            narrative.highlights ??
-            narrative.rationale,
+        narrativePayload.bullets ??
+            narrativePayload.key_points ??
+            narrativePayload.keyPoints ??
+            narrativePayload.highlights ??
+            narrativePayload.rationale,
     );
 
     return {
         featureKey,
-        available: narrative.available === true,
+        available: artifact.available === true || narrativePayload.available === true,
         headline,
         summary,
         bullets,
         provenance,
-        raw: narrative,
+        raw: artifact,
     };
 }
 

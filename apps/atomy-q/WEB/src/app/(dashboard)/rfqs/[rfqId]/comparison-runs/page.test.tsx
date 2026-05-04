@@ -48,7 +48,7 @@ describe('ComparisonRunsPage', () => {
     expect(await screen.findByText(/snapshot frozen/i)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /decision trail/i })).toBeInTheDocument();
     expect(screen.getByText('Final comparison')).toBeInTheDocument();
-    expect(screen.getByText('run-1')).toBeInTheDocument();
+    expect(screen.getByText('Final run')).toBeInTheDocument();
   });
 
   it('hides the snapshot banner when there are no final runs', async () => {
@@ -69,7 +69,7 @@ describe('ComparisonRunsPage', () => {
     await renderPageWithProviders(<ComparisonRunsPage params={Promise.resolve({ rfqId: 'RFQ-2026-0001' })} />);
 
     expect(await screen.findByText('Preview comparison')).toBeInTheDocument();
-    expect(screen.getByText('run-preview-1')).toBeInTheDocument();
+    expect(screen.getByText('Preview run')).toBeInTheDocument();
     expect(screen.queryByText(/snapshot frozen/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /decision trail/i })).not.toBeInTheDocument();
   });

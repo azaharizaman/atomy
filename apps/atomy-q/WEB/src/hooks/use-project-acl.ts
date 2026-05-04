@@ -7,6 +7,7 @@ export type ProjectAclRole = 'owner' | 'admin' | 'editor' | 'viewer';
 
 export interface ProjectAclEntry {
   userId: string;
+  userDisplayIdentifier: string;
   role: ProjectAclRole;
 }
 
@@ -23,6 +24,7 @@ function normalizeProjectAcl(payload: unknown): ProjectAclEntry[] {
       const role = raw === 'manager' ? 'admin' : raw === 'contributor' ? 'editor' : raw === 'client_stakeholder' ? 'viewer' : raw;
       return {
         userId: String(r.user_id ?? r.userId ?? ''),
+        userDisplayIdentifier: String(r.user_display_identifier ?? r.userDisplayIdentifier ?? r.user_id ?? r.userId ?? ''),
         role: (role as ProjectAclRole) || 'viewer',
       };
     })
@@ -40,4 +42,3 @@ export function useProjectAcl(projectId: string, options?: { enabled?: boolean }
     enabled,
   });
 }
-

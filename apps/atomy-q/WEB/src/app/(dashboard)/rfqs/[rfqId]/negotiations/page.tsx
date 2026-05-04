@@ -17,7 +17,6 @@ function NegotiationsListPageContent({ params }: { params: Promise<{ rfqId: stri
   const { data: rfq } = useRfq(rfqId, { enabled: true });
 
   const columns: ColumnDef<NegotiationRow>[] = [
-    { key: 'id', label: 'ID', render: (row) => <span className="font-mono text-sm">{row.id}</span> },
     { key: 'vendor', label: 'Vendor', render: (row) => <span className="text-sm font-medium text-slate-800">{row.vendor}</span> },
     { key: 'status', label: 'Status', render: (row) => <span className="text-sm text-slate-600">{row.status}</span> },
     { key: 'lastActivity', label: 'Last activity', render: (row) => <span className="text-xs text-slate-500">{row.lastActivity}</span> },
