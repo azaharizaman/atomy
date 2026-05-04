@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Nexus\QuoteIngestion;
+namespace App\Services\QuoteIntake;
 
-use Nexus\QuoteIngestion\Contracts\QuoteSubmissionInterface;
-use Nexus\QuoteIngestion\Contracts\QuoteSubmissionQueryInterface;
-use Nexus\QuoteIngestion\Contracts\QuoteSubmissionPersistInterface;
-use Nexus\QuoteIngestion\Contracts\NormalizationSourceLineQueryInterface;
-use Nexus\QuoteIngestion\Contracts\NormalizationSourceLinePersistInterface;
-use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterface;
+use App\Services\QuoteIntake\Contracts\NormalizationSourceLinePersistInterface;
+use App\Services\QuoteIntake\Contracts\NormalizationSourceLineQueryInterface;
+use App\Services\QuoteIntake\Contracts\QuoteSubmissionInterface;
+use App\Services\QuoteIntake\Contracts\QuoteSubmissionPersistInterface;
+use App\Services\QuoteIntake\Contracts\QuoteSubmissionQueryInterface;
 use Nexus\QuotationIntelligence\Contracts\DecisionTrailWriterInterface;
+use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterface;
 use Nexus\Tenant\Contracts\TenantContextInterface;
 use Psr\Log\LoggerInterface;
 
@@ -58,7 +58,6 @@ final readonly class QuoteIngestionOrchestrator
             $avgConfidence = $this->calculateAvgConfidence($confidences);
             $finalStatus = $avgConfidence >= self::CONFIDENCE_THRESHOLD ? 'ready' : 'needs_review';
             $this->submissionPersist->markCompleted($submission, $finalStatus, $avgConfidence, $persistedLineCount);
-
         } catch (\Throwable $e) {
             $this->logger->error('Quote intelligence processing failed', [
                 'tenant_id' => $tenantId,
@@ -154,8 +153,7 @@ final readonly class QuoteIngestionOrchestrator
         string $rfqLineId,
         array $line,
         ?float $confidence,
-    ): void
-    {
+    ): void {
         $confidence ??= 0.0;
         if ($confidence >= self::CONFIDENCE_THRESHOLD) {
             $this->decisionTrailWriter->write(

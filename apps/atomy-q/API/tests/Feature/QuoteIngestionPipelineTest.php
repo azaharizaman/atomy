@@ -15,7 +15,7 @@ use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
 use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterface;
 use Nexus\QuotationIntelligence\Contracts\SemanticMapperInterface;
 use Nexus\QuotationIntelligence\Exceptions\QuotationIntelligenceException;
-use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
+use App\Services\QuoteIntake\QuoteIngestionOrchestrator;
 use App\Adapters\QuotationIntelligence\DeterministicContentProcessor;
 use App\Adapters\QuotationIntelligence\DeterministicSemanticMapper;
 use App\Adapters\QuotationIntelligence\DormantLlmContentProcessor;

@@ -11,14 +11,14 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
+use App\Services\QuoteIntake\QuoteIngestionOrchestrator;
 
 /**
  * Queued quote-ingestion worker for one uploaded supplier quote.
  *
  * The job is intentionally retryable and records retry exhaustion as a failed
  * quote submission with a sanitized public error. It delegates extraction and
- * normalization to the package orchestrator using the persisted tenant id so
+ * normalization to the app-local quote intake orchestrator using the persisted tenant id so
  * queued execution does not trust request context.
  */
 class ProcessQuoteSubmissionJob implements ShouldQueue

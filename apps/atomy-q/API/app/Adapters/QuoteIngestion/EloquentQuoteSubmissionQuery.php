@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Adapters\QuoteIngestion;
 
 use App\Models\QuoteSubmission;
-use Nexus\QuoteIngestion\Contracts\QuoteSubmissionInterface;
-use Nexus\QuoteIngestion\Contracts\QuoteSubmissionQueryInterface;
+use App\Services\QuoteIntake\Contracts\QuoteSubmissionInterface;
+use App\Services\QuoteIntake\Contracts\QuoteSubmissionQueryInterface;
 
 final class EloquentQuoteSubmissionQuery implements QuoteSubmissionQueryInterface
 {

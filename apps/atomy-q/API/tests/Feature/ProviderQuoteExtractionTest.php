@@ -23,7 +23,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
+use App\Services\QuoteIntake\QuoteIngestionOrchestrator;
 use Nexus\IntelligenceOperations\DTOs\AiCapabilityStatus;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;

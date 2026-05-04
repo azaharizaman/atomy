@@ -18,6 +18,7 @@ use App\Models\QuoteSubmission;
 use App\Models\Rfq;
 use App\Models\RfqLineItem;
 use App\Services\QuoteIntake\DecisionTrailRecorder;
+use App\Services\QuoteIntake\QuoteIngestionOrchestrator;
 use App\Services\QuoteIntake\QuoteSubmissionReadinessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,7 +27,6 @@ use Illuminate\Validation\ValidationException;
 use Nexus\IntelligenceOperations\DTOs\AiCapabilityStatus;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 use Nexus\Idempotency\Contracts\IdempotencyServiceInterface;
-use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
 use Throwable;
 
 final class QuoteSubmissionController extends Controller

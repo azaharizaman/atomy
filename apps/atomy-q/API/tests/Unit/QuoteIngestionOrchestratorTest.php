@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
-use Nexus\QuoteIngestion\Contracts\NormalizationSourceLinePersistInterface;
-use Nexus\QuoteIngestion\Contracts\NormalizationSourceLineQueryInterface;
-use Nexus\QuoteIngestion\Contracts\QuoteSubmissionInterface;
-use Nexus\QuoteIngestion\Contracts\QuoteSubmissionPersistInterface;
-use Nexus\QuoteIngestion\Contracts\QuoteSubmissionQueryInterface;
-use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
+use App\Services\QuoteIntake\Contracts\NormalizationSourceLinePersistInterface;
+use App\Services\QuoteIntake\Contracts\NormalizationSourceLineQueryInterface;
+use App\Services\QuoteIntake\Contracts\QuoteSubmissionInterface;
+use App\Services\QuoteIntake\Contracts\QuoteSubmissionPersistInterface;
+use App\Services\QuoteIntake\Contracts\QuoteSubmissionQueryInterface;
+use App\Services\QuoteIntake\QuoteIngestionOrchestrator;
 use Nexus\QuotationIntelligence\Contracts\DecisionTrailWriterInterface;
 use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterface;
 use Nexus\Tenant\Contracts\TenantContextInterface;

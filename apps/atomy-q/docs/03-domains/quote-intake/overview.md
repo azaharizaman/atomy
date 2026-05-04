@@ -48,7 +48,7 @@ Core entity definitions are documented in [entities.md](./entities.md).
 - `packages/Sourcing`
 - `packages/Document`
 - `packages/Notifier`
-- `orchestrators/QuoteIngestion`
+- `apps/atomy-q/API/app/Services/QuoteIntake`
 
 ### External dependencies
 

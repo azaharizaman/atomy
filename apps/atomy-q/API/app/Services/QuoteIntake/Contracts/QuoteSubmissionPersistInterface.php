@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nexus\QuoteIngestion\Contracts;
+namespace App\Services\QuoteIntake\Contracts;
 
 interface QuoteSubmissionPersistInterface
 {
