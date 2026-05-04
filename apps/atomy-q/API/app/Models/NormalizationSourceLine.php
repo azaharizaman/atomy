@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Nexus\QuoteIngestion\Contracts\NormalizationSourceLineReadInterface;
+use App\Services\QuoteIntake\Contracts\NormalizationSourceLineReadInterface;
 
 /**
  * Buyer-reviewable source line produced from supplier quote extraction.

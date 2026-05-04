@@ -58,7 +58,7 @@ Core entity definitions are documented in [entities.md](./entities.md).
 
 ### Nexus packages
 
-- `Nexus\QuoteIngestion`
+- `App\Services\QuoteIntake`
 - `Nexus\Sourcing`
 
 ### External dependencies

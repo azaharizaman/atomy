@@ -154,7 +154,7 @@
   - `OrchestratorTenantRepository`
   - `OrchestratorProcurementManager`
   - `AtomyDecisionTrailWriter`
-- Wired `QuoteIngestionOrchestrator` to `QuotationIntelligenceCoordinator` with tenant-context propagation and deterministic decision-trail writes.
+- Wired the app-local `App\Services\QuoteIntake\QuoteIngestionOrchestrator` to `QuotationIntelligenceCoordinator` with tenant-context propagation and deterministic decision-trail writes.
 - Added smart-mock ingestion coverage for quote submission processing and delta reparse preservation of manual overrides.
 - Added local support shims for API-side runtime wiring where the package contracts are used from the Laravel app.
 

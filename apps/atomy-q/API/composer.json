@@ -73,7 +73,6 @@
         "nexus/project-management-operations": "*@dev",
         "azaharizaman/nexus-query-engine": "*@dev",
         "nexus/quotation-intelligence": "*@dev",
-        "nexus/quote-ingestion": "*@dev",
         "azaharizaman/nexus-reporting": "*@dev",
         "azaharizaman/nexus-sanctions": "*@dev",
         "azaharizaman/nexus-scheduler": "*@dev",

@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Adapters\QuoteIngestion;
 
 use App\Models\NormalizationSourceLine;
-use Nexus\QuoteIngestion\Contracts\NormalizationSourceLineReadInterface;
-use Nexus\QuoteIngestion\Contracts\NormalizationSourceLineQueryInterface;
-use Nexus\QuoteIngestion\Contracts\NormalizationSourceLinePersistInterface;
+use App\Services\QuoteIntake\Contracts\NormalizationSourceLineReadInterface;
+use App\Services\QuoteIntake\Contracts\NormalizationSourceLineQueryInterface;
+use App\Services\QuoteIntake\Contracts\NormalizationSourceLinePersistInterface;
 
-final class EloquentNormalizationSourceLineRepository implements NormalizationSourceLineQueryInterface, NormalizationSourceLinePersistInterface
+final class EloquentSourceLineRepository implements NormalizationSourceLineQueryInterface, NormalizationSourceLinePersistInterface
 {
     public function findExisting(
         string $tenantId,

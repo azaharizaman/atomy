@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Nexus\QuoteIngestion\Contracts\QuoteSubmissionInterface;
+use App\Services\QuoteIntake\Contracts\QuoteSubmissionInterface;
 
 /**
  * Supplier quote upload tracked through extraction, normalization, review, and acceptance.

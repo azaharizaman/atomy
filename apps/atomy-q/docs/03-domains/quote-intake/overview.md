@@ -48,7 +48,7 @@ Core entity definitions are documented in [entities.md](./entities.md).
 - `packages/Sourcing`
 - `packages/Document`
 - `packages/Notifier`
-- `orchestrators/QuoteIngestion`
+- `App\Services\QuoteIntake`
 
 ### External dependencies
 

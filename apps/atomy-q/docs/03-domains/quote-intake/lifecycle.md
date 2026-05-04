@@ -122,7 +122,7 @@ The current implementation spans the Atomy-Q API quote-submission controller, th
 
 ### Nexus packages
 
-- `Nexus\QuoteIngestion`
+- `App\Services\QuoteIntake`
 - `Nexus\Sourcing`
 - `Nexus\Document`
 - `Nexus\Notifier`

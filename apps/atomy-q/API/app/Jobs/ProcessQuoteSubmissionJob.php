@@ -11,14 +11,14 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Nexus\QuoteIngestion\QuoteIngestionOrchestrator;
+use App\Services\QuoteIntake\Contracts\QuoteIngestionOrchestratorInterface;
 
 /**
  * Queued quote-ingestion worker for one uploaded supplier quote.
  *
  * The job is intentionally retryable and records retry exhaustion as a failed
  * quote submission with a sanitized public error. It delegates extraction and
- * normalization to the package orchestrator using the persisted tenant id so
+ * normalization to the app-local quote intake orchestrator using the persisted tenant id so
  * queued execution does not trust request context.
  */
 class ProcessQuoteSubmissionJob implements ShouldQueue
@@ -32,7 +32,7 @@ class ProcessQuoteSubmissionJob implements ShouldQueue
         public string $quoteSubmissionId,
     ) {}
 
-    public function handle(QuoteIngestionOrchestrator $orchestrator): void
+    public function handle(QuoteIngestionOrchestratorInterface $orchestrator): void
     {
         $submission = QuoteSubmission::find($this->quoteSubmissionId);
         
@@ -65,7 +65,7 @@ class ProcessQuoteSubmissionJob implements ShouldQueue
         if ($submission !== null) {
             $submission->status = 'failed';
             $submission->error_code = 'MAX_RETRIES_EXCEEDED';
-            $submission->error_message = QuoteIngestionOrchestrator::GENERIC_FAILURE_MESSAGE;
+            $submission->error_message = \App\Services\QuoteIntake\QuoteIngestionOrchestrator::GENERIC_FAILURE_MESSAGE;
             $submission->processing_completed_at = now();
             $submission->save();
         }
@@ -86,7 +86,7 @@ class ProcessQuoteSubmissionJob implements ShouldQueue
         return $message;
     }
 
-    public function runSync(QuoteIngestionOrchestrator $orchestrator): void
+    public function runSync(QuoteIngestionOrchestratorInterface $orchestrator): void
     {
         Log::warning('ProcessQuoteSubmissionJob running in sync fallback mode', [
             'quote_submission_id' => $this->quoteSubmissionId,

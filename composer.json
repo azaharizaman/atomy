@@ -40,7 +40,6 @@
         "azaharizaman/nexus-esg-regulatory": "*@dev",
         "nexus/esg-operations": "*@dev",
         "azaharizaman/nexus-idempotency": "*@dev",
-        "nexus/quote-ingestion": "*@dev",
         "azaharizaman/nexus-vendor": "*@dev",
         "azaharizaman/nexus-sourcing": "*@dev",
         "azaharizaman/nexus-sourcing-scoring": "*@dev",
