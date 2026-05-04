@@ -17,7 +17,7 @@ declare(strict_types=1);
 |   §4  - RFQ Templates                    (rfq-templates)       → 7 endpoints
 |   §5  - Vendor Management                (vendors)             → 10 endpoints
 |   §6  - Vendor Invitations               (rfqs.*\/invitations)  → 3 endpoints
-|   §7  - Quote Intake                     (quote-submissions)  → 10 endpoints
+|   §7  - Quote Intake                     (quote-submissions)  → 9 endpoints
 |   §8  - Quote Normalization              (normalization)       → 10 endpoints
 |   §9  - Comparison Matrix                (comparison-runs)     → 10 endpoints
 |   §10 - Scoring Models                   (scoring-models)      → 8 endpoints

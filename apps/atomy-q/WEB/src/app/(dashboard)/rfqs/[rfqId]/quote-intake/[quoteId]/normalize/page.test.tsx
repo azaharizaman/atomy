@@ -97,6 +97,12 @@ async function renderPage() {
 describe('NormalizeQuotePage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useRfq).mockReturnValue({
+      data: { title: 'RFQ', submission_deadline: '2026-04-01T00:00:00.000Z' },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
 
     mockUseNormalizationReview.mockReturnValue({
       conflicts: [],

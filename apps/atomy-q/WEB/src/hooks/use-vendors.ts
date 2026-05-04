@@ -27,11 +27,11 @@ export interface VendorRow {
   approvalRecord: VendorApprovalRecord | null;
   createdAt: string;
   updatedAt: string;
-  name: string;
-  tradingName: string;
-  countryCode: string;
-  email: string;
-  phone: string | null;
+  name?: string;
+  tradingName?: string;
+  countryCode?: string;
+  email?: string;
+  phone?: string | null;
 }
 
 export interface VendorListMeta {
@@ -211,11 +211,11 @@ function normalizeVendorRow(row: unknown, index: number): VendorRow {
     approvalRecord: normalizeApprovalRecord(approvalRecordValue, context),
     createdAt: requireText(pickField(item, 'created_at', 'createdAt'), 'created_at', context),
     updatedAt: requireText(pickField(item, 'updated_at', 'updatedAt'), 'updated_at', context),
-    name: toText(pickField(item, 'name')) ?? displayName,
-    tradingName: toText(pickField(item, 'trading_name', 'tradingName')) ?? displayName,
-    countryCode: toText(pickField(item, 'country_code', 'countryCode')) ?? countryOfRegistration,
-    email: toText(pickField(item, 'email')) ?? primaryContactEmail,
-    phone: phoneValue === undefined ? normalizeNullableText(primaryContactPhoneValue, 'primary_contact_phone', context) : normalizeNullableText(phoneValue, 'phone', context),
+    name: toText(pickField(item, 'name')),
+    tradingName: toText(pickField(item, 'trading_name', 'tradingName')),
+    countryCode: toText(pickField(item, 'country_code', 'countryCode')),
+    email: toText(pickField(item, 'email')),
+    phone: phoneValue === undefined ? null : normalizeNullableText(phoneValue, 'phone', context),
   };
 }
 
@@ -342,10 +342,6 @@ function extractMessageCandidate(value: unknown): string | null {
 
 export function extractResponseErrorMessage(error: unknown): string {
   const message = extractMessageCandidate(error);
-  if (message !== null && /idempotency key/i.test(message)) {
-    return 'We could not save the vendor. Please try again.';
-  }
-
   return message ?? 'Request failed.';
 }
 

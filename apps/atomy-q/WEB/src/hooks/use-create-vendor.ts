@@ -38,7 +38,11 @@ async function invokeVendorStore(input: VendorUpsertInput): Promise<VendorRow> {
 
     return normalizeVendorResponse(response.data);
   } catch (error: unknown) {
-    throw new Error(extractResponseErrorMessage(error));
+    const message = extractResponseErrorMessage(error);
+    if (/idempotency key/i.test(message)) {
+      throw new Error('We could not save the vendor. Please try again.');
+    }
+    throw new Error(message);
   }
 }
 

@@ -94,6 +94,11 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
     return () => clearInterval(timer);
   }, [rfqId]);
 
+  React.useEffect(() => {
+    const sourceLineIds = new Set(liveSourceLines.filter((line) => line.quote_submission_id === quoteId).map((line) => line.id));
+    setSelectedLineIds((current) => current.filter((id) => sourceLineIds.has(id)));
+  }, [liveSourceLines, quoteId]);
+
   if (rfqQuery.isError) {
     const pageError = rfqQuery.error;
     const errorMessage = pageError instanceof Error ? pageError.message : 'The live normalization workspace could not be loaded.';
@@ -136,6 +141,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
   }
 
   function submitManualSourceLine(): void {
+    if (locked) return;
     const description = manualForm.source_description.trim();
     const reason = manualForm.reason.trim();
     const note = normalizeNullableField(manualForm.note);
@@ -161,11 +167,13 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
   }
 
   function startEdit(line: NormalizationSourceLineRow): void {
+    if (locked) return;
     setEditingLineId(line.id);
     setEditForm(formFromSourceLine(line));
   }
 
   function saveEdit(lineId: string): void {
+    if (locked) return;
     const description = editForm.source_description.trim();
     const reason = editForm.reason.trim();
     const note = normalizeNullableField(editForm.note);
@@ -199,6 +207,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
   }
 
   function deleteSourceLine(lineId: string, lineNumber: number): void {
+    if (locked) return;
     if (manualSourceLines.deleteSourceLine.isPending) return;
     if (typeof window !== 'undefined' && !window.confirm(`Delete source line ${lineNumber}?`)) return;
 
@@ -373,6 +382,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
               size="sm"
               variant="outline"
               icon={locked ? <Unlock size={14} /> : <Lock size={14} />}
+              disabled={locked}
               onClick={() => setLocked(!locked)}
             >
               {locked ? 'Unlock' : 'Lock for Comparison'}
@@ -405,6 +415,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                   className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   value={manualForm.source_description}
                   onChange={(event) => updateManualForm('source_description', event.target.value)}
+                  disabled={locked}
                 />
               </label>
               <label className="text-xs font-medium text-slate-600">
@@ -414,6 +425,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                   className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   value={manualForm.source_quantity}
                   onChange={(event) => updateManualForm('source_quantity', event.target.value)}
+                  disabled={locked}
                 />
               </label>
               <label className="text-xs font-medium text-slate-600">
@@ -423,6 +435,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                   className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   value={manualForm.source_uom}
                   onChange={(event) => updateManualForm('source_uom', event.target.value)}
+                  disabled={locked}
                 />
               </label>
               <label className="text-xs font-medium text-slate-600">
@@ -432,6 +445,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                   className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   value={manualForm.source_unit_price}
                   onChange={(event) => updateManualForm('source_unit_price', event.target.value)}
+                  disabled={locked}
                 />
               </label>
               <label className="text-xs font-medium text-slate-600">
@@ -441,6 +455,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                   className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   value={manualForm.rfq_line_item_id}
                   onChange={(event) => updateManualForm('rfq_line_item_id', event.target.value)}
+                  disabled={locked}
                 >
                   <option value="">Unmapped</option>
                   {rfqLineItems.map((line, index) => (
@@ -457,6 +472,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                   className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   value={manualForm.reason}
                   onChange={(event) => updateManualForm('reason', event.target.value)}
+                  disabled={locked}
                 >
                   <option value="">Select reason</option>
                   {NORMALIZATION_REASON_OPTIONS.map((option) => (
@@ -473,6 +489,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                   className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   value={manualForm.note}
                   onChange={(event) => updateManualForm('note', event.target.value)}
+                  disabled={locked}
                 />
               </label>
               <div className="flex items-end">
@@ -482,6 +499,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                   type="button"
                   icon={<Plus size={14} />}
                   disabled={
+                    locked ||
                     manualForm.source_description.trim() === '' ||
                     manualForm.reason.trim() === '' ||
                     (manualForm.reason === 'other' && manualForm.note.trim() === '') ||
@@ -505,6 +523,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                       className="rounded border-slate-300"
                       checked={allSourceLinesSelected}
                       onChange={toggleAllSourceLines}
+                      disabled={locked}
                     />
                   </th>
                   <th className="px-3 py-2 text-xs font-medium text-slate-600">Line</th>
@@ -531,6 +550,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                           className="rounded border-slate-300"
                           checked={isSelected(liveLine.id)}
                           onChange={() => toggleSelection(liveLine.id)}
+                          disabled={locked}
                         />
                       </td>
                       <td className="px-3 py-3 text-xs text-slate-600">
@@ -545,6 +565,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                               className="h-8 rounded border border-slate-300 px-2 text-xs"
                               value={editForm.source_description}
                               onChange={(event) => updateEditForm('source_description', event.target.value)}
+                              disabled={locked}
                             />
                             <div className="grid grid-cols-3 gap-2">
                               <input
@@ -552,18 +573,21 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                                 className="h-8 rounded border border-slate-300 px-2 text-xs"
                                 value={editForm.source_quantity}
                                 onChange={(event) => updateEditForm('source_quantity', event.target.value)}
+                                disabled={locked}
                               />
                               <input
                                 aria-label={`UOM source line ${lineNumber}`}
                                 className="h-8 rounded border border-slate-300 px-2 text-xs"
                                 value={editForm.source_uom}
                                 onChange={(event) => updateEditForm('source_uom', event.target.value)}
+                                disabled={locked}
                               />
                               <input
                                 aria-label={`Unit price source line ${lineNumber}`}
                                 className="h-8 rounded border border-slate-300 px-2 text-xs"
                                 value={editForm.source_unit_price}
                                 onChange={(event) => updateEditForm('source_unit_price', event.target.value)}
+                                disabled={locked}
                               />
                             </div>
                           </div>
@@ -583,6 +607,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                             className="h-8 w-full rounded border border-slate-300 px-2 text-xs"
                             value={editForm.rfq_line_item_id}
                             onChange={(event) => updateEditForm('rfq_line_item_id', event.target.value)}
+                            disabled={locked}
                           >
                             <option value="">Unmapped</option>
                             {rfqLineItems.map((item, itemIndex) => (
@@ -613,6 +638,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                               className="h-8 rounded border border-slate-300 px-2 text-xs"
                               value={editForm.reason}
                               onChange={(event) => updateEditForm('reason', event.target.value)}
+                              disabled={locked}
                             >
                               <option value="">Select reason</option>
                               {NORMALIZATION_REASON_OPTIONS.map((option) => (
@@ -626,6 +652,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                               className="h-8 rounded border border-slate-300 px-2 text-xs"
                               value={editForm.note}
                               onChange={(event) => updateEditForm('note', event.target.value)}
+                              disabled={locked}
                             />
                             <div className="text-[11px] text-slate-500">
                               Provider confidence {providerConfidenceLabel(liveLine.ai_confidence) ?? 'Unavailable'}
@@ -667,6 +694,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                                 type="button"
                                 icon={<Save size={14} />}
                                 disabled={
+                                  locked ||
                                   editForm.source_description.trim() === '' ||
                                   editForm.reason.trim() === '' ||
                                   (editForm.reason === 'other' && editForm.note.trim() === '') ||
@@ -682,7 +710,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                             </>
                           ) : (
                             <>
-                              <Button size="sm" variant="ghost" type="button" icon={<Pencil size={14} />} onClick={() => startEdit(liveLine)}>
+                              <Button size="sm" variant="ghost" type="button" icon={<Pencil size={14} />} disabled={locked} onClick={() => startEdit(liveLine)}>
                                 Edit source line {lineNumber}
                               </Button>
                               <Button
@@ -690,7 +718,7 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
                                 variant="ghost"
                                 type="button"
                                 icon={<Trash2 size={14} />}
-                                disabled={manualSourceLines.deleteSourceLine.isPending}
+                                disabled={locked || manualSourceLines.deleteSourceLine.isPending}
                                 onClick={() => deleteSourceLine(liveLine.id, lineNumber)}
                               >
                                 Delete source line {lineNumber}

@@ -73,7 +73,9 @@ describe('useQuoteSubmission', () => {
       retry_count: undefined,
     });
   });
+});
 
+describe('useQuoteSubmissionActions', () => {
   it('accepts quote submissions through the status endpoint', async () => {
     patchMock.mockResolvedValueOnce({ data: { data: { id: 'quote-1', status: 'ready' } } });
 

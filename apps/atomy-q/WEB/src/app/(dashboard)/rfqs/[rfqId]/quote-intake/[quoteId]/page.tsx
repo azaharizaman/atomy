@@ -10,6 +10,7 @@ import { SecondaryTabs } from '@/components/ds/Tabs';
 import { useAiStatus } from '@/hooks/use-ai-status';
 import { useQuoteSubmission, useQuoteSubmissionActions } from '@/hooks/use-quote-submission';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function QuoteIntakeDetailPage({
   params,
@@ -39,7 +40,7 @@ export default function QuoteIntakeDetailPage({
   const statusBadge = submission?.status === 'ready' ? 'approved' : submission?.status === 'needs_review' ? 'pending' : submission?.status === 'failed' ? 'error' : 'processing';
   const showExtractionUnavailable = aiStatus.shouldShowUnavailableMessage('quote_document_extraction');
   const hideExtractionControls = aiStatus.shouldHideAiControls('quote_document_extraction');
-  const acceptDisabled = quoteActions.acceptQuote.isPending || submission?.status === 'ready';
+  const acceptDisabled = quoteActions.acceptQuote.isPending || submission?.status === 'ready' || submission?.status === 'accepted' || submission?.status === 'failed';
   const reparseDisabled = quoteActions.reparseQuote.isPending || submission?.status === 'extracting' || submission?.status === 'normalizing';
 
   const validationItems = [
@@ -124,7 +125,14 @@ export default function QuoteIntakeDetailPage({
           variant="outline"
           loading={quoteActions.acceptQuote.isPending}
           disabled={acceptDisabled}
-          onClick={() => void quoteActions.acceptQuote.mutateAsync().catch(() => undefined)}
+          onClick={() => {
+            quoteActions.acceptQuote.mutate(undefined, {
+              onError: (error) => {
+                const message = error instanceof Error ? error.message : 'Unable to accept quote';
+                toast.error(message);
+              },
+            });
+          }}
         >
           Accept
         </Button>
@@ -141,7 +149,14 @@ export default function QuoteIntakeDetailPage({
             variant="ghost"
             loading={quoteActions.reparseQuote.isPending}
             disabled={reparseDisabled}
-            onClick={() => void quoteActions.reparseQuote.mutateAsync().catch(() => undefined)}
+            onClick={() => {
+              quoteActions.reparseQuote.mutate(undefined, {
+                onError: (error) => {
+                  const message = error instanceof Error ? error.message : 'Unable to re-parse quote';
+                  toast.error(message);
+                },
+              });
+            }}
           >
             Re-Parse
           </Button>

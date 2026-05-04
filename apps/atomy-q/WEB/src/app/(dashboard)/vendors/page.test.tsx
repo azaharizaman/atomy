@@ -166,6 +166,10 @@ describe('VendorsPage', () => {
     );
     expect(screen.queryByRole('button', { name: /submit vendor/i })).not.toBeInTheDocument();
     expect(screen.queryByDisplayValue('Acme Manufacturing')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByRole('button', { name: /create vendor/i })[0]);
+    expect(screen.getByLabelText(/legal name/i)).toHaveValue('');
+    expect(screen.getByLabelText(/display name/i)).toHaveValue('');
   });
 
   it('rejects unsupported country codes before creating a vendor', () => {
