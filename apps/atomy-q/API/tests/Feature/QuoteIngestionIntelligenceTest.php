@@ -15,7 +15,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use App\Services\QuoteIntake\QuoteIngestionOrchestrator;
+use App\Services\QuoteIntake\Contracts\QuoteIngestionOrchestratorInterface;
 use Nexus\Tenant\Contracts\TenantContextInterface;
 use Tests\Feature\Api\ApiTestCase;
 
@@ -158,7 +158,7 @@ final class QuoteIngestionIntelligenceTest extends ApiTestCase
             'errors_count' => 0,
         ]);
 
-        $orchestrator = app(QuoteIngestionOrchestrator::class);
+        $orchestrator = app(QuoteIngestionOrchestratorInterface::class);
         $orchestrator->process($submission->id, $submission->tenant_id);
 
         $submission->refresh();

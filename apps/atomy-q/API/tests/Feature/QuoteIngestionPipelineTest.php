@@ -15,7 +15,7 @@ use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
 use Nexus\QuotationIntelligence\Contracts\QuotationIntelligenceCoordinatorInterface;
 use Nexus\QuotationIntelligence\Contracts\SemanticMapperInterface;
 use Nexus\QuotationIntelligence\Exceptions\QuotationIntelligenceException;
-use App\Services\QuoteIntake\QuoteIngestionOrchestrator;
+use App\Services\QuoteIntake\Contracts\QuoteIngestionOrchestratorInterface;
 use App\Adapters\QuotationIntelligence\DeterministicContentProcessor;
 use App\Adapters\QuotationIntelligence\DeterministicSemanticMapper;
 use App\Adapters\QuotationIntelligence\DormantLlmContentProcessor;
@@ -123,7 +123,7 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         app()->forgetInstance(OrchestratorContentProcessorInterface::class);
         app()->forgetInstance(SemanticMapperInterface::class);
         app()->forgetInstance(QuotationIntelligenceCoordinatorInterface::class);
-        app()->forgetInstance(QuoteIngestionOrchestrator::class);
+        app()->forgetInstance(QuoteIngestionOrchestratorInterface::class);
         app()->forgetInstance(BatchQuoteComparisonCoordinatorInterface::class);
         app()->forgetInstance(ConfiguredAiEndpointRegistry::class);
         app()->forgetInstance(AiEndpointRegistryInterface::class);
@@ -251,7 +251,7 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         $response->assertCreated();
         $response->assertJsonPath('data.status', 'failed');
         $response->assertJsonPath('data.error_code', 'INTELLIGENCE_FAILED');
-        $response->assertJsonPath('data.error_message', QuoteIngestionOrchestrator::GENERIC_FAILURE_MESSAGE);
+        $response->assertJsonPath('data.error_message', \App\Services\QuoteIntake\QuoteIngestionOrchestrator::GENERIC_FAILURE_MESSAGE);
     }
 
     public function test_quote_intelligence_llm_mode_semantic_mapper_is_dormant(): void
@@ -383,7 +383,7 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
         $response->assertCreated();
         $response->assertJsonPath('data.status', 'failed');
         $response->assertJsonPath('data.error_code', 'INTELLIGENCE_FAILED');
-        $response->assertJsonPath('data.error_message', QuoteIngestionOrchestrator::GENERIC_FAILURE_MESSAGE);
+        $response->assertJsonPath('data.error_message', \App\Services\QuoteIntake\QuoteIngestionOrchestrator::GENERIC_FAILURE_MESSAGE);
     }
 
     public function test_job_failed_path_sanitizes_retry_exhaustion_error_message(): void
@@ -412,7 +412,7 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
 
         self::assertSame('failed', $submission->status);
         self::assertSame('MAX_RETRIES_EXCEEDED', $submission->error_code);
-        self::assertSame(QuoteIngestionOrchestrator::GENERIC_FAILURE_MESSAGE, $submission->error_message);
+        self::assertSame(\App\Services\QuoteIntake\QuoteIngestionOrchestrator::GENERIC_FAILURE_MESSAGE, $submission->error_message);
     }
 
     public function test_job_failed_path_logs_retry_exhaustion_when_submission_is_missing(): void
@@ -510,7 +510,7 @@ final class QuoteIngestionPipelineTest extends ApiTestCase
             'errors_count' => 0,
         ]);
 
-        $orchestrator = app(QuoteIngestionOrchestrator::class);
+        $orchestrator = app(QuoteIngestionOrchestratorInterface::class);
         $orchestrator->process($submission->id, $submission->tenant_id);
 
         $submission->refresh();

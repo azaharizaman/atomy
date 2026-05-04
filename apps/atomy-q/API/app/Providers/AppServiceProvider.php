@@ -72,6 +72,7 @@ use App\Services\ProjectManagementOperations\AtomyProjectTaskIdsQuery;
 use App\Services\ProjectManagementOperations\AtomyTimelineDriftService;
 use App\Services\QuoteIntake\Contracts\NormalizationSourceLinePersistInterface;
 use App\Services\QuoteIntake\Contracts\NormalizationSourceLineQueryInterface;
+use App\Services\QuoteIntake\Contracts\QuoteIngestionOrchestratorInterface;
 use App\Services\QuoteIntake\Contracts\QuoteSubmissionPersistInterface;
 use App\Services\QuoteIntake\Contracts\QuoteSubmissionQueryInterface;
 use App\Services\QuoteIntake\QuoteIngestionOrchestrator;
@@ -188,7 +189,7 @@ use App\Adapters\QuotationIntelligence\Support\InMemoryUomRepository;
 use App\Adapters\QuotationIntelligence\Support\StaticExchangeRateProvider;
 use App\Adapters\QuoteIngestion\EloquentQuoteSubmissionQuery;
 use App\Adapters\QuoteIngestion\EloquentQuoteSubmissionPersist;
-use App\Adapters\QuoteIngestion\EloquentNormalizationSourceLineRepository;
+use App\Adapters\QuoteIngestion\EloquentSourceLineRepository;
 use Nexus\QuotationIntelligence\Coordinators\QuotationIntelligenceCoordinator;
 use Nexus\QuotationIntelligence\Coordinators\BatchQuoteComparisonCoordinator;
 use Nexus\QuotationIntelligence\Contracts\QuoteNormalizationServiceInterface;
@@ -801,15 +802,15 @@ class AppServiceProvider extends ServiceProvider
         );
         $this->app->singleton(
             NormalizationSourceLineQueryInterface::class,
-            EloquentNormalizationSourceLineRepository::class,
+            EloquentSourceLineRepository::class,
         );
         $this->app->singleton(
             NormalizationSourceLinePersistInterface::class,
-            EloquentNormalizationSourceLineRepository::class,
+            EloquentSourceLineRepository::class,
         );
         $this->app->singleton(
-            QuoteIngestionOrchestrator::class,
-            static function ($app): QuoteIngestionOrchestrator {
+            QuoteIngestionOrchestratorInterface::class,
+            static function ($app): QuoteIngestionOrchestratorInterface {
                 return new QuoteIngestionOrchestrator(
                     $app->make(
                         QuotationIntelligenceCoordinatorInterface::class,

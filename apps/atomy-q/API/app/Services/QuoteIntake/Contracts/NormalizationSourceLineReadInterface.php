@@ -12,6 +12,11 @@ interface NormalizationSourceLineReadInterface
 
     public function getQuoteSubmissionId(): string;
 
+    /**
+     * Returns the RFQ line item identifier for this source line.
+     *
+     * @throws \DomainException When `rfq_line_item_id` is null on the underlying record.
+     */
     public function getRfqLineItemId(): string;
 
     /**

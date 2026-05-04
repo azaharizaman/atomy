@@ -9,7 +9,7 @@ use App\Services\QuoteIntake\Contracts\NormalizationSourceLineReadInterface;
 use App\Services\QuoteIntake\Contracts\NormalizationSourceLineQueryInterface;
 use App\Services\QuoteIntake\Contracts\NormalizationSourceLinePersistInterface;
 
-final class EloquentNormalizationSourceLineRepository implements NormalizationSourceLineQueryInterface, NormalizationSourceLinePersistInterface
+final class EloquentSourceLineRepository implements NormalizationSourceLineQueryInterface, NormalizationSourceLinePersistInterface
 {
     public function findExisting(
         string $tenantId,

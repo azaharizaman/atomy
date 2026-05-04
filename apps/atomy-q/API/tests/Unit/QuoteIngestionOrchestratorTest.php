@@ -6,6 +6,7 @@ namespace Tests\Unit;
 
 use App\Services\QuoteIntake\Contracts\NormalizationSourceLinePersistInterface;
 use App\Services\QuoteIntake\Contracts\NormalizationSourceLineQueryInterface;
+use App\Services\QuoteIntake\Contracts\QuoteIngestionOrchestratorInterface;
 use App\Services\QuoteIntake\Contracts\QuoteSubmissionInterface;
 use App\Services\QuoteIntake\Contracts\QuoteSubmissionPersistInterface;
 use App\Services\QuoteIntake\Contracts\QuoteSubmissionQueryInterface;
@@ -128,6 +129,8 @@ final class QuoteIngestionOrchestratorTest extends TestCase
             $sourceLineQuery,
             $sourceLinePersist
         );
+
+        self::assertInstanceOf(QuoteIngestionOrchestratorInterface::class, $orchestrator);
 
         $orchestrator->process('submission-1', 'tenant-1');
     }

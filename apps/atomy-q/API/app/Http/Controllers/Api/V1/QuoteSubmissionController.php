@@ -18,7 +18,7 @@ use App\Models\QuoteSubmission;
 use App\Models\Rfq;
 use App\Models\RfqLineItem;
 use App\Services\QuoteIntake\DecisionTrailRecorder;
-use App\Services\QuoteIntake\QuoteIngestionOrchestrator;
+use App\Services\QuoteIntake\Contracts\QuoteIngestionOrchestratorInterface;
 use App\Services\QuoteIntake\QuoteSubmissionReadinessService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -158,7 +158,7 @@ final class QuoteSubmissionController extends Controller
 
         if ($shouldRunSync) {
             $job = new ProcessQuoteSubmissionJob($submission->id);
-            $job->runSync(app(QuoteIngestionOrchestrator::class));
+            $job->runSync(app(QuoteIngestionOrchestratorInterface::class));
         } else {
             ProcessQuoteSubmissionJob::dispatch($submission->id);
         }

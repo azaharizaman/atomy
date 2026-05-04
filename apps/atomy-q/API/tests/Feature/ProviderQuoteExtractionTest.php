@@ -23,7 +23,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use App\Services\QuoteIntake\QuoteIngestionOrchestrator;
+use App\Services\QuoteIntake\Contracts\QuoteIngestionOrchestratorInterface;
 use Nexus\IntelligenceOperations\DTOs\AiCapabilityStatus;
 use Nexus\IntelligenceOperations\DTOs\AiStatusSchema;
 use Nexus\QuotationIntelligence\Contracts\OrchestratorContentProcessorInterface;
@@ -138,7 +138,7 @@ final class ProviderQuoteExtractionTest extends ApiTestCase
             OpenRouterDocumentExtractionMapper::class,
             OrchestratorContentProcessorInterface::class,
             QuotationIntelligenceCoordinatorInterface::class,
-            QuoteIngestionOrchestrator::class,
+            QuoteIngestionOrchestratorInterface::class,
         ] as $abstract) {
             app()->forgetInstance($abstract);
         }
