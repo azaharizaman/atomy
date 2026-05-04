@@ -86,8 +86,7 @@ This document maps every required API endpoint to the UI screens, elements, and 
 | GET | `/quote-submissions` | Quote Intake Inbox | Data table list | List submissions as data table with filters (status, RFQ, vendor). Columns: File name, Vendor, RFQ, Status (processing/parsed/accepted/rejected/error/pending_assignment), Parse confidence, Uploaded at. |
 | POST | `/quote-submissions/upload` | Quote Intake Inbox | Upload & Parse slide-over | Upload and parse quote file(s) |
 | GET | `/quote-submissions/:id` | Quote Intake Detail (separate screen at `/quote-intake/:id`) | Two-tab detail view | Get full submission detail. Tab 1 (Overview): document/preview reference, vendor details, parse confidence, validation result (quote-level errors/warnings). Tab 2 (Parsed line items): array of lines with id, description, quantity, uom, unitPrice, currency, confidence, rfqLineId, overridden, mappedToRfqLineId, validationWarning — supports expandable rows with manual override/revert. Line-level override/revert may call PUT/DELETE `/normalization/source-lines/:id/override` (Section 8) when the submission is accepted and in normalization state. Clicking a row in the Quote Intake list navigates to this detail screen. |
-| PATCH | `/quote-submissions/:id/status` | Quote Intake Inbox | Accept/Reject buttons | Accept or reject a submission |
-| POST | `/quote-submissions/:id/replace` | Quote Intake Inbox | Replace & Re-Parse slide-over | Replace document and re-parse |
+| PATCH | `/quote-submissions/:id/status` | Quote Intake Inbox | Accept button | Accept a reviewed submission |
 | POST | `/quote-submissions/:id/reparse` | Quote Intake Inbox | Re-Parse button | Re-run extraction on existing file |
 | POST | `/quote-submissions/:id/assign` | Quote Intake Inbox | Assign Document slide-over | Link unassigned document to RFQ/vendor |
 

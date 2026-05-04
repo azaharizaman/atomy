@@ -2,12 +2,21 @@ import { describe, expect, it, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
-import { useQuoteSubmission } from './use-quote-submission';
+import { useQuoteSubmission, useQuoteSubmissionActions } from './use-quote-submission';
 
 const fetchLiveOrFailMock = vi.hoisted(() => vi.fn());
+const patchMock = vi.hoisted(() => vi.fn());
+const postMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/api-live', () => ({
   fetchLiveOrFail: fetchLiveOrFailMock,
+}));
+
+vi.mock('@/lib/api', () => ({
+  api: {
+    patch: patchMock,
+    post: postMock,
+  },
 }));
 
 function wrapper({ children }: { children: React.ReactNode }) {
@@ -63,5 +72,27 @@ describe('useQuoteSubmission', () => {
       parsed_at: undefined,
       retry_count: undefined,
     });
+  });
+});
+
+describe('useQuoteSubmissionActions', () => {
+  it('accepts quote submissions through the status endpoint', async () => {
+    patchMock.mockResolvedValueOnce({ data: { data: { id: 'quote-1', status: 'ready' } } });
+
+    const { result } = renderHook(() => useQuoteSubmissionActions('rfq-1', 'quote-1'), { wrapper });
+
+    await result.current.acceptQuote.mutateAsync();
+
+    expect(patchMock).toHaveBeenCalledWith('/quote-submissions/quote-1/status', { status: 'accepted' });
+  });
+
+  it('reparses quote submissions through the reparse endpoint', async () => {
+    postMock.mockResolvedValueOnce({ data: { data: { id: 'quote-1', status: 'uploaded' } } });
+
+    const { result } = renderHook(() => useQuoteSubmissionActions('rfq-1', 'quote-1'), { wrapper });
+
+    await result.current.reparseQuote.mutateAsync();
+
+    expect(postMock).toHaveBeenCalledWith('/quote-submissions/quote-1/reparse');
   });
 });

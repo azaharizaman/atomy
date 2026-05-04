@@ -27,11 +27,11 @@ export interface VendorRow {
   approvalRecord: VendorApprovalRecord | null;
   createdAt: string;
   updatedAt: string;
-  name: string;
-  tradingName: string;
-  countryCode: string;
-  email: string;
-  phone: string | null;
+  name?: string;
+  tradingName?: string;
+  countryCode?: string;
+  email?: string;
+  phone?: string | null;
 }
 
 export interface VendorListMeta {
@@ -176,45 +176,46 @@ function normalizeVendorRow(row: unknown, index: number): VendorRow {
     throw new Error(`${context}: missing primary_contact_phone`);
   }
 
+  const legalName = requireText(pickField(item, 'legal_name', 'legalName'), 'legal_name', context);
+  const displayName = requireText(pickField(item, 'display_name', 'displayName'), 'display_name', context);
+  const countryOfRegistration = requireText(
+    pickField(item, 'country_of_registration', 'countryOfRegistration'),
+    'country_of_registration',
+    context,
+  );
+  const primaryContactEmail = requireText(
+    pickField(item, 'primary_contact_email', 'primaryContactEmail'),
+    'primary_contact_email',
+    context,
+  );
   const phoneValue = pickField(item, 'phone');
-  if (phoneValue === undefined) {
-    throw new Error(`${context}: missing phone`);
-  }
 
   return {
     id: requireText(pickField(item, 'id'), 'id', context),
-    legalName: requireText(pickField(item, 'legal_name', 'legalName'), 'legal_name', context),
-    displayName: requireText(pickField(item, 'display_name', 'displayName'), 'display_name', context),
+    legalName,
+    displayName,
     registrationNumber: requireText(
       pickField(item, 'registration_number', 'registrationNumber'),
       'registration_number',
       context,
     ),
-    countryOfRegistration: requireText(
-      pickField(item, 'country_of_registration', 'countryOfRegistration'),
-      'country_of_registration',
-      context,
-    ),
+    countryOfRegistration,
     primaryContactName: requireText(
       pickField(item, 'primary_contact_name', 'primaryContactName'),
       'primary_contact_name',
       context,
     ),
-    primaryContactEmail: requireText(
-      pickField(item, 'primary_contact_email', 'primaryContactEmail'),
-      'primary_contact_email',
-      context,
-    ),
+    primaryContactEmail,
     primaryContactPhone: normalizeNullableText(primaryContactPhoneValue, 'primary_contact_phone', context),
     status: normalizeVendorStatus(pickField(item, 'status'), context),
     approvalRecord: normalizeApprovalRecord(approvalRecordValue, context),
     createdAt: requireText(pickField(item, 'created_at', 'createdAt'), 'created_at', context),
     updatedAt: requireText(pickField(item, 'updated_at', 'updatedAt'), 'updated_at', context),
-    name: requireText(pickField(item, 'name'), 'name', context),
-    tradingName: requireText(pickField(item, 'trading_name', 'tradingName'), 'trading_name', context),
-    countryCode: requireText(pickField(item, 'country_code', 'countryCode'), 'country_code', context),
-    email: requireText(pickField(item, 'email'), 'email', context),
-    phone: normalizeNullableText(phoneValue, 'phone', context),
+    name: toText(pickField(item, 'name')),
+    tradingName: toText(pickField(item, 'trading_name', 'tradingName')),
+    countryCode: toText(pickField(item, 'country_code', 'countryCode')),
+    email: toText(pickField(item, 'email')),
+    phone: phoneValue === undefined ? null : normalizeNullableText(phoneValue, 'phone', context),
   };
 }
 
@@ -340,7 +341,8 @@ function extractMessageCandidate(value: unknown): string | null {
 }
 
 export function extractResponseErrorMessage(error: unknown): string {
-  return extractMessageCandidate(error) ?? 'Request failed.';
+  const message = extractMessageCandidate(error);
+  return message ?? 'Request failed.';
 }
 
 async function invokeVendorIndex(filters: VendorListFilters): Promise<VendorListResult> {

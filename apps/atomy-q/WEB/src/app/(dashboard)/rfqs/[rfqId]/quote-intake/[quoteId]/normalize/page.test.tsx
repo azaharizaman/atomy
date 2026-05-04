@@ -97,6 +97,12 @@ async function renderPage() {
 describe('NormalizeQuotePage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useRfq).mockReturnValue({
+      data: { title: 'RFQ', submission_deadline: '2026-04-01T00:00:00.000Z' },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
 
     mockUseNormalizationReview.mockReturnValue({
       conflicts: [],
@@ -255,6 +261,44 @@ describe('NormalizeQuotePage', () => {
     expect(await screen.findByText('Widget A')).toBeInTheDocument();
     expect(screen.getAllByText('$42').length).toBeGreaterThan(0);
     expect(screen.queryByText('$0')).not.toBeInTheDocument();
+  });
+
+  it('presents source lines and mappings in one review table with select all', async () => {
+    await renderPage();
+
+    const table = await screen.findByRole('table', { name: /source line normalization review/i });
+    expect(table).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /select all source lines/i })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /select source line 1/i })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: /select source line 2/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/source line 1/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/rfq line 1/i).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/normalized mapping/i)).not.toBeInTheDocument();
+  });
+
+  it('selects and clears all source lines from the header checkbox', async () => {
+    await renderPage();
+
+    const selectAll = await screen.findByRole('checkbox', { name: /select all source lines/i });
+    const lineOne = screen.getByRole('checkbox', { name: /select source line 1/i });
+    const lineTwo = screen.getByRole('checkbox', { name: /select source line 2/i });
+
+    fireEvent.click(selectAll);
+    expect(lineOne).toBeChecked();
+    expect(lineTwo).toBeChecked();
+
+    fireEvent.click(selectAll);
+    expect(lineOne).not.toBeChecked();
+    expect(lineTwo).not.toBeChecked();
+  });
+
+  it('does not expose raw system identifiers in the review table', async () => {
+    await renderPage();
+
+    const table = await screen.findByRole('table', { name: /source line normalization review/i });
+    expect(table).toHaveTextContent(/source line 1/i);
+    expect(table).not.toHaveTextContent('line-1');
+    expect(table).not.toHaveTextContent('rfq-line-1');
   });
 
   it('renders an explicit unavailable state when source lines fail to load in live mode', async () => {

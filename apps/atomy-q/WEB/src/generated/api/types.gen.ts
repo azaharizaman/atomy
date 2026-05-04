@@ -4555,26 +4555,6 @@ export type QuoteSubmissionUpdateSourceLineResponses = {
 
 export type QuoteSubmissionUpdateSourceLineResponse = QuoteSubmissionUpdateSourceLineResponses[keyof QuoteSubmissionUpdateSourceLineResponses];
 
-export type QuoteSubmissionReplaceData = {
-    body?: never;
-    path: {
-        id: string;
-    };
-    query?: never;
-    url: '/quote-submissions/{id}/replace';
-};
-
-export type QuoteSubmissionReplaceResponses = {
-    200: {
-        data: {
-            id: string;
-            status: 'replaced';
-        };
-    };
-};
-
-export type QuoteSubmissionReplaceResponse = QuoteSubmissionReplaceResponses[keyof QuoteSubmissionReplaceResponses];
-
 export type QuoteSubmissionReparseData = {
     body?: never;
     path: {

@@ -368,20 +368,6 @@ final class QuoteSubmissionController extends Controller
     }
 
     /**
-     * POST /quote-submissions/:id/replace
-     * Scoped by tenant_id.
-     */
-    public function replace(Request $request, string $id): JsonResponse
-    {
-        return response()->json([
-            'data' => [
-                'id' => $id,
-                'status' => 'replaced',
-            ],
-        ]);
-    }
-
-    /**
      * POST /quote-submissions/:id/reparse
      * Scoped by tenant_id.
      */

@@ -1,6 +1,7 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api';
 import { fetchLiveOrFail } from '@/lib/api-live';
 
 export interface QuoteSubmissionSummary {
@@ -88,4 +89,36 @@ export function useQuoteSubmission(quoteId: string, options?: { enabled?: boolea
     },
     enabled,
   });
+}
+
+export function useQuoteSubmissionActions(rfqId: string, quoteId: string) {
+  const qc = useQueryClient();
+
+  function invalidate(): void {
+    qc.invalidateQueries({ queryKey: ['quote-submissions', quoteId] });
+    qc.invalidateQueries({ queryKey: ['quote-submissions', 'list', rfqId] });
+    qc.invalidateQueries({ queryKey: ['normalization-source-lines', rfqId] });
+    qc.invalidateQueries({ queryKey: ['normalization-conflicts', rfqId] });
+    qc.invalidateQueries({ queryKey: ['rfqs', rfqId, 'overview'] });
+  }
+
+  const acceptQuote = useMutation({
+    mutationFn: async () => {
+      const { data } = await api.patch(`/quote-submissions/${encodeURIComponent(quoteId)}/status`, {
+        status: 'accepted',
+      });
+      return data;
+    },
+    onSuccess: invalidate,
+  });
+
+  const reparseQuote = useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post(`/quote-submissions/${encodeURIComponent(quoteId)}/reparse`);
+      return data;
+    },
+    onSuccess: invalidate,
+  });
+
+  return { acceptQuote, reparseQuote };
 }

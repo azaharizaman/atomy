@@ -73,7 +73,6 @@ final class ProtectedEndpointsTest extends ApiTestCase
             ['POST', '/api/v1/quote-submissions/upload', []],
             ['GET', '/api/v1/quote-submissions/quote-1', []],
             ['PATCH', '/api/v1/quote-submissions/quote-1/status', []],
-            ['POST', '/api/v1/quote-submissions/quote-1/replace', []],
             ['POST', '/api/v1/quote-submissions/quote-1/reparse', []],
             ['POST', '/api/v1/quote-submissions/quote-1/assign', []],
 

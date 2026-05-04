@@ -520,8 +520,8 @@ export function ShowcasePage() {
       </aside>
 
       {/* ── Main Content ── */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-8 py-8">
+      <main className="flex-1 overflow-y-auto p-3">
+        <div className="min-h-full w-full border border-slate-200 bg-white px-6 py-6">
 
           {/* ═══════════════════════════════════════════════════════════
               FOUNDATION
@@ -2440,33 +2440,33 @@ export function ShowcasePage() {
                           <table className="w-full text-xs">
                             <thead>
                               <tr className="bg-slate-50 border-b border-slate-200">
-                                <th className="w-8 pl-3 py-2.5 text-left text-slate-500 font-medium"></th>
-                                <th className="w-8 py-2.5"></th>
-                                <th className="px-3 py-2.5 text-left text-slate-500 font-medium">ID</th>
-                                <th className="px-3 py-2.5 text-left text-slate-500 font-medium">RFQ</th>
-                                <th className="px-3 py-2.5 text-left text-slate-500 font-medium">Status</th>
-                                <th className="px-3 py-2.5 text-left text-slate-500 font-medium">Deadline</th>
-                                <th className="px-3 py-2.5 text-right text-slate-500 font-medium">Est. Value</th>
+                                <th className="w-8 pl-3 py-2.5 align-top text-left text-slate-500 font-medium"></th>
+                                <th className="w-8 py-2.5 align-top"></th>
+                                <th className="px-3 py-2.5 align-top text-left text-slate-500 font-medium">ID</th>
+                                <th className="px-3 py-2.5 align-top text-left text-slate-500 font-medium">RFQ</th>
+                                <th className="px-3 py-2.5 align-top text-left text-slate-500 font-medium">Status</th>
+                                <th className="px-3 py-2.5 align-top text-left text-slate-500 font-medium">Deadline</th>
+                                <th className="px-3 py-2.5 align-top text-right text-slate-500 font-medium">Est. Value</th>
                               </tr>
                             </thead>
                             <tbody>
                               {RFQ_ROWS.slice(0, 5).map((row, i) => (
                                 <React.Fragment key={row.id}>
                                   <tr className={`border-b border-slate-100 ${i < 2 ? 'bg-indigo-50/50' : ''}`}>
-                                    <td className="pl-3 py-0 h-11"><div className="w-3 h-3 rounded border border-slate-300 bg-white" /></td>
-                                    <td className="py-0 pl-2"><div className={`w-4 h-4 flex items-center justify-center text-slate-400`}><ChevronRight size={11} className={i === 0 ? 'rotate-90' : ''} /></div></td>
-                                    <td className="px-3 py-0 font-mono text-slate-600">{row.rfqId}</td>
-                                    <td className="px-3 py-0">
+                                    <td className="pl-3 py-0 h-11 align-top"><div className="w-3 h-3 rounded border border-slate-300 bg-white" /></td>
+                                    <td className="py-0 pl-2 align-top"><div className={`w-4 h-4 flex items-center justify-center text-slate-400`}><ChevronRight size={11} className={i === 0 ? 'rotate-90' : ''} /></div></td>
+                                    <td className="px-3 py-0 align-top font-mono text-slate-600">{row.rfqId}</td>
+                                    <td className="px-3 py-0 align-top">
                                       <div className="text-slate-800 font-medium">{row.title}</div>
                                       <div className="text-slate-400">{row.owner}</div>
                                     </td>
-                                    <td className="px-3 py-0"><StatusBadge status={row.status} size="xs" /></td>
-                                    <td className="px-3 py-0 text-slate-600">{row.deadline}</td>
-                                    <td className="px-3 py-0 text-right font-medium text-slate-800">{row.estValue}</td>
+                                    <td className="px-3 py-0 align-top"><StatusBadge status={row.status} size="xs" /></td>
+                                    <td className="px-3 py-0 align-top text-slate-600">{row.deadline}</td>
+                                    <td className="px-3 py-0 align-top text-right font-medium text-slate-800">{row.estValue}</td>
                                   </tr>
                                   {i === 0 && (
                                     <tr className="border-b border-slate-200">
-                                      <td colSpan={7}>
+                                      <td colSpan={7} className="align-top">
                                         <div className="grid grid-cols-6 gap-3 px-4 py-2.5 bg-slate-50 text-[10px]">
                                           {[
                                             { l: 'Category', v: row.category },
@@ -2702,5 +2702,3 @@ export function ShowcasePage() {
     </div>
   );
 }
-
-
