@@ -4,6 +4,7 @@ import React from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { ProgressBar } from './Progress';
 import { CircularProgress } from './Progress';
+import { formatCompactMetricValue } from '@/lib/format-compact-metric';
 
 type TrendDirection = 'up' | 'down' | 'neutral';
 type ProgressType = 'bar' | 'circular' | 'none';
@@ -41,6 +42,10 @@ export function KPIScorecard({
   className = '',
   highlight = false,
 }: KPIScorecardProps) {
+  const displayValue = typeof value === 'number' || typeof value === 'string'
+    ? formatCompactMetricValue(value)
+    : value;
+
   return (
     <div
       onClick={onClick}
@@ -72,7 +77,7 @@ export function KPIScorecard({
 
       <div className="flex items-end justify-between gap-3">
         <div>
-          <div className="text-2xl font-semibold text-slate-900 leading-none">{value}</div>
+          <div className="text-2xl font-semibold text-slate-900 leading-none">{displayValue}</div>
           {subtitle != null && <div className="text-xs text-slate-500 mt-1 leading-tight">{subtitle}</div>}
         </div>
 

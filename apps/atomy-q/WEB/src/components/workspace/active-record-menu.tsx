@@ -12,6 +12,7 @@ import { isAlphaMode, isRfqSectionVisibleInAlpha } from '@/lib/alpha-mode';
 import { type RfqStatus } from '@/hooks/use-rfqs';
 import { useRfqPendingApprovalCount } from '@/hooks/use-approvals';
 import { MetricChip } from './metric-chip';
+import { formatCompactCount, formatCompactCurrency, formatCompactPercent } from '@/lib/format-compact-metric';
 
 export interface ActiveRfqRecord {
   id: string;
@@ -75,10 +76,10 @@ export function ActiveRecordMenu({ record }: { record: ActiveRfqRecord }) {
         </div>
 
         <div className="mt-3 flex flex-wrap gap-2">
-          <MetricChip label="Vendors" value={record.vendorsCount} />
-          <MetricChip label="Quotes" value={record.quotesCount} />
-          <MetricChip label="Est.Value" value={record.estValue} />
-          <MetricChip label="Savings" value={record.savings} />
+          <MetricChip label="Vendors" value={formatCompactCount(record.vendorsCount)} />
+          <MetricChip label="Quotes" value={formatCompactCount(record.quotesCount)} />
+          <MetricChip label="Est.Value" value={formatCompactCurrency(record.estValue)} />
+          <MetricChip label="Savings" value={formatCompactPercent(record.savings)} />
         </div>
 
         <div className="mt-3">

@@ -17,7 +17,7 @@ import { useRouter } from 'next/navigation';
 import { AiNarrativePanel } from '@/components/ai/ai-narrative-panel';
 import { useDashboardAiSummary } from '@/hooks/use-dashboard-ai-summary';
 import { fetchLiveOrFail } from '@/lib/api-live';
-import { formatCurrencyValue } from '@/lib/format-currency';
+import { formatCompactCurrency } from '@/lib/format-compact-metric';
 import {
   ActivitySummaryCard,
   type ActivitySummaryItem,
@@ -86,7 +86,7 @@ export default function DashboardPage() {
         return {
           active_rfqs: 12,
           pending_approvals: 5,
-          total_savings: '$1.2M',
+          total_savings: 1_200_000,
           avg_cycle_time_days: '14 days',
         } satisfies DashboardKpis;
       }
@@ -126,7 +126,7 @@ export default function DashboardPage() {
   };
 
   const savingsValue =
-    formatCurrencyValue(kpis?.total_savings, 'USD') ?? '$0';
+    formatCompactCurrency(kpis?.total_savings ?? 0, 'USD');
 
   const approvals: PendingApprovalItem[] = [];
 

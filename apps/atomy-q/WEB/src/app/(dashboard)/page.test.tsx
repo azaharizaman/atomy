@@ -122,6 +122,6 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Quotes In Intake')).toBeInTheDocument();
     expect(screen.getByText('2')).toBeInTheDocument();
     expect(screen.getByText('Awards In Flight')).toBeInTheDocument();
-    expect(screen.getByText('$4,308,228.53')).toBeInTheDocument();
+    expect(screen.getByText('$4.3M')).toBeInTheDocument();
   });
 });

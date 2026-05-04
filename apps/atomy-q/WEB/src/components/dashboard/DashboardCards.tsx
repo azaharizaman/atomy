@@ -4,6 +4,7 @@ import React from 'react';
 import { AlertTriangle, ChevronRight, Clock, TrendingUp } from 'lucide-react';
 import { Card } from '@/components/ds/Card';
 import { Button } from '@/components/ds/Button';
+import { formatCompactCount, formatCompactCurrency } from '@/lib/format-compact-metric';
 
 // ─── Pipeline Stat Card ───────────────────────────────────────────────────────
 
@@ -28,7 +29,7 @@ export function PipelineStatCard({ label, count, icon, onClick, className = '' }
       <div className="flex items-center gap-3">
         {icon && <div className="text-slate-400">{icon}</div>}
         <div>
-          <p className="text-2xl font-semibold text-slate-900">{count}</p>
+          <p className="text-2xl font-semibold text-slate-900">{formatCompactCount(count)}</p>
           <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{label}</p>
         </div>
       </div>
@@ -245,7 +246,7 @@ export function CategoryBreakdownCard({ items, title = 'By Category', maxItems =
           <div key={item.category}>
             <div className="flex items-center justify-between text-xs mb-1">
               <span className="font-medium text-slate-700">{item.category}</span>
-              <span className="text-slate-500">{item.estValue} · {item.count} RFQs</span>
+              <span className="text-slate-500">{formatCompactCurrency(item.estValue)} · {formatCompactCount(item.count)} RFQs</span>
             </div>
             <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
               <div
