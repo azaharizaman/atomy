@@ -17,4 +17,4 @@
 | `adapters/Laravel/Setting` | `nexus/laravel-setting-adapter` | `azaharizaman/nexus-laravel-setting-adapter` | `nexus-laravel-setting-adapter` |
 | `adapters/Laravel/Sourcing` | `nexus/laravel-sourcing-adapter` | `azaharizaman/nexus-laravel-sourcing-adapter` | `nexus-laravel-sourcing-adapter` |
 | `adapters/Laravel/Tenant` | `nexus/laravel-tenant-adapter` | `azaharizaman/nexus-laravel-tenant-adapter` | `nexus-laravel-tenant-adapter` |
-| `adapters/Laravel/Vendor` | `nexus/vendor-laravel-adapter` | `azaharizaman/nexus-vendor-laravel-adapter` | `nexus-vendor-laravel-adapter` |
+| `adapters/Laravel/Vendor` | `nexus/laravel-vendor-adapter` | `azaharizaman/nexus-laravel-vendor-adapter` | `nexus-laravel-vendor-adapter` |

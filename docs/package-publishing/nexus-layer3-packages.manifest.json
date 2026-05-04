@@ -1,5 +1,5 @@
 {
-    "generated_at": "2026-05-04T22:43:34+00:00",
+    "generated_at": "2026-05-04T22:49:03+00:00",
     "packagist_vendor": "azaharizaman",
     "github_owner": "azaharizaman",
     "package_count": 16,
@@ -7,7 +7,7 @@
         {
             "path": "adapters/Laravel/ApprovalOperations",
             "composer": "adapters/Laravel/ApprovalOperations/composer.json",
-            "current_name": "nexus/laravel-approval-operations-adapter",
+            "current_name": "azaharizaman/nexus-laravel-approval-operations-adapter",
             "old_name": "nexus/laravel-approval-operations-adapter",
             "new_name": "azaharizaman/nexus-laravel-approval-operations-adapter",
             "github_owner": "azaharizaman",
@@ -20,7 +20,7 @@
         {
             "path": "adapters/Laravel/AuditLogger",
             "composer": "adapters/Laravel/AuditLogger/composer.json",
-            "current_name": "nexus/laravel-auditlogger-adapter",
+            "current_name": "azaharizaman/nexus-laravel-auditlogger-adapter",
             "old_name": "nexus/laravel-auditlogger-adapter",
             "new_name": "azaharizaman/nexus-laravel-auditlogger-adapter",
             "github_owner": "azaharizaman",
@@ -33,7 +33,7 @@
         {
             "path": "adapters/Laravel/ConnectivityOperations",
             "composer": "adapters/Laravel/ConnectivityOperations/composer.json",
-            "current_name": "nexus/laravel-connectivity-operations-adapter",
+            "current_name": "azaharizaman/nexus-laravel-connectivity-operations-adapter",
             "old_name": "nexus/laravel-connectivity-operations-adapter",
             "new_name": "azaharizaman/nexus-laravel-connectivity-operations-adapter",
             "github_owner": "azaharizaman",
@@ -46,7 +46,7 @@
         {
             "path": "adapters/Laravel/DataExchangeOperations",
             "composer": "adapters/Laravel/DataExchangeOperations/composer.json",
-            "current_name": "nexus/laravel-data-exchange-operations-adapter",
+            "current_name": "azaharizaman/nexus-laravel-data-exchange-operations-adapter",
             "old_name": "nexus/laravel-data-exchange-operations-adapter",
             "new_name": "azaharizaman/nexus-laravel-data-exchange-operations-adapter",
             "github_owner": "azaharizaman",
@@ -59,7 +59,7 @@
         {
             "path": "adapters/Laravel/FeatureFlags",
             "composer": "adapters/Laravel/FeatureFlags/composer.json",
-            "current_name": "nexus/laravel-featureflags-adapter",
+            "current_name": "azaharizaman/nexus-laravel-featureflags-adapter",
             "old_name": "nexus/laravel-featureflags-adapter",
             "new_name": "azaharizaman/nexus-laravel-featureflags-adapter",
             "github_owner": "azaharizaman",
@@ -72,7 +72,7 @@
         {
             "path": "adapters/Laravel/Idempotency",
             "composer": "adapters/Laravel/Idempotency/composer.json",
-            "current_name": "nexus/laravel-idempotency-adapter",
+            "current_name": "azaharizaman/nexus-laravel-idempotency-adapter",
             "old_name": "nexus/laravel-idempotency-adapter",
             "new_name": "azaharizaman/nexus-laravel-idempotency-adapter",
             "github_owner": "azaharizaman",
@@ -85,7 +85,7 @@
         {
             "path": "adapters/Laravel/Identity",
             "composer": "adapters/Laravel/Identity/composer.json",
-            "current_name": "nexus/laravel-identity-adapter",
+            "current_name": "azaharizaman/nexus-laravel-identity-adapter",
             "old_name": "nexus/laravel-identity-adapter",
             "new_name": "azaharizaman/nexus-laravel-identity-adapter",
             "github_owner": "azaharizaman",
@@ -98,7 +98,7 @@
         {
             "path": "adapters/Laravel/InsightOperations",
             "composer": "adapters/Laravel/InsightOperations/composer.json",
-            "current_name": "nexus/laravel-insight-operations-adapter",
+            "current_name": "azaharizaman/nexus-laravel-insight-operations-adapter",
             "old_name": "nexus/laravel-insight-operations-adapter",
             "new_name": "azaharizaman/nexus-laravel-insight-operations-adapter",
             "github_owner": "azaharizaman",
@@ -111,7 +111,7 @@
         {
             "path": "adapters/Laravel/IntelligenceOperations",
             "composer": "adapters/Laravel/IntelligenceOperations/composer.json",
-            "current_name": "nexus/laravel-intelligence-operations-adapter",
+            "current_name": "azaharizaman/nexus-laravel-intelligence-operations-adapter",
             "old_name": "nexus/laravel-intelligence-operations-adapter",
             "new_name": "azaharizaman/nexus-laravel-intelligence-operations-adapter",
             "github_owner": "azaharizaman",
@@ -124,7 +124,7 @@
         {
             "path": "adapters/Laravel/Monitoring",
             "composer": "adapters/Laravel/Monitoring/composer.json",
-            "current_name": "nexus/laravel-monitoring-adapter",
+            "current_name": "azaharizaman/nexus-laravel-monitoring-adapter",
             "old_name": "nexus/laravel-monitoring-adapter",
             "new_name": "azaharizaman/nexus-laravel-monitoring-adapter",
             "github_owner": "azaharizaman",
@@ -137,7 +137,7 @@
         {
             "path": "adapters/Laravel/Notifier",
             "composer": "adapters/Laravel/Notifier/composer.json",
-            "current_name": "nexus/laravel-notifier-adapter",
+            "current_name": "azaharizaman/nexus-laravel-notifier-adapter",
             "old_name": "nexus/laravel-notifier-adapter",
             "new_name": "azaharizaman/nexus-laravel-notifier-adapter",
             "github_owner": "azaharizaman",
@@ -150,7 +150,7 @@
         {
             "path": "adapters/Laravel/Sales",
             "composer": "adapters/Laravel/Sales/composer.json",
-            "current_name": "nexus/laravel-sales",
+            "current_name": "azaharizaman/nexus-laravel-sales",
             "old_name": "nexus/laravel-sales",
             "new_name": "azaharizaman/nexus-laravel-sales",
             "github_owner": "azaharizaman",
@@ -163,7 +163,7 @@
         {
             "path": "adapters/Laravel/Setting",
             "composer": "adapters/Laravel/Setting/composer.json",
-            "current_name": "nexus/laravel-setting-adapter",
+            "current_name": "azaharizaman/nexus-laravel-setting-adapter",
             "old_name": "nexus/laravel-setting-adapter",
             "new_name": "azaharizaman/nexus-laravel-setting-adapter",
             "github_owner": "azaharizaman",
@@ -176,7 +176,7 @@
         {
             "path": "adapters/Laravel/Sourcing",
             "composer": "adapters/Laravel/Sourcing/composer.json",
-            "current_name": "nexus/laravel-sourcing-adapter",
+            "current_name": "azaharizaman/nexus-laravel-sourcing-adapter",
             "old_name": "nexus/laravel-sourcing-adapter",
             "new_name": "azaharizaman/nexus-laravel-sourcing-adapter",
             "github_owner": "azaharizaman",
@@ -189,7 +189,7 @@
         {
             "path": "adapters/Laravel/Tenant",
             "composer": "adapters/Laravel/Tenant/composer.json",
-            "current_name": "nexus/laravel-tenant-adapter",
+            "current_name": "azaharizaman/nexus-laravel-tenant-adapter",
             "old_name": "nexus/laravel-tenant-adapter",
             "new_name": "azaharizaman/nexus-laravel-tenant-adapter",
             "github_owner": "azaharizaman",
@@ -202,12 +202,12 @@
         {
             "path": "adapters/Laravel/Vendor",
             "composer": "adapters/Laravel/Vendor/composer.json",
-            "current_name": "nexus/vendor-laravel-adapter",
-            "old_name": "nexus/vendor-laravel-adapter",
-            "new_name": "azaharizaman/nexus-vendor-laravel-adapter",
+            "current_name": "azaharizaman/nexus-laravel-vendor-adapter",
+            "old_name": "nexus/laravel-vendor-adapter",
+            "new_name": "azaharizaman/nexus-laravel-vendor-adapter",
             "github_owner": "azaharizaman",
-            "github_repo": "nexus-vendor-laravel-adapter",
-            "github_url": "https://github.com/azaharizaman/nexus-vendor-laravel-adapter",
+            "github_repo": "nexus-laravel-vendor-adapter",
+            "github_url": "https://github.com/azaharizaman/nexus-laravel-vendor-adapter",
             "description": "Laravel adapter for Nexus Vendor (Layer 3): Eloquent models and repository.",
             "type": "library",
             "license": "MIT"

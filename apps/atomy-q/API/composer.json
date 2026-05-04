@@ -88,7 +88,7 @@
         "nexus/tenant-operations": "*@dev",
         "azaharizaman/nexus-uom": "*@dev",
         "azaharizaman/nexus-vendor": "*@dev",
-        "azaharizaman/nexus-vendor-laravel-adapter": "*@dev",
+        "azaharizaman/nexus-laravel-vendor-adapter": "*@dev",
         "azaharizaman/nexus-workflow": "*@dev"
     },
     "require-dev": {
