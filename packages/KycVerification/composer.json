@@ -1,5 +1,5 @@
 {
-    "name": "nexus/kyc-verification",
+    "name": "azaharizaman/nexus-kyc-verification",
     "description": "Know Your Customer (KYC) identity verification and customer due diligence with UBO tracking - atomic, framework-agnostic package",
     "type": "library",
     "license": "MIT",
@@ -23,7 +23,7 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/common": "*@dev",
+        "azaharizaman/nexus-common": "*@dev",
         "psr/log": "^3.0"
     },
     "require-dev": {

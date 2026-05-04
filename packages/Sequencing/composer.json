@@ -1,5 +1,5 @@
 {
-    "name": "nexus/sequencing",
+    "name": "azaharizaman/nexus-sequencing",
     "description": "Framework-agnostic auto-numbering system with pattern-based generation, counter management, and atomic locking",
     "type": "library",
     "license": "MIT",

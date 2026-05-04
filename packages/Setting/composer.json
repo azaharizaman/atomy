@@ -1,5 +1,5 @@
 {
-    "name": "nexus/setting",
+    "name": "azaharizaman/nexus-setting",
     "description": "Framework-agnostic settings management engine with hierarchical resolution across user, tenant, and application layers",
     "type": "library",
     "license": "MIT",

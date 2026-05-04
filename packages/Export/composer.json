@@ -1,5 +1,5 @@
 {
-    "name": "nexus/export",
+    "name": "azaharizaman/nexus-export",
     "description": "Framework-agnostic export/output rendering engine for ERP system",
     "type": "library",
     "license": "MIT",

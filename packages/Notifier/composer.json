@@ -1,5 +1,5 @@
 {
-    "name": "nexus/notifier",
+    "name": "azaharizaman/nexus-notifier",
     "description": "Framework-agnostic notification engine for multi-channel communication (Email, SMS, Push, In-App)",
     "type": "library",
     "license": "MIT",

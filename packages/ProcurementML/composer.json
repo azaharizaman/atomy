@@ -1,5 +1,5 @@
 {
-    "name": "nexus/procurement-ml",
+    "name": "azaharizaman/nexus-procurement-ml",
     "description": "Machine learning feature extractors for procurement analytics - predictive models for vendor fraud detection, pricing anomalies, budget overruns, and delivery quality",
     "type": "library",
     "license": "MIT",
@@ -12,11 +12,11 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/machine-learning": "*@dev",
-        "nexus/scheduler": "*@dev"
+        "azaharizaman/nexus-machine-learning": "*@dev",
+        "azaharizaman/nexus-scheduler": "*@dev"
     },
     "suggest": {
-        "nexus/procurement": "Required for type definitions (PurchaseOrderInterface, RequisitionInterface, etc.)"
+        "azaharizaman/nexus-procurement": "Required for type definitions (PurchaseOrderInterface, RequisitionInterface, etc.)"
     },
     "autoload": {
         "psr-4": {

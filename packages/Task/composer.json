@@ -1,11 +1,11 @@
 {
-    "name": "nexus/task",
+    "name": "azaharizaman/nexus-task",
     "description": "Task entity, assignment, dependencies and schedule calculation (Gantt-support). Reusable across projects, support, campaigns.",
     "type": "library",
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "nexus/common": "*@dev",
+        "azaharizaman/nexus-common": "*@dev",
         "psr/log": "^3.0"
     },
     "require-dev": {

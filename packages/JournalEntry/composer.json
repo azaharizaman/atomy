@@ -1,5 +1,5 @@
 {
-    "name": "nexus/journal-entry",
+    "name": "azaharizaman/nexus-journal-entry",
     "description": "Framework-agnostic journal entry management for general ledger systems",
     "type": "library",
     "license": "MIT",
@@ -21,7 +21,7 @@
     "require": {
         "php": "^8.3",
         "ext-bcmath": "*",
-        "nexus/common": "*@dev",
+        "azaharizaman/nexus-common": "*@dev",
         "psr/log": "^3.0"
     },
     "require-dev": {

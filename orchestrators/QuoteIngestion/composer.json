@@ -21,7 +21,7 @@
     "require": {
         "php": "^8.3",
         "nexus/quotation-intelligence": "*@dev",
-        "nexus/tenant": "*@dev",
+        "azaharizaman/nexus-tenant": "*@dev",
         "psr/log": "^3.0"
     },
     "require-dev": {

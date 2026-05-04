@@ -1,6 +1,6 @@
 {
-    "name": "nexus/fixed-asset-depreciation",
-    "description": "Framework-agnostic fixed asset depreciation calculation engine with progressive delivery (SB→MB→LE)",
+    "name": "azaharizaman/nexus-fixed-asset-depreciation",
+    "description": "Framework-agnostic fixed asset depreciation calculation engine with progressive delivery (SB\u2192MB\u2192LE)",
     "type": "library",
     "license": "MIT",
     "autoload": {
@@ -14,10 +14,10 @@
     },
     "suggest": {
         "nexus/finance": "For GL posting of depreciation entries",
-        "nexus/tax": "For tax depreciation calculations (differs from book depreciation)",
-        "nexus/currency": "For multi-currency asset depreciation",
-        "nexus/audit": "For audit trail of depreciation calculations",
-        "nexus/setting": "For tier configuration"
+        "azaharizaman/nexus-tax": "For tax depreciation calculations (differs from book depreciation)",
+        "azaharizaman/nexus-currency": "For multi-currency asset depreciation",
+        "azaharizaman/nexus-audit": "For audit trail of depreciation calculations",
+        "azaharizaman/nexus-setting": "For tier configuration"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

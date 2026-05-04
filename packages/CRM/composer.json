@@ -1,5 +1,5 @@
 {
-    "name": "nexus/crm",
+    "name": "azaharizaman/nexus-crm",
     "description": "Pure CRM domain logic package with zero business package dependencies for Nexus ERP",
     "type": "library",
     "license": "MIT",

@@ -1,10 +1,10 @@
 {
-    "name": "nexus/tax",
+    "name": "azaharizaman/nexus-tax",
     "description": "Framework-agnostic tax calculation engine with multi-jurisdiction support, temporal rate resolution, hierarchical tax structure, reverse charge mechanism, economic nexus determination, partial exemptions, and place-of-supply rules for cross-border services",
     "type": "library",
     "license": "MIT",
     "require": {
-        "nexus/common": "*@dev",
+        "azaharizaman/nexus-common": "*@dev",
         "php": "^8.3",
         "psr/cache": "^3.0",
         "psr/log": "^3.0"
@@ -25,13 +25,13 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "suggest": {
-        "nexus/accounting": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/audit-logger": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/geo": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/party": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/product": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/storage": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/telemetry": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/tenant": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-accounting": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-audit-logger": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-geo": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-party": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-product": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-storage": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-telemetry": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-tenant": "Optional integration dependency; currently not referenced by package src."
     }
 }

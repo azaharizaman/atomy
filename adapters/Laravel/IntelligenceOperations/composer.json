@@ -8,9 +8,9 @@
         "illuminate/support": "^11.0|^12.0",
         "illuminate/cache": "^11.0|^12.0",
         "nexus/intelligence-operations": "*@dev",
-        "nexus/machine-learning": "*@dev",
-        "nexus/query-engine": "*@dev",
-        "nexus/telemetry": "*@dev",
+        "azaharizaman/nexus-machine-learning": "*@dev",
+        "azaharizaman/nexus-query-engine": "*@dev",
+        "azaharizaman/nexus-telemetry": "*@dev",
         "psr/log": "^3.0"
     },
     "autoload": {

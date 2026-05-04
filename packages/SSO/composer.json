@@ -1,6 +1,6 @@
 {
-    "name": "nexus/sso",
-    "description": "⚠️ PENDING: Framework-agnostic Single Sign-On package for Nexus ERP",
+    "name": "azaharizaman/nexus-sso",
+    "description": "\u26a0\ufe0f PENDING: Framework-agnostic Single Sign-On package for Nexus ERP",
     "type": "library",
     "license": "MIT",
     "autoload": {

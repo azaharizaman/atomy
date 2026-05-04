@@ -1,5 +1,5 @@
 {
-    "name": "nexus/sanctions",
+    "name": "azaharizaman/nexus-sanctions",
     "description": "Regulatory screening engine for sanctions lists (OFAC, UN, EU, UK HMT) and PEP detection with fuzzy matching",
     "type": "library",
     "license": "MIT",
@@ -21,7 +21,7 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/common": "*@dev",
+        "azaharizaman/nexus-common": "*@dev",
         "psr/log": "^3.0"
     },
     "require-dev": {

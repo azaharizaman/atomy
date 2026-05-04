@@ -1,5 +1,5 @@
 {
-    "name": "nexus/vendor",
+    "name": "azaharizaman/nexus-vendor",
     "description": "Vendor master domain for Nexus ERP ecosystem",
     "type": "library",
     "license": "MIT",

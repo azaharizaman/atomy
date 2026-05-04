@@ -1,5 +1,5 @@
 {
-    "name": "nexus/event-stream",
+    "name": "azaharizaman/nexus-event-stream",
     "description": "Nexus EventStream Package - Event sourcing for critical domains (Finance GL, Inventory)",
     "type": "library",
     "license": "MIT",

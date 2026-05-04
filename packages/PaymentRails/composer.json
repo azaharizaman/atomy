@@ -1,5 +1,5 @@
 {
-    "name": "nexus/payment-rails",
+    "name": "azaharizaman/nexus-payment-rails",
     "description": "Payment rails extension providing ACH, Wire, Check, RTGS, and other payment network implementations",
     "type": "library",
     "license": "MIT",
@@ -19,7 +19,7 @@
         }
     ],
     "require": {
-        "nexus/common": "^1.0",
+        "azaharizaman/nexus-common": "^1.0",
         "php": "^8.3",
         "psr/log": "^3.0"
     },
@@ -44,6 +44,6 @@
         "sort-packages": true
     },
     "suggest": {
-        "nexus/payment": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-payment": "Optional integration dependency; currently not referenced by package src."
     }
 }

@@ -1,5 +1,5 @@
 {
-    "name": "nexus/product",
+    "name": "azaharizaman/nexus-product",
     "description": "Framework-agnostic product catalog management with template-variant architecture, SKU generation, and barcode handling",
     "type": "library",
     "license": "MIT",
@@ -12,8 +12,8 @@
     "require": {
         "php": "^8.3",
         "psr/log": "^3.0",
-        "nexus/uom": "*@dev",
-        "nexus/sequencing": "*@dev"
+        "azaharizaman/nexus-uom": "*@dev",
+        "azaharizaman/nexus-sequencing": "*@dev"
     },
     "autoload": {
         "psr-4": {

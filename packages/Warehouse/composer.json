@@ -1,5 +1,5 @@
 {
-    "name": "nexus/warehouse",
+    "name": "azaharizaman/nexus-warehouse",
     "description": "Framework-agnostic warehouse management for Nexus ERP",
     "type": "library",
     "license": "MIT",
@@ -9,13 +9,13 @@
         }
     },
     "require": {
-        "nexus/routing": "*@dev",
+        "azaharizaman/nexus-routing": "*@dev",
         "php": "^8.3",
         "psr/log": "^3.0"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
     "suggest": {
-        "nexus/inventory": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-inventory": "Optional integration dependency; currently not referenced by package src."
     }
 }

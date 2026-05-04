@@ -1,5 +1,5 @@
 {
-    "name": "nexus/audit-logger",
+    "name": "azaharizaman/nexus-audit-logger",
     "description": "Framework-agnostic audit logging package for tracking CRUD operations and system activities",
     "type": "library",
     "license": "MIT",

@@ -1,5 +1,5 @@
 {
-    "name": "nexus/data-processor",
+    "name": "azaharizaman/nexus-data-processor",
     "description": "Nexus DataProcessor Package - Contracts for OCR, ETL, and document processing",
     "type": "library",
     "license": "MIT",

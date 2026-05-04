@@ -1,5 +1,5 @@
 {
-    "name": "nexus/financial-ratios",
+    "name": "azaharizaman/nexus-financial-ratios",
     "description": "Financial ratio calculations including liquidity, profitability, leverage, and efficiency ratios",
     "type": "library",
     "license": "MIT",
@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/common": "^1.0"
+        "azaharizaman/nexus-common": "^1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.0"

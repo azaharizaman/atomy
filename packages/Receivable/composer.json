@@ -1,5 +1,5 @@
 {
-    "name": "nexus/receivable",
+    "name": "azaharizaman/nexus-receivable",
     "description": "Accounts Receivable (A/R) package for Nexus ERP - manages customer invoicing, payment receipts, credit control, and collections",
     "type": "library",
     "license": "MIT",
@@ -9,7 +9,7 @@
         }
     },
     "require": {
-        "nexus/currency": "*@dev",
+        "azaharizaman/nexus-currency": "*@dev",
         "php": "^8.3",
         "psr/log": "^3.0"
     },
@@ -21,11 +21,11 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "suggest": {
-        "nexus/accounting": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/audit-logger": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/party": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/period": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/sales": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/sequencing": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-accounting": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-audit-logger": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-party": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-period": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-sales": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-sequencing": "Optional integration dependency; currently not referenced by package src."
     }
 }

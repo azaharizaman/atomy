@@ -1,9 +1,15 @@
 {
-    "name": "nexus/training-management",
+    "name": "azaharizaman/nexus-training-management",
     "description": "Training courses, enrollments, trainers, and certification tracking for employee development",
     "type": "library",
     "license": "MIT",
-    "keywords": ["hrm", "training", "courses", "certification", "learning"],
+    "keywords": [
+        "hrm",
+        "training",
+        "courses",
+        "certification",
+        "learning"
+    ],
     "require": {
         "php": "^8.3"
     },

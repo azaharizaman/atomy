@@ -1,5 +1,5 @@
 {
-    "name": "nexus/sales",
+    "name": "azaharizaman/nexus-sales",
     "description": "Framework-agnostic sales management package for quotation-to-order lifecycle",
     "type": "library",
     "license": "MIT",
@@ -14,16 +14,16 @@
         "psr/log": "^3.0"
     },
     "suggest": {
-        "nexus/party": "Required for customer data integration",
-        "nexus/product": "Required for product variant data",
-        "nexus/uom": "Required for unit of measure handling",
-        "nexus/currency": "Required for exchange rate locking",
+        "azaharizaman/nexus-party": "Required for customer data integration",
+        "azaharizaman/nexus-product": "Required for product variant data",
+        "azaharizaman/nexus-uom": "Required for unit of measure handling",
+        "azaharizaman/nexus-currency": "Required for exchange rate locking",
         "nexus/finance": "Required for financial calculations",
-        "nexus/sequencing": "Required for order number generation",
-        "nexus/period": "Required for period management",
-        "nexus/audit-logger": "Required for audit trail",
-        "nexus/inventory": "Required for stock reservation",
-        "nexus/receivable": "Required for credit checking and invoice generation"
+        "azaharizaman/nexus-sequencing": "Required for order number generation",
+        "azaharizaman/nexus-period": "Required for period management",
+        "azaharizaman/nexus-audit-logger": "Required for audit trail",
+        "azaharizaman/nexus-inventory": "Required for stock reservation",
+        "azaharizaman/nexus-receivable": "Required for credit checking and invoice generation"
     },
     "autoload": {
         "psr-4": {

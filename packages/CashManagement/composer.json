@@ -1,5 +1,5 @@
 {
-    "name": "nexus/cash-management",
+    "name": "azaharizaman/nexus-cash-management",
     "description": "Atomic package for managing bank accounts, bank statement imports, cash reconciliation, and liquidity forecasting",
     "type": "library",
     "license": "MIT",
@@ -16,8 +16,8 @@
     },
     "require-dev": {
         "phpunit/phpunit": "^11.0",
-        "nexus/machine-learning": "*@dev",
-        "nexus/query-engine": "*@dev"
+        "azaharizaman/nexus-machine-learning": "*@dev",
+        "azaharizaman/nexus-query-engine": "*@dev"
     },
     "autoload": {
         "psr-4": {
@@ -32,13 +32,13 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "suggest": {
-        "nexus/currency": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/import": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/payable": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/period": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/receivable": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/sequencing": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/setting": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/workflow": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-currency": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-import": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-payable": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-period": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-receivable": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-sequencing": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-setting": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-workflow": "Optional integration dependency; currently not referenced by package src."
     }
 }

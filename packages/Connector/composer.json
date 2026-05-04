@@ -1,5 +1,5 @@
 {
-    "name": "nexus/connector",
+    "name": "azaharizaman/nexus-connector",
     "description": "Framework-agnostic integration hub for external API communication with retry, circuit breaker, and rate limiting support",
     "type": "library",
     "license": "MIT",

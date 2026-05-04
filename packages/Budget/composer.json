@@ -1,5 +1,5 @@
 {
-    "name": "nexus/budget",
+    "name": "azaharizaman/nexus-budget",
     "description": "Financial budget management and control plane for Nexus ERP",
     "type": "library",
     "version": "1.0.0",
@@ -11,16 +11,16 @@
         }
     ],
     "require": {
-        "nexus/audit-logger": "*@dev",
-        "nexus/common": "*@dev",
-        "nexus/currency": "*@dev",
-        "nexus/machine-learning": "*@dev",
-        "nexus/notifier": "*@dev",
-        "nexus/period": "*@dev",
-        "nexus/procurement": "*@dev",
-        "nexus/setting": "*@dev",
-        "nexus/uom": "*@dev",
-        "nexus/workflow": "*@dev",
+        "azaharizaman/nexus-audit-logger": "*@dev",
+        "azaharizaman/nexus-common": "*@dev",
+        "azaharizaman/nexus-currency": "*@dev",
+        "azaharizaman/nexus-machine-learning": "*@dev",
+        "azaharizaman/nexus-notifier": "*@dev",
+        "azaharizaman/nexus-period": "*@dev",
+        "azaharizaman/nexus-procurement": "*@dev",
+        "azaharizaman/nexus-setting": "*@dev",
+        "azaharizaman/nexus-uom": "*@dev",
+        "azaharizaman/nexus-workflow": "*@dev",
         "php": "^8.3",
         "psr/event-dispatcher": "^1.0",
         "psr/log": "^3.0"
@@ -33,7 +33,7 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "suggest": {
-        "nexus/accounting": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/party": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-accounting": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-party": "Optional integration dependency; currently not referenced by package src."
     }
 }

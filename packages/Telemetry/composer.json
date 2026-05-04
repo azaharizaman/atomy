@@ -1,5 +1,5 @@
 {
-    "name": "nexus/telemetry",
+    "name": "azaharizaman/nexus-telemetry",
     "description": "Framework-agnostic monitoring, telemetry tracking, health checks, and alert management package for the Nexus ERP system",
     "type": "library",
     "license": "MIT",
@@ -16,9 +16,9 @@
         "phpunit/phpunit": "^11.0"
     },
     "suggest": {
-        "nexus/notifier": "For alert notification delivery",
-        "nexus/audit-logger": "For audit trail integration",
-        "nexus/tenant": "For multi-tenancy metric tagging"
+        "azaharizaman/nexus-notifier": "For alert notification delivery",
+        "azaharizaman/nexus-audit-logger": "For audit trail integration",
+        "azaharizaman/nexus-tenant": "For multi-tenancy metric tagging"
     },
     "autoload": {
         "psr-4": {

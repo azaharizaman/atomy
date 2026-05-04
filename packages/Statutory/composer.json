@@ -1,5 +1,5 @@
 {
-    "name": "nexus/statutory",
+    "name": "azaharizaman/nexus-statutory",
     "description": "Statutory reporting engine for generating tax and regulatory reports in country-specific formats",
     "type": "library",
     "license": "MIT",
@@ -29,7 +29,7 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "suggest": {
-        "nexus/accounting": "Optional integration dependency; currently not referenced by package src.",
-        "nexus/period": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-accounting": "Optional integration dependency; currently not referenced by package src.",
+        "azaharizaman/nexus-period": "Optional integration dependency; currently not referenced by package src."
     }
 }

@@ -1,5 +1,5 @@
 {
-    "name": "nexus/document",
+    "name": "azaharizaman/nexus-document",
     "description": "Framework-agnostic document management engine for Nexus ERP monorepo",
     "type": "library",
     "license": "MIT",
@@ -11,10 +11,10 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/storage": "*@dev",
-        "nexus/crypto": "*@dev",
-        "nexus/audit-logger": "*@dev",
-        "nexus/tenant": "*@dev",
+        "azaharizaman/nexus-storage": "*@dev",
+        "azaharizaman/nexus-crypto": "*@dev",
+        "azaharizaman/nexus-audit-logger": "*@dev",
+        "azaharizaman/nexus-tenant": "*@dev",
         "psr/log": "^3.0",
         "symfony/uid": "^7.0"
     },

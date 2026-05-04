@@ -1,5 +1,5 @@
 {
-    "name": "nexus/procurement",
+    "name": "azaharizaman/nexus-procurement",
     "description": "Framework-agnostic procurement management package for purchase requisitions, purchase orders, goods receipts, and 3-way matching",
     "type": "library",
     "license": "MIT",

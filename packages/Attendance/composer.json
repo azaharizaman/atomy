@@ -1,5 +1,5 @@
 {
-    "name": "nexus/attendance-management",
+    "name": "azaharizaman/nexus-attendance-management",
     "description": "Attendance Management Domain Package - Pure business logic for attendance operations",
     "type": "library",
     "license": "MIT",

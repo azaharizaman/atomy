@@ -1,5 +1,5 @@
 {
-    "name": "nexus/identity",
+    "name": "azaharizaman/nexus-identity",
     "description": "Domain layer: Framework-agnostic Identity and Access Management package for Nexus ERP",
     "type": "library",
     "license": "MIT",
@@ -20,7 +20,7 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/common": "*@dev",
+        "azaharizaman/nexus-common": "*@dev",
         "psr/log": "^3.0",
         "spomky-labs/otphp": "^11.3",
         "endroid/qr-code": "^5.0",

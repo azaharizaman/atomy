@@ -1,5 +1,5 @@
 {
-    "name": "nexus/cost-accounting",
+    "name": "azaharizaman/nexus-cost-accounting",
     "description": "Cost accounting and management package for Nexus ERP - cost center management, cost pools, product costing, and allocation",
     "type": "library",
     "version": "1.0.0",

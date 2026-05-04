@@ -1,5 +1,5 @@
 {
-    "name": "nexus/policy-engine",
+    "name": "azaharizaman/nexus-policy-engine",
     "description": "Deterministic policy evaluation for authorization and workflow decisions.",
     "type": "library",
     "license": "MIT",

@@ -1,5 +1,5 @@
 {
-    "name": "nexus/sourcing-scoring",
+    "name": "azaharizaman/nexus-sourcing-scoring",
     "description": "Scoring engine for vendor evaluation and sourcing analysis",
     "type": "library",
     "license": "MIT",

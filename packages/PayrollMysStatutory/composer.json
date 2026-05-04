@@ -1,11 +1,11 @@
 {
-    "name": "nexus/payroll-mys-statutory",
+    "name": "azaharizaman/nexus-payroll-mys-statutory",
     "description": "Malaysia statutory payroll calculations (EPF, SOCSO, EIS, PCB) for Nexus Payroll package",
     "type": "library",
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "nexus/payroll": "*@dev"
+        "azaharizaman/nexus-payroll": "*@dev"
     },
     "autoload": {
         "psr-4": {

@@ -1,11 +1,11 @@
 {
-    "name": "nexus/time-tracking",
+    "name": "azaharizaman/nexus-time-tracking",
     "description": "Time entry and timesheet rules: hours validation, approval workflow, immutability. Reusable for projects, support, internal work.",
     "type": "library",
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "nexus/common": "*@dev",
+        "azaharizaman/nexus-common": "*@dev",
         "psr/log": "^3.0"
     },
     "require-dev": {

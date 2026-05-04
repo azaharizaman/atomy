@@ -1,5 +1,5 @@
 {
-    "name": "nexus/aml-compliance",
+    "name": "azaharizaman/nexus-aml-compliance",
     "description": "Anti-Money Laundering (AML) risk assessment and transaction monitoring with SAR generation - atomic, framework-agnostic package",
     "type": "library",
     "license": "MIT",
@@ -22,7 +22,7 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/common": "*@dev",
+        "azaharizaman/nexus-common": "*@dev",
         "psr/log": "^3.0"
     },
     "require-dev": {

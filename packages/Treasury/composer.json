@@ -1,5 +1,5 @@
 {
-    "name": "nexus/treasury",
+    "name": "azaharizaman/nexus-treasury",
     "description": "Atomic package for treasury management - liquidity pools, cash concentration, working capital optimization, and treasury analytics",
     "type": "library",
     "license": "MIT",
@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": "^8.3",
-        "nexus/common": "^1.0"
+        "azaharizaman/nexus-common": "^1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.0"
