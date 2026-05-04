@@ -1,5 +1,5 @@
 {
-    "name": "nexus/laravel-sales",
+    "name": "azaharizaman/nexus-laravel-sales",
     "description": "Laravel adapter for Sales package with cross-package integrations",
     "type": "library",
     "license": "MIT",

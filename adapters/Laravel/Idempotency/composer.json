@@ -1,5 +1,5 @@
 {
-    "name": "nexus/laravel-idempotency-adapter",
+    "name": "azaharizaman/nexus-laravel-idempotency-adapter",
     "description": "Laravel adapter for Nexus Idempotency (Layer 3): HTTP middleware, database store, replay helpers.",
     "type": "library",
     "license": "MIT",

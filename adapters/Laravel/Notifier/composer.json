@@ -1,5 +1,5 @@
 {
-    "name": "nexus/laravel-notifier-adapter",
+    "name": "azaharizaman/nexus-laravel-notifier-adapter",
     "description": "Laravel adapter for nexus/notifier (Postmark email via queue).",
     "type": "library",
     "license": "MIT",

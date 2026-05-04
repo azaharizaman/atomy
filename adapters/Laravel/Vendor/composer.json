@@ -1,5 +1,5 @@
 {
-    "name": "nexus/vendor-laravel-adapter",
+    "name": "azaharizaman/nexus-vendor-laravel-adapter",
     "description": "Laravel adapter for Nexus Vendor (Layer 3): Eloquent models and repository.",
     "type": "library",
     "license": "MIT",

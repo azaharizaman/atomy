@@ -1,5 +1,5 @@
 {
-    "name": "nexus/laravel-auditlogger-adapter",
+    "name": "azaharizaman/nexus-laravel-auditlogger-adapter",
     "description": "Laravel adapter for AuditLogger package",
     "type": "library",
     "license": "MIT",

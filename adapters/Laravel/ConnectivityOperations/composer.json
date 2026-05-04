@@ -1,5 +1,5 @@
 {
-    "name": "nexus/laravel-connectivity-operations-adapter",
+    "name": "azaharizaman/nexus-laravel-connectivity-operations-adapter",
     "description": "Laravel adapters for ConnectivityOperations orchestrator ports",
     "type": "library",
     "license": "MIT",

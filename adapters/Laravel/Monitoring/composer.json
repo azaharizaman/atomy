@@ -1,5 +1,5 @@
 {
-    "name": "nexus/laravel-monitoring-adapter",
+    "name": "azaharizaman/nexus-laravel-monitoring-adapter",
     "description": "Laravel adapter for Monitoring package",
     "type": "library",
     "license": "MIT",

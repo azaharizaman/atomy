@@ -1,5 +1,5 @@
 {
-    "name": "nexus/laravel-data-exchange-operations-adapter",
+    "name": "azaharizaman/nexus-laravel-data-exchange-operations-adapter",
     "description": "Laravel adapters for DataExchangeOperations orchestrator ports",
     "type": "library",
     "license": "MIT",

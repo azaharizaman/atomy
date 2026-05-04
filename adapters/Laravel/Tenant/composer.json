@@ -1,5 +1,5 @@
 {
-    "name": "nexus/laravel-tenant-adapter",
+    "name": "azaharizaman/nexus-laravel-tenant-adapter",
     "description": "Laravel adapter for Tenant package with multi-tenant support",
     "type": "library",
     "license": "MIT",

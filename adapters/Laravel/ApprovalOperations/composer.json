@@ -1,5 +1,5 @@
 {
-    "name": "nexus/laravel-approval-operations-adapter",
+    "name": "azaharizaman/nexus-laravel-approval-operations-adapter",
     "description": "Laravel adapter for Nexus ApprovalOperations (Layer 3): Eloquent persistence, workflow bridge stub.",
     "type": "library",
     "license": "MIT",
@@ -33,12 +33,16 @@
         {
             "type": "path",
             "url": "../../packages/*",
-            "options": { "symlink": true }
+            "options": {
+                "symlink": true
+            }
         },
         {
             "type": "path",
             "url": "../../orchestrators/*",
-            "options": { "symlink": true }
+            "options": {
+                "symlink": true
+            }
         }
     ],
     "minimum-stability": "dev",

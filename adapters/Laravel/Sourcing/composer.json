@@ -1,5 +1,5 @@
 {
-    "name": "nexus/laravel-sourcing-adapter",
+    "name": "azaharizaman/nexus-laravel-sourcing-adapter",
     "description": "Laravel adapter for Nexus Sourcing (Layer 3): quotations, awards, Eloquent repository.",
     "type": "library",
     "license": "MIT",

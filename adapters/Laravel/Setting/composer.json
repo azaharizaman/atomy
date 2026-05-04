@@ -1,5 +1,5 @@
 {
-    "name": "nexus/laravel-setting-adapter",
+    "name": "azaharizaman/nexus-laravel-setting-adapter",
     "description": "Laravel adapter for Setting package with configuration management",
     "type": "library",
     "license": "MIT",

@@ -1,5 +1,5 @@
 {
-    "name": "nexus/laravel-featureflags-adapter",
+    "name": "azaharizaman/nexus-laravel-featureflags-adapter",
     "description": "Laravel adapter for FeatureFlags package",
     "type": "library",
     "license": "MIT",
