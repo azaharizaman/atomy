@@ -212,7 +212,7 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
         Route::patch('{id}/due-diligence/{itemId}', [VendorGovernanceController::class, 'updateDueDiligence']);
     });
 
-    // --- Section 7: Quote Intake (10 endpoints) ---
+    // --- Section 7: Quote Intake (9 endpoints) ---
     Route::prefix('quote-submissions')->group(function (): void {
         Route::get('/', [QuoteSubmissionController::class, 'index']);
         Route::post('upload', [QuoteSubmissionController::class, 'upload']);
@@ -223,7 +223,6 @@ Route::middleware(['jwt.auth', 'tenant'])->group(function (): void {
             ->name('v1.quote-submissions.source-lines.store');
         Route::patch('{id}/source-lines/{sourceLineId}', [QuoteSubmissionController::class, 'updateSourceLine']);
         Route::delete('{id}/source-lines/{sourceLineId}', [QuoteSubmissionController::class, 'destroySourceLine']);
-        Route::post('{id}/replace', [QuoteSubmissionController::class, 'replace']);
         Route::post('{id}/reparse', [QuoteSubmissionController::class, 'reparse']);
         Route::post('{id}/assign', [QuoteSubmissionController::class, 'assign']);
     });

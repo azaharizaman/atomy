@@ -198,14 +198,6 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
     );
   }
 
-  function toggleSelection(lineId: string): void {
-    setSelectedLineIds((current) => (current.includes(lineId) ? current.filter((id) => id !== lineId) : [...current, lineId]));
-  }
-
-  function isSelected(lineId: string): boolean {
-    return selectedLineIds.includes(lineId);
-  }
-
   function deleteSourceLine(lineId: string, lineNumber: number): void {
     if (manualSourceLines.deleteSourceLine.isPending) return;
     if (typeof window !== 'undefined' && !window.confirm(`Delete source line ${lineNumber}?`)) return;
@@ -230,10 +222,6 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
 
   function getLineNumber(line: { lineNo?: number; sort_order?: number | null }, index: number): number {
     return line.lineNo ?? ((line.sort_order ?? index) + 1);
-  }
-
-  function checkboxId(section: 'source' | 'mapping', lineId: string): string {
-    return `${section}-${lineId}`;
   }
 
   function formatReasonCode(reasonCode: string | null | undefined): string {
@@ -264,13 +252,44 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
 
     const matchedLine = rfqLineItems.find((item) => item.id === suggestedId);
     if (matchedLine) {
-      return matchedLine.description;
+      return rfqLineDisplay(matchedLine.id);
     }
 
-    return suggestedId;
+    return 'Unmapped';
+  }
+
+  function sourceLineDisplay(line: { sort_order?: number | null }, index: number): string {
+    return `Source line ${getLineNumber(line, index)}`;
+  }
+
+  function rfqLineDisplay(rfqLineItemId: string | null | undefined): string {
+    if (!rfqLineItemId) return 'Unmapped';
+    const matchedIndex = rfqLineItems.findIndex((item) => item.id === rfqLineItemId);
+    if (matchedIndex < 0) return 'Unmapped';
+    return `RFQ line ${matchedIndex + 1}`;
+  }
+
+  function rfqLineDescription(rfqLineItemId: string | null | undefined, fallback: string | null | undefined): string {
+    if (!rfqLineItemId) return 'No RFQ line selected';
+    const matchedLine = rfqLineItems.find((item) => item.id === rfqLineItemId);
+    return matchedLine?.description ?? fallback ?? 'RFQ line not found';
   }
 
   const freezeDisabled = hasBlockingIssues || freeze.isPending || comparisonFreezeBlockedByReadiness;
+  const sourceLineIds = sourceLines.map((line) => line.id);
+  const allSourceLinesSelected = sourceLineIds.length > 0 && sourceLineIds.every((id) => selectedLineIds.includes(id));
+
+  function toggleAllSourceLines(): void {
+    setSelectedLineIds(allSourceLinesSelected ? [] : sourceLineIds);
+  }
+
+  function toggleSelection(lineId: string): void {
+    setSelectedLineIds((current) => (current.includes(lineId) ? current.filter((id) => id !== lineId) : [...current, lineId]));
+  }
+
+  function isSelected(lineId: string): boolean {
+    return selectedLineIds.includes(lineId);
+  }
 
   return (
     <div className="space-y-5">
@@ -308,10 +327,10 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
           </p>
           {openConflicts.length > 0 && (
             <ul className="mt-2 space-y-1.5 text-xs text-amber-950">
-              {openConflicts.map((c) => (
+              {openConflicts.map((c, index) => (
                 <li key={c.id} className="flex items-center gap-2">
                   <StatusBadge status="pending" size="xs" label={conflictTypeLabel(c.conflict_type)} />
-                  <span className="text-amber-800 font-mono truncate">{c.id}</span>
+                  <span className="text-amber-800">Blocking issue {index + 1}</span>
                 </li>
               ))}
             </ul>
@@ -340,330 +359,361 @@ function NormalizePageContent({ rfqId, quoteId }: { rfqId: string; quoteId: stri
           <p className="text-xs text-slate-600">Waiting for the RFQ record before checking the submission deadline.</p>
         </Card>
       )}
-      <div className="flex items-center gap-3 flex-wrap">
-        <Button size="sm" variant="outline" disabled>
-          Bulk Apply Mapping
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => setLocked(!locked)}>
-          {locked ? <Lock size={14} className="mr-1.5" /> : <Unlock size={14} className="mr-1.5" />}
-          {locked ? 'Unlock' : 'Lock for Comparison'}
-        </Button>
-        <span className="text-xs text-slate-500">
-          {locked ? 'Locked' : 'Unlocked'}
-        </span>
-        <StatusBadge status="draft" label="Fully Normalized: 18/24 lines" />
-        <Button
-          size="sm"
-          variant="primary"
-          disabled={freezeDisabled}
-          onClick={() => freeze.mutate(rfqId)}
-        >
-          Freeze comparison
-        </Button>
-        <Link
-          href={`/rfqs/${encodeURIComponent(rfqId)}/decision-trail`}
-          className="text-xs font-medium text-indigo-600 hover:underline"
-        >
-          Decision trail
-        </Link>
+      <div className="rounded-md border border-slate-200 bg-white px-3 py-2">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge status={locked ? 'approved' : 'draft'} label={locked ? 'Locked' : 'Unlocked'} />
+            <StatusBadge status="draft" label={`${sourceLines.filter((line) => line.rfq_line_item_id !== null).length}/${sourceLines.length} mapped`} />
+            {selectedLineIds.length > 0 && (
+              <span className="text-xs font-medium text-indigo-700">{selectedLineIds.length} selected</span>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              icon={locked ? <Unlock size={14} /> : <Lock size={14} />}
+              onClick={() => setLocked(!locked)}
+            >
+              {locked ? 'Unlock' : 'Lock for Comparison'}
+            </Button>
+            <Button
+              size="sm"
+              variant="primary"
+              disabled={freezeDisabled}
+              onClick={() => freeze.mutate(rfqId)}
+            >
+              Freeze comparison
+            </Button>
+            <Link
+              href={`/rfqs/${encodeURIComponent(rfqId)}/decision-trail`}
+              className="inline-flex h-7 items-center whitespace-nowrap rounded border border-transparent px-2 text-xs font-medium text-indigo-600 hover:bg-indigo-50"
+            >
+              Decision trail
+            </Link>
+          </div>
+        </div>
       </div>
-      <div className="grid gap-5 xl:grid-cols-[0.45fr,0.55fr]">
-        <SectionCard title="Source lines" subtitle="Extracted vendor line items">
-          <div className="space-y-2">
-            <div className="rounded border border-slate-200 bg-slate-50 p-3">
-              <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_90px_90px_110px_minmax(150px,0.8fr)_minmax(140px,0.8fr)_auto]">
-                <label className="text-xs font-medium text-slate-600">
-                  Description
-                  <input
-                    aria-label="Description"
-                    className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    value={manualForm.source_description}
-                    onChange={(event) => updateManualForm('source_description', event.target.value)}
-                  />
-                </label>
-                <label className="text-xs font-medium text-slate-600">
-                  Quantity
-                  <input
-                    aria-label="Quantity"
-                    className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    value={manualForm.source_quantity}
-                    onChange={(event) => updateManualForm('source_quantity', event.target.value)}
-                  />
-                </label>
-                <label className="text-xs font-medium text-slate-600">
-                  UOM
-                  <input
-                    aria-label="UOM"
-                    className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    value={manualForm.source_uom}
-                    onChange={(event) => updateManualForm('source_uom', event.target.value)}
-                  />
-                </label>
-                <label className="text-xs font-medium text-slate-600">
-                  Unit price
-                  <input
-                    aria-label="Unit price"
-                    className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    value={manualForm.source_unit_price}
-                    onChange={(event) => updateManualForm('source_unit_price', event.target.value)}
-                  />
-                </label>
-                <label className="text-xs font-medium text-slate-600">
-                  RFQ line
-                  <select
-                    aria-label="RFQ line"
-                    className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    value={manualForm.rfq_line_item_id}
-                    onChange={(event) => updateManualForm('rfq_line_item_id', event.target.value)}
-                  >
-                    <option value="">Unmapped</option>
-                    {rfqLineItems.map((line) => (
-                      <option key={line.id} value={line.id}>
-                        {line.description}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="text-xs font-medium text-slate-600">
-                  Reason code
-                  <select
-                    aria-label="Reason code"
-                    className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    value={manualForm.reason}
-                    onChange={(event) => updateManualForm('reason', event.target.value)}
-                  >
-                    <option value="">Select reason</option>
-                    {NORMALIZATION_REASON_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="text-xs font-medium text-slate-600">
-                  Note
-                  <input
-                    aria-label="Note"
-                    className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    value={manualForm.note}
-                    onChange={(event) => updateManualForm('note', event.target.value)}
-                  />
-                </label>
-                <div className="flex items-end">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    type="button"
-                    disabled={
-                      manualForm.source_description.trim() === '' ||
-                      manualForm.reason.trim() === '' ||
-                      (manualForm.reason === 'other' && manualForm.note.trim() === '') ||
-                      manualSourceLines.createSourceLine.isPending
-                    }
-                    onClick={submitManualSourceLine}
-                  >
-                    <Plus size={14} className="mr-1.5" />
-                    Add source line
-                  </Button>
-                </div>
+      <SectionCard title="Source line normalization" subtitle="Review extracted supplier lines, mapping, effective values, and buyer changes in one place">
+        <div className="space-y-3">
+          <div className="rounded border border-slate-200 bg-slate-50 p-3">
+            <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_90px_90px_110px_minmax(150px,0.8fr)_minmax(140px,0.8fr)_auto]">
+              <label className="text-xs font-medium text-slate-600">
+                Description
+                <input
+                  aria-label="Description"
+                  className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  value={manualForm.source_description}
+                  onChange={(event) => updateManualForm('source_description', event.target.value)}
+                />
+              </label>
+              <label className="text-xs font-medium text-slate-600">
+                Quantity
+                <input
+                  aria-label="Quantity"
+                  className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  value={manualForm.source_quantity}
+                  onChange={(event) => updateManualForm('source_quantity', event.target.value)}
+                />
+              </label>
+              <label className="text-xs font-medium text-slate-600">
+                UOM
+                <input
+                  aria-label="UOM"
+                  className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  value={manualForm.source_uom}
+                  onChange={(event) => updateManualForm('source_uom', event.target.value)}
+                />
+              </label>
+              <label className="text-xs font-medium text-slate-600">
+                Unit price
+                <input
+                  aria-label="Unit price"
+                  className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  value={manualForm.source_unit_price}
+                  onChange={(event) => updateManualForm('source_unit_price', event.target.value)}
+                />
+              </label>
+              <label className="text-xs font-medium text-slate-600">
+                RFQ line
+                <select
+                  aria-label="RFQ line"
+                  className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  value={manualForm.rfq_line_item_id}
+                  onChange={(event) => updateManualForm('rfq_line_item_id', event.target.value)}
+                >
+                  <option value="">Unmapped</option>
+                  {rfqLineItems.map((line, index) => (
+                    <option key={line.id} value={line.id}>
+                      {`RFQ line ${index + 1}: ${line.description}`}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-xs font-medium text-slate-600">
+                Reason code
+                <select
+                  aria-label="Reason code"
+                  className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  value={manualForm.reason}
+                  onChange={(event) => updateManualForm('reason', event.target.value)}
+                >
+                  <option value="">Select reason</option>
+                  {NORMALIZATION_REASON_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="text-xs font-medium text-slate-600">
+                Note
+                <input
+                  aria-label="Note"
+                  className="mt-1 h-8 w-full rounded border border-slate-300 bg-white px-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  value={manualForm.note}
+                  onChange={(event) => updateManualForm('note', event.target.value)}
+                />
+              </label>
+              <div className="flex items-end">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  type="button"
+                  icon={<Plus size={14} />}
+                  disabled={
+                    manualForm.source_description.trim() === '' ||
+                    manualForm.reason.trim() === '' ||
+                    (manualForm.reason === 'other' && manualForm.note.trim() === '') ||
+                    manualSourceLines.createSourceLine.isPending
+                  }
+                  onClick={submitManualSourceLine}
+                >
+                  Add source line
+                </Button>
               </div>
             </div>
-            {sourceLines.map((line, index) => {
-              const liveLine = line as NormalizationSourceLineRow;
-              const unitPrice = parseOptionalPrice(liveLine.source_unit_price);
-              const lineNumber = getLineNumber(liveLine, index);
-              const sourceCheckboxId = checkboxId('source', liveLine.id);
-              const isEditing = editingLineId === liveLine.id;
-              return (
-                <div
-                  key={liveLine.id}
-                  className="rounded border border-slate-200 px-3 py-2 text-xs"
-                >
-                  {isEditing ? (
-                    <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_80px_80px_100px_minmax(140px,0.8fr)_auto]">
-                      <input
-                        aria-label={`Description source line ${lineNumber}`}
-                        className="h-8 rounded border border-slate-300 px-2 text-xs"
-                        value={editForm.source_description}
-                        onChange={(event) => updateEditForm('source_description', event.target.value)}
-                      />
-                      <input
-                        aria-label={`Quantity source line ${lineNumber}`}
-                        className="h-8 rounded border border-slate-300 px-2 text-xs"
-                        value={editForm.source_quantity}
-                        onChange={(event) => updateEditForm('source_quantity', event.target.value)}
-                      />
-                      <input
-                        aria-label={`UOM source line ${lineNumber}`}
-                        className="h-8 rounded border border-slate-300 px-2 text-xs"
-                        value={editForm.source_uom}
-                        onChange={(event) => updateEditForm('source_uom', event.target.value)}
-                      />
-                      <input
-                        aria-label={`Unit price source line ${lineNumber}`}
-                        className="h-8 rounded border border-slate-300 px-2 text-xs"
-                        value={editForm.source_unit_price}
-                        onChange={(event) => updateEditForm('source_unit_price', event.target.value)}
-                      />
-                      <select
-                        aria-label={`RFQ line source line ${lineNumber}`}
-                        className="h-8 rounded border border-slate-300 px-2 text-xs"
-                        value={editForm.rfq_line_item_id}
-                        onChange={(event) => updateEditForm('rfq_line_item_id', event.target.value)}
-                      >
-                        <option value="">Unmapped</option>
-                        {rfqLineItems.map((line) => (
-                          <option key={line.id} value={line.id}>
-                          {line.description}
-                        </option>
-                        ))}
-                      </select>
-                      <select
-                        aria-label={`Reason code source line ${lineNumber}`}
-                        className="h-8 rounded border border-slate-300 px-2 text-xs"
-                        value={editForm.reason}
-                        onChange={(event) => updateEditForm('reason', event.target.value)}
-                      >
-                        <option value="">Select reason</option>
-                        {NORMALIZATION_REASON_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                      <input
-                        aria-label={`Note source line ${lineNumber}`}
-                        className="h-8 rounded border border-slate-300 px-2 text-xs"
-                        value={editForm.note}
-                        onChange={(event) => updateEditForm('note', event.target.value)}
-                      />
-                      <div className="flex items-center gap-1">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          type="button"
-                          disabled={
-                            editForm.source_description.trim() === '' ||
-                            editForm.reason.trim() === '' ||
-                            (editForm.reason === 'other' && editForm.note.trim() === '') ||
-                            manualSourceLines.overrideSourceLine.isPending
-                          }
-                          onClick={() => saveEdit(liveLine.id)}
-                        >
-                          <Save size={14} className="mr-1.5" />
-                          Save source line {lineNumber}
-                        </Button>
-                        <Button size="sm" variant="ghost" type="button" onClick={() => setEditingLineId(null)}>
-                          <X size={14} className="mr-1.5" />
-                          Cancel
-                        </Button>
-                      </div>
-                      <div className="mt-1 grid gap-1 text-[11px] text-slate-500 lg:col-span-6">
-                        <span>
-                          Provider confidence {providerConfidenceLabel(liveLine.ai_confidence) ?? 'Unavailable'}
-                        </span>
-                        <span>
-                          {liveLine.is_buyer_overridden
-                            ? `Override reason ${formatReasonCode(liveLine.latest_override?.reason_code)}`
-                            : `Suggested mapping ${suggestedMappingLabel(liveLine)}`}
-                        </span>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-3">
-                        <input
-                          id={sourceCheckboxId}
-                          type="checkbox"
-                          className="rounded border-slate-300"
-                          checked={isSelected(line.id)}
-                          onChange={() => toggleSelection(line.id)}
-                        />
-                        <label htmlFor={sourceCheckboxId} className="sr-only">
-                          Select source line {lineNumber}
-                        </label>
-                        <span className="w-6 text-slate-500">{lineNumber}</span>
-                        <span className="flex-1 truncate text-slate-800">{liveLine.source_description}</span>
-                        <span className="text-slate-500">{`${liveLine.source_quantity ?? '—'} ${liveLine.source_uom ?? ''}`.trim()}</span>
-                        <span className="font-medium tabular-nums">{formatPrice(unitPrice)}</span>
-                        <StatusBadge status={liveLine.has_blocking_issue ? 'pending' : 'approved'} size="xs" label={liveLine.confidence} />
-                        {liveLine.is_buyer_overridden ? (
-                          <StatusBadge status="pending" size="xs" label="Buyer override" />
-                        ) : (
-                          <StatusBadge status="draft" size="xs" label="Provider suggested" />
-                        )}
-                        <Button size="sm" variant="ghost" type="button" onClick={() => startEdit(liveLine)}>
-                          <Pencil size={14} className="mr-1.5" />
-                          Edit source line {lineNumber}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          type="button"
-                          disabled={manualSourceLines.deleteSourceLine.isPending}
-                          onClick={() => deleteSourceLine(liveLine.id, lineNumber)}
-                        >
-                          <Trash2 size={14} className="mr-1.5" />
-                          Delete source line {lineNumber}
-                        </Button>
-                      </div>
-                      <div className="mt-2 grid gap-1 text-[11px] text-slate-500 md:grid-cols-2">
-                        <span>
-                          Provider confidence {providerConfidenceLabel(liveLine.ai_confidence) ?? 'Unavailable'}
-                        </span>
-                        <span>
-                          {liveLine.is_buyer_overridden
-                            ? `Override reason ${formatReasonCode(liveLine.latest_override?.reason_code)}`
-                            : `Suggested mapping ${suggestedMappingLabel(liveLine)}`}
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-            {sourceLines.length === 0 && (
-              <p className="text-xs text-slate-500">No source lines yet.</p>
-            )}
           </div>
-        </SectionCard>
-        <SectionCard title="Normalized mapping" subtitle="Map to RFQ line items">
-          <div className="space-y-2 text-xs">
-            {sourceLines.map((line, index) => {
-              const liveLine = line as NormalizationSourceLineRow;
-              const unitPrice = parseOptionalPrice(liveLine.rfq_line_unit_price);
-              const lineNumber = getLineNumber(liveLine, index);
-              const mappingCheckboxId = checkboxId('mapping', liveLine.id);
-              return (
-                <div
-                  key={liveLine.id}
-                  className="grid grid-cols-5 gap-2 rounded border border-slate-200 px-3 py-2 items-center"
-                >
-                  <span className="col-span-2 flex items-center gap-2 truncate text-slate-800">
+          <div className="overflow-x-auto rounded-lg border border-slate-200">
+            <table aria-label="Source line normalization review" className="w-full min-w-[1120px] border-collapse bg-white">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50 text-left">
+                  <th className="w-10 px-3 py-2">
                     <input
-                      id={mappingCheckboxId}
                       type="checkbox"
+                      aria-label="Select all source lines"
                       className="rounded border-slate-300"
-                      checked={isSelected(line.id)}
-                      onChange={() => toggleSelection(line.id)}
+                      checked={allSourceLinesSelected}
+                      onChange={toggleAllSourceLines}
                     />
-                    <label htmlFor={mappingCheckboxId} className="sr-only">
-                      Select normalized line {lineNumber}
-                    </label>
-                    <span>{liveLine.rfq_line_description ?? `RFQ Line #${(liveLine.sort_order ?? index) + 1}`}</span>
-                  </span>
-                  <span className="text-slate-500 font-mono">—</span>
-                  <span>{`${liveLine.rfq_line_quantity ?? '—'} ${liveLine.rfq_line_uom ?? ''}`.trim()}</span>
-                  <span className="tabular-nums font-medium">{formatPrice(unitPrice)}</span>
-                </div>
-              );
-            })}
-            {sourceLines.length === 0 && (
-              <p className="text-xs text-slate-500">No normalized mappings yet.</p>
-            )}
+                  </th>
+                  <th className="px-3 py-2 text-xs font-medium text-slate-600">Line</th>
+                  <th className="px-3 py-2 text-xs font-medium text-slate-600">Supplier source</th>
+                  <th className="px-3 py-2 text-xs font-medium text-slate-600">RFQ mapping</th>
+                  <th className="px-3 py-2 text-xs font-medium text-slate-600">Effective values</th>
+                  <th className="px-3 py-2 text-xs font-medium text-slate-600">Review state</th>
+                  <th className="px-3 py-2 text-right text-xs font-medium text-slate-600">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sourceLines.map((line, index) => {
+                  const liveLine = line as NormalizationSourceLineRow;
+                  const sourceUnitPrice = parseOptionalPrice(liveLine.source_unit_price);
+                  const effectiveUnitPrice = parseOptionalPrice(liveLine.effective_values?.unit_price ?? liveLine.source_unit_price);
+                  const lineNumber = getLineNumber(liveLine, index);
+                  const isEditing = editingLineId === liveLine.id;
+                  return (
+                    <tr key={liveLine.id} className={['border-b border-slate-100 align-top', isSelected(liveLine.id) ? 'bg-indigo-50/60' : ''].join(' ')}>
+                      <td className="px-3 py-3">
+                        <input
+                          type="checkbox"
+                          aria-label={`Select source line ${lineNumber}`}
+                          className="rounded border-slate-300"
+                          checked={isSelected(liveLine.id)}
+                          onChange={() => toggleSelection(liveLine.id)}
+                        />
+                      </td>
+                      <td className="px-3 py-3 text-xs text-slate-600">
+                        <div className="font-medium text-slate-800">{sourceLineDisplay(liveLine, index)}</div>
+                        <div className="mt-1">{liveLine.vendor_name}</div>
+                      </td>
+                      <td className="px-3 py-3">
+                        {isEditing ? (
+                          <div className="grid gap-2">
+                            <input
+                              aria-label={`Description source line ${lineNumber}`}
+                              className="h-8 rounded border border-slate-300 px-2 text-xs"
+                              value={editForm.source_description}
+                              onChange={(event) => updateEditForm('source_description', event.target.value)}
+                            />
+                            <div className="grid grid-cols-3 gap-2">
+                              <input
+                                aria-label={`Quantity source line ${lineNumber}`}
+                                className="h-8 rounded border border-slate-300 px-2 text-xs"
+                                value={editForm.source_quantity}
+                                onChange={(event) => updateEditForm('source_quantity', event.target.value)}
+                              />
+                              <input
+                                aria-label={`UOM source line ${lineNumber}`}
+                                className="h-8 rounded border border-slate-300 px-2 text-xs"
+                                value={editForm.source_uom}
+                                onChange={(event) => updateEditForm('source_uom', event.target.value)}
+                              />
+                              <input
+                                aria-label={`Unit price source line ${lineNumber}`}
+                                className="h-8 rounded border border-slate-300 px-2 text-xs"
+                                value={editForm.source_unit_price}
+                                onChange={(event) => updateEditForm('source_unit_price', event.target.value)}
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="max-w-[280px]">
+                            <div className="truncate text-sm font-medium text-slate-800">{liveLine.source_description}</div>
+                            <div className="mt-1 text-xs text-slate-500">
+                              {`${liveLine.source_quantity ?? '—'} ${liveLine.source_uom ?? ''}`.trim()} · {formatPrice(sourceUnitPrice)}
+                            </div>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-3 py-3">
+                        {isEditing ? (
+                          <select
+                            aria-label={`RFQ line source line ${lineNumber}`}
+                            className="h-8 w-full rounded border border-slate-300 px-2 text-xs"
+                            value={editForm.rfq_line_item_id}
+                            onChange={(event) => updateEditForm('rfq_line_item_id', event.target.value)}
+                          >
+                            <option value="">Unmapped</option>
+                            {rfqLineItems.map((item, itemIndex) => (
+                              <option key={item.id} value={item.id}>
+                                {`RFQ line ${itemIndex + 1}: ${item.description}`}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <div className="max-w-[260px]">
+                            <div className="text-xs font-semibold text-slate-800">{rfqLineDisplay(liveLine.rfq_line_item_id)}</div>
+                            <div className="mt-1 truncate text-xs text-slate-500">
+                              {rfqLineDescription(liveLine.rfq_line_item_id, liveLine.rfq_line_description)}
+                            </div>
+                            <div className="mt-1 text-[11px] text-slate-400">Suggested mapping {suggestedMappingLabel(liveLine)}</div>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-3 py-3 text-xs text-slate-600">
+                        <div>{`${liveLine.effective_values?.quantity ?? liveLine.source_quantity ?? '—'} ${liveLine.effective_values?.uom ?? liveLine.source_uom ?? ''}`.trim()}</div>
+                        <div className="mt-1 font-medium tabular-nums text-slate-800">{formatPrice(effectiveUnitPrice)}</div>
+                      </td>
+                      <td className="px-3 py-3">
+                        {isEditing ? (
+                          <div className="grid gap-2">
+                            <select
+                              aria-label={`Reason code source line ${lineNumber}`}
+                              className="h-8 rounded border border-slate-300 px-2 text-xs"
+                              value={editForm.reason}
+                              onChange={(event) => updateEditForm('reason', event.target.value)}
+                            >
+                              <option value="">Select reason</option>
+                              {NORMALIZATION_REASON_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                            <input
+                              aria-label={`Note source line ${lineNumber}`}
+                              className="h-8 rounded border border-slate-300 px-2 text-xs"
+                              value={editForm.note}
+                              onChange={(event) => updateEditForm('note', event.target.value)}
+                            />
+                            <div className="text-[11px] text-slate-500">
+                              Provider confidence {providerConfidenceLabel(liveLine.ai_confidence) ?? 'Unavailable'}
+                            </div>
+                            <div className="text-[11px] text-slate-500">
+                              {liveLine.is_buyer_overridden
+                                ? `Override reason ${formatReasonCode(liveLine.latest_override?.reason_code)}`
+                                : `Suggested mapping ${suggestedMappingLabel(liveLine)}`}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="space-y-1.5">
+                            <div className="flex flex-wrap gap-1">
+                              <StatusBadge status={liveLine.has_blocking_issue ? 'pending' : 'approved'} size="xs" label={liveLine.confidence} />
+                              {liveLine.is_buyer_overridden ? (
+                                <StatusBadge status="pending" size="xs" label="Buyer override" />
+                              ) : (
+                                <StatusBadge status="draft" size="xs" label="Provider suggested" />
+                              )}
+                            </div>
+                            <div className="text-[11px] text-slate-500">
+                              Provider confidence {providerConfidenceLabel(liveLine.ai_confidence) ?? 'Unavailable'}
+                            </div>
+                            <div className="text-[11px] text-slate-500">
+                              {liveLine.is_buyer_overridden
+                                ? `Override reason ${formatReasonCode(liveLine.latest_override?.reason_code)}`
+                                : `Suggested mapping ${suggestedMappingLabel(liveLine)}`}
+                            </div>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-3 py-3">
+                        <div className="flex flex-wrap justify-end gap-1">
+                          {isEditing ? (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                type="button"
+                                icon={<Save size={14} />}
+                                disabled={
+                                  editForm.source_description.trim() === '' ||
+                                  editForm.reason.trim() === '' ||
+                                  (editForm.reason === 'other' && editForm.note.trim() === '') ||
+                                  manualSourceLines.overrideSourceLine.isPending
+                                }
+                                onClick={() => saveEdit(liveLine.id)}
+                              >
+                                Save source line {lineNumber}
+                              </Button>
+                              <Button size="sm" variant="ghost" type="button" icon={<X size={14} />} onClick={() => setEditingLineId(null)}>
+                                Cancel
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button size="sm" variant="ghost" type="button" icon={<Pencil size={14} />} onClick={() => startEdit(liveLine)}>
+                                Edit source line {lineNumber}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                type="button"
+                                icon={<Trash2 size={14} />}
+                                disabled={manualSourceLines.deleteSourceLine.isPending}
+                                onClick={() => deleteSourceLine(liveLine.id, lineNumber)}
+                              >
+                                Delete source line {lineNumber}
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {sourceLines.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="px-3 py-8 text-center text-sm text-slate-500">
+                      No source lines yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-        </SectionCard>
-      </div>
+        </div>
+      </SectionCard>
     </div>
   );
 }

@@ -9,6 +9,12 @@ export type { VendorRow, VendorUpsertInput } from '@/hooks/use-vendors';
 
 async function invokeVendorStore(input: VendorUpsertInput): Promise<VendorRow> {
   const token = useAuthStore.getState().token;
+  const headers: Record<string, string> = {
+    'Idempotency-Key': crypto.randomUUID(),
+  };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
 
   try {
     const response = await v1VendorsStore({
@@ -22,7 +28,7 @@ async function invokeVendorStore(input: VendorUpsertInput): Promise<VendorRow> {
         primary_contact_phone: input.primaryContactPhone ?? null,
       },
       credentials: 'include',
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      headers,
       throwOnError: true,
     });
 

@@ -8,7 +8,7 @@ import { RecordHeader } from '@/components/ds/RecordHeader';
 import { ConfidenceBadge } from '@/components/ds/Badge';
 import { SecondaryTabs } from '@/components/ds/Tabs';
 import { useAiStatus } from '@/hooks/use-ai-status';
-import { useQuoteSubmission } from '@/hooks/use-quote-submission';
+import { useQuoteSubmission, useQuoteSubmissionActions } from '@/hooks/use-quote-submission';
 import { CheckCircle2, AlertTriangle } from 'lucide-react';
 
 export default function QuoteIntakeDetailPage({
@@ -20,6 +20,7 @@ export default function QuoteIntakeDetailPage({
   const { rfqId, quoteId } = React.use(params);
   const aiStatus = useAiStatus();
   const { data: submission } = useQuoteSubmission(quoteId);
+  const quoteActions = useQuoteSubmissionActions(rfqId, quoteId);
   const [activeTab, setActiveTab] = React.useState('overview');
   const blockingCount = submission?.blocking_issue_count ?? 0;
   const fileName = submission?.original_filename ?? 'Quote submission';
@@ -38,6 +39,8 @@ export default function QuoteIntakeDetailPage({
   const statusBadge = submission?.status === 'ready' ? 'approved' : submission?.status === 'needs_review' ? 'pending' : submission?.status === 'failed' ? 'error' : 'processing';
   const showExtractionUnavailable = aiStatus.shouldShowUnavailableMessage('quote_document_extraction');
   const hideExtractionControls = aiStatus.shouldHideAiControls('quote_document_extraction');
+  const acceptDisabled = quoteActions.acceptQuote.isPending || submission?.status === 'ready';
+  const reparseDisabled = quoteActions.reparseQuote.isPending || submission?.status === 'extracting' || submission?.status === 'normalizing';
 
   const validationItems = [
     { label: 'Line count match', pass: true },
@@ -116,10 +119,13 @@ export default function QuoteIntakeDetailPage({
         </SectionCard>
       )}
       <div className="flex items-center gap-2 flex-wrap border-t border-slate-200 pt-4">
-        <Button size="sm" variant="ghost">
-          Reject
-        </Button>
-        <Button size="sm" variant="outline">
+        <Button
+          size="sm"
+          variant="outline"
+          loading={quoteActions.acceptQuote.isPending}
+          disabled={acceptDisabled}
+          onClick={() => void quoteActions.acceptQuote.mutateAsync().catch(() => undefined)}
+        >
           Accept
         </Button>
         <Button
@@ -127,10 +133,19 @@ export default function QuoteIntakeDetailPage({
           variant="primary"
           onClick={() => router.push(`/rfqs/${encodeURIComponent(rfqId)}/quote-intake/${encodeURIComponent(quoteId)}/normalize`)}
         >
-          Accept & Normalize
+          Normalize
         </Button>
-        <Button size="sm" variant="ghost">Replace Document</Button>
-        {!hideExtractionControls && <Button size="sm" variant="ghost">Re-Parse</Button>}
+        {!hideExtractionControls && (
+          <Button
+            size="sm"
+            variant="ghost"
+            loading={quoteActions.reparseQuote.isPending}
+            disabled={reparseDisabled}
+            onClick={() => void quoteActions.reparseQuote.mutateAsync().catch(() => undefined)}
+          >
+            Re-Parse
+          </Button>
+        )}
       </div>
     </div>
   );

@@ -125,6 +125,49 @@ describe('VendorsPage', () => {
     );
   });
 
+  it('closes and resets the create form after a vendor is created', () => {
+    const createVendor = vi.fn((_input, options) => {
+      options.onSuccess();
+    });
+    mockUseVendors.mockReturnValue({
+      data: { items: [], meta: { currentPage: 1, perPage: 25, total: 0, totalPages: 1 } },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    mockUseCreateVendor.mockReturnValue({ mutate: createVendor, isPending: false, isError: false, error: null });
+
+    renderWithProviders(<VendorsPage />);
+
+    fireEvent.click(screen.getAllByRole('button', { name: /create vendor/i })[0]);
+    fireEvent.change(screen.getByLabelText(/legal name/i), { target: { value: 'Acme Manufacturing' } });
+    fireEvent.change(screen.getByLabelText(/display name/i), { target: { value: 'Acme' } });
+    fireEvent.change(screen.getByLabelText(/registration number/i), { target: { value: 'REG-200' } });
+    fireEvent.change(screen.getByLabelText(/country of registration/i), { target: { value: 'MY' } });
+    fireEvent.change(screen.getByLabelText(/primary contact name/i), { target: { value: 'Rina Tan' } });
+    fireEvent.change(screen.getByLabelText(/primary contact email/i), { target: { value: 'rina@example.com' } });
+    fireEvent.change(screen.getByLabelText(/primary contact phone/i), { target: { value: '+60 12 345 6789' } });
+    fireEvent.click(screen.getByRole('button', { name: /submit vendor/i }));
+
+    expect(createVendor).toHaveBeenCalledWith(
+      {
+        legalName: 'Acme Manufacturing',
+        displayName: 'Acme',
+        registrationNumber: 'REG-200',
+        countryOfRegistration: 'MY',
+        primaryContactName: 'Rina Tan',
+        primaryContactEmail: 'rina@example.com',
+        primaryContactPhone: '+60 12 345 6789',
+      },
+      expect.objectContaining({
+        onSuccess: expect.any(Function),
+        onError: expect.any(Function),
+      }),
+    );
+    expect(screen.queryByRole('button', { name: /submit vendor/i })).not.toBeInTheDocument();
+    expect(screen.queryByDisplayValue('Acme Manufacturing')).not.toBeInTheDocument();
+  });
+
   it('rejects unsupported country codes before creating a vendor', () => {
     const createVendor = vi.fn();
     mockUseVendors.mockReturnValue({

@@ -12555,58 +12555,6 @@
                 }
             }
         },
-        "/quote-submissions/{id}/replace": {
-            "post": {
-                "operationId": "quoteSubmission.replace",
-                "summary": "POST /quote-submissions/:id/replace\nScoped by tenant_id",
-                "tags": [
-                    "QuoteSubmission"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "object",
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string"
-                                                },
-                                                "status": {
-                                                    "type": "string",
-                                                    "const": "replaced"
-                                                }
-                                            },
-                                            "required": [
-                                                "id",
-                                                "status"
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
         "/quote-submissions/{id}/reparse": {
             "post": {
                 "operationId": "quoteSubmission.reparse",

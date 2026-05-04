@@ -262,8 +262,8 @@ export function DataTable<T extends { id: string | number }>({
   function renderColumnTotalsRow(dataRows: T[]): React.ReactNode {
     return (
       <tr className="bg-slate-100 border-t border-slate-300">
-        {selectable && <td className="w-10 py-0" />}
-        {expandable && <td className="w-8 py-0" />}
+        {selectable && <td className="w-10 py-0 align-top" />}
+        {expandable && <td className="w-8 py-0 align-top" />}
         {columns.map((col, idx) => {
           const total = getColumnTotal(col, dataRows);
           const isFirst = idx === 0;
@@ -273,7 +273,7 @@ export function DataTable<T extends { id: string | number }>({
             <td
               key={col.key}
               className={[
-                'px-3 py-2 text-xs font-medium text-slate-700',
+                'px-3 py-2 align-top text-xs font-medium text-slate-700',
                 align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left',
                 col.className ?? '',
                 stickyColumns && idx === 0 ? 'sticky left-0 z-[2] bg-slate-100 relative' : '',
@@ -295,7 +295,7 @@ export function DataTable<T extends { id: string | number }>({
         {showActions && (
           <td
             className={[
-              'w-10 py-0',
+              'w-10 py-0 align-top',
               stickyColumns ? 'sticky right-0 z-[2] bg-slate-100 relative pl-3' : '',
             ].filter(Boolean).join(' ')}
           >
@@ -340,13 +340,13 @@ export function DataTable<T extends { id: string | number }>({
           ].filter(Boolean).join(' ')}
         >
           {selectable && (
-            <td className="w-10 pl-4 pr-0 py-0" onClick={e => e.stopPropagation()}>
+            <td className="w-10 pl-4 pr-0 py-0 align-top" onClick={e => e.stopPropagation()}>
               <Checkbox checked={isSelected} onChange={() => toggleRow(row.id)} />
             </td>
           )}
           {expandable && (
             <td
-              className="w-8 py-0 pl-2"
+              className="w-8 py-0 pl-2 align-top"
               onClick={e => {
                 e.stopPropagation();
                 onExpandChange?.(isExpanded ? null : row.id);
@@ -364,7 +364,7 @@ export function DataTable<T extends { id: string | number }>({
             <td
               key={col.key}
               className={[
-                'px-3 py-0 h-11',
+                'px-3 py-0 h-11 align-top',
                 alignClass[col.align ?? 'left'],
                 col.className ?? '',
                 stickyColumns && colIdx === 0 ? 'sticky left-0 z-[2] bg-inherit relative' : '',
@@ -382,7 +382,7 @@ export function DataTable<T extends { id: string | number }>({
           {showActions && (
             <td
               className={[
-                'w-10 py-0 pr-2',
+                'w-10 py-0 pr-2 align-top',
                 stickyColumns ? 'sticky right-0 z-[2] bg-inherit relative pl-3' : '',
               ].filter(Boolean).join(' ')}
               onClick={e => e.stopPropagation()}
@@ -397,7 +397,7 @@ export function DataTable<T extends { id: string | number }>({
 
         {expandable && isExpanded && renderExpanded && (
           <tr className="border-b border-slate-200">
-            <td colSpan={colSpanCount} className="p-0">
+            <td colSpan={colSpanCount} className="p-0 align-top">
               <div style={{ paddingLeft: expandedOffsetPx() }}>
                 {renderExpanded(row)}
               </div>
@@ -432,7 +432,7 @@ export function DataTable<T extends { id: string | number }>({
           <thead className={stickyHeader ? 'sticky top-0 z-10' : ''}>
             <tr className="bg-slate-50 border-b border-slate-200">
               {selectable && (
-                <th className="w-10 pl-4 pr-0 py-2.5">
+                <th className="w-10 pl-4 pr-0 py-2.5 align-top">
                   <Checkbox
                     checked={allSelected}
                     indeterminate={someSelected}
@@ -440,13 +440,13 @@ export function DataTable<T extends { id: string | number }>({
                   />
                 </th>
               )}
-              {expandable && <th className="w-8 py-2.5" />}
+              {expandable && <th className="w-8 py-2.5 align-top" />}
               {columns.map((col, colIdx) => (
                 <th
                   key={col.key}
                   style={{ width: col.width, minWidth: col.minWidth }}
                   className={[
-                    'px-3 py-2.5',
+                    'px-3 py-2.5 align-top',
                     alignClass[col.align ?? 'left'],
                     col.className ?? '',
                     stickyColumns && colIdx === 0 ? 'sticky left-0 z-[2] bg-slate-50 relative' : '',
@@ -471,7 +471,7 @@ export function DataTable<T extends { id: string | number }>({
               {showActions && (
                 <th
                   className={[
-                    'w-10 py-2.5',
+                    'w-10 py-2.5 align-top',
                     stickyColumns ? 'sticky right-0 z-[2] bg-slate-50 relative pl-3' : '',
                   ].filter(Boolean).join(' ')}
                 >
@@ -487,7 +487,7 @@ export function DataTable<T extends { id: string | number }>({
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={colSpanCount}>
+                <td colSpan={colSpanCount} className="align-top">
                   <div className="flex items-center justify-center py-12">
                     <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
                   </div>
@@ -495,7 +495,7 @@ export function DataTable<T extends { id: string | number }>({
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan={colSpanCount}>
+                <td colSpan={colSpanCount} className="align-top">
                   {emptyState ?? (
                     <div className="py-12 text-center text-sm text-slate-400">No records found.</div>
                   )}
@@ -508,7 +508,7 @@ export function DataTable<T extends { id: string | number }>({
                     {groupedRows.map(group => (
                       <React.Fragment key={group.key}>
                         <tr className="bg-slate-50 border-y border-slate-200">
-                          <td colSpan={colSpanCount} className="px-3 py-2">
+                          <td colSpan={colSpanCount} className="px-3 py-2 align-top">
                             {renderGroupHeader
                               ? renderGroupHeader(group.key, group.rows)
                               : (
@@ -521,7 +521,7 @@ export function DataTable<T extends { id: string | number }>({
                         {group.rows.map(row => renderDataRow(row))}
                         {showGroupSummary && renderGroupSummary && (
                           <tr className="bg-slate-50/70 border-b border-slate-200">
-                            <td colSpan={colSpanCount} className="px-3 py-2">
+                            <td colSpan={colSpanCount} className="px-3 py-2 align-top">
                               {renderGroupSummary(group.key, group.rows)}
                             </td>
                           </tr>
@@ -530,7 +530,7 @@ export function DataTable<T extends { id: string | number }>({
                     ))}
                     {showTableSummary && (footerSummaryMode === 'columnTotals' ? renderColumnTotalsRow(rows) : renderTableSummary && (
                       <tr className="bg-slate-100 border-t border-slate-300">
-                        <td colSpan={colSpanCount} className="px-3 py-2">
+                        <td colSpan={colSpanCount} className="px-3 py-2 align-top">
                           {renderTableSummary(rows)}
                         </td>
                       </tr>
@@ -542,7 +542,7 @@ export function DataTable<T extends { id: string | number }>({
                     {rows.map(row => renderDataRow(row))}
                     {showTableSummary && (footerSummaryMode === 'columnTotals' ? renderColumnTotalsRow(rows) : renderTableSummary && (
                       <tr className="bg-slate-100 border-t border-slate-300">
-                        <td colSpan={colSpanCount} className="px-3 py-2">
+                        <td colSpan={colSpanCount} className="px-3 py-2 align-top">
                           {renderTableSummary(rows)}
                         </td>
                       </tr>

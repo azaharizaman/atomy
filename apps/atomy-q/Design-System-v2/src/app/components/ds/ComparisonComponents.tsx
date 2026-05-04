@@ -143,11 +143,11 @@ export function ComparisonMatrixGrid({ vendors, rows }: ComparisonMatrixGridProp
       <table className="w-full text-xs border-collapse min-w-[760px]">
         <thead className="bg-slate-50 border-b border-slate-200">
           <tr>
-            <th className="sticky left-0 z-10 bg-slate-50 px-3 py-2 text-left text-slate-600 font-medium min-w-56">
+            <th className="sticky left-0 z-10 bg-slate-50 px-3 py-2 align-top text-left text-slate-600 font-medium min-w-56">
               Line Item
             </th>
             {vendors.map(vendor => (
-              <th key={vendor.name} className="px-2 py-2 min-w-44">
+              <th key={vendor.name} className="px-2 py-2 align-top min-w-44">
                 <VendorSummaryHeader vendor={vendor.name} total={vendor.total} rank={vendor.rank} />
               </th>
             ))}
@@ -156,12 +156,12 @@ export function ComparisonMatrixGrid({ vendors, rows }: ComparisonMatrixGridProp
         <tbody>
           {rows.map(row => (
             <tr key={row.id} className="border-b border-slate-100">
-              <td className="sticky left-0 bg-white px-3 py-2 text-slate-700 font-medium">{row.lineItem}</td>
+              <td className="sticky left-0 bg-white px-3 py-2 align-top text-slate-700 font-medium">{row.lineItem}</td>
               {row.values.map((value, idx) => (
                 <td
                   key={`${row.id}-${idx}`}
                   className={[
-                    'px-2 py-2 text-right',
+                    'px-2 py-2 align-top text-right',
                     idx === row.bestVendorIndex ? 'bg-green-50/60' : '',
                   ].join(' ')}
                 >

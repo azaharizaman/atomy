@@ -58,8 +58,8 @@ Core entity definitions are documented in [entities.md](./entities.md).
 
 ## Current Implementation Notes
 
-- `/quote-submissions`, `/quote-submissions/upload`, `/quote-submissions/{id}`, `/quote-submissions/{id}/status`, `/quote-submissions/{id}/replace`, `/quote-submissions/{id}/reparse`, and `/quote-submissions/{id}/assign` are the main API surfaces.
+- `/quote-submissions`, `/quote-submissions/upload`, `/quote-submissions/{id}`, `/quote-submissions/{id}/status`, `/quote-submissions/{id}/reparse`, and `/quote-submissions/{id}/assign` are the main API surfaces.
 - Upload and status-update behavior are active.
 - Reparse is active and restarts the quote ingestion processing flow.
-- Replace and assign currently return stubbed responses in the controller.
+- Assign currently returns a stubbed response in the controller.
 - The WEB quote-intake pages use live data in live mode and seed data only in explicit mock mode.
