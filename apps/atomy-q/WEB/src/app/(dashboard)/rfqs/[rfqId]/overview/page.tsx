@@ -168,6 +168,7 @@ export default function RfqOverviewPage({ params }: { params: Promise<{ rfqId: s
         onGenerate={rfqAiSummary.generate ?? undefined}
         isGenerating={rfqAiSummary.isGenerating}
         canGenerate={rfqAiSummary.canGenerate}
+        hideWhenEmpty
       />
 
       {/* 4 KPI scorecards */}

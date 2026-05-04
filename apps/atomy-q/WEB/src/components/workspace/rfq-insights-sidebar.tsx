@@ -119,6 +119,7 @@ export function RfqInsightsSidebar({ rfqId, isNewRfq: explicitIsNewRfq, defaultE
               isError={rfqAiSummary.isError}
               error={rfqAiSummary.error}
               fallbackCopy="RFQ insights are unavailable. Use the deterministic comparison and risk views instead."
+              hideWhenEmpty
             />
           )}
 

@@ -29,7 +29,7 @@ describe('AiNarrativePanel', () => {
   });
 
   it('renders the available narrative summary', () => {
-    renderWithProviders(
+    const { container } = renderWithProviders(
       <AiNarrativePanel
         featureKey="insight_intelligence"
         title="AI summary"
@@ -54,6 +54,7 @@ describe('AiNarrativePanel', () => {
     expect(screen.getByText('Spend is stable and cycle time is improving.')).toBeInTheDocument();
     expect(screen.getByText('Vendor response rates are up.')).toBeInTheDocument();
     expect(screen.getByText('AI-derived')).toBeInTheDocument();
+    expect(container.firstElementChild).toHaveClass('shadow-[0_0_0_1px_rgba(168,85,247,0.22),0_12px_30px_rgba(16,185,129,0.14)]');
   });
 
   it('hides the panel when AI controls should be hidden', () => {
@@ -113,6 +114,35 @@ describe('AiNarrativePanel', () => {
     );
 
     expect(screen.getByRole('button', { name: 'Generate' })).toBeEnabled();
+  });
+
+  it('hides empty panels until an insight exists when requested', () => {
+    const { container } = renderWithProviders(
+      <AiNarrativePanel
+        featureKey="insight_intelligence"
+        title="AI summary"
+        summary={null}
+        isLoading={false}
+        isError={false}
+        hideWhenEmpty
+      />,
+    );
+
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('keeps the panel visible while a hidden-empty insight is loading', () => {
+    renderWithProviders(
+      <AiNarrativePanel
+        featureKey="insight_intelligence"
+        title="AI summary"
+        summary={null}
+        isLoading
+        hideWhenEmpty
+      />,
+    );
+
+    expect(screen.getByText('Loading AI summary...')).toBeInTheDocument();
   });
 
   it('disables generate when canGenerate is false', () => {

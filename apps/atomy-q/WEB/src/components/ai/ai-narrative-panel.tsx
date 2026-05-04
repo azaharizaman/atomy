@@ -9,6 +9,7 @@ import { SectionCard } from '@/components/ds/Card';
 import { Button } from '@/components/ds/Button';
 import { useAiStatus } from '@/hooks/use-ai-status';
 import type { AiNarrativeSummary } from '@/hooks/use-ai-narrative-summary';
+import { AI_DERIVED_CHROME } from '@/lib/ai-derived-style';
 
 function isExpectedUnavailableError(error: Error): boolean {
   return axios.isAxiosError(error) && error.response?.status === 404;
@@ -78,6 +79,7 @@ export interface AiNarrativePanelProps {
   isGenerating?: boolean;
   canGenerate?: boolean;
   generateLabel?: string;
+  hideWhenEmpty?: boolean;
 }
 
 export function AiNarrativePanel({
@@ -94,6 +96,7 @@ export function AiNarrativePanel({
   isGenerating = false,
   canGenerate = true,
   generateLabel,
+  hideWhenEmpty = false,
 }: AiNarrativePanelProps) {
   const aiStatus = useAiStatus();
   React.useEffect(() => {
@@ -109,6 +112,10 @@ export function AiNarrativePanel({
   const showUnavailableMessage = aiStatus.shouldShowUnavailableMessage(featureKey);
   const messageKey = aiStatus.messageKeyForFeature(featureKey);
   const hasAvailableSummary = summary?.available === true;
+  if (hideWhenEmpty && !hasAvailableSummary && !isLoading && !showUnavailableMessage && !isError) {
+    return null;
+  }
+
   const bullets = Array.isArray(summary?.bullets) ? summary.bullets : [];
   const bulletCounts = new Map<string, number>();
   const generationLabel = isGenerating
@@ -135,7 +142,7 @@ export function AiNarrativePanel({
     <SectionCard
       title={title}
       subtitle={subtitle}
-      className={className}
+      className={[hasAvailableSummary ? AI_DERIVED_CHROME : '', className].join(' ')}
       actions={hasAvailableSummary || onGenerate ? actions : null}
     >
       {hasAvailableSummary ? (

@@ -187,6 +187,7 @@ function VendorDetailPageContent({ vendorId }: { vendorId: string }) {
         onGenerate={() => generateGovernanceMutation.mutate(vendorId)}
         isGenerating={generateGovernanceMutation.isPending}
         canGenerate={!generateGovernanceMutation.isPending}
+        hideWhenEmpty
       />
 
       <SectionCard

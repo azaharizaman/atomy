@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Bell, Bot, ChevronRight, Plus } from 'lucide-react';
+import { Bell, ChevronRight, Plus } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/use-auth-store';
 import { Button } from '@/components/ds/Button';
@@ -8,6 +8,7 @@ import { CountBadge } from '@/components/ds/Badge';
 import { SearchInput } from '@/components/ds/Input';
 import { useRfq } from '@/hooks/use-rfq';
 import { buildHeaderBreadcrumbs } from '@/lib/header-breadcrumbs';
+import { SmartAiInsightsButton } from '@/components/layout/smart-ai-insights-button';
 
 function getWorkspaceRfqId(pathname: string): string | null {
   if (!pathname.startsWith('/rfqs/')) return null;
@@ -79,10 +80,7 @@ export function Header() {
         >
           New RFQ
         </Button>
-        <Button size="sm" variant="ghost" icon={<Bot size={14} />}>
-          AI Insights
-        </Button>
-
+        <SmartAiInsightsButton />
         <button className="relative text-slate-500 hover:text-slate-700" aria-label="Notifications" type="button">
           <Bell size={18} />
           <CountBadge count={1} variant="red" className="absolute -top-1 -right-1" />

@@ -75,6 +75,7 @@ function VendorEsgCompliancePageContent({ vendorId }: { vendorId: string }) {
         onGenerate={() => generateGovernanceMutation.mutate(vendorId)}
         isGenerating={generateGovernanceMutation.isPending}
         canGenerate={!generateGovernanceMutation.isPending}
+        hideWhenEmpty
       />
 
       <SectionCard title="Health scores" subtitle="Monitoring signals are advisory and do not automatically change eligibility">

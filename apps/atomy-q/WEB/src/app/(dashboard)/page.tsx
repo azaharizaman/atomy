@@ -171,6 +171,7 @@ export default function DashboardPage() {
         onGenerate={dashboardAiSummary.generate ?? undefined}
         isGenerating={dashboardAiSummary.isGenerating}
         canGenerate={dashboardAiSummary.canGenerate}
+        hideWhenEmpty
       />
 
       <div className="grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-4">
