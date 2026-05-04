@@ -21,7 +21,7 @@ export function PipelineStatCard({ label, count, icon, onClick, className = '' }
     <div
       onClick={onClick}
       className={[
-        'flex items-center justify-between p-4 rounded-lg border border-slate-200 bg-white shadow-[0_1px_3px_0_rgba(0,0,0,0.06)]',
+        'flex h-full items-center justify-between p-4 rounded-lg border border-slate-200 bg-white shadow-[0_1px_3px_0_rgba(0,0,0,0.06)]',
         onClick ? 'cursor-pointer hover:border-indigo-300 hover:shadow-sm transition-all' : '',
         className,
       ].join(' ')}
@@ -52,7 +52,7 @@ interface SavingsHighlightCardProps {
 export function SavingsHighlightCard({ title, value, subtitle, trend, onClick, className = '' }: SavingsHighlightCardProps) {
   const trendUp = trend && trend.value > 0;
   return (
-    <Card padding="lg" onClick={onClick} className={className}>
+    <Card padding="lg" onClick={onClick} className={['h-full', className].join(' ')}>
       <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">{title}</p>
       <p className="text-3xl font-bold text-slate-900">{value}</p>
       {subtitle && <p className="text-sm text-slate-500 mt-1">{subtitle}</p>}
@@ -135,7 +135,7 @@ interface ActivitySummaryCardProps {
 export function ActivitySummaryCard({ items, title = 'Recent Activity', maxItems = 5, onViewAll, className = '' }: ActivitySummaryCardProps) {
   const shown = items.slice(0, maxItems);
   return (
-    <Card padding="none" className={className}>
+    <Card padding="none" className={['h-full', className].join(' ')}>
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
         <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
         {onViewAll && (
@@ -179,7 +179,7 @@ interface PendingApprovalsCardProps {
 
 export function PendingApprovalsCard({ items, onItemClick, onViewAll, className = '' }: PendingApprovalsCardProps) {
   return (
-    <Card padding="none" className={className}>
+    <Card padding="none" className={['h-full', className].join(' ')}>
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
         <h3 className="text-sm font-semibold text-slate-800">Pending Approvals</h3>
         {onViewAll && (
@@ -232,7 +232,7 @@ export function CategoryBreakdownCard({ items, title = 'By Category', maxItems =
   const shown = items.slice(0, maxItems);
   const maxPct = Math.max(...shown.map(i => i.pct), 1);
   return (
-    <Card padding="none" className={className}>
+    <Card padding="none" className={['h-full', className].join(' ')}>
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
         <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
         {onViewAll && (
@@ -274,7 +274,7 @@ interface QuickActionCardProps {
 
 export function QuickActionCard({ icon, title, description, actionLabel, onAction, className = '' }: QuickActionCardProps) {
   return (
-    <Card padding="md" onClick={onAction} className={className}>
+    <Card padding="md" onClick={onAction} className={['h-full', className].join(' ')}>
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 shrink-0">
           {icon}

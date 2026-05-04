@@ -160,6 +160,7 @@ final class RfqController extends Controller
             ->withCount([
                 'vendorInvitations as vendors_count',
                 'quoteSubmissions as quotes_count',
+                'comparisonRuns as comparison_runs_count',
             ])
             ->where('tenant_id', $tenantId);
 
@@ -352,6 +353,7 @@ final class RfqController extends Controller
             ->withCount([
                 'vendorInvitations as vendors_count',
                 'quoteSubmissions as quotes_count',
+                'comparisonRuns as comparison_runs_count',
             ])
             ->where('tenant_id', $tenantId)
             ->where(function ($builder) use ($id): void {
@@ -413,6 +415,7 @@ final class RfqController extends Controller
             ->withCount([
                 'vendorInvitations as vendors_count',
                 'quoteSubmissions as quotes_count',
+                'comparisonRuns as comparison_runs_count',
             ])
             ->where('tenant_id', $tenantId)
             ->where(function ($builder) use ($id): void {
@@ -522,6 +525,7 @@ final class RfqController extends Controller
                     'progress_pct' => $normProgress,
                 ],
                 'comparison' => $comparison,
+                'comparison_runs_count' => (int) $rfq->comparison_runs_count,
                 'approvals' => [
                     'pending_count' => $approvalsPending,
                     'approved_count' => $approvalsApproved,
@@ -531,6 +535,7 @@ final class RfqController extends Controller
                 'activity' => $activity,
                 'expectedQuotes' => $expectedQuotes,
                 'normalizationProgress' => $normProgress,
+                'comparisonRunsCount' => (int) $rfq->comparison_runs_count,
                 'latestComparisonRun' => $latestComparisonRun,
                 'approvalStatus' => [
                     'overall' => $approvalOverall,

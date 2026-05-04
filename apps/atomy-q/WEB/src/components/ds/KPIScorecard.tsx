@@ -62,7 +62,7 @@ export function KPIScorecard({
           : undefined
       }
       className={[
-        'flex flex-col gap-2 p-4 bg-white rounded-lg border shadow-[0_1px_3px_0_rgba(0,0,0,0.06)]',
+        'flex h-full flex-col gap-2 p-4 bg-white rounded-lg border shadow-[0_1px_3px_0_rgba(0,0,0,0.06)]',
         highlight ? 'border-indigo-300 ring-1 ring-indigo-200' : 'border-slate-200',
         onClick
           ? 'cursor-pointer hover:border-indigo-300 hover:shadow-[0_2px_8px_0_rgba(0,0,0,0.08)] transition-all duration-150'

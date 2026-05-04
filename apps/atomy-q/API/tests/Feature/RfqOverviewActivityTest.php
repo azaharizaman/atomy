@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\ComparisonRun;
 use App\Models\QuoteSubmission;
 use App\Models\Rfq;
 use App\Models\User;
@@ -192,6 +193,32 @@ final class RfqOverviewActivityTest extends ApiTestCase
         $rfq = Rfq::query()->where('rfq_number', 'RFQ-ACT-0004')->first();
         $this->assertNotNull($rfq);
 
+        $previewRun = ComparisonRun::query()->create([
+            'tenant_id' => $tenantId,
+            'rfq_id' => $rfq->id,
+            'name' => 'Preview comparison',
+            'is_preview' => true,
+            'status' => 'draft',
+            'version' => 1,
+        ]);
+        $previewRun->forceFill([
+            'created_at' => now()->subMinute(),
+            'updated_at' => now()->subMinute(),
+        ])->save();
+
+        $finalRun = ComparisonRun::query()->create([
+            'tenant_id' => $tenantId,
+            'rfq_id' => $rfq->id,
+            'name' => 'Final comparison',
+            'is_preview' => false,
+            'status' => 'locked',
+            'version' => 1,
+        ]);
+        $finalRun->forceFill([
+            'created_at' => now(),
+            'updated_at' => now(),
+        ])->save();
+
         $response = $this->getJson(
             '/api/v1/rfqs/' . $rfq->id . '/overview',
             $this->authHeaders($tenantId, (string) $user->id),
@@ -201,13 +228,17 @@ final class RfqOverviewActivityTest extends ApiTestCase
         $response->assertJsonPath('data.rfq.display_identifier', 'RFQ-ACT-0004');
         $response->assertJsonPath('data.expectedQuotes', 0);
         $response->assertJsonPath('data.normalizationProgress', 0);
-        $response->assertJsonPath('data.latestComparisonRun', null);
+        $response->assertJsonPath('data.comparison_runs_count', 2);
+        $response->assertJsonPath('data.comparisonRunsCount', 2);
+        $response->assertJsonPath('data.latestComparisonRun.status', 'locked');
         $response->assertJsonPath('data.approvalStatus.overall', 'none');
         $response->assertJsonStructure([
             'data' => [
                 'expected_quotes',
                 'expectedQuotes',
                 'normalizationProgress',
+                'comparison_runs_count',
+                'comparisonRunsCount',
                 'latestComparisonRun',
                 'approvalStatus' => ['overall', 'pending_count', 'approved_count', 'rejected_count'],
                 'activity',
