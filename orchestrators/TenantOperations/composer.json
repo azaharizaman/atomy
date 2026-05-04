@@ -1,5 +1,5 @@
 {
-    "name": "nexus/tenant-operations",
+    "name": "azaharizaman/nexus-tenant-operations",
     "description": "Non-operational orchestrator for multi-tenant lifecycle management - defines interfaces for tenant, setting, feature flags, backoffice, and audit operations",
     "type": "library",
     "license": "MIT",

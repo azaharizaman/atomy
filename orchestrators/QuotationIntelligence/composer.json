@@ -1,5 +1,5 @@
 {
-    "name": "nexus/quotation-intelligence",
+    "name": "azaharizaman/nexus-quotation-intelligence",
     "description": "AI-driven quotation normalization and intelligence orchestrator.",
     "type": "library",
     "license": "proprietary",

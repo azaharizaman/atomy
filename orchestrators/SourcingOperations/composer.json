@@ -1,5 +1,5 @@
 {
-    "name": "nexus/sourcing-operations",
+    "name": "azaharizaman/nexus-sourcing-operations",
     "description": "Nexus SourcingOperations Orchestrator - Cross-package workflow coordination for vendor sourcing and ecosystem management",
     "type": "library",
     "license": "MIT",

@@ -1,5 +1,5 @@
 {
-    "name": "nexus/manufacturing-operations",
+    "name": "azaharizaman/nexus-manufacturing-operations",
     "description": "Production-ready orchestrator for manufacturing operations - coordinates production lifecycles, BOM reconciliation, costing, quality control, and work center management across multiple user groups",
     "type": "library",
     "license": "MIT",

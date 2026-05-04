@@ -1,5 +1,5 @@
 {
-    "name": "nexus/insight-operations",
+    "name": "azaharizaman/nexus-insight-operations",
     "description": "Nexus InsightOperations Orchestrator - Transforming raw data into business intelligence",
     "type": "library",
     "license": "MIT",

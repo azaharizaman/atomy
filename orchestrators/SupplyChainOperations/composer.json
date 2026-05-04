@@ -1,5 +1,5 @@
 {
-    "name": "nexus/supply-chain-operations",
+    "name": "azaharizaman/nexus-supply-chain-operations",
     "description": "Nexus SupplyChainOperations Orchestrator - Coordinating end-to-end supply chain flows from procurement to fulfillment",
     "type": "library",
     "license": "MIT",

@@ -1,5 +1,5 @@
 {
-    "name": "nexus/project-management-operations",
+    "name": "azaharizaman/nexus-project-management-operations",
     "description": "Nexus ProjectManagementOperations Orchestrator - Cross-package workflow coordination for project-based businesses",
     "type": "library",
     "license": "MIT",

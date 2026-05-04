@@ -1,5 +1,5 @@
 {
-    "name": "nexus/intelligence-operations",
+    "name": "azaharizaman/nexus-intelligence-operations",
     "description": "Nexus IntelligenceOperations Orchestrator - Managing AI/ML model lifecycles",
     "type": "library",
     "license": "MIT",

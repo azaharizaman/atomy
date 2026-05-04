@@ -1,5 +1,5 @@
 {
-    "name": "nexus/procurement-operations",
+    "name": "azaharizaman/nexus-procurement-operations",
     "description": "Nexus ProcurementOperations Orchestrator - Cross-package workflow coordination for Procure-to-Pay (P2P) processes",
     "type": "library",
     "license": "MIT",

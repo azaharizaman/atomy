@@ -1,5 +1,5 @@
 {
-    "name": "nexus/finance-operations",
+    "name": "azaharizaman/nexus-finance-operations",
     "description": "Framework-agnostic finance workflow orchestrator for day-to-day financial operations including cash flow management, cost allocation, depreciation coordination, GL posting, and budget tracking.",
     "type": "library",
     "license": "MIT",

@@ -1,5 +1,5 @@
 {
-    "name": "nexus/identity-operations",
+    "name": "azaharizaman/nexus-identity-operations",
     "description": "Non-operational orchestrator for user lifecycle management - defines interfaces for Identity, Tenant, and AuditLogger operations",
     "type": "library",
     "license": "MIT",

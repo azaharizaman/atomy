@@ -1,5 +1,5 @@
 {
-    "name": "nexus/approval-operations",
+    "name": "azaharizaman/nexus-approval-operations",
     "description": "Nexus ApprovalOperations \u2014 Layer 2 orchestration for operational approvals (Workflow, PolicyEngine, tenant-scoped ports)",
     "type": "library",
     "license": "MIT",

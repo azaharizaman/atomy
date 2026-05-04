@@ -1,5 +1,5 @@
 {
-    "name": "nexus/accounting-operations",
+    "name": "azaharizaman/nexus-accounting-operations",
     "description": "Nexus AccountingOperations Orchestrator - Cross-package workflow coordination for accounting processes",
     "type": "library",
     "license": "MIT",

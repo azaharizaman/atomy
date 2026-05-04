@@ -1,5 +1,5 @@
 {
-    "name": "nexus/connectivity-operations",
+    "name": "azaharizaman/nexus-connectivity-operations",
     "description": "Nexus ConnectivityOperations Orchestrator - Resilient and secure 3rd-party integration gateway",
     "type": "library",
     "license": "MIT",

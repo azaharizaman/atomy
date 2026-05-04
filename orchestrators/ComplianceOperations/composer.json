@@ -1,5 +1,5 @@
 {
-    "name": "nexus/compliance-operations",
+    "name": "azaharizaman/nexus-compliance-operations",
     "description": "Nexus ComplianceOperations Orchestrator - Cross-package workflow coordination for compliance processes including KYC, AML, sanctions, and privacy",
     "type": "library",
     "license": "MIT",

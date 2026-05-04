@@ -1,5 +1,5 @@
 {
-    "name": "nexus/human-resource-operations",
+    "name": "azaharizaman/nexus-human-resource-operations",
     "description": "HR Operations Orchestrator - Coordinates all HR domain packages including Leave, Attendance, Payroll, Employee, Shift, Disciplinary, Performance Review, Training, Recruitment, and Onboarding",
     "type": "library",
     "license": "MIT",

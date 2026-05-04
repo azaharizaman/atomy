@@ -1,5 +1,5 @@
 {
-    "name": "nexus/sales-operations",
+    "name": "azaharizaman/nexus-sales-operations",
     "description": "Nexus SalesOperations Orchestrator - Order-to-Cash workflow coordination with progressive disclosure for SMB to Enterprise",
     "type": "library",
     "license": "MIT",

@@ -1,5 +1,5 @@
 {
-    "name": "nexus/data-exchange-operations",
+    "name": "azaharizaman/nexus-data-exchange-operations",
     "description": "Nexus DataExchangeOperations Orchestrator - Coordinating high-integrity data movement",
     "type": "library",
     "license": "MIT",

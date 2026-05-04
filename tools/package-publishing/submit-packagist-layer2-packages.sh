@@ -5,7 +5,7 @@ manifest="${MANIFEST:-docs/package-publishing/nexus-layer2-packages.manifest.jso
 execute=0
 packagist_username="${PACKAGIST_USERNAME:-}"
 packagist_token="${PACKAGIST_API_TOKEN:-}"
-user_agent="${PACKAGIST_USER_AGENT:-Nexus package publishing automation mailto:azaharizaman@users.noreply.github.com}"
+user_agent="${PACKAGIST_USER_AGENT:-Nexus package publishing automation mailto:azaharizaman@gmail.com}"
 
 if [[ "${1:-}" == "--execute" ]]; then
   execute=1

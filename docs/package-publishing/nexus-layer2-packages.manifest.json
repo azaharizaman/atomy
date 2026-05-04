@@ -1,5 +1,5 @@
 {
-    "generated_at": "2026-05-04T21:14:14+00:00",
+    "generated_at": "2026-05-04T22:08:52+00:00",
     "packagist_vendor": "azaharizaman",
     "github_owner": "azaharizaman",
     "package_count": 23,
@@ -7,7 +7,7 @@
         {
             "path": "orchestrators/AccountingOperations",
             "composer": "orchestrators/AccountingOperations/composer.json",
-            "current_name": "nexus/accounting-operations",
+            "current_name": "azaharizaman/nexus-accounting-operations",
             "old_name": "nexus/accounting-operations",
             "new_name": "azaharizaman/nexus-accounting-operations",
             "github_owner": "azaharizaman",
@@ -20,7 +20,7 @@
         {
             "path": "orchestrators/ApprovalOperations",
             "composer": "orchestrators/ApprovalOperations/composer.json",
-            "current_name": "nexus/approval-operations",
+            "current_name": "azaharizaman/nexus-approval-operations",
             "old_name": "nexus/approval-operations",
             "new_name": "azaharizaman/nexus-approval-operations",
             "github_owner": "azaharizaman",
@@ -33,7 +33,7 @@
         {
             "path": "orchestrators/ComplianceOperations",
             "composer": "orchestrators/ComplianceOperations/composer.json",
-            "current_name": "nexus/compliance-operations",
+            "current_name": "azaharizaman/nexus-compliance-operations",
             "old_name": "nexus/compliance-operations",
             "new_name": "azaharizaman/nexus-compliance-operations",
             "github_owner": "azaharizaman",
@@ -46,7 +46,7 @@
         {
             "path": "orchestrators/ConnectivityOperations",
             "composer": "orchestrators/ConnectivityOperations/composer.json",
-            "current_name": "nexus/connectivity-operations",
+            "current_name": "azaharizaman/nexus-connectivity-operations",
             "old_name": "nexus/connectivity-operations",
             "new_name": "azaharizaman/nexus-connectivity-operations",
             "github_owner": "azaharizaman",
@@ -59,7 +59,7 @@
         {
             "path": "orchestrators/CRMOperations",
             "composer": "orchestrators/CRMOperations/composer.json",
-            "current_name": "nexus/crm-operations",
+            "current_name": "azaharizaman/nexus-crm-operations",
             "old_name": "nexus/crm-operations",
             "new_name": "azaharizaman/nexus-crm-operations",
             "github_owner": "azaharizaman",
@@ -72,7 +72,7 @@
         {
             "path": "orchestrators/CustomerServiceOperations",
             "composer": "orchestrators/CustomerServiceOperations/composer.json",
-            "current_name": "nexus/customer-service-operations",
+            "current_name": "azaharizaman/nexus-customer-service-operations",
             "old_name": "nexus/customer-service-operations",
             "new_name": "azaharizaman/nexus-customer-service-operations",
             "github_owner": "azaharizaman",
@@ -85,7 +85,7 @@
         {
             "path": "orchestrators/DataExchangeOperations",
             "composer": "orchestrators/DataExchangeOperations/composer.json",
-            "current_name": "nexus/data-exchange-operations",
+            "current_name": "azaharizaman/nexus-data-exchange-operations",
             "old_name": "nexus/data-exchange-operations",
             "new_name": "azaharizaman/nexus-data-exchange-operations",
             "github_owner": "azaharizaman",
@@ -98,7 +98,7 @@
         {
             "path": "orchestrators/ESGOperations",
             "composer": "orchestrators/ESGOperations/composer.json",
-            "current_name": "nexus/esg-operations",
+            "current_name": "azaharizaman/nexus-esg-operations",
             "old_name": "nexus/esg-operations",
             "new_name": "azaharizaman/nexus-esg-operations",
             "github_owner": "azaharizaman",
@@ -111,7 +111,7 @@
         {
             "path": "orchestrators/FinanceOperations",
             "composer": "orchestrators/FinanceOperations/composer.json",
-            "current_name": "nexus/finance-operations",
+            "current_name": "azaharizaman/nexus-finance-operations",
             "old_name": "nexus/finance-operations",
             "new_name": "azaharizaman/nexus-finance-operations",
             "github_owner": "azaharizaman",
@@ -124,7 +124,7 @@
         {
             "path": "orchestrators/HumanResourceOperations",
             "composer": "orchestrators/HumanResourceOperations/composer.json",
-            "current_name": "nexus/human-resource-operations",
+            "current_name": "azaharizaman/nexus-human-resource-operations",
             "old_name": "nexus/human-resource-operations",
             "new_name": "azaharizaman/nexus-human-resource-operations",
             "github_owner": "azaharizaman",
@@ -137,7 +137,7 @@
         {
             "path": "orchestrators/IdentityOperations",
             "composer": "orchestrators/IdentityOperations/composer.json",
-            "current_name": "nexus/identity-operations",
+            "current_name": "azaharizaman/nexus-identity-operations",
             "old_name": "nexus/identity-operations",
             "new_name": "azaharizaman/nexus-identity-operations",
             "github_owner": "azaharizaman",
@@ -150,7 +150,7 @@
         {
             "path": "orchestrators/InsightOperations",
             "composer": "orchestrators/InsightOperations/composer.json",
-            "current_name": "nexus/insight-operations",
+            "current_name": "azaharizaman/nexus-insight-operations",
             "old_name": "nexus/insight-operations",
             "new_name": "azaharizaman/nexus-insight-operations",
             "github_owner": "azaharizaman",
@@ -163,7 +163,7 @@
         {
             "path": "orchestrators/IntelligenceOperations",
             "composer": "orchestrators/IntelligenceOperations/composer.json",
-            "current_name": "nexus/intelligence-operations",
+            "current_name": "azaharizaman/nexus-intelligence-operations",
             "old_name": "nexus/intelligence-operations",
             "new_name": "azaharizaman/nexus-intelligence-operations",
             "github_owner": "azaharizaman",
@@ -176,7 +176,7 @@
         {
             "path": "orchestrators/ManufacturingOperations",
             "composer": "orchestrators/ManufacturingOperations/composer.json",
-            "current_name": "nexus/manufacturing-operations",
+            "current_name": "azaharizaman/nexus-manufacturing-operations",
             "old_name": "nexus/manufacturing-operations",
             "new_name": "azaharizaman/nexus-manufacturing-operations",
             "github_owner": "azaharizaman",
@@ -189,7 +189,7 @@
         {
             "path": "orchestrators/ProcurementOperations",
             "composer": "orchestrators/ProcurementOperations/composer.json",
-            "current_name": "nexus/procurement-operations",
+            "current_name": "azaharizaman/nexus-procurement-operations",
             "old_name": "nexus/procurement-operations",
             "new_name": "azaharizaman/nexus-procurement-operations",
             "github_owner": "azaharizaman",
@@ -202,7 +202,7 @@
         {
             "path": "orchestrators/ProjectManagementOperations",
             "composer": "orchestrators/ProjectManagementOperations/composer.json",
-            "current_name": "nexus/project-management-operations",
+            "current_name": "azaharizaman/nexus-project-management-operations",
             "old_name": "nexus/project-management-operations",
             "new_name": "azaharizaman/nexus-project-management-operations",
             "github_owner": "azaharizaman",
@@ -215,7 +215,7 @@
         {
             "path": "orchestrators/QuotationIntelligence",
             "composer": "orchestrators/QuotationIntelligence/composer.json",
-            "current_name": "nexus/quotation-intelligence",
+            "current_name": "azaharizaman/nexus-quotation-intelligence",
             "old_name": "nexus/quotation-intelligence",
             "new_name": "azaharizaman/nexus-quotation-intelligence",
             "github_owner": "azaharizaman",
@@ -228,7 +228,7 @@
         {
             "path": "orchestrators/SalesOperations",
             "composer": "orchestrators/SalesOperations/composer.json",
-            "current_name": "nexus/sales-operations",
+            "current_name": "azaharizaman/nexus-sales-operations",
             "old_name": "nexus/sales-operations",
             "new_name": "azaharizaman/nexus-sales-operations",
             "github_owner": "azaharizaman",
@@ -241,7 +241,7 @@
         {
             "path": "orchestrators/SettingsManagement",
             "composer": "orchestrators/SettingsManagement/composer.json",
-            "current_name": "nexus/settings-management",
+            "current_name": "azaharizaman/nexus-settings-management",
             "old_name": "nexus/settings-management",
             "new_name": "azaharizaman/nexus-settings-management",
             "github_owner": "azaharizaman",
@@ -254,7 +254,7 @@
         {
             "path": "orchestrators/SourcingOperations",
             "composer": "orchestrators/SourcingOperations/composer.json",
-            "current_name": "nexus/sourcing-operations",
+            "current_name": "azaharizaman/nexus-sourcing-operations",
             "old_name": "nexus/sourcing-operations",
             "new_name": "azaharizaman/nexus-sourcing-operations",
             "github_owner": "azaharizaman",
@@ -267,7 +267,7 @@
         {
             "path": "orchestrators/SupplyChainOperations",
             "composer": "orchestrators/SupplyChainOperations/composer.json",
-            "current_name": "nexus/supply-chain-operations",
+            "current_name": "azaharizaman/nexus-supply-chain-operations",
             "old_name": "nexus/supply-chain-operations",
             "new_name": "azaharizaman/nexus-supply-chain-operations",
             "github_owner": "azaharizaman",
@@ -280,7 +280,7 @@
         {
             "path": "orchestrators/SystemAdministration",
             "composer": "orchestrators/SystemAdministration/composer.json",
-            "current_name": "nexus/system-administration",
+            "current_name": "azaharizaman/nexus-system-administration",
             "old_name": "nexus/system-administration",
             "new_name": "azaharizaman/nexus-system-administration",
             "github_owner": "azaharizaman",
@@ -293,7 +293,7 @@
         {
             "path": "orchestrators/TenantOperations",
             "composer": "orchestrators/TenantOperations/composer.json",
-            "current_name": "nexus/tenant-operations",
+            "current_name": "azaharizaman/nexus-tenant-operations",
             "old_name": "nexus/tenant-operations",
             "new_name": "azaharizaman/nexus-tenant-operations",
             "github_owner": "azaharizaman",

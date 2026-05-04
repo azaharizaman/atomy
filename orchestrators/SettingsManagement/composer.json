@@ -1,5 +1,5 @@
 {
-    "name": "nexus/settings-management",
+    "name": "azaharizaman/nexus-settings-management",
     "description": "Non-operational orchestrator for system-wide configuration management - defines interfaces for settings, feature flags, period, and audit operations",
     "type": "library",
     "license": "MIT",

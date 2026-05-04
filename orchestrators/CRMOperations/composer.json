@@ -1,5 +1,5 @@
 {
-    "name": "nexus/crm-operations",
+    "name": "azaharizaman/nexus-crm-operations",
     "description": "CRM Operations Orchestrator for cross-package workflow coordination in Nexus ERP",
     "type": "library",
     "license": "MIT",
