@@ -5,170 +5,118 @@ Status: Proposed
 
 ## 1. Purpose
 
-`Nexus\MetricEngine` is a new Layer 1 package for stateless, framework-agnostic metric calculation.
+`Nexus\MetricEngine` is a Layer 1 package for deterministic, framework-agnostic metric calculation.
 
-Its responsibility is limited to evaluating metrics from prepared inputs. It does not fetch data, define domain semantics, render reports, or own dashboard/query concerns.
+It evaluates prepared scalar and time-series inputs against caller-defined formulas. It does not fetch data, own business semantics, render reports, persist state, or collect observability metrics.
 
-The package exists to provide one reusable calculation kernel that domain packages can use when they need:
+The package exists to centralize reusable calculation mechanics that are currently repeated across domain packages such as `FinancialRatios`, `AccountVarianceAnalysis`, `Treasury`, `ESG`, `SourcingScoring`, and `PerformanceReview`.
 
-- mathematical and statistical calculations
-- generic business metric calculations
-- scalar metric evaluation
-- time-series and windowed metric evaluation
-- formula composition from reusable primitives
+## 2. Boundary
 
-## 2. Problem Statement
+`MetricEngine` owns neutral calculation mechanics:
 
-The current package catalogue already contains domain-specific KPI and scoring logic:
-
-- `PerformanceReview` for appraisal KPIs and ratings
-- `FinancialRatios` for financial ratio calculation
-- `AccountVarianceAnalysis` for variance and trend analysis
-- `Treasury` for treasury KPI objects and analytics
-- `ESG` for sustainability scoring
-- `SourcingScoring` for sourcing evaluation
-
-Those packages correctly own business meaning, but calculation mechanics are fragmented. Reusable primitives such as ratio, growth, target attainment, rolling average, weighted score, or period comparison should not be repeatedly reimplemented in each domain package.
-
-`MetricEngine` addresses that gap by centralizing calculation mechanics while leaving business formula ownership in the consuming domain package.
-
-## 3. Goals
-
-- Provide a Layer 1 calculation engine for neutral metric evaluation.
-- Support both scalar inputs and time-series inputs.
-- Support composable formulas backed by built-in primitives.
-- Remain stateless and framework-agnostic.
-- Keep dependencies bounded to PHP, PSR contracts, and math-oriented libraries only.
-- Return typed, deterministic results with explicit failure semantics.
-- Avoid leaking domain-specific business semantics into the package.
-
-## 4. Non-Goals
-
-- No data fetching or query execution.
-- No persistence, caching, or stateful runtime.
-- No report rendering, export formatting, or distribution.
-- No dashboard composition.
-- No observability/monitoring metric collection.
-- No domain-owned formulas such as employee appraisal score, sourcing award logic, or treasury policy thresholds.
-- No framework-specific adapters in Layer 1.
-
-## 5. Recommended Approach
-
-Three approaches were considered:
-
-1. Pure function library only
-2. Formula runtime with typed inputs
-3. Mini analytics platform
-
-Recommended approach: `MetricEngine` should be a formula runtime with typed inputs.
-
-Reason:
-
-- a pure function library is too rigid and pushes too much assembly work into every caller
-- a mini analytics platform would overlap with `QueryEngine` and `Reporting`
-- a formula runtime preserves a clean Layer 1 boundary while remaining reusable across domains
-
-## 6. Boundary
-
-`MetricEngine` owns:
-
-- primitive calculations
+- primitive math/statistical operations
 - formula composition
 - scalar evaluation
 - time-series evaluation
 - window resolution
-- comparison logic
-- typed metric result objects
-- validation and deterministic calculation errors
+- period comparison
+- typed deterministic result objects
+- explicit validation and calculation failures
 
 `MetricEngine` does not own:
 
-- data sourcing
-- query execution
-- reporting
-- presentation
-- dashboard semantics
-- domain formula meaning
+- data sourcing or query execution
+- dashboard/report composition
+- persistence, caching, or runtime state
+- domain metric names, meanings, labels, thresholds, or interpretation
+- observability/system telemetry collection
 
-Boundary rule:
+Boundary invariant:
 
-Domain packages define metric formulas, semantic labels, and interpretation rules. `MetricEngine` only evaluates the supplied formula against prepared inputs.
+Domain packages define the formula meaning. `MetricEngine` only evaluates neutral formula definitions against prepared inputs.
 
-## 7. Runtime Shape
+## 3. Design Choice
 
-The package should be stateless and framework-agnostic.
+Use a small formula runtime with typed inputs.
+
+A pure function library would push repeated assembly logic into every caller. A mini analytics platform would overlap with `QueryEngine`, `Reporting`, and dashboard concerns. A typed formula runtime gives domains reusable mechanics while preserving Layer 1 purity.
+
+## 4. Package Shape
 
 Suggested structure:
 
-- `src/Contracts/`
-  - `FormulaInterface`
-  - `FormulaEvaluatorInterface`
-  - `WindowResolverInterface`
-  - `MetricResultInterface`
-- `src/ValueObjects/`
-  - `MetricInput`
-  - `TimeSeriesPoint`
-  - `TimeWindow`
-  - `FormulaDefinition`
-  - `MetricResult`
-  - `ComparisonResult`
-- `src/Enums/`
-  - `AggregationType`
-  - `WindowType`
-  - `ComparisonType`
-  - `ValueType`
-- `src/Services/`
-  - `FormulaEvaluator`
-  - `ScalarMetricCalculator`
-  - `TimeSeriesMetricCalculator`
-  - `WindowingEngine`
-  - `ComparisonEngine`
-- `src/Exceptions/`
-  - formula validation errors
-  - missing input errors
-  - type mismatch errors
-  - divide-by-zero errors
-  - invalid window errors
-  - insufficient data errors
+- `src/Contracts/FormulaInterface.php`
+- `src/Contracts/FormulaEvaluatorInterface.php`
+- `src/Contracts/WindowResolverInterface.php`
+- `src/Contracts/MetricResultInterface.php`
+- `src/ValueObjects/MetricInput.php`
+- `src/ValueObjects/MetricSeries.php`
+- `src/ValueObjects/TimeSeriesPoint.php`
+- `src/ValueObjects/TimeWindow.php`
+- `src/ValueObjects/FormulaDefinition.php`
+- `src/ValueObjects/MetricResult.php`
+- `src/ValueObjects/ComparisonResult.php`
+- `src/Enums/AggregationType.php`
+- `src/Enums/WindowType.php`
+- `src/Enums/ComparisonType.php`
+- `src/Enums/ValueType.php`
+- `src/Services/FormulaEvaluatorService.php`
+- `src/Services/ScalarMetricCalculatorService.php`
+- `src/Services/TimeSeriesMetricCalculatorService.php`
+- `src/Services/WindowResolverService.php`
+- `src/Services/ComparisonService.php`
+- `src/Exceptions/*Exception.php`
 
-This is a calculation kernel, not a data platform.
+All value objects should be `final readonly class`. Service names should follow Layer 1 naming conventions and use the `Service` suffix.
 
-## 8. Input Modes
+## 5. Input Model
 
-The package should support two input modes:
+The engine supports two prepared input modes.
 
-### 8.1 Scalar Inputs
+Scalar inputs are named values supplied by the caller:
 
-Used when a domain package already has prepared values such as:
+- `revenue`
+- `cost`
+- `target`
+- `actual`
+- `weight`
 
-- revenue
-- cost
-- target
-- actual
-- weight
+Time-series inputs are ordered points supplied by the caller:
 
-### 8.2 Time-Series Inputs
+- date or period key
+- numeric value
+- optional caller-provided metadata
 
-Used when the domain package supplies dated or periodized values such as:
+The engine must not normalize domain data. Callers are responsible for turning domain records into `MetricInput` or `MetricSeries`.
 
-- daily sales
-- monthly cash balances
-- quarterly operating margin
-- weekly delivery performance
+## 6. Formula Model
 
-Time-series support should enable:
+Formulas are declarative and deterministic.
 
-- rolling windows
-- period-over-period comparison
-- year-over-year and quarter-over-quarter comparison
-- year-to-date, quarter-to-date, month-to-date
-- custom time ranges
+A formula may reference:
 
-## 9. Primitive Set
+- named inputs
+- constants
+- primitive operations
+- nested primitive expressions
+- caller-supplied precision policy
+- optional time windows or comparison definitions
 
-The initial primitive set should stay intentionally small but expressive.
+Formula definitions may be object-based in v1. Array-backed formula loading is deferred unless an immediate package consumer requires config-driven definitions.
 
-### 9.1 Base Math And Statistical Primitives
+Example conceptual formulas:
+
+- `ratio(delta(revenue, cogs), revenue)`
+- `weighted_score([quality, delivery, price], [0.4, 0.3, 0.3])`
+
+The engine must not assign those formulas names like "gross margin", "vendor health", or "delivery performance". Those labels belong to consuming packages.
+
+## 7. V1 Primitive Set
+
+V1 should be intentionally small and complete.
+
+Scalar primitives:
 
 - `sum`
 - `avg`
@@ -179,260 +127,186 @@ The initial primitive set should stay intentionally small but expressive.
 - `delta`
 - `absolute_delta`
 - `pct_change`
-- `median`
-- `percentile`
-- `stddev`
 - `weighted_avg`
 - `weighted_score`
 
-### 9.2 Generic Business Metric Primitives
-
-- `target_attainment`
-- `target_gap`
-- `variance_to_target`
-- `forecast_accuracy`
-- `banded_health_score`
-
-These are allowed because they are reusable calculation patterns and do not require domain meaning.
-
-### 9.3 Time-Aware Primitives
+Time-series primitives:
 
 - `rolling_avg`
 - `rolling_sum`
 - `period_compare`
+
+Deferred primitives:
+
+- `median`
+- `percentile`
+- `stddev`
+- `target_attainment`
+- `target_gap`
+- `variance_to_target`
+- `forecast_accuracy`
 - `yoy_change`
 - `qoq_change`
 - `trend_slope`
-
-Possible later primitive:
-
 - `cagr`
 
-This should not be in the initial scope unless a consuming package proves the need.
+Deferred primitives should be added only when a real consuming package needs them.
 
-## 10. Formula Model
+`banded_health_score` must not be a `MetricEngine` primitive. If needed later, the neutral primitive should be `banded_score`, with caller-supplied bands and no domain label.
 
-The package should support a composable formula model with built-in primitives.
+## 8. Windows And Comparison
 
-Formula rules:
+V1 window support:
 
-- domain packages define formulas using neutral primitives
-- formulas may reference named inputs, constants, weights, and optional windows
-- formulas may be scalar or time-series based
-- formulas may compose other primitive expressions
-- formulas remain declarative and deterministic
+- fixed-size rolling windows
+- explicit custom ranges
+- previous-period comparison
 
-Example conceptual formulas:
+Deferred window support:
 
-- `gross_margin = ratio(delta(revenue, cogs), revenue)`
-- `delivery_health = weighted_score(on_time_rate, defect_rate, lead_time_variance)`
+- year-to-date
+- quarter-to-date
+- month-to-date
+- year-over-year
+- quarter-over-quarter
 
-Important boundary:
+The caller must provide calendar boundaries or period keys when fiscal semantics matter. `MetricEngine` must not infer fiscal calendars.
 
-`MetricEngine` evaluates these formulas but does not own what "gross margin" or "delivery health" means in a business context.
+## 9. Determinism
 
-## 11. Existing Package Boundaries
+For identical formula definitions, inputs, windows, and precision policy, the engine must return identical results.
 
-`MetricEngine` must not collapse existing package boundaries.
+`MetricEngine` must not generate runtime timestamps inside calculation results. If an evaluation timestamp is needed, it must be caller-supplied as metadata or attached outside the deterministic result.
 
-### 11.1 QueryEngine
+## 10. Precision Policy
 
-`QueryEngine` prepares, executes, and aggregates analytical queries across models and sources.
+V1 must define precision explicitly.
 
-`MetricEngine` only evaluates formulas on prepared inputs.
+Recommended default:
 
-### 11.2 Reporting
+- accept `int`, `float`, or numeric string inputs
+- normalize numeric strings for decimal-sensitive operations
+- return numeric values with caller-configurable scale
+- default rounding mode: half-up
+- reject non-finite values such as `NaN` and `INF`
 
-`Reporting` renders and distributes report outputs.
+Financial packages may wrap or adapt results into money-specific value objects, but `MetricEngine` should not own currency semantics.
 
-`MetricEngine` only returns calculation results.
+## 11. Result Model
 
-### 11.3 Telemetry
+Successful evaluation returns typed result objects, not arrays.
 
-`Telemetry` owns system and application observability metrics.
+Required result data:
 
-`MetricEngine` owns business-metric calculation mechanics.
+- calculated value
+- value type
+- formula identifier
+- input mode
+- precision policy applied
+- optional unit provided by caller
+- optional window or comparison metadata
 
-### 11.4 Domain Packages
+Optional metadata:
 
-Packages such as `PerformanceReview`, `FinancialRatios`, `AccountVarianceAnalysis`, `Treasury`, `ESG`, and `SourcingScoring` remain the public owners of domain semantics.
+- contributing values
+- target or benchmark reference when explicitly supplied
+- data sufficiency marker when explicitly computed
 
-They may later delegate internal calculation mechanics to `MetricEngine`, but they should still define:
+The engine must not fabricate confidence, health, quality, or business status labels.
 
-- formula meaning
-- domain labels
-- interpretation rules
-- thresholds tied to business semantics
+## 12. Failure Semantics
 
-## 12. Composition Model
+The package fails loudly and deterministically.
 
-Expected usage pattern:
-
-1. domain package or repository prepares normalized inputs
-2. domain package selects or defines a formula
-3. `MetricEngine` evaluates the formula
-4. domain package interprets the result in domain language
-5. `QueryEngine`, `Reporting`, dashboards, or orchestrators consume the interpreted result as needed
-
-This preserves Layer 1 purity while enabling reuse.
-
-## 13. Validation And Failure Semantics
-
-The package should fail loudly and deterministically.
-
-Expected failure cases:
+Failure cases:
 
 - invalid formula structure
 - missing required input
 - incompatible input type
+- invalid numeric value
+- divide-by-zero or undefined operation
 - invalid window definition
-- divide-by-zero or undefined mathematical operation
-- insufficient time-series data for the requested operation
+- insufficient time-series data
+- mismatched value and weight counts
 
 Failure requirements:
 
 - no silent fallback values
-- no synthetic zero unless explicitly configured by formula semantics
-- machine-readable exception types
-- stable error messages suitable for testing
+- no synthetic zero unless formula explicitly defines that behavior
+- package-specific exception classes
+- stable machine-readable error codes
+- stable messages suitable for unit tests
 
-## 14. Result Model
+## 13. Dependency Policy
 
-Success should return typed result objects, not loose arrays.
+Allowed:
 
-Recommended result data:
+- core PHP 8.3+
+- PSR contracts if needed
+- math/statistics libraries only after v1 proves necessity
 
-- calculated value
-- optional unit
-- precision or scale
-- formula identifier
-- evaluation timestamp
-- source input mode
-- applied window or comparison metadata when relevant
+Disallowed:
 
-Optional secondary result metadata:
-
-- contributing values
-- benchmark or target reference
-- confidence or data sufficiency markers if explicitly computed by the formula
-
-`MetricEngine` should not fabricate confidence or quality labels unless the formula explicitly defines them.
-
-## 15. Dependency Policy
-
-Dependencies must remain tightly bounded.
-
-Allowed dependency categories:
-
-- core PHP
-- PSR contracts
-- math-oriented or statistics-oriented libraries if truly needed
-
-Disallowed dependency categories:
-
-- frameworks
+- Laravel, Symfony, or other frameworks
 - ORM/database libraries
 - HTTP clients
-- UI/reporting libraries
 - queue libraries
 - application containers
+- reporting, export, or UI libraries
 
-## 16. Test Strategy
+## 14. Testing Strategy
 
-The package should be heavily unit-tested.
+V1 requires unit tests for:
 
-Minimum coverage areas:
+- each scalar primitive
+- each time-series primitive
+- formula composition
+- named input lookup
+- precision and rounding
+- divide-by-zero
+- invalid numeric values
+- missing input
+- type mismatch
+- empty and sparse series
+- insufficient window data
+- comparison edge cases
 
-- primitive calculation tests
-- scalar formula evaluation tests
-- time-series formula evaluation tests
-- window resolution tests
-- comparison logic tests
-- invalid formula tests
-- missing input tests
-- divide-by-zero tests
-- sparse/empty series tests
-- type mismatch tests
+Tests must not bootstrap a framework.
 
-Test policy:
+## 15. Initial Delivery Scope
 
-- no framework bootstrapping
-- deterministic fixtures
-- edge cases must be first-class, especially numeric and array safety
+V1 includes:
 
-## 17. Risks And Guardrails
+- package skeleton
+- typed value objects
+- object-based formula definitions
+- scalar formula evaluation
+- minimal time-series evaluation
+- fixed rolling windows
+- previous-period comparison
+- v1 primitive set
+- deterministic result model
+- explicit exception model
+- full unit coverage for v1 behavior
 
-### 17.1 Scope Creep
-
-Risk:
-
-The package becomes a general analytics or reporting platform.
-
-Guardrail:
-
-Reject any feature that fetches data, plans queries, persists state, or renders user-facing output.
-
-### 17.2 Domain Leakage
-
-Risk:
-
-The package accumulates business-specific primitives.
-
-Guardrail:
-
-If a primitive name sounds domain-owned, it belongs in the consuming package, not in `MetricEngine`.
-
-### 17.3 Over-Abstracted Formula DSL
-
-Risk:
-
-The formula model becomes too complex to understand or maintain.
-
-Guardrail:
-
-Start with a small declarative model and only expand when real consumers require it.
-
-## 18. Initial Delivery Scope
-
-The first version should include:
-
-- stateless formula runtime
-- scalar input support
-- time-series input support
-- core math/stat primitives
-- generic business metric primitives
-- window and comparison support
-- typed result objects
-- explicit error model
-- full unit-test coverage for the initial primitive set
-
-The first version should not include:
+V1 excludes:
 
 - data connectors
 - query builders
 - persistence adapters
 - report schemas
-- domain-specific formula packs
-- cross-package migration work
+- dashboard composition
+- domain formula packs
+- config-file formula DSL
+- migration of existing packages onto `MetricEngine`
 
-## 19. Open Follow-Up For Planning
+## 16. Acceptance Criteria
 
-The implementation plan should decide:
+The design is acceptable when:
 
-- exact PHP API for `FormulaDefinition`
-- whether formulas are object-based, array-backed, or both
-- exact list of initial primitives in v1
-- precision and rounding policy
-- unit handling strategy
-- whether optional math libraries are needed on day one or deferred
-
-## 20. Recommendation Summary
-
-Proceed with `Nexus\MetricEngine` as:
-
-- a Layer 1 stateless metric calculation runtime
-- framework-agnostic
-- composable formula model with built-in primitives
-- support for both scalar and time-series evaluation
-- strict separation from data/query/reporting concerns
-- strict separation from domain-owned business semantics
+- no domain-owned metric meaning exists inside `MetricEngine`
+- no framework dependency is required
+- identical inputs produce identical outputs
+- all v1 primitives have explicit tests
+- invalid input cannot produce silent success
+- consuming packages can define their own formulas without leaking interpretation into the engine
