@@ -1,6 +1,6 @@
 # Nexus\PaymentWallet Test Suite Summary
 
-**Package:** `nexus/payment-wallet`  
+**Package:** `azaharizaman/nexus-payment-wallet`  
 **Version:** 0.1.0  
 **Last Run:** N/A  
 **Status:** 🔴 Not Started

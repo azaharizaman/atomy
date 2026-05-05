@@ -373,7 +373,7 @@ cd /home/conrad/Dev/azaharizaman/atomy
 # Add package to root composer.json repositories array (if not already)
 # Then install in consuming application
 cd apps/consuming application
-composer require nexus/uom:"*@dev"
+composer require azaharizaman/nexus-uom:"*@dev"
 ```
 
 ### 2. Register Service Provider

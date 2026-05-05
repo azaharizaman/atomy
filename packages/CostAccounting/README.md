@@ -128,7 +128,7 @@ src/
 ### 2. Install Package
 
 ```bash
-composer require nexus/cost-accounting:"*@dev"
+composer require azaharizaman/nexus-cost-accounting:"*@dev"
 ```
 
 ### 3. Register Service Provider (Laravel)

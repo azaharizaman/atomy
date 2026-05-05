@@ -19,8 +19,8 @@
         }
     ],
     "require": {
-        "azaharizaman/nexus-common": "*@dev",
-        "azaharizaman/nexus-connector": "*@dev",
+        "azaharizaman/nexus-common": "dev-main",
+        "azaharizaman/nexus-connector": "dev-main",
         "php": "^8.3",
         "psr/event-dispatcher": "^1.0",
         "psr/http-client": "^1.0",
@@ -47,6 +47,6 @@
         "sort-packages": true
     },
     "suggest": {
-        "azaharizaman/nexus-payment": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-payment": "dev-main"
     }
 }

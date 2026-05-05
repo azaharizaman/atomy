@@ -24,7 +24,7 @@
 
 ```json
 {
-    "name": "nexus/vendor",
+    "name": "azaharizaman/nexus-vendor",
     "description": "Nexus Vendor Domain Package",
     "type": "library",
     "license": "MIT",
@@ -102,9 +102,9 @@ git commit -m "feat(vendor): scaffold Layer 1 package"
 
 ```json
 {
-    "name": "nexus/sourcing",
+    "name": "azaharizaman/nexus-sourcing",
     "autoload": { "psr-4": { "Nexus\\Sourcing\\": "src/" } },
-    "require": { "php": "^8.3", "nexus/vendor": "*" }
+    "require": { "php": "^8.3", "azaharizaman/nexus-vendor": "*" }
 }
 ```
 

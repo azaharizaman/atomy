@@ -27,16 +27,16 @@ This is an **Orchestrator Package** following Nexus ERP's package architecture:
 - psr/event-dispatcher:^1
 
 ### Suggested (for full functionality)
-- `nexus/crm` - CRM domain operations
-- `nexus/party` - Customer data integration
-- `nexus/sales` - Quotation and sales integration
-- `nexus/workflow` - Approval workflows
-- `nexus/notifier` - Notification services
+- `azaharizaman/nexus-crm` - CRM domain operations
+- `azaharizaman/nexus-party` - Customer data integration
+- `azaharizaman/nexus-sales` - Quotation and sales integration
+- `azaharizaman/nexus-workflow` - Approval workflows
+- `azaharizaman/nexus-notifier` - Notification services
 
 ## Installation
 
 ```bash
-composer require nexus/crm-operations
+composer require azaharizaman/nexus-crm-operations
 ```
 
 ## Features

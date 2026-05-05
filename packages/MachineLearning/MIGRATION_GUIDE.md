@@ -34,7 +34,7 @@ The **Intelligence** package has been refactored and renamed to **MachineLearnin
 
 | v1.x | v2.0 |
 |------|------|
-| `nexus/intelligence` | `nexus/machinelearning` |
+| `azaharizaman/nexus-intelligence` | `azaharizaman/nexus-machinelearning` |
 
 **Impact:** `composer.json` dependencies must be updated.
 
@@ -114,7 +114,7 @@ The **Intelligence** package has been refactored and renamed to **MachineLearnin
 ```json
 {
     "require": {
-        "nexus/intelligence": "^1.0"
+        "azaharizaman/nexus-intelligence": "^1.0"
     }
 }
 ```
@@ -123,15 +123,15 @@ The **Intelligence** package has been refactored and renamed to **MachineLearnin
 ```json
 {
     "require": {
-        "nexus/machinelearning": "^2.0"
+        "azaharizaman/nexus-machinelearning": "^2.0"
     }
 }
 ```
 
 **Command:**
 ```bash
-composer remove nexus/intelligence
-composer require nexus/machinelearning:"^2.0"
+composer remove azaharizaman/nexus-intelligence
+composer require azaharizaman/nexus-machinelearning:"^2.0"
 ```
 
 ---

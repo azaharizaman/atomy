@@ -8,7 +8,7 @@
 ## Installation
 
 ```bash
-composer require nexus/storage:"*@dev"
+composer require azaharizaman/nexus-storage:"*@dev"
 ```
 
 ## When to Use This Package

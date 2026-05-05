@@ -14,6 +14,6 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "suggest": {
-        "azaharizaman/nexus-accounting": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-accounting": "dev-main"
     }
 }

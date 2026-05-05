@@ -1,6 +1,6 @@
 # Integration Guide: Nexus Attendance
 
-**Package:** `nexus/attendance-management`  
+**Package:** `azaharizaman/nexus-attendance-management`  
 **Target Frameworks:** Laravel 10+, Symfony 6+
 
 This guide provides detailed instructions for integrating the Attendance package into Laravel and Symfony applications.
@@ -21,12 +21,12 @@ This guide provides detailed instructions for integrating the Attendance package
 ### Step 1: Install Package and Adapter
 
 ```bash
-composer require nexus/attendance-management
+composer require azaharizaman/nexus-attendance-management
 ```
 
 For Laravel-specific adapter (optional):
 ```bash
-composer require nexus/attendance-laravel-adapter
+composer require azaharizaman/nexus-attendance-laravel-adapter
 ```
 
 ### Step 2: Create Database Migrations
@@ -702,7 +702,7 @@ Route::prefix('attendance')->group(function () {
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/attendance-management
+composer require azaharizaman/nexus-attendance-management
 ```
 
 ### Step 2: Create Doctrine Entities
@@ -1192,4 +1192,4 @@ class AttendanceControllerTest extends WebTestCase
 
 ---
 
-**For questions or issues, see the [GitHub repository](https://github.com/nexus/attendance-management).**
+**For questions or issues, see the [GitHub repository](https://github.com/azaharizaman/nexus-attendance-management).**

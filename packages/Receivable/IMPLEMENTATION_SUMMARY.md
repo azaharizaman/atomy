@@ -2,7 +2,7 @@
 
 **Date**: November 21, 2025  
 **Status**: Architecture & Contracts Complete (Phase 1)  
-**Package**: `nexus/receivable`
+**Package**: `azaharizaman/nexus-receivable`
 
 ## 🎯 Executive Summary
 

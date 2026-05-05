@@ -1,8 +1,8 @@
 # Nexus\FeatureFlags
 
-[![Latest Version](https://img.shields.io/packagist/v/nexus/feature-flags.svg?style=flat-square)](https://packagist.org/packages/nexus/feature-flags)
-[![Total Downloads](https://img.shields.io/packagist/dt/nexus/feature-flags.svg?style=flat-square)](https://packagist.org/packages/nexus/feature-flags)
-[![License](https://img.shields.io/packagist/l/nexus/feature-flags.svg?style=flat-square)](LICENSE)
+[![Latest Version](https://img.shields.io/packagist/v/azaharizaman/nexus-feature-flags.svg?style=flat-square)](https://packagist.org/packages/azaharizaman/nexus-feature-flags)
+[![Total Downloads](https://img.shields.io/packagist/dt/azaharizaman/nexus-feature-flags.svg?style=flat-square)](https://packagist.org/packages/azaharizaman/nexus-feature-flags)
+[![License](https://img.shields.io/packagist/l/azaharizaman/nexus-feature-flags.svg?style=flat-square)](LICENSE)
 
 Production-grade feature flag management with context-based evaluation, percentage rollout, tenant inheritance, and kill switches. Framework-agnostic pure PHP 8.3+ package designed for Laravel, Symfony, Slim, and vanilla PHP applications.
 
@@ -22,7 +22,7 @@ Production-grade feature flag management with context-based evaluation, percenta
 ### For Laravel
 
 ```bash
-composer require nexus/feature-flags
+composer require azaharizaman/nexus-feature-flags
 ```
 
 The service provider will be auto-discovered. Publish the migration:
@@ -35,7 +35,7 @@ php artisan migrate
 ### For Symfony
 
 ```bash
-composer require nexus/feature-flags
+composer require azaharizaman/nexus-feature-flags
 ```
 
 Register services in `config/services.yaml`:
@@ -56,7 +56,7 @@ services:
 ### For Vanilla PHP
 
 ```bash
-composer require nexus/feature-flags
+composer require azaharizaman/nexus-feature-flags
 ```
 
 ```php

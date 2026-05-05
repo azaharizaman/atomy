@@ -20,7 +20,7 @@ Complete integration examples for Laravel and Symfony applications.
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/event-stream:"*@dev"
+composer require azaharizaman/nexus-event-stream:"*@dev"
 ```
 
 ### Step 2: Create Migrations
@@ -441,7 +441,7 @@ class LedgerService
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/event-stream:"*@dev"
+composer require azaharizaman/nexus-event-stream:"*@dev"
 ```
 
 ### Step 2: Configure Services

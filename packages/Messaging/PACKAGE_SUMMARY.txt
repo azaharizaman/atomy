@@ -5,7 +5,7 @@
 
 📦 PACKAGE INFORMATION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Name:           nexus/messaging
+Name:           azaharizaman/nexus-messaging
 Version:        1.0.0
 Type:           library
 License:        MIT
@@ -122,7 +122,7 @@ Strategic Score:          9.29/10 (Critical)
 
 🚀 GETTING STARTED
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. Install:     composer require nexus/messaging:"*@dev"
+1. Install:     composer require azaharizaman/nexus-messaging:"*@dev"
 2. Implement:   MessagingRepositoryInterface (database)
 3. Implement:   MessagingConnectorInterface (Twilio, SendGrid, etc.)
 4. Register:    Bind implementations in DI container

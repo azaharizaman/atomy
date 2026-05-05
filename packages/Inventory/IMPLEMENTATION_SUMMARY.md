@@ -15,8 +15,8 @@ The `Nexus\Inventory` package provides a comprehensive, framework-agnostic inven
 - **3 valuation engines** with performance-optimized algorithms
 - **5 service managers** orchestrating business logic
 - **8 domain events** enabling event-driven architecture
-- **Optional Event Sourcing** via `nexus/event-stream` (progressive disclosure)
-- **Optional ML Forecasting** via `nexus/machine-learning` (progressive disclosure)
+- **Optional Event Sourcing** via `azaharizaman/nexus-event-stream` (progressive disclosure)
+- **Optional ML Forecasting** via `azaharizaman/nexus-machine-learning` (progressive disclosure)
 - **Zero framework dependencies** - pure PHP 8.3+ implementation
 
 ---
@@ -87,8 +87,8 @@ The `Nexus\Inventory` package provides a comprehensive, framework-agnostic inven
 
 ### Phase 8: Progressive Disclosure ✅ COMPLETE
 
-- [x] Optional `nexus/event-stream` integration for stock replay
-- [x] Optional `nexus/machine-learning` integration for demand forecasting
+- [x] Optional `azaharizaman/nexus-event-stream` integration for stock replay
+- [x] Optional `azaharizaman/nexus-machine-learning` integration for demand forecasting
 - [x] `composer.json` suggest section configured
 - [x] Package functional without optional dependencies
 
@@ -168,7 +168,7 @@ Note: `CostLayerStorageInterface` and `StandardCostStorageInterface` defined inl
 
 ### v2.0: Event Sourcing by Default (Q2 2026)
 
-- [ ] Make `nexus/event-stream` required dependency
+- [ ] Make `azaharizaman/nexus-event-stream` required dependency
 - [ ] Full stock replay capability
 - [ ] Temporal queries ("What was stock on 2025-01-15?")
 - [ ] Complete audit trail with point-in-time reconstruction
@@ -187,10 +187,10 @@ Note: `CostLayerStorageInterface` and `StandardCostStorageInterface` defined inl
 **Reason:** Application layer concern. Package provides serial allocation; consuming app implements barcode capture UI.
 
 ### 4. Demand Forecasting
-**Reason:** Optional via `nexus/machine-learning`. Package suggests dependency but doesn't require it (progressive disclosure).
+**Reason:** Optional via `azaharizaman/nexus-machine-learning`. Package suggests dependency but doesn't require it (progressive disclosure).
 
 ### 5. Concrete Event Store Implementation
-**Reason:** Optional via `nexus/event-stream`. Package publishes events; consuming app decides whether to use event sourcing.
+**Reason:** Optional via `azaharizaman/nexus-event-stream`. Package publishes events; consuming app decides whether to use event sourcing.
 
 ---
 
@@ -205,7 +205,7 @@ Note: `CostLayerStorageInterface` and `StandardCostStorageInterface` defined inl
 - Performance optimization per method (FIFO O(n), WAC O(1))
 
 ### 2. Progressive Disclosure for Event Sourcing
-**Decision:** Make `nexus/event-stream` optional via `composer.json suggest`.  
+**Decision:** Make `azaharizaman/nexus-event-stream` optional via `composer.json suggest`.  
 **Rationale:**
 - Core inventory features don't require event sourcing
 - Large enterprises benefit from full stock replay
@@ -217,7 +217,7 @@ Note: `CostLayerStorageInterface` and `StandardCostStorageInterface` defined inl
 // packages/Inventory/composer.json
 {
     "suggest": {
-        "nexus/event-stream": "Event sourcing for stock replay and temporal queries"
+        "azaharizaman/nexus-event-stream": "Event sourcing for stock replay and temporal queries"
     }
 }
 ```
@@ -276,9 +276,9 @@ Note: `CostLayerStorageInterface` and `StandardCostStorageInterface` defined inl
 **Test Gap Identified:** High priority remediation required before v1.0 release.
 
 ### Dependencies
-- **External Dependencies:** 2 (`nexus/uom`, `psr/log`)
-- **Optional Dependencies:** 2 (`nexus/event-stream`, `nexus/machine-learning`)
-- **Internal Package Dependencies:** 1 required (`nexus/uom` for unit conversions)
+- **External Dependencies:** 2 (`azaharizaman/nexus-uom`, `psr/log`)
+- **Optional Dependencies:** 2 (`azaharizaman/nexus-event-stream`, `azaharizaman/nexus-machine-learning`)
+- **Internal Package Dependencies:** 1 required (`azaharizaman/nexus-uom` for unit conversions)
 
 ---
 

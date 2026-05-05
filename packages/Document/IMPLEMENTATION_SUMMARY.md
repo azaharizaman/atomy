@@ -321,12 +321,12 @@ $redactedPath = $contentProcessor->redact($documentPath, ['/\b\d{3}-\d{2}-\d{4}\
     "require": {
         "php": "^8.3",
         "psr/log": "^3.0",
-        "nexus/storage": "*@dev",
-        "nexus/crypto": "*@dev"
+        "azaharizaman/nexus-storage": "*@dev",
+        "azaharizaman/nexus-crypto": "*@dev"
     },
     "require-dev": {
-        "nexus/audit-logger": "*@dev",
-        "nexus/tenant": "*@dev"
+        "azaharizaman/nexus-audit-logger": "*@dev",
+        "azaharizaman/nexus-tenant": "*@dev"
     }
 }
 ```
@@ -543,7 +543,7 @@ vendor/bin/phpunit consuming application (e.g., Laravel app)tests/Feature/Docume
 
 ```bash
 cd apps/consuming application
-composer require nexus/document:"*@dev"
+composer require azaharizaman/nexus-document:"*@dev"
 ```
 
 ### 2. Run Migrations
@@ -1034,7 +1034,7 @@ MIT License - See `packages/Document/LICENSE`
 
 For questions or issues:
 
-- **GitHub Issues:** [nexus/monorepo/issues](https://github.com/nexus/monorepo/issues)
+- **GitHub Issues:** [azaharizaman/nexus-monorepo/issues](https://github.com/azaharizaman/nexus-monorepo/issues)
 - **Documentation:** `packages/Document/README.md`
 - **Requirements:** `docs/REQUIREMENTS_DOCUMENT.md`
 

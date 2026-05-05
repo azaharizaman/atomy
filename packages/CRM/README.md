@@ -15,14 +15,14 @@ This package provides the core CRM (Customer Relationship Management) domain log
 
 This is an **Atomic Package** following Nexus ERP's package architecture:
 
-- **Zero business package dependencies** - No dependencies on `nexus/party`, `nexus/sales`, etc.
+- **Zero business package dependencies** - No dependencies on `azaharizaman/nexus-party`, `azaharizaman/nexus-sales`, etc.
 - **Pure domain logic** - Contains only CRM-specific business rules and value objects
 - **Interface-driven** - All external integrations through interfaces implemented by orchestrators
 
 ## Installation
 
 ```bash
-composer require nexus/crm
+composer require azaharizaman/nexus-crm
 ```
 
 ## Features

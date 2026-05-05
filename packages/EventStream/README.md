@@ -54,7 +54,7 @@ This package is **pure PHP** with no Laravel dependencies. All persistence opera
 ## 🔧 Installation
 
 ```bash
-composer require nexus/event-stream:"*@dev"
+composer require azaharizaman/nexus-event-stream:"*@dev"
 ```
 
 ## 📋 Requirements Satisfied

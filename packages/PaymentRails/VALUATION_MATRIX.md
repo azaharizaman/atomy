@@ -1,6 +1,6 @@
 # Nexus\PaymentRails Valuation Matrix
 
-**Package:** `nexus/payment-rails`  
+**Package:** `azaharizaman/nexus-payment-rails`  
 **Version:** 0.1.0  
 **Assessment Date:** December 18, 2025
 
@@ -22,14 +22,14 @@
 
 | Package | Criticality |
 |---------|-------------|
-| `nexus/payment` | Required (core payment domain) |
-| `nexus/common` | Required (Money VO) |
+| `azaharizaman/nexus-payment` | Required (core payment domain) |
+| `azaharizaman/nexus-common` | Required (Money VO) |
 
 ### Depended Upon By
 
 | Package | Relationship |
 |---------|--------------|
-| `nexus/payment-bank` | Optional (bank file generation uses rail info) |
+| `azaharizaman/nexus-payment-bank` | Optional (bank file generation uses rail info) |
 | Orchestrators | Payment processing workflows |
 
 ## Priority Rating

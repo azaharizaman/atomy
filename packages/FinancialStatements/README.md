@@ -14,7 +14,7 @@ This package is **framework-agnostic** and contains no database access, no HTTP 
 ## Installation
 
 ```bash
-composer require nexus/financial-statements
+composer require azaharizaman/nexus-financial-statements
 ```
 
 ## Package Responsibilities

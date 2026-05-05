@@ -16,14 +16,14 @@ A framework-agnostic PHP package for journal entry management in general ledger 
 ## Requirements
 
 - PHP 8.3+
-- `nexus/common` ^1.0
-- `nexus/chart-of-account` ^1.0
-- `nexus/period` ^1.0
+- `azaharizaman/nexus-common` ^1.0
+- `azaharizaman/nexus-chart-of-account` ^1.0
+- `azaharizaman/nexus-period` ^1.0
 
 ## Installation
 
 ```bash
-composer require nexus/journal-entry
+composer require azaharizaman/nexus-journal-entry
 ```
 
 ## Key Concepts
@@ -228,7 +228,7 @@ $sequence = $number->getSequence(); // 1234
 
 ## Integration with Other Packages
 
-### Chart of Account (`nexus/chart-of-account`)
+### Chart of Account (`azaharizaman/nexus-chart-of-account`)
 
 Journal entries reference accounts for posting:
 
@@ -245,7 +245,7 @@ if (!$account->isActive()) {
 }
 ```
 
-### Period (`nexus/period`)
+### Period (`azaharizaman/nexus-period`)
 
 Period validation before posting:
 
@@ -256,7 +256,7 @@ if (!$periodValidator->isOpen($entry->getPostingDate())) {
 }
 ```
 
-### Sequencing (`nexus/sequencing`)
+### Sequencing (`azaharizaman/nexus-sequencing`)
 
 Journal entry number generation:
 

@@ -127,7 +127,7 @@ Only authorized users (typically CFO, Controller) can reopen closed periods.
 ## Installation
 
 ```bash
-composer require nexus/period:"*@dev"
+composer require azaharizaman/nexus-period:"*@dev"
 ```
 
 ---

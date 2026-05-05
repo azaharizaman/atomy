@@ -209,11 +209,11 @@ ESTIMATED PACKAGE VALUE: $102,600
 - **Compliance Dashboard API (v2.2):** [Expected value add: $10,000]
 - **Real-time Violation Monitoring (v2.3):** [Expected value add: $6,000]
 - **Premium Compliance Schemes (Separate Packages):**
-  - `nexus/compliance-iso14001` [Expected value: $15,000]
-  - `nexus/compliance-sox` [Expected value: $20,000]
-  - `nexus/compliance-gdpr` [Expected value: $18,000]
-  - `nexus/compliance-hipaa` [Expected value: $22,000]
-  - `nexus/compliance-pci-dss` [Expected value: $25,000]
+  - `azaharizaman/nexus-compliance-iso14001` [Expected value: $15,000]
+  - `azaharizaman/nexus-compliance-sox` [Expected value: $20,000]
+  - `azaharizaman/nexus-compliance-gdpr` [Expected value: $18,000]
+  - `azaharizaman/nexus-compliance-hipaa` [Expected value: $22,000]
+  - `azaharizaman/nexus-compliance-pci-dss` [Expected value: $25,000]
 
 ### Market Growth Potential
 - **Addressable Market Size:** $850 million (Enterprise GRC market)

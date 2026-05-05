@@ -1,6 +1,6 @@
 # API Reference: Nexus Attendance
 
-**Package:** `nexus/attendance-management`  
+**Package:** `azaharizaman/nexus-attendance-management`  
 **Namespace:** `Nexus\Attendance`  
 **Version:** 1.0.0
 
@@ -1181,4 +1181,4 @@ class AttendanceService
 
 ---
 
-**For questions or issues, see the [GitHub repository](https://github.com/nexus/attendance-management).**
+**For questions or issues, see the [GitHub repository](https://github.com/azaharizaman/nexus-attendance-management).**

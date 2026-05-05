@@ -12,12 +12,12 @@ Route optimization and Vehicle Routing Problem (VRP) solver for the Nexus ERP sy
 - **Constraint Validation**: Time windows, vehicle capacity, service duration
 - **Route Metrics**: Total distance, duration, constraint violations
 
-This package depends on `nexus/geo` for distance calculations and coordinates.
+This package depends on `azaharizaman/nexus-geo` for distance calculations and coordinates.
 
 ## Installation
 
 ```bash
-composer require nexus/routing:*@dev
+composer require azaharizaman/nexus-routing:*@dev
 ```
 
 ## Features
@@ -272,7 +272,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 
 ## Dependencies
 
-- `nexus/geo`: Geospatial calculations
+- `azaharizaman/nexus-geo`: Geospatial calculations
 - `psr/log`: Logging interface
 - Google OR-Tools (optional, via Docker)
 

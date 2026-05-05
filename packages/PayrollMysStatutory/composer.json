@@ -5,7 +5,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "azaharizaman/nexus-payroll": "*@dev"
+        "azaharizaman/nexus-payroll": "dev-main"
     },
     "autoload": {
         "psr-4": {

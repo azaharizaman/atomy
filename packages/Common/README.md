@@ -16,7 +16,7 @@ This package provides:
 ## Installation
 
 ```bash
-composer require nexus/common
+composer require azaharizaman/nexus-common
 ```
 
 ## Package Contents

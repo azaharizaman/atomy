@@ -18,7 +18,7 @@ Framework-agnostic warehouse management package for Nexus ERP.
 ## Installation
 
 ```bash
-composer require nexus/warehouse:"*@dev"
+composer require azaharizaman/nexus-warehouse:"*@dev"
 ```
 
 ## Quick Start

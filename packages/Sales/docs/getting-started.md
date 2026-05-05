@@ -12,7 +12,7 @@
 ## Installation
 
 ```bash
-composer require nexus/sales:"*@dev"
+composer require azaharizaman/nexus-sales:"*@dev"
 ```
 
 ## When to Use This Package

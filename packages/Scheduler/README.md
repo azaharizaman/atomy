@@ -79,7 +79,7 @@ The **Nexus\Scheduler** package serves as the **central repository for future-da
 ### 1. Install Package
 
 ```bash
-composer require nexus/scheduler:*@dev
+composer require azaharizaman/nexus-scheduler:*@dev
 ```
 
 ### 2. Optional: Install Cron Expression Support

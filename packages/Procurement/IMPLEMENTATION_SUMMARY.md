@@ -1,6 +1,6 @@
 # Nexus\Procurement Implementation Summary
 
-**Package:** `nexus/procurement`  
+**Package:** `azaharizaman/nexus-procurement`  
 **Status:** ✅ Complete  
 **Implementation Date:** November 20, 2025 (Updated March 8, 2026)  
 **Laravel Version:** 12.x  
@@ -793,7 +793,7 @@ public function three_way_matching_meets_performance_target(): void
 ### Immediate (Post-Implementation)
 
 1. ✅ Run migrations: `php artisan migrate`
-2. ✅ Install package: `composer require nexus/procurement:"*@dev"`
+2. ✅ Install package: `composer require azaharizaman/nexus-procurement:"*@dev"`
 3. ✅ Write integration tests
 4. ✅ Add API routes in `routes/api.php`
 

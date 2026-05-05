@@ -58,22 +58,22 @@ The **Nexus\Tax** package provides a comprehensive, framework-agnostic tax calcu
 ## Installation
 
 ```bash
-composer require nexus/tax:"*@dev"
+composer require azaharizaman/nexus-tax:"*@dev"
 ```
 
 ### Dependencies
 
 This package requires the following Nexus packages:
 
-- `nexus/finance` - GL account integration
-- `nexus/currency` - Multi-currency support and conversion
-- `nexus/geo` - Geocoding for jurisdiction resolution
-- `nexus/party` - Customer/vendor address data
-- `nexus/product` - Product tax categories
-- `nexus/tenant` - Multi-tenancy context
-- `nexus/audit-logger` - Optional audit trail logging
-- `nexus/telemetry` - Optional telemetry tracking
-- `nexus/storage` - Optional exemption certificate PDF storage
+- `azaharizaman/nexus-finance` - GL account integration
+- `azaharizaman/nexus-currency` - Multi-currency support and conversion
+- `azaharizaman/nexus-geo` - Geocoding for jurisdiction resolution
+- `azaharizaman/nexus-party` - Customer/vendor address data
+- `azaharizaman/nexus-product` - Product tax categories
+- `azaharizaman/nexus-tenant` - Multi-tenancy context
+- `azaharizaman/nexus-audit-logger` - Optional audit trail logging
+- `azaharizaman/nexus-telemetry` - Optional telemetry tracking
+- `azaharizaman/nexus-storage` - Optional exemption certificate PDF storage
 
 ---
 

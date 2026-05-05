@@ -1,6 +1,6 @@
 # Nexus\PaymentGateway Valuation Matrix
 
-**Package:** `nexus/payment-gateway`  
+**Package:** `azaharizaman/nexus-payment-gateway`  
 **Version:** 0.1.0  
 **Assessment Date:** December 18, 2025
 
@@ -22,8 +22,8 @@
 
 | Package | Criticality |
 |---------|-------------|
-| `nexus/payment` | Required |
-| `nexus/connector` | Required (HTTP client abstraction) |
+| `azaharizaman/nexus-payment` | Required |
+| `azaharizaman/nexus-connector` | Required (HTTP client abstraction) |
 
 ### Depended Upon By
 

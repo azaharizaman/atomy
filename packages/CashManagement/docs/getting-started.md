@@ -11,7 +11,7 @@
 ## Installation
 
 ```bash
-composer require nexus/cash-management:"*@dev"
+composer require azaharizaman/nexus-cash-management:"*@dev"
 ```
 
 ## When to Use This Package

@@ -124,7 +124,7 @@
 | psr/log | PSR-3 Interface | Low | Widely adopted standard |
 
 ### Internal Package Dependencies
-- **Depends On:** nexus/tenant (optional, for multi-tenancy tagging)
+- **Depends On:** azaharizaman/nexus-tenant (optional, for multi-tenancy tagging)
 - **Depended By:** ALL Nexus packages (monitoring is core infrastructure)
 - **Coupling Risk:** Low (optional injection pattern)
 

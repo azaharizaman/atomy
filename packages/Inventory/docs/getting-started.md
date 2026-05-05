@@ -4,22 +4,22 @@
 
 - PHP 8.3 or higher
 - Composer
-- `nexus/uom` package (automatically installed)
+- `azaharizaman/nexus-uom` package (automatically installed)
 
 ## Installation
 
 ```bash
-composer require nexus/inventory:"*@dev"
+composer require azaharizaman/nexus-inventory:"*@dev"
 ```
 
 ## Optional Dependencies (Progressive Disclosure)
 
 ```bash
 # Event Sourcing for stock replay and temporal queries (recommended for large enterprises)
-composer require nexus/event-stream:"*@dev"
+composer require azaharizaman/nexus-event-stream:"*@dev"
 
 # Demand forecasting and stock optimization (requires minimum 90 days of historical data)
-composer require nexus/machine-learning:"*@dev"
+composer require azaharizaman/nexus-machine-learning:"*@dev"
 ```
 
 Core inventory features work without these dependencies.

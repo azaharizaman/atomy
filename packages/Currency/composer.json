@@ -10,7 +10,7 @@
         }
     ],
     "require": {
-        "azaharizaman/nexus-common": "*@dev",
+        "azaharizaman/nexus-common": "dev-main",
         "php": "^8.3",
         "psr/log": "^3.0"
     },
@@ -30,6 +30,6 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "suggest": {
-        "azaharizaman/nexus-accounting": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-accounting": "dev-main"
     }
 }

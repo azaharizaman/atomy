@@ -379,7 +379,7 @@ interface ShipmentInterface
 ## Installation
 
 ```bash
-composer require nexus/sales-operations
+composer require azaharizaman/nexus-sales-operations
 ```
 
 ### Required Dependencies (via Adapters)

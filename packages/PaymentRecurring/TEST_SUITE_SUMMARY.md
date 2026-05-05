@@ -1,6 +1,6 @@
 # Nexus\PaymentRecurring Test Suite Summary
 
-**Package:** `nexus/payment-recurring`  
+**Package:** `azaharizaman/nexus-payment-recurring`  
 **Version:** 0.1.0  
 **Last Run:** N/A  
 **Status:** 🔴 Not Started

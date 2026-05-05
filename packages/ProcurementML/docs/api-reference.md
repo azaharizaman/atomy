@@ -24,7 +24,7 @@ All extractors implement the `Nexus\MachineLearning\Contracts\FeatureExtractorIn
 
 ## Services
 
-This package does not contain any public services. The extractors are intended to be consumed by services in the `nexus/machine-learning` package.
+This package does not contain any public services. The extractors are intended to be consumed by services in the `azaharizaman/nexus-machine-learning` package.
 
 ---
 

@@ -13,7 +13,7 @@ Pre-hire to onboarding to probation milestone tracking for new employee integrat
 ## Installation
 
 ```bash
-composer require nexus/onboarding
+composer require azaharizaman/nexus-onboarding
 ```
 
 ## Usage

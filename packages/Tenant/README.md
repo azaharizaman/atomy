@@ -52,7 +52,7 @@ The consuming application (`Nexus\Atomy`) must provide:
 ## Installation
 
 ```bash
-composer require nexus/tenant:"*@dev"
+composer require azaharizaman/nexus-tenant:"*@dev"
 ```
 
 ## Requirements

@@ -6,7 +6,7 @@ namespace Nexus\Common\ValueObjects;
 
 /**
  * Money Value Object stub for PHPStan analysis.
- * This is a stub file - the actual implementation is in nexus/common package.
+ * This is a stub file - the actual implementation is in azaharizaman/nexus-common package.
  */
 final class Money
 {

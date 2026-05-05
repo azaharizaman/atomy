@@ -50,7 +50,7 @@ Following ARCHITECTURE.md Section 3.1, this orchestrator:
 ## Installation
 
 ```bash
-composer require nexus/compliance-operations
+composer require azaharizaman/nexus-compliance-operations
 ```
 
 ### Framework Integration

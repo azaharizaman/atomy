@@ -4,25 +4,25 @@
 
 - PHP 8.3 or higher
 - Composer
-- `nexus/procurement` package
-- `nexus/machine-learning` package
+- `azaharizaman/nexus-procurement` package
+- `azaharizaman/nexus-machine-learning` package
 
 ## Installation
 
 ```bash
-composer require nexus/procurement-ml:"*@dev"
+composer require azaharizaman/nexus-procurement-ml:"*@dev"
 ```
 
 ## When to Use This Package
 
 This package is designed for:
-- ✅ Extracting ML features from `nexus/procurement` entities.
-- ✅ Integrating procurement processes with `nexus/machine-learning` services.
+- ✅ Extracting ML features from `azaharizaman/nexus-procurement` entities.
+- ✅ Integrating procurement processes with `azaharizaman/nexus-machine-learning` services.
 - ✅ Building predictive models for procurement data.
 
 Do NOT use this package for:
-- ❌ General procurement business logic (use `nexus/procurement`).
-- ❌ Core machine learning model management (use `nexus/machine-learning`).
+- ❌ General procurement business logic (use `azaharizaman/nexus-procurement`).
+- ❌ Core machine learning model management (use `azaharizaman/nexus-machine-learning`).
 
 ## Core Concepts
 
@@ -32,7 +32,7 @@ This package contains two main types of components:
 These interfaces (`src/Contracts/*AnalyticsRepositoryInterface.php`) define the methods required to fetch historical and analytical data from your application's database. You must provide concrete implementations of these interfaces in your application.
 
 ### Feature Extractors
-These classes (`src/Extractors/*Extractor.php`) consume data from the analytics repositories and transform it into a format suitable for machine learning models. They are designed to be used by services within the `nexus/machine-learning` package.
+These classes (`src/Extractors/*Extractor.php`) consume data from the analytics repositories and transform it into a format suitable for machine learning models. They are designed to be used by services within the `azaharizaman/nexus-machine-learning` package.
 
 ## Basic Configuration
 

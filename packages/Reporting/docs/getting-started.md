@@ -5,20 +5,20 @@
 - **PHP 8.3 or higher**
 - **Composer**
 - **Required Nexus Packages:**
-  - `nexus/query-engine` - Query execution engine
-  - `nexus/export` - File rendering (PDF, Excel, CSV, HTML, JSON)
-  - `nexus/scheduler` - Scheduled report jobs
-  - `nexus/notifier` - Multi-channel distribution
-  - `nexus/storage` - File storage abstraction
-  - `nexus/audit-logger` - Audit trail (optional)
-  - `nexus/tenant` - Multi-tenant context
+  - `azaharizaman/nexus-query-engine` - Query execution engine
+  - `azaharizaman/nexus-export` - File rendering (PDF, Excel, CSV, HTML, JSON)
+  - `azaharizaman/nexus-scheduler` - Scheduled report jobs
+  - `azaharizaman/nexus-notifier` - Multi-channel distribution
+  - `azaharizaman/nexus-storage` - File storage abstraction
+  - `azaharizaman/nexus-audit-logger` - Audit trail (optional)
+  - `azaharizaman/nexus-tenant` - Multi-tenant context
 
 ---
 
 ## Installation
 
 ```bash
-composer require nexus/reporting:"*@dev"
+composer require azaharizaman/nexus-reporting:"*@dev"
 ```
 
 This will install the Reporting package along with its dependencies.

@@ -9,7 +9,7 @@
         }
     },
     "require": {
-        "azaharizaman/nexus-currency": "*@dev",
+        "azaharizaman/nexus-currency": "dev-main",
         "php": "^8.3",
         "psr/log": "^3.0"
     },
@@ -21,11 +21,11 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "suggest": {
-        "azaharizaman/nexus-accounting": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-audit-logger": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-party": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-period": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-sales": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-sequencing": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-accounting": "dev-main",
+        "azaharizaman/nexus-audit-logger": "dev-main",
+        "azaharizaman/nexus-party": "dev-main",
+        "azaharizaman/nexus-period": "dev-main",
+        "azaharizaman/nexus-sales": "dev-main",
+        "azaharizaman/nexus-sequencing": "dev-main"
     }
 }

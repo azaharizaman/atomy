@@ -12,7 +12,7 @@
 ## Installation
 
 ```bash
-composer require nexus/shift-management
+composer require azaharizaman/nexus-shift-management
 ```
 
 ## Architecture

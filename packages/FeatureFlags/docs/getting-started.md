@@ -19,7 +19,7 @@
 ## Installation
 
 ```bash
-composer require nexus/feature-flags:"*@dev"
+composer require azaharizaman/nexus-feature-flags:"*@dev"
 ```
 
 ---

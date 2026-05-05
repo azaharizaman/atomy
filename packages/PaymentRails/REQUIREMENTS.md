@@ -1,6 +1,6 @@
 # Nexus\PaymentRails Requirements Specification
 
-**Package:** `nexus/payment-rails`  
+**Package:** `azaharizaman/nexus-payment-rails`  
 **Version:** 0.1.0  
 **Status:** Draft  
 **Last Updated:** December 18, 2025  
@@ -284,15 +284,15 @@ AchReturnCode
 
 | Package | Purpose |
 |---------|---------|
-| `nexus/payment` | Core payment interfaces |
-| `nexus/common` | Money VO, common interfaces |
+| `azaharizaman/nexus-payment` | Core payment interfaces |
+| `azaharizaman/nexus-common` | Money VO, common interfaces |
 
 ### 6.2 Optional Dependencies
 
 | Package | Purpose |
 |---------|---------|
-| `nexus/connector` | SFTP file transmission |
-| `nexus/sanctions` | OFAC screening integration |
+| `azaharizaman/nexus-connector` | SFTP file transmission |
+| `azaharizaman/nexus-sanctions` | OFAC screening integration |
 
 ---
 

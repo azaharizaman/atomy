@@ -30,7 +30,7 @@ The `Nexus\QueryEngine` package provides a comprehensive analytics engine that e
 In the Atomy application:
 
 ```bash
-composer require nexus/query-engine:"*@dev"
+composer require azaharizaman/nexus-query-engine:"*@dev"
 ```
 
 ## Basic Usage

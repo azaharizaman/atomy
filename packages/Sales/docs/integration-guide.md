@@ -9,7 +9,7 @@ This guide shows how to integrate the Sales package into your application.
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/sales:"*@dev"
+composer require azaharizaman/nexus-sales:"*@dev"
 ```
 
 ### Step 2: Create Database Migration
@@ -111,7 +111,7 @@ class SalesServiceProvider extends ServiceProvider
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/sales:"*@dev"
+composer require azaharizaman/nexus-sales:"*@dev"
 ```
 
 ### Step 2: Configure Services

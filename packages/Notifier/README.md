@@ -89,7 +89,7 @@ See `REQUIREMENTS.csv` for complete list.
 This package is part of the Nexus monorepo. To use it in the Atomy application:
 
 ```bash
-composer require nexus/notifier:"*@dev"
+composer require azaharizaman/nexus-notifier:"*@dev"
 ```
 
 ## Usage
@@ -246,10 +246,10 @@ $this->notifier->send($user, new InvoiceReadyNotification($invoice));
 ## Dependencies
 
 This package depends on:
-- **`nexus/audit-logger`**: For audit trail logging
-- **`nexus/connector`**: For actual email/SMS delivery via external providers
-- **`nexus/identity`**: For recipient user data
-- **`nexus/setting`**: For notification preferences
+- **`azaharizaman/nexus-audit-logger`**: For audit trail logging
+- **`azaharizaman/nexus-connector`**: For actual email/SMS delivery via external providers
+- **`azaharizaman/nexus-identity`**: For recipient user data
+- **`azaharizaman/nexus-setting`**: For notification preferences
 
 ## Integration Points
 

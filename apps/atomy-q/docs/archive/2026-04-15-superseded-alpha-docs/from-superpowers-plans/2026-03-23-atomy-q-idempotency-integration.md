@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship `nexus/laravel-idempotency-adapter` (Layer 3) plus Atomy-Q API and WEB wiring so Phase 1 mutating routes require `Idempotency-Key`, use `Nexus\Idempotency` for deduplication and replay, and match the approved integration spec.
+**Goal:** Ship `azaharizaman/nexus-laravel-idempotency-adapter` (Layer 3) plus Atomy-Q API and WEB wiring so Phase 1 mutating routes require `Idempotency-Key`, use `Nexus\Idempotency` for deduplication and replay, and match the approved integration spec.
 
-**Architecture:** New Laravel adapter package under `adapters/Laravel/Idempotency/` implements `IdempotencyStoreInterface` (DB + migration), clock, middleware (`jwt.auth` → `tenant` → `idempotency`), fingerprint hashing, and request attributes for `IdempotencyRequest`. Atomy-Q adds `nexus/idempotency` + adapter dependencies, named routes, a small HTTP replay envelope helper, controller-level `complete`/`fail` (try/finally) using the canonical v1 envelope string, feature tests, axios header injection, and scheduler hook for cleanup.
+**Architecture:** New Laravel adapter package under `adapters/Laravel/Idempotency/` implements `IdempotencyStoreInterface` (DB + migration), clock, middleware (`jwt.auth` → `tenant` → `idempotency`), fingerprint hashing, and request attributes for `IdempotencyRequest`. Atomy-Q adds `azaharizaman/nexus-idempotency` + adapter dependencies, named routes, a small HTTP replay envelope helper, controller-level `complete`/`fail` (try/finally) using the canonical v1 envelope string, feature tests, axios header injection, and scheduler hook for cleanup.
 
-**Tech stack:** PHP 8.3, Laravel 12, `nexus/idempotency` (L1), MySQL-compatible migration, PHPUnit, Vitest for WEB optional, Axios interceptors.
+**Tech stack:** PHP 8.3, Laravel 12, `azaharizaman/nexus-idempotency` (L1), MySQL-compatible migration, PHPUnit, Vitest for WEB optional, Axios interceptors.
 
 **Specs (read first):**
 - `docs/superpowers/specs/2026-03-23-atomy-q-idempotency-integration-design.md` (approved)
@@ -30,7 +30,7 @@
 | `adapters/Laravel/Idempotency/src/Providers/IdempotencyAdapterServiceProvider.php` | Bindings |
 | `adapters/Laravel/Idempotency/src/Console/Commands/IdempotencyCleanupCommand.php` | Expired row cleanup |
 | `adapters/Laravel/Idempotency/src/Contracts/ReplayResponseFactoryInterface.php` | Turns stored v1 envelope string into `SymfonyResponse` (implemented in Atomy-Q) |
-| `apps/atomy-q/API/composer.json` | Require `nexus/idempotency`, `nexus/laravel-idempotency-adapter` |
+| `apps/atomy-q/API/composer.json` | Require `azaharizaman/nexus-idempotency`, `azaharizaman/nexus-laravel-idempotency-adapter` |
 | `apps/atomy-q/API/bootstrap/app.php` or `AppServiceProvider` | Register `idempotency` middleware alias |
 | `apps/atomy-q/API/routes/api.php` | `->name()` on Phase 1 routes; wrap groups with `idempotency` |
 | `apps/atomy-q/API/app/Http/Idempotency/IdempotencyReplayResponseFactory.php` | Implements `ReplayResponseFactoryInterface` (v1 decode) — **single owner** for replay bytes → Laravel response |
@@ -39,15 +39,15 @@
 
 ---
 
-### Task 1: Scaffold `nexus/laravel-idempotency-adapter` package
+### Task 1: Scaffold `azaharizaman/nexus-laravel-idempotency-adapter` package
 
 **Files:**
-- Create: `adapters/Laravel/Idempotency/composer.json` (require `nexus/idempotency`, illuminate 11/12, psr/log)
+- Create: `adapters/Laravel/Idempotency/composer.json` (require `azaharizaman/nexus-idempotency`, illuminate 11/12, psr/log)
 - Create: `adapters/Laravel/Idempotency/phpunit.xml` (mirror other Laravel adapters)
 - Modify: `apps/atomy-q/API/composer.json` — add path repo if missing (already has `adapters/Laravel/*`)
 
 - [ ] **Step 1:** Copy structure from `adapters/Laravel/Tenant/` (composer layout, `src/`, `tests/`).
-- [ ] **Step 2:** `composer validate` in adapter directory; from `apps/atomy-q/API` run `composer require nexus/laravel-idempotency-adapter:*@dev` (or add to require + `composer update`).
+- [ ] **Step 2:** `composer validate` in adapter directory; from `apps/atomy-q/API` run `composer require azaharizaman/nexus-laravel-idempotency-adapter:*@dev` (or add to require + `composer update`).
 - [ ] **Step 3:** Commit: `feat(idempotency-adapter): scaffold composer package`
 
 ---
@@ -135,7 +135,7 @@
 ### Task 7: Wire Atomy-Q API — dependency, middleware alias, scheduler, replay binding
 
 **Files:**
-- Modify: `apps/atomy-q/API/composer.json` — require `nexus/idempotency`, `nexus/laravel-idempotency-adapter`
+- Modify: `apps/atomy-q/API/composer.json` — require `azaharizaman/nexus-idempotency`, `azaharizaman/nexus-laravel-idempotency-adapter`
 - Modify: `apps/atomy-q/API/bootstrap/app.php` — alias e.g. `idempotency` → middleware class
 - Modify: `apps/atomy-q/API/app/Providers/AppServiceProvider.php` — register `ReplayResponseFactoryInterface` (depends on Task 6)
 - Modify: `apps/atomy-q/API/routes/console.php` or `routes/console.php` / `bootstrap/app.php` — `Schedule::command('idempotency:cleanup')->daily()`

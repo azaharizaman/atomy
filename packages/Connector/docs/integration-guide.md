@@ -9,7 +9,7 @@ This guide shows how to integrate the Connector package into your application fr
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/connector:"*@dev"
+composer require azaharizaman/nexus-connector:"*@dev"
 ```
 
 ### Step 2: Create Database Migrations
@@ -415,7 +415,7 @@ class WelcomeController extends Controller
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/connector:"*@dev"
+composer require azaharizaman/nexus-connector:"*@dev"
 ```
 
 ### Step 2: Create Doctrine Entities

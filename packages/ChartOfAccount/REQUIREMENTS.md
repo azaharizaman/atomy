@@ -44,7 +44,7 @@ This requirements document defines the **atomic package layer** for `Nexus\Chart
 |-------------------|-------------------|------|------------------------|---------------|--------|-----------------|-------------------|
 | **ARCHITECTURAL REQUIREMENTS** |
 | `Nexus\ChartOfAccount` | Architectural | ARC-COA-1001 | Package MUST be framework-agnostic with zero dependencies on Laravel, Symfony, or any web framework | composer.json, src/ | ⏳ Pending | Validate no Illuminate\* imports | 2025-11-26 |
-| `Nexus\ChartOfAccount` | Architectural | ARC-COA-1002 | Package composer.json MUST require only: php:^8.3 and nexus/common | composer.json | ⏳ Pending | Minimal dependencies | 2025-11-26 |
+| `Nexus\ChartOfAccount` | Architectural | ARC-COA-1002 | Package composer.json MUST require only: php:^8.3 and azaharizaman/nexus-common | composer.json | ⏳ Pending | Minimal dependencies | 2025-11-26 |
 | `Nexus\ChartOfAccount` | Architectural | ARC-COA-1003 | All entity data structures MUST be defined via interfaces (AccountInterface) | Contracts/ | ⏳ Pending | - | 2025-11-26 |
 | `Nexus\ChartOfAccount` | Architectural | ARC-COA-1004 | All persistence operations MUST use CQRS repository interfaces (AccountQueryInterface, AccountPersistInterface) | Contracts/ | ⏳ Pending | Separate read/write | 2025-11-26 |
 | `Nexus\ChartOfAccount` | Architectural | ARC-COA-1005 | Business logic MUST be concentrated in service layer (AccountManager) with readonly injected dependencies | Services/ | ⏳ Pending | - | 2025-11-26 |

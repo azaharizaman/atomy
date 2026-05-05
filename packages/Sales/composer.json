@@ -14,16 +14,16 @@
         "psr/log": "^3.0"
     },
     "suggest": {
-        "azaharizaman/nexus-party": "Required for customer data integration",
-        "azaharizaman/nexus-product": "Required for product variant data",
-        "azaharizaman/nexus-uom": "Required for unit of measure handling",
-        "azaharizaman/nexus-currency": "Required for exchange rate locking",
-        "nexus/finance": "Required for financial calculations",
-        "azaharizaman/nexus-sequencing": "Required for order number generation",
-        "azaharizaman/nexus-period": "Required for period management",
-        "azaharizaman/nexus-audit-logger": "Required for audit trail",
-        "azaharizaman/nexus-inventory": "Required for stock reservation",
-        "azaharizaman/nexus-receivable": "Required for credit checking and invoice generation"
+        "azaharizaman/nexus-party": "dev-main",
+        "azaharizaman/nexus-product": "dev-main",
+        "azaharizaman/nexus-uom": "dev-main",
+        "azaharizaman/nexus-currency": "dev-main",
+        "azaharizaman/nexus-accounting": "dev-main",
+        "azaharizaman/nexus-sequencing": "dev-main",
+        "azaharizaman/nexus-period": "dev-main",
+        "azaharizaman/nexus-audit-logger": "dev-main",
+        "azaharizaman/nexus-inventory": "dev-main",
+        "azaharizaman/nexus-receivable": "dev-main"
     },
     "autoload": {
         "psr-4": {

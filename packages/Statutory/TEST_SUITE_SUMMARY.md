@@ -225,7 +225,7 @@
 
 1. **Country-Specific Logic**
    - **Reason:** Country-specific implementations (SSM, MYS Payroll) are separate packages with their own test suites
-   - **Example:** XBRL taxonomy for Malaysian Company Act tested in `nexus/statutory-accounting-ssm`
+   - **Example:** XBRL taxonomy for Malaysian Company Act tested in `azaharizaman/nexus-statutory-accounting-ssm`
 
 2. **Database Migrations**
    - **Reason:** Migrations are in application layer, not package

@@ -11,8 +11,8 @@ Layer 2 orchestrator for RFQ lifecycle coordination in the sourcing domain.
 
 | Package | Role |
 |---------|------|
-| `nexus/sourcing` | RFQ lifecycle vocabulary, bulk-action allowlist, and transition policy contract |
-| `nexus/vendor` | Shared vendor-related contracts used by the sourcing domain |
+| `azaharizaman/nexus-sourcing` | RFQ lifecycle vocabulary, bulk-action allowlist, and transition policy contract |
+| `azaharizaman/nexus-vendor` | Shared vendor-related contracts used by the sourcing domain |
 
 ## Testing
 

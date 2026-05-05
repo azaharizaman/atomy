@@ -17,7 +17,7 @@ As an atomic package, it:
 ## Installation
 
 ```bash
-composer require nexus/chart-of-account
+composer require azaharizaman/nexus-chart-of-account
 ```
 
 ## Features

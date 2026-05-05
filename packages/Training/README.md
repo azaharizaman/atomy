@@ -13,7 +13,7 @@ Training courses, enrollments, trainers, and certification tracking for employee
 ## Installation
 
 ```bash
-composer require nexus/training-management
+composer require azaharizaman/nexus-training-management
 ```
 
 ## Usage

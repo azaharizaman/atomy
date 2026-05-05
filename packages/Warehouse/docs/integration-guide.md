@@ -20,7 +20,7 @@ Complete integration examples for Laravel and Symfony frameworks.
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/warehouse:"*@dev"
+composer require azaharizaman/nexus-warehouse:"*@dev"
 ```
 
 ### Step 2: Create Database Migrations
@@ -558,7 +558,7 @@ class PickingController extends Controller
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/warehouse:"*@dev"
+composer require azaharizaman/nexus-warehouse:"*@dev"
 ```
 
 ### Step 2: Create Doctrine Entities

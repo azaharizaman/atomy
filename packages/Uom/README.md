@@ -55,7 +55,7 @@ The `Nexus\Uom` package provides a pure PHP, framework-agnostic engine for manag
 Add to your `composer.json`:
 
 ```bash
-composer require nexus/uom:"*@dev"
+composer require azaharizaman/nexus-uom:"*@dev"
 ```
 
 ## Basic Usage

@@ -1,6 +1,6 @@
 # Nexus\PaymentBank Implementation Summary
 
-**Package:** `nexus/payment-bank`  
+**Package:** `azaharizaman/nexus-payment-bank`  
 **Version:** 0.1.0  
 **Status:** � In Progress  
 **Last Updated:** December 26, 2025

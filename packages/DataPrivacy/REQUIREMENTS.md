@@ -1,6 +1,6 @@
 # Nexus\DataPrivacy - Package Requirements
 
-**Package**: nexus/data-privacy  
+**Package**: azaharizaman/nexus-data-privacy  
 **Version**: 1.0.0  
 **Status**: 🔵 In Development  
 **Domain**: Data Privacy & Data Subject Rights
@@ -15,7 +15,7 @@
 | **Atomic Domain** | Data Privacy (ONE domain) |
 | **Framework Agnostic** | ✅ Pure PHP 8.3+ |
 | **Target LOC** | ~1,300 lines |
-| **Dependencies** | nexus/party, nexus/audit-logger, psr/log |
+| **Dependencies** | azaharizaman/nexus-party, azaharizaman/nexus-audit-logger, psr/log |
 
 ---
 

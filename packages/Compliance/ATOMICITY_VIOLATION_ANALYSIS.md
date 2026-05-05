@@ -327,10 +327,10 @@ Update consumer packages to depend on new atomic packages:
 
 | Consumer Package | Adds Dependencies |
 |------------------|-------------------|
-| **VendorManagement** | `nexus/sanctions`, `nexus/kyc-verification` |
-| **CustomerManagement** | `nexus/data-privacy` |
-| **PartyCompliance** | `nexus/sanctions`, `nexus/aml-compliance`, `nexus/kyc-verification`, `nexus/data-privacy` |
-| **BankAccount** | `nexus/sanctions` |
+| **VendorManagement** | `azaharizaman/nexus-sanctions`, `azaharizaman/nexus-kyc-verification` |
+| **CustomerManagement** | `azaharizaman/nexus-data-privacy` |
+| **PartyCompliance** | `azaharizaman/nexus-sanctions`, `azaharizaman/nexus-aml-compliance`, `azaharizaman/nexus-kyc-verification`, `azaharizaman/nexus-data-privacy` |
+| **BankAccount** | `azaharizaman/nexus-sanctions` |
 
 ---
 

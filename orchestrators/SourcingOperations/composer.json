@@ -3,27 +3,11 @@
     "description": "Nexus SourcingOperations Orchestrator - Cross-package workflow coordination for vendor sourcing and ecosystem management",
     "type": "library",
     "license": "MIT",
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../../packages/*",
-            "options": {
-                "symlink": true
-            }
-        },
-        {
-            "type": "path",
-            "url": "../../orchestrators/*",
-            "options": {
-                "symlink": true
-            }
-        }
-    ],
     "require": {
         "php": "^8.3",
-        "azaharizaman/nexus-sourcing": "*@dev",
-        "azaharizaman/nexus-sourcing-scoring": "*@dev",
-        "azaharizaman/nexus-vendor": "*@dev"
+        "azaharizaman/nexus-sourcing": "dev-main",
+        "azaharizaman/nexus-sourcing-scoring": "dev-main",
+        "azaharizaman/nexus-vendor": "dev-main"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.0"

@@ -47,7 +47,7 @@
 ## Installation
 
 ```bash
-composer require nexus/content:"*@dev"
+composer require azaharizaman/nexus-content:"*@dev"
 ```
 
 ## Quick Start

@@ -8,7 +8,7 @@ declare(strict_types=1);
  * This file demonstrates basic usage of the Nexus\Crypto package.
  * 
  * Prerequisites:
- * - Package installed: composer require nexus/crypto:"*@dev"
+ * - Package installed: composer require azaharizaman/nexus-crypto:"*@dev"
  * - Interfaces bound in DI container
  * - ext-sodium and ext-openssl enabled
  */

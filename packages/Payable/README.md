@@ -62,18 +62,18 @@ This package follows the **Nexus Architecture Principle**: "Logic in Packages, I
 ## Installation
 
 ```bash
-composer require nexus/payable:"*@dev"
+composer require azaharizaman/nexus-payable:"*@dev"
 ```
 
 ## Requirements
 
 - **PHP**: ^8.3
 - **Dependencies**:
-  - `nexus/finance` - General ledger integration
-  - `nexus/period` - Fiscal period validation
-  - `nexus/uom` - Unit of measurement (currency)
-  - `nexus/currency` - Multi-currency support
-  - `nexus/audit-logger` - Change tracking
+  - `azaharizaman/nexus-finance` - General ledger integration
+  - `azaharizaman/nexus-period` - Fiscal period validation
+  - `azaharizaman/nexus-uom` - Unit of measurement (currency)
+  - `azaharizaman/nexus-currency` - Multi-currency support
+  - `azaharizaman/nexus-audit-logger` - Change tracking
   - `psr/log` - Logging interface
 
 ## Core Concepts

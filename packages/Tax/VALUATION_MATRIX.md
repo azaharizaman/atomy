@@ -167,31 +167,31 @@
 |------------|------|------------|------------|
 | PHP 8.3+ | Language | Low | Standard modern PHP requirement |
 | BCMath Extension | PHP Extension | Low | Standard PHP extension, widely available |
-| nexus/finance | Internal Package | Low | Co-developed, stable API |
-| nexus/currency | Internal Package | Low | Multi-currency support required |
-| nexus/geo | Internal Package | Medium | Geocoding API costs; fallback to manual jurisdiction entry |
-| nexus/tenant | Internal Package | Low | Multi-tenancy context |
-| nexus/party | Internal Package | Low | Customer/vendor address data |
-| nexus/product | Internal Package | Low | Product tax categories |
+| azaharizaman/nexus-finance | Internal Package | Low | Co-developed, stable API |
+| azaharizaman/nexus-currency | Internal Package | Low | Multi-currency support required |
+| azaharizaman/nexus-geo | Internal Package | Medium | Geocoding API costs; fallback to manual jurisdiction entry |
+| azaharizaman/nexus-tenant | Internal Package | Low | Multi-tenancy context |
+| azaharizaman/nexus-party | Internal Package | Low | Customer/vendor address data |
+| azaharizaman/nexus-product | Internal Package | Low | Product tax categories |
 | psr/log | PSR Interface | Low | Standard logging interface |
 | psr/cache | PSR Interface | Low | Standard caching interface |
 
 ### Internal Package Dependencies
 
 **Depends On:**
-- `nexus/finance` (GL integration)
-- `nexus/currency` (multi-currency conversion)
-- `nexus/geo` (geocoding for jurisdiction)
-- `nexus/party` (customer/vendor data)
-- `nexus/product` (product tax categories)
-- `nexus/tenant` (multi-tenancy context)
+- `azaharizaman/nexus-finance` (GL integration)
+- `azaharizaman/nexus-currency` (multi-currency conversion)
+- `azaharizaman/nexus-geo` (geocoding for jurisdiction)
+- `azaharizaman/nexus-party` (customer/vendor data)
+- `azaharizaman/nexus-product` (product tax categories)
+- `azaharizaman/nexus-tenant` (multi-tenancy context)
 
 **Depended By (Planned):**
-- `nexus/receivable` (customer invoice tax)
-- `nexus/payable` (vendor bill tax, reverse charge)
-- `nexus/sales` (sales order tax preview)
-- `nexus/procurement` (purchase order tax estimation)
-- `nexus/statutory` (compliance report transformation)
+- `azaharizaman/nexus-receivable` (customer invoice tax)
+- `azaharizaman/nexus-payable` (vendor bill tax, reverse charge)
+- `azaharizaman/nexus-sales` (sales order tax preview)
+- `azaharizaman/nexus-procurement` (purchase order tax estimation)
+- `azaharizaman/nexus-statutory` (compliance report transformation)
 
 **Coupling Risk:** Medium (high integration criticality, but well-defined interfaces minimize impact)
 

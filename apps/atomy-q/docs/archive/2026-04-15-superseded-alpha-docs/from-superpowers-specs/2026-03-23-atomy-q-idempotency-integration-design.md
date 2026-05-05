@@ -3,7 +3,7 @@
 **Date:** 2026-03-23  
 **Status:** Approved for implementation  
 **Related:** [2026-03-22-idempotency-laravel-adapter-design.md](./2026-03-22-idempotency-laravel-adapter-design.md) (Layer 3 adapter package)  
-**Layer 1:** `nexus/idempotency` (`packages/Idempotency/`)
+**Layer 1:** `azaharizaman/nexus-idempotency` (`packages/Idempotency/`)
 
 ---
 

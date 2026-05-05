@@ -31,7 +31,7 @@
 | `Nexus\Manufacturing` | Business Requirements | BUS-BOM-0004 | System MUST support BOM versioning with effectivity dates (effectiveFrom/effectiveTo) | src/Contracts/EffectivityInterface.php | ⏳ Pending | ECO support | 2025-11-25 |
 | `Nexus\Manufacturing` | Business Requirements | BUS-BOM-0005 | System MUST explode BOMs respecting effectivity dates at explosion time | src/Services/BomManager.php | ⏳ Pending | - | 2025-11-25 |
 | `Nexus\Manufacturing` | Business Requirements | BUS-BOM-0006 | System MUST support cost rollup calculation from component costs | src/Services/BomManager.php | ⏳ Pending | - | 2025-11-25 |
-| `Nexus\Manufacturing` | Business Requirements | BUS-BOM-0007 | System MUST convert component quantities using UoM converter | src/Services/BomManager.php | ⏳ Pending | nexus/uom integration | 2025-11-25 |
+| `Nexus\Manufacturing` | Business Requirements | BUS-BOM-0007 | System MUST convert component quantities using UoM converter | src/Services/BomManager.php | ⏳ Pending | azaharizaman/nexus-uom integration | 2025-11-25 |
 
 ---
 
@@ -53,7 +53,7 @@
 |-------------------|-------------------|------|------------------------|---------------|--------|-----------------|-------------------|
 | `Nexus\Manufacturing` | Business Requirements | BUS-WO-0001 | Work Orders MUST follow FSM: planned→released→in_progress→completed/cancelled | src/Services/WorkOrderManager.php | ⏳ Pending | - | 2025-11-25 |
 | `Nexus\Manufacturing` | Business Requirements | BUS-WO-0002 | System MUST validate state transitions (e.g., cannot complete without releasing) | src/Services/WorkOrderManager.php | ⏳ Pending | - | 2025-11-25 |
-| `Nexus\Manufacturing` | Business Requirements | BUS-WO-0003 | System MUST reserve materials via Inventory interface when WO is released | src/Services/WorkOrderManager.php | ⏳ Pending | nexus/inventory integration | 2025-11-25 |
+| `Nexus\Manufacturing` | Business Requirements | BUS-WO-0003 | System MUST reserve materials via Inventory interface when WO is released | src/Services/WorkOrderManager.php | ⏳ Pending | azaharizaman/nexus-inventory integration | 2025-11-25 |
 | `Nexus\Manufacturing` | Business Requirements | BUS-WO-0004 | System MUST track actual vs planned quantities and durations | src/Services/WorkOrderManager.php | ⏳ Pending | Variance analysis | 2025-11-25 |
 | `Nexus\Manufacturing` | Business Requirements | BUS-WO-0005 | System MUST publish WorkOrderCreatedEvent, WorkOrderReleasedEvent, etc. | src/Events/ | ⏳ Pending | - | 2025-11-25 |
 
@@ -98,7 +98,7 @@
 
 | Package Namespace | Requirements Type | Code | Requirement Statements | Files/Folders | Status | Notes on Status | Date Last Updated |
 |-------------------|-------------------|------|------------------------|---------------|--------|-----------------|-------------------|
-| `Nexus\Manufacturing` | Integration Requirement | INT-ML-0001 | MRP MUST consume DemandForecastInterface for predictive demand input | src/Core/Engine/MrpEngine.php | ⏳ Pending | nexus/machine-learning | 2025-11-25 |
+| `Nexus\Manufacturing` | Integration Requirement | INT-ML-0001 | MRP MUST consume DemandForecastInterface for predictive demand input | src/Core/Engine/MrpEngine.php | ⏳ Pending | azaharizaman/nexus-machine-learning | 2025-11-25 |
 | `Nexus\Manufacturing` | Integration Requirement | INT-ML-0002 | System MUST fall back to historical average when ML unavailable/low-confidence | src/Core/Engine/ForecastIntegrationEngine.php | ⏳ Pending | Graceful degradation | 2025-11-25 |
 | `Nexus\Manufacturing` | Integration Requirement | INT-ML-0003 | System MUST publish ForecastFallbackUsedEvent when fallback is triggered | src/Events/ForecastFallbackUsedEvent.php | ⏳ Pending | Consumer awareness | 2025-11-25 |
 | `Nexus\Manufacturing` | Integration Requirement | INT-ML-0004 | System MUST track forecast confidence levels for each prediction | src/ValueObjects/DemandForecast.php | ⏳ Pending | - | 2025-11-25 |

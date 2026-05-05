@@ -10,7 +10,7 @@ Laravel's native `Storage` facade is built on top of Flysystem, making integrati
 
 ### Step 1: Install Package
 ```bash
-composer require nexus/storage:"*@dev"
+composer require azaharizaman/nexus-storage:"*@dev"
 ```
 
 ### Step 2: Create the Storage Driver Implementation
@@ -198,7 +198,7 @@ Symfony integration follows a similar pattern of creating adapter classes and co
 
 ### Step 1: Install Package
 ```bash
-composer require nexus/storage:"*@dev"
+composer require azaharizaman/nexus-storage:"*@dev"
 ```
 
 ### Step 2: Create the Storage Driver Implementation

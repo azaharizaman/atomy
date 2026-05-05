@@ -1,6 +1,6 @@
 # Nexus\PaymentRecurring Valuation Matrix
 
-**Package:** `nexus/payment-recurring`  
+**Package:** `azaharizaman/nexus-payment-recurring`  
 **Version:** 0.1.0  
 **Assessment Date:** December 18, 2025
 
@@ -22,8 +22,8 @@
 
 | Package | Criticality |
 |---------|-------------|
-| `nexus/payment` | Required |
-| `nexus/scheduler` | Required (for scheduled billing) |
+| `azaharizaman/nexus-payment` | Required |
+| `azaharizaman/nexus-scheduler` | Required (for scheduled billing) |
 
 ### Depended Upon By
 

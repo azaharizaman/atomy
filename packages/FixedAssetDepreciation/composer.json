@@ -13,11 +13,11 @@
         "psr/log": "^3.0"
     },
     "suggest": {
-        "nexus/finance": "For GL posting of depreciation entries",
-        "azaharizaman/nexus-tax": "For tax depreciation calculations (differs from book depreciation)",
-        "azaharizaman/nexus-currency": "For multi-currency asset depreciation",
-        "azaharizaman/nexus-audit": "For audit trail of depreciation calculations",
-        "azaharizaman/nexus-setting": "For tier configuration"
+        "azaharizaman/nexus-accounting": "dev-main",
+        "azaharizaman/nexus-tax": "dev-main",
+        "azaharizaman/nexus-currency": "dev-main",
+        "azaharizaman/nexus-audit": "dev-main",
+        "azaharizaman/nexus-setting": "dev-main"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

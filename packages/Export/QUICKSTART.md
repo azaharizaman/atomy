@@ -486,7 +486,7 @@ class ExportIntegrationTest extends TestCase
 
 ## Troubleshooting
 
-### "Package nexus/export not found"
+### "Package azaharizaman/nexus-export not found"
 **Solution**: Add repository to `composer.json`:
 ```json
 "repositories": [

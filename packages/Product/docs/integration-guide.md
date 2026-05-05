@@ -3,7 +3,7 @@
 ## Laravel Integration
 
 ```bash
-composer require nexus/product:"*@dev"
+composer require azaharizaman/nexus-product:"*@dev"
 ```
 
 Bind interfaces in your service provider.

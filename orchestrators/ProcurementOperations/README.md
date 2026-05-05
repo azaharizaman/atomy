@@ -1,6 +1,6 @@
 # Nexus ProcurementOperations Orchestrator
 
-**Package:** `nexus/procurement-operations`  
+**Package:** `azaharizaman/nexus-procurement-operations`  
 **Namespace:** `Nexus\ProcurementOperations`  
 **Type:** Orchestrator (Pure PHP)  
 **Version:** 2.0.0-phase-c

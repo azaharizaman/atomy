@@ -159,17 +159,17 @@ src/
 ## Installation
 
 ```bash
-composer require nexus/tenant-operations
+composer require azaharizaman/nexus-tenant-operations
 ```
 
 ### Dependencies
 
-- `nexus/tenant` - Core tenant management
-- `nexus/setting` - Tenant-specific settings
-- `nexus/feature-flags` - Feature flag management
-- `nexus/backoffice` - Company structure
-- `nexus/audit-logger` - Audit trail logging
-- `nexus/identity` - User authentication/authorization
+- `azaharizaman/nexus-tenant` - Core tenant management
+- `azaharizaman/nexus-setting` - Tenant-specific settings
+- `azaharizaman/nexus-feature-flags` - Feature flag management
+- `azaharizaman/nexus-backoffice` - Company structure
+- `azaharizaman/nexus-audit-logger` - Audit trail logging
+- `azaharizaman/nexus-identity` - User authentication/authorization
 
 ---
 

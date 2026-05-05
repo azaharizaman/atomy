@@ -148,24 +148,24 @@ Seven database migrations were created to support the sales workflow:
 
 ### 3.1 Problem Identified
 
-The Sales package `composer.json` had 10 `nexus/*` packages in the `require` section:
-- `nexus/receivable`
-- `nexus/inventory`
-- `nexus/sequencing`
-- `nexus/audit`
-- `nexus/setting`
-- `nexus/tenant`
-- `nexus/uom`
-- `nexus/org-structure`
-- `nexus/workflow`
-- `nexus/notifier`
+The Sales package `composer.json` had 10 `azaharizaman/nexus-*` packages in the `require` section:
+- `azaharizaman/nexus-receivable`
+- `azaharizaman/nexus-inventory`
+- `azaharizaman/nexus-sequencing`
+- `azaharizaman/nexus-audit`
+- `azaharizaman/nexus-setting`
+- `azaharizaman/nexus-tenant`
+- `azaharizaman/nexus-uom`
+- `azaharizaman/nexus-org-structure`
+- `azaharizaman/nexus-workflow`
+- `azaharizaman/nexus-notifier`
 
 This violated the **Nexus Three-Layer Architecture** where atomic packages must be independently publishable to Packagist without requiring other Nexus packages.
 
 ### 3.2 Solution Applied
 
 **Dependency Restructuring:**
-- Moved all `nexus/*` dependencies from `require` to `suggest` in [`packages/Sales/composer.json`](packages/Sales/composer.json)
+- Moved all `azaharizaman/nexus-*` dependencies from `require` to `suggest` in [`packages/Sales/composer.json`](packages/Sales/composer.json)
 - Sales package now only requires:
   - `php: ^8.3`
   - `psr/log: ^3.0`

@@ -18,7 +18,7 @@
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/query-engine:"*@dev"
+composer require azaharizaman/nexus-query-engine:"*@dev"
 ```
 
 ### Step 2: Create Service Provider
@@ -279,7 +279,7 @@ final readonly class AnalyticsController extends Controller
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/query-engine:"*@dev"
+composer require azaharizaman/nexus-query-engine:"*@dev"
 ```
 
 ### Step 2: Configure Services

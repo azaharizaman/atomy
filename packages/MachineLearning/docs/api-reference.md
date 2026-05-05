@@ -1,7 +1,7 @@
 # API Reference: MachineLearning
 
 **Version:** 2.0.0  
-**Package:** `nexus/machinelearning`  
+**Package:** `azaharizaman/nexus-machinelearning`  
 **Namespace:** `Nexus\MachineLearning`
 
 ---

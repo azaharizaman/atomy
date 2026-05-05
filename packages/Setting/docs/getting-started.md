@@ -18,7 +18,7 @@ The `Nexus\Setting` package delivers a framework-agnostic settings engine with h
 ## Installation
 
 ```bash
-composer require nexus/setting:"*@dev"
+composer require azaharizaman/nexus-setting:"*@dev"
 ```
 
 Update your application's `composer.json` to point to the local path repository if you are working inside the Nexus monorepo:
@@ -32,7 +32,7 @@ Update your application's `composer.json` to point to the local path repository 
 		}
 	],
 	"require": {
-		"nexus/setting": "*@dev"
+		"azaharizaman/nexus-setting": "*@dev"
 	}
 }
 ```

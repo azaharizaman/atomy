@@ -5,8 +5,8 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "azaharizaman/nexus-common": "*@dev",
-        "azaharizaman/nexus-identity": "*@dev",
+        "azaharizaman/nexus-common": "dev-main",
+        "azaharizaman/nexus-identity": "dev-main",
         "psr/log": "^3.0",
         "psr/event-dispatcher": "^1.0"
     },
@@ -23,15 +23,6 @@
             "Nexus\\IdentityOperations\\Tests\\": "tests/"
         }
     },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../../packages/*",
-            "options": {
-                "symlink": true
-            }
-        }
-    ],
     "minimum-stability": "dev",
     "prefer-stable": true
 }

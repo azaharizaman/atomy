@@ -1,6 +1,6 @@
 # Nexus\PaymentRecurring Requirements Specification
 
-**Package:** `nexus/payment-recurring`  
+**Package:** `azaharizaman/nexus-payment-recurring`  
 **Version:** 0.1.0  
 **Status:** Draft  
 **Last Updated:** December 18, 2025  
@@ -388,17 +388,17 @@ ProrationBehavior
 
 | Package | Purpose |
 |---------|---------|
-| `nexus/payment` | Core payment interfaces for executing payments |
-| `nexus/common` | Money VO, common interfaces |
+| `azaharizaman/nexus-payment` | Core payment interfaces for executing payments |
+| `azaharizaman/nexus-common` | Money VO, common interfaces |
 | `psr/event-dispatcher` | Domain event publishing |
 
 ### 6.2 Optional Dependencies
 
 | Package | Purpose |
 |---------|---------|
-| `nexus/scheduler` | Scheduling billing cycle jobs |
-| `nexus/notifier` | Dunning and trial notifications |
-| `nexus/receivable` | Invoice integration |
+| `azaharizaman/nexus-scheduler` | Scheduling billing cycle jobs |
+| `azaharizaman/nexus-notifier` | Dunning and trial notifications |
+| `azaharizaman/nexus-receivable` | Invoice integration |
 
 ---
 

@@ -2,7 +2,7 @@
 
 **Status**: ✅ **COMPLETE** (Core Package & Laravel Integration)  
 **Date**: November 20, 2025  
-**Package**: `nexus/party` v1.0.0  
+**Package**: `azaharizaman/nexus-party` v1.0.0  
 **Application**: `apps/consuming application` (Laravel 12 Integration Layer)
 
 ---

@@ -24,7 +24,7 @@ Nexus\Assets is a comprehensive fixed asset management package that supports the
 ## Installation
 
 ```bash
-composer require nexus/assets:"*@dev"
+composer require azaharizaman/nexus-assets:"*@dev"
 ```
 
 ---

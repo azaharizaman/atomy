@@ -11,8 +11,8 @@ Layer 2 orchestrator for **operational approvals**: template resolution, composi
 
 | Package | Role |
 |---------|------|
-| `nexus/workflow` | State machine, approval strategies, escalation/delegation |
-| `nexus/policy-engine` | Deterministic policy evaluation |
+| `azaharizaman/nexus-workflow` | State machine, approval strategies, escalation/delegation |
+| `azaharizaman/nexus-policy-engine` | Deterministic policy evaluation |
 | `psr/log` | Logging port |
 
 ## Design
@@ -30,5 +30,5 @@ composer install
 Install from monorepo root when resolving path packages:
 
 ```bash
-composer update nexus/approval-operations
+composer update azaharizaman/nexus-approval-operations
 ```

@@ -1,6 +1,6 @@
 # Nexus\PaymentBank Valuation Matrix
 
-**Package:** `nexus/payment-bank`  
+**Package:** `azaharizaman/nexus-payment-bank`  
 **Version:** 0.1.0  
 **Assessment Date:** December 18, 2025
 
@@ -22,14 +22,14 @@
 
 | Package | Criticality |
 |---------|-------------|
-| `nexus/payment` | Required |
-| `nexus/connector` | Required |
+| `azaharizaman/nexus-payment` | Required |
+| `azaharizaman/nexus-connector` | Required |
 
 ### Optional Dependencies
 
 | Package | Use Case |
 |---------|----------|
-| `nexus/payment-rails` | ACH/Wire file generation |
+| `azaharizaman/nexus-payment-rails` | ACH/Wire file generation |
 
 ### Depended Upon By
 

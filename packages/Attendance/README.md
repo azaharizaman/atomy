@@ -81,7 +81,7 @@ The **AttendanceManagement** package provides a complete solution for tracking e
 ### Composer Install
 
 ```bash
-composer require nexus/attendance-management
+composer require azaharizaman/nexus-attendance-management
 ```
 
 ### Framework Integration
@@ -1293,7 +1293,7 @@ We welcome contributions! Please follow these guidelines:
 
 ```bash
 # Clone the repository
-git clone https://github.com/nexus/attendance-management.git
+git clone https://github.com/azaharizaman/nexus-attendance-management.git
 cd attendance-management
 
 # Install dependencies
@@ -1403,7 +1403,7 @@ For developers contributing to or evaluating this package:
 ## 📞 Support
 
 - **Documentation**: [https://nexus-docs.example.com/attendance](https://nexus-docs.example.com/attendance)
-- **Issues**: [GitHub Issues](https://github.com/nexus/attendance-management/issues)
+- **Issues**: [GitHub Issues](https://github.com/azaharizaman/nexus-attendance-management/issues)
 - **Email**: support@nexus.example.com
 
 ---

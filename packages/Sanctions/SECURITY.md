@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-The following versions of `nexus/sanctions` are currently supported with security updates:
+The following versions of `azaharizaman/nexus-sanctions` are currently supported with security updates:
 
 | Version | Supported          |
 | ------- | ------------------ |
@@ -47,12 +47,12 @@ If you discover a security vulnerability in this package, please report it respo
 
 ## Security Best Practices for Users
 
-When using `nexus/sanctions` in production:
+When using `azaharizaman/nexus-sanctions` in production:
 
 ### 1. Keep Dependencies Updated
 
 ```bash
-composer update nexus/sanctions
+composer update azaharizaman/nexus-sanctions
 composer update  # Update all dependencies
 ```
 

@@ -32,7 +32,7 @@ Atomy-Q has a **strong skeleton**: JWT auth, tenant-scoped RFQ/quote/comparison/
 | **Normalization** | ⚠ **Risky** | **DB-backed** mapping/conflicts/readiness for lines that exist; **GET source-lines / normalized-items return empty `data`**; **no AI**. |
 | **Comparison** | ⚠ **Risky** | **Final comparison** is real; **preview** returns ephemeral id; **matrix/readiness/lock** endpoints largely stubbed. |
 | **Award** | ❌ **Broken** | **All award endpoints 501 / not implemented.** |
-| **AI / LLM** | ❌ **Broken** | `nexus/machine-learning` is a **dependency**, but **no usage in `atomy-q/API` app code**; no `OPENAI_*` (or similar) in API `.env.example`. |
+| **AI / LLM** | ❌ **Broken** | `azaharizaman/nexus-machine-learning` is a **dependency**, but **no usage in `atomy-q/API` app code**; no `OPENAI_*` (or similar) in API `.env.example`. |
 
 **Flows (concise):**
 
@@ -145,7 +145,7 @@ Atomy-Q has a **strong skeleton**: JWT auth, tenant-scoped RFQ/quote/comparison/
 | Error handling / retry | ❌ N/A |
 | Fallback | ⚠ Rule-based readiness + `QuoteSubmissionReadinessService` only |
 
-**Note:** `packages/MachineLearning` contains **OpenAI/Anthropic** providers, but **Atomy-Q API does not reference them** in application code. `nexus/quotation-intelligence` is in `composer.json` but **no imports** under `apps/atomy-q/API/app`.
+**Note:** `packages/MachineLearning` contains **OpenAI/Anthropic** providers, but **Atomy-Q API does not reference them** in application code. `azaharizaman/nexus-quotation-intelligence` is in `composer.json` but **no imports** under `apps/atomy-q/API/app`.
 
 ---
 

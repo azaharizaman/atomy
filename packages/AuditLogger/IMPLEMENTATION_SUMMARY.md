@@ -107,7 +107,7 @@ consuming application (e.g., Laravel app)
 
 ```bash
 cd /path/to/nexus
-composer require nexus/audit-logger:"*@dev"
+composer require azaharizaman/nexus-audit-logger:"*@dev"
 ```
 
 ### 2. Register Service Provider (Laravel 12)
@@ -251,7 +251,7 @@ php artisan test --filter=AuditLog
 
 1. Install Laravel 12 in `consuming application (e.g., Laravel app)`
 2. Add package to root `composer.json` repositories
-3. Run `composer require nexus/audit-logger:"*@dev"`
+3. Run `composer require azaharizaman/nexus-audit-logger:"*@dev"`
 4. Run migrations
 5. Configure audit settings
 6. Add Auditable trait to models

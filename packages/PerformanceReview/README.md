@@ -13,7 +13,7 @@ Appraisal cycles, KPIs, competency scoring, and rating calculations for employee
 ## Installation
 
 ```bash
-composer require nexus/performance-review
+composer require azaharizaman/nexus-performance-review
 ```
 
 ## Usage

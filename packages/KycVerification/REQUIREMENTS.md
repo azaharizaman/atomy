@@ -1,6 +1,6 @@
 # Nexus\KycVerification - Package Requirements
 
-**Package**: nexus/kyc-verification  
+**Package**: azaharizaman/nexus-kyc-verification  
 **Version**: 1.0.0  
 **Status**: 🔵 In Development  
 **Domain**: KYC Identity Verification
@@ -15,7 +15,7 @@
 | **Atomic Domain** | KYC Identity Verification (ONE domain) |
 | **Framework Agnostic** | ✅ Pure PHP 8.3+ |
 | **Target LOC** | ~600 lines |
-| **Dependencies** | nexus/party, nexus/document, nexus/identity, psr/log |
+| **Dependencies** | azaharizaman/nexus-party, azaharizaman/nexus-document, azaharizaman/nexus-identity, psr/log |
 
 ---
 

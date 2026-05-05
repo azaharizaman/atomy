@@ -54,7 +54,7 @@ Today, integration-style emissions (notifications, webhooks, analytics) risk **a
 | **L2 orchestrator** | Coordinates **EventStream append + outbox enqueue** in one transactional boundary **when both are used**; may host a small **mapper** from `EventInterface` → outbox enqueue DTO (recommended default to avoid unnecessary L1↔L1 coupling). |
 | **L3 adapter** | DB schema, unique indexes, transactional `enqueue` with business commit, worker claim loop, publisher to external bus. |
 
-**Dependency recommendation (v1):** Core `nexus/outbox` **composer `require`** only `php` (^8.3) (and dev test tools), matching `nexus/idempotency`. The **EventStream bridge** is **specified** in §8; the **reference mapper implementation** may live in **L2** or, if the repo later wants a reusable L1 helper, a **separate** `nexus/outbox-event-stream-bridge` package **or** an explicit `require` on `nexus/event-stream`—decision deferred to the implementation plan to avoid pulling `symfony/uid` / `psr/log` into all Outbox consumers unnecessarily.
+**Dependency recommendation (v1):** Core `azaharizaman/nexus-outbox` **composer `require`** only `php` (^8.3) (and dev test tools), matching `azaharizaman/nexus-idempotency`. The **EventStream bridge** is **specified** in §8; the **reference mapper implementation** may live in **L2** or, if the repo later wants a reusable L1 helper, a **separate** `azaharizaman/nexus-outbox-event-stream-bridge` package **or** an explicit `require` on `azaharizaman/nexus-event-stream`—decision deferred to the implementation plan to avoid pulling `symfony/uid` / `psr/log` into all Outbox consumers unnecessarily.
 
 ---
 
@@ -149,7 +149,7 @@ Outbox **query APIs** remain **tenant-scoped**; failed lookups for wrong tenant 
 
 1. Whether **`Sending`** is v1 or v1 uses claim on `Pending` only (simpler, weaker observability).
 2. Exact **retry** model: `Failed` → `Pending` with attempt counter vs dead-letter status in v1.
-3. Whether **mapper code** ships in L2 only vs optional **`nexus/outbox-event-stream-bridge`** package.
+3. Whether **mapper code** ships in L2 only vs optional **`azaharizaman/nexus-outbox-event-stream-bridge`** package.
 
 ---
 

@@ -4,7 +4,7 @@
     "type": "library",
     "license": "MIT",
     "require": {
-        "azaharizaman/nexus-common": "*@dev",
+        "azaharizaman/nexus-common": "dev-main",
         "php": "^8.3",
         "psr/cache": "^3.0",
         "psr/log": "^3.0"
@@ -25,13 +25,13 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "suggest": {
-        "azaharizaman/nexus-accounting": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-audit-logger": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-geo": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-party": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-product": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-storage": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-telemetry": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-tenant": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-accounting": "dev-main",
+        "azaharizaman/nexus-audit-logger": "dev-main",
+        "azaharizaman/nexus-geo": "dev-main",
+        "azaharizaman/nexus-party": "dev-main",
+        "azaharizaman/nexus-product": "dev-main",
+        "azaharizaman/nexus-storage": "dev-main",
+        "azaharizaman/nexus-telemetry": "dev-main",
+        "azaharizaman/nexus-tenant": "dev-main"
     }
 }

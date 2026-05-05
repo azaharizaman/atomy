@@ -120,10 +120,10 @@
 | Dependency | Type | Risk Level | Mitigation |
 |------------|------|------------|------------|
 | PHP 8.3+ | Language | Low | Standard requirement |
-| nexus/uom | First-party | Low | Unit conversion abstraction |
+| azaharizaman/nexus-uom | First-party | Low | Unit conversion abstraction |
 | psr/log | PSR Standard | Low | Logging interface |
-| nexus/event-stream | Optional (suggested) | Low | Optional event sourcing |
-| nexus/machine-learning | Optional (suggested) | Low | Optional demand forecasting |
+| azaharizaman/nexus-event-stream | Optional (suggested) | Low | Optional event sourcing |
+| azaharizaman/nexus-machine-learning | Optional (suggested) | Low | Optional demand forecasting |
 
 ### Internal Package Dependencies
 - **Depends On:** `Nexus\Uom` (unit conversions)

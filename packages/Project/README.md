@@ -28,7 +28,7 @@ The **Nexus\Project** package is a Layer 1 atomic package that owns project meta
 ## Installation
 
 ```bash
-composer require nexus/project
+composer require azaharizaman/nexus-project
 ```
 
 ## License

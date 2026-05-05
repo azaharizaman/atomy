@@ -1,6 +1,6 @@
 # Nexus\PaymentWallet Implementation Summary
 
-**Package:** `nexus/payment-wallet`  
+**Package:** `azaharizaman/nexus-payment-wallet`  
 **Version:** 0.1.0  
 **Status:** 🔴 Not Started  
 **Last Updated:** December 18, 2025

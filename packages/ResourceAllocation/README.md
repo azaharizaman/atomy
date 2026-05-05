@@ -27,7 +27,7 @@ The **Nexus\ResourceAllocation** package is a Layer 1 atomic package that owns a
 ## Installation
 
 ```bash
-composer require nexus/resource-allocation
+composer require azaharizaman/nexus-resource-allocation
 ```
 
 ## License

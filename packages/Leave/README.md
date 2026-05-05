@@ -16,7 +16,7 @@
 ## Installation
 
 ```bash
-composer require nexus/leave-management
+composer require azaharizaman/nexus-leave-management
 ```
 
 ## Key Concepts

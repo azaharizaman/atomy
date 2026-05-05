@@ -19,7 +19,7 @@
         }
     ],
     "require": {
-        "azaharizaman/nexus-common": "^1.0",
+        "azaharizaman/nexus-common": "dev-main",
         "php": "^8.3",
         "psr/log": "^3.0"
     },
@@ -44,7 +44,7 @@
         "sort-packages": true
     },
     "suggest": {
-        "azaharizaman/nexus-payment": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-scheduler": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-payment": "dev-main",
+        "azaharizaman/nexus-scheduler": "dev-main"
     }
 }

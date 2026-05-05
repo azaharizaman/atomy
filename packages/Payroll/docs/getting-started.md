@@ -10,17 +10,17 @@
 ## Installation
 
 ```bash
-composer require nexus/payroll:"*@dev"
+composer require azaharizaman/nexus-payroll:"*@dev"
 ```
 
 For country-specific statutory calculations, install the appropriate package:
 
 ```bash
 # Malaysia (EPF, SOCSO, EIS, PCB)
-composer require nexus/payroll-mys-statutory:"*@dev"
+composer require azaharizaman/nexus-payroll-mys-statutory:"*@dev"
 
 # Singapore (CPF, SDL) - Coming soon
-# composer require nexus/payroll-sgp-statutory:"*@dev"
+# composer require azaharizaman/nexus-payroll-sgp-statutory:"*@dev"
 ```
 
 ---
@@ -366,7 +366,7 @@ Target interface [Nexus\Payroll\Contracts\StatutoryCalculatorInterface] is not i
 ```
 
 - **Cause:** No country-specific calculator package installed
-- **Solution:** Install appropriate package: `composer require nexus/payroll-mys-statutory`
+- **Solution:** Install appropriate package: `composer require azaharizaman/nexus-payroll-mys-statutory`
 
 **Issue 3: Empty payslips array returned**
 

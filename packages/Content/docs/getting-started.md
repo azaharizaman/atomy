@@ -13,7 +13,7 @@ This guide will help you integrate and use the `Nexus\Content` package in your a
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/content:"*@dev"
+composer require azaharizaman/nexus-content:"*@dev"
 ```
 
 ### Step 2: Implement Required Interfaces

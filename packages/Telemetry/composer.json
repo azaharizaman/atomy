@@ -16,9 +16,9 @@
         "phpunit/phpunit": "^11.0"
     },
     "suggest": {
-        "azaharizaman/nexus-notifier": "For alert notification delivery",
-        "azaharizaman/nexus-audit-logger": "For audit trail integration",
-        "azaharizaman/nexus-tenant": "For multi-tenancy metric tagging"
+        "azaharizaman/nexus-notifier": "dev-main",
+        "azaharizaman/nexus-audit-logger": "dev-main",
+        "azaharizaman/nexus-tenant": "dev-main"
     },
     "autoload": {
         "psr-4": {

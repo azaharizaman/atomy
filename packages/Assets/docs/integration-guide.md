@@ -18,7 +18,7 @@
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/assets:"*@dev"
+composer require azaharizaman/nexus-assets:"*@dev"
 ```
 
 ### Step 2: Create Eloquent Models
@@ -439,7 +439,7 @@ class AssetGLListener implements ShouldQueue
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/assets:"*@dev"
+composer require azaharizaman/nexus-assets:"*@dev"
 ```
 
 ### Step 2: Create Doctrine Entity

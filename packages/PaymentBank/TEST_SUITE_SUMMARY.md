@@ -1,6 +1,6 @@
 # Nexus\PaymentBank Test Suite Summary
 
-**Package:** `nexus/payment-bank`  
+**Package:** `azaharizaman/nexus-payment-bank`  
 **Version:** 0.1.0  
 **Last Run:** N/A  
 **Status:** 🔴 Not Started

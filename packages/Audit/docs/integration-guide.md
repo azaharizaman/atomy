@@ -9,7 +9,7 @@ This guide shows how to integrate the Nexus\Audit package into Laravel and Symfo
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/audit:"*@dev"
+composer require azaharizaman/nexus-audit:"*@dev"
 ```
 
 ### Step 2: Create Database Migration
@@ -421,7 +421,7 @@ class PurgeExpiredAuditRecords extends Command
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/audit:"*@dev"
+composer require azaharizaman/nexus-audit:"*@dev"
 ```
 
 ### Step 2: Create Doctrine Entity

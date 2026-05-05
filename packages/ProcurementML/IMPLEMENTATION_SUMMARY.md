@@ -38,7 +38,7 @@ Runtime behavior is gated outside this Layer 1 package by `atomy.ai.mode` and `a
 
 ## What Was Completed
 
-- Created the `nexus/procurement-ml` package.
+- Created the `azaharizaman/nexus-procurement-ml` package.
 - Migrated 7 `*AnalyticsRepositoryInterface.php` files to `src/Contracts/`.
 - Migrated 7 `*Extractor.php` files to `src/Extractors/`.
 - All files have been updated with the `Nexus\ProcurementML` namespace.
@@ -63,7 +63,7 @@ Runtime behavior is gated outside this Layer 1 package by `atomy.ai.mode` and `a
 
 ### Dependencies
 - External Dependencies: 1 (`php:^8.3`)
-- Internal Package Dependencies: `nexus/machine-learning`
+- Internal Package Dependencies: `azaharizaman/nexus-machine-learning`
 
 ## Known Limitations
 

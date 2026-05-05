@@ -11,10 +11,10 @@
     ],
     "require": {
         "php": "^8.3",
-        "azaharizaman/nexus-storage": "*@dev",
-        "azaharizaman/nexus-crypto": "*@dev",
-        "azaharizaman/nexus-audit-logger": "*@dev",
-        "azaharizaman/nexus-tenant": "*@dev",
+        "azaharizaman/nexus-storage": "dev-main",
+        "azaharizaman/nexus-crypto": "dev-main",
+        "azaharizaman/nexus-audit-logger": "dev-main",
+        "azaharizaman/nexus-tenant": "dev-main",
         "psr/log": "^3.0",
         "symfony/uid": "^7.0"
     },

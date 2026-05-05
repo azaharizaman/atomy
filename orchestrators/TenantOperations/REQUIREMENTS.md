@@ -198,13 +198,13 @@ The system MUST manage tenant context:
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `nexus/tenant` | *@dev | Core tenant management |
-| `nexus/setting` | *@dev | Tenant-specific settings |
-| `nexus/feature-flags` | *@dev | Feature flag management |
-| `nexus/backoffice` | *@dev | Company structure |
-| `nexus/audit-logger` | *@dev | Audit trail logging |
-| `nexus/identity` | *@dev | User authentication/authorization |
-| `nexus/common` | *@dev | Shared utilities |
+| `azaharizaman/nexus-tenant` | *@dev | Core tenant management |
+| `azaharizaman/nexus-setting` | *@dev | Tenant-specific settings |
+| `azaharizaman/nexus-feature-flags` | *@dev | Feature flag management |
+| `azaharizaman/nexus-backoffice` | *@dev | Company structure |
+| `azaharizaman/nexus-audit-logger` | *@dev | Audit trail logging |
+| `azaharizaman/nexus-identity` | *@dev | User authentication/authorization |
+| `azaharizaman/nexus-common` | *@dev | Shared utilities |
 
 ### 4.2 Dependency Flow
 

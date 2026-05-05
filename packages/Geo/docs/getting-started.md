@@ -10,7 +10,7 @@
 ## Installation
 
 ```bash
-composer require nexus/geo:"*@dev"
+composer require azaharizaman/nexus-geo:"*@dev"
 ```
 
 ## When to Use This Package

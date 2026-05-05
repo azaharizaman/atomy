@@ -153,7 +153,7 @@ consuming application (e.g., Laravel app)
 
 ```bash
 cd apps/consuming application
-composer require nexus/query-engine:"*@dev"
+composer require azaharizaman/nexus-query-engine:"*@dev"
 ```
 
 ### 2. Register Service Provider

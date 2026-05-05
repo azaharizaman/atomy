@@ -1,6 +1,6 @@
 # Nexus\PaymentGateway — Production Readiness Audit & Mitigation Plan
 
-**Package:** `nexus/payment-gateway`  
+**Package:** `azaharizaman/nexus-payment-gateway`  
 **Audience:** Maintainers, adapter implementers (Laravel/Symfony), reviewers  
 **Last Updated:** 2025-12-24 (Updated P0 Status)  
 **Scope:** `packages/PaymentGateway` (atomic package) — architecture compliance + production hardening

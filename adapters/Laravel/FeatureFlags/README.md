@@ -9,7 +9,7 @@ The FeatureFlags package is an atomic package. This adapter provides Laravel int
 ## Installation
 
 ```bash
-composer require nexus/laravel-featureflags-adapter
+composer require azaharizaman/nexus-laravel-featureflags-adapter
 ```
 
 ## Adapters Provided
@@ -28,5 +28,5 @@ The `FeatureFlagsAdapterServiceProvider` automatically binds the FeatureFlags in
 
 ## Dependencies
 
-- `nexus/featureflags` - The atomic FeatureFlags package
+- `azaharizaman/nexus-featureflags` - The atomic FeatureFlags package
 - `illuminate/support` - Laravel framework components

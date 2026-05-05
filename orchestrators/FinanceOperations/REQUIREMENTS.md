@@ -196,17 +196,17 @@ All dependencies must follow DIP:
 
 | Package | Dependency Type | Usage |
 |---------|----------------|-------|
-| `nexus/treasury` | Required | Cash flow operations |
-| `nexus/cost-accounting` | Required | Cost allocation |
-| `nexus/fixed-asset-depreciation` | Required | Depreciation operations |
-| `nexus/chart-of-account` | Required | GL account lookup |
-| `nexus/journal-entry` | Required | Journal entry creation |
-| `nexus/receivable` | Required | AR subledger |
-| `nexus/payable` | Required | AP subledger |
-| `nexus/assets` | Required | Asset data |
-| `nexus/budget` | Required | Budget data |
-| `nexus/period` | Required | Fiscal period validation |
-| `nexus/currency` | Required | Multi-currency support |
+| `azaharizaman/nexus-treasury` | Required | Cash flow operations |
+| `azaharizaman/nexus-cost-accounting` | Required | Cost allocation |
+| `azaharizaman/nexus-fixed-asset-depreciation` | Required | Depreciation operations |
+| `azaharizaman/nexus-chart-of-account` | Required | GL account lookup |
+| `azaharizaman/nexus-journal-entry` | Required | Journal entry creation |
+| `azaharizaman/nexus-receivable` | Required | AR subledger |
+| `azaharizaman/nexus-payable` | Required | AP subledger |
+| `azaharizaman/nexus-assets` | Required | Asset data |
+| `azaharizaman/nexus-budget` | Required | Budget data |
+| `azaharizaman/nexus-period` | Required | Fiscal period validation |
+| `azaharizaman/nexus-currency` | Required | Multi-currency support |
 | `psr/log` | Required | Logging interface |
 
 ---

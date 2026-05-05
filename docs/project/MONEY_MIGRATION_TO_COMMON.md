@@ -124,14 +124,14 @@ packages/Common/
 
 3. **Consistency:** Other shared primitives like `TenantId` already live in Common
 
-4. **Dependency Simplification:** Instead of requiring both `nexus/common` AND `nexus/money`, packages now only need `nexus/common`
+4. **Dependency Simplification:** Instead of requiring both `azaharizaman/nexus-common` AND `azaharizaman/nexus-money`, packages now only need `azaharizaman/nexus-common`
 
 5. **Semantic Clarity:** Money is truly a "common" primitive used across many domains (Finance, Sales, Procurement, Payroll, etc.)
 
 ## Impact Analysis
 
 ### Packages Already Using Common
-These packages don't need changes as they already depend on `nexus/common`:
+These packages don't need changes as they already depend on `azaharizaman/nexus-common`:
 - ✅ `Nexus\AccountVarianceAnalysis`
 - ✅ `Nexus\AccountPeriodClose`
 - ✅ `Nexus\FinancialStatements`
@@ -143,7 +143,7 @@ These packages don't need changes as they already depend on `nexus/common`:
 
 ### Required Changes for Packages Using Money
 Any package using Money needs to:
-1. **Keep `nexus/common` dependency** (no change needed)
+1. **Keep `azaharizaman/nexus-common` dependency** (no change needed)
 2. **Update imports:**
    - Old: `use Nexus\Money\Money;`
    - New: `use Nexus\Common\ValueObjects\Money;`

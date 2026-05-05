@@ -19,7 +19,7 @@ This guide demonstrates how to integrate the Nexus Statutory package into Larave
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/statutory:"*@dev"
+composer require azaharizaman/nexus-statutory:"*@dev"
 ```
 
 ### Step 2: Create Migrations
@@ -444,7 +444,7 @@ class StatutoryReportController extends Controller
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/statutory:"*@dev"
+composer require azaharizaman/nexus-statutory:"*@dev"
 ```
 
 ### Step 2: Create Doctrine Entities

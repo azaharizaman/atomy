@@ -5,20 +5,20 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "azaharizaman/nexus-common": "*@dev",
-        "nexus/hrm": "*@dev",
-        "nexus/attendance": "*@dev",
-        "nexus/leave": "*@dev",
-        "nexus/shift": "*@dev",
-        "azaharizaman/nexus-disciplinary": "*@dev",
-        "azaharizaman/nexus-performance-review": "*@dev",
-        "nexus/training": "*@dev",
-        "azaharizaman/nexus-recruitment": "*@dev",
-        "azaharizaman/nexus-onboarding": "*@dev",
-        "azaharizaman/nexus-payroll": "*@dev",
-        "azaharizaman/nexus-payroll-mys-statutory": "*@dev",
-        "azaharizaman/nexus-identity": "*@dev",
-        "azaharizaman/nexus-crypto": "*@dev",
+        "azaharizaman/nexus-common": "dev-main",
+        "azaharizaman/nexus-employee-profile": "dev-main",
+        "azaharizaman/nexus-attendance-management": "dev-main",
+        "azaharizaman/nexus-leave-management": "dev-main",
+        "azaharizaman/nexus-shift-management": "dev-main",
+        "azaharizaman/nexus-disciplinary": "dev-main",
+        "azaharizaman/nexus-performance-review": "dev-main",
+        "azaharizaman/nexus-training-management": "dev-main",
+        "azaharizaman/nexus-recruitment": "dev-main",
+        "azaharizaman/nexus-onboarding": "dev-main",
+        "azaharizaman/nexus-payroll": "dev-main",
+        "azaharizaman/nexus-payroll-mys-statutory": "dev-main",
+        "azaharizaman/nexus-identity": "dev-main",
+        "azaharizaman/nexus-crypto": "dev-main",
         "psr/log": "^3.0"
     },
     "require-dev": {
@@ -34,15 +34,6 @@
             "Nexus\\HumanResourceOperations\\Tests\\": "tests/"
         }
     },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../../packages/*",
-            "options": {
-                "symlink": true
-            }
-        }
-    ],
     "minimum-stability": "dev",
     "prefer-stable": true
 }

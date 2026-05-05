@@ -18,7 +18,7 @@ This package is designed to be **completely country-agnostic**. All statutory ca
 ### Example: Malaysia Statutory Package
 
 ```php
-// Separate package: nexus/payroll-mys-statutory
+// Separate package: azaharizaman/nexus-payroll-mys-statutory
 class MalaysiaStatutoryCalculator implements StatutoryCalculatorInterface
 {
     public function calculate(PayloadInterface $payload): DeductionResultInterface
@@ -41,17 +41,17 @@ src/
 ## Installation
 
 ```bash
-composer require nexus/payroll
+composer require azaharizaman/nexus-payroll
 ```
 
 For country-specific statutory calculations:
 
 ```bash
 # Malaysia
-composer require nexus/payroll-mys-statutory
+composer require azaharizaman/nexus-payroll-mys-statutory
 
 # Singapore
-composer require nexus/payroll-sgp-statutory
+composer require azaharizaman/nexus-payroll-sgp-statutory
 ```
 
 ## Usage

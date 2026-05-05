@@ -1,6 +1,6 @@
 # Nexus\Crypto Package - Implementation Summary
 
-**Package:** `nexus/crypto`  
+**Package:** `azaharizaman/nexus-crypto`  
 **Version:** Phase 1 (Classical Algorithms)  
 **Date:** November 20, 2025  
 **Branch:** `feature-crypto`

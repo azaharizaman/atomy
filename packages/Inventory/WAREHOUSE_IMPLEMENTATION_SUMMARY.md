@@ -2,7 +2,7 @@
 
 **Implementation Date**: November 21, 2025  
 **Branch**: `feature/inventory-warehouse-implementation`  
-**Packages Created**: `nexus/inventory`, `nexus/warehouse`  
+**Packages Created**: `azaharizaman/nexus-inventory`, `azaharizaman/nexus-warehouse`  
 **Integration Layer**: `apps/consuming application` (Laravel 12)
 
 ---
@@ -23,7 +23,7 @@ Both packages implement **Progressive Disclosure** architecture with optional Ev
 ### Architecture Principles Followed
 
 1. **Framework-Agnostic Packages**: Zero Laravel dependencies in package layer
-2. **Progressive Disclosure**: Optional `nexus/event-stream` and `nexus/intelligence` via `composer.json suggest`
+2. **Progressive Disclosure**: Optional `azaharizaman/nexus-event-stream` and `azaharizaman/nexus-intelligence` via `composer.json suggest`
 3. **Event-Driven GL Integration**: StockReceivedEvent/StockIssuedEvent → InventoryGLListener → Finance GL posting
 4. **Repository Pattern**: All persistence via interfaces (consuming application provides Eloquent implementations)
 5. **Phase-Based Rollout**: Phase 1 (PickingOptimizer), Phase 2 deferred (WorkOrderInterface, barcode scanning)
@@ -34,8 +34,8 @@ Both packages implement **Progressive Disclosure** architecture with optional Ev
 ```json
 {
     "suggest": {
-        "nexus/event-stream": "Event sourcing for stock replay and temporal queries (recommended for large enterprises)",
-        "nexus/intelligence": "Demand forecasting and stock optimization (requires minimum 90 days of historical data)"
+        "azaharizaman/nexus-event-stream": "Event sourcing for stock replay and temporal queries (recommended for large enterprises)",
+        "azaharizaman/nexus-intelligence": "Demand forecasting and stock optimization (requires minimum 90 days of historical data)"
     }
 }
 ```
@@ -53,7 +53,7 @@ Both packages implement **Progressive Disclosure** architecture with optional Ev
 
 ```
 packages/Inventory/
-├── composer.json (name: nexus/inventory, requires: nexus/uom, psr/log)
+├── composer.json (name: azaharizaman/nexus-inventory, requires: azaharizaman/nexus-uom, psr/log)
 ├── README.md
 └── src/
     ├── Contracts/ (14 interfaces)
@@ -225,7 +225,7 @@ $transferManager->completeTransfer($transfer->getId(), 'user-789');
 
 ```
 packages/Warehouse/
-├── composer.json (requires: nexus/inventory, nexus/routing)
+├── composer.json (requires: azaharizaman/nexus-inventory, azaharizaman/nexus-routing)
 ├── README.md
 └── src/
     ├── Contracts/ (3 interfaces)
@@ -1035,13 +1035,13 @@ FOR VALUES IN ('abc123');
 - ✅ PHP 8.3+
 - ✅ Laravel 12
 - ✅ MySQL/PostgreSQL
-- ✅ Existing packages: `nexus/uom`, `nexus/routing`, `nexus/geo`, `nexus/setting`
+- ✅ Existing packages: `azaharizaman/nexus-uom`, `azaharizaman/nexus-routing`, `azaharizaman/nexus-geo`, `azaharizaman/nexus-setting`
 
 ### Installation Steps
 
 1. **Install Packages**:
    ```bash
-   composer require nexus/inventory:"*@dev" nexus/warehouse:"*@dev"
+   composer require azaharizaman/nexus-inventory:"*@dev" azaharizaman/nexus-warehouse:"*@dev"
    ```
 
 2. **Publish Configurations** (optional, defaults provided):

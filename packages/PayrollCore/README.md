@@ -13,7 +13,7 @@
 ## Installation
 
 ```bash
-composer require nexus/payroll-core
+composer require azaharizaman/nexus-payroll-core
 ```
 
 ## Architecture

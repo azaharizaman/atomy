@@ -41,7 +41,7 @@ Framework-agnostic geographic and location services package for the Nexus ERP sy
 ## Installation
 
 ```bash
-composer require nexus/geo:"*@dev"
+composer require azaharizaman/nexus-geo:"*@dev"
 ```
 
 ## Dependencies
@@ -50,8 +50,8 @@ composer require nexus/geo:"*@dev"
 
 - `geocoder-php/geocoder`: ^4.0 - Multi-provider geocoding abstraction
 - `league/geotools`: ^2.0 - Geospatial math library
-- `nexus/party`: *@dev - For `PostalAddress` integration
-- `nexus/connector`: *@dev - For resilient external API calls
+- `azaharizaman/nexus-party`: *@dev - For `PostalAddress` integration
+- `azaharizaman/nexus-connector`: *@dev - For resilient external API calls
 - `psr/log`: ^3.0 - Logging interface
 
 ### External Services (Optional)

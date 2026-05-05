@@ -66,21 +66,21 @@ All V1 stub implementations provide clear upgrade paths.
 ## Installation
 
 ```bash
-composer require nexus/sales
+composer require azaharizaman/nexus-sales
 ```
 
 ## Dependencies
 
-- `nexus/party` - Customer management
-- `nexus/product` - Product catalog
-- `nexus/uom` - Unit of measurement
-- `nexus/currency` - Multi-currency support
-- `nexus/finance` - Accounting integration
-- `nexus/sequencing` - Auto-numbering
-- `nexus/period` - Fiscal period management
-- `nexus/audit-logger` - Audit trail
-- `nexus/inventory` - Stock management (for InventoryStockReservation)
-- `nexus/receivable` - Accounts receivable (for credit checking and invoicing)
+- `azaharizaman/nexus-party` - Customer management
+- `azaharizaman/nexus-product` - Product catalog
+- `azaharizaman/nexus-uom` - Unit of measurement
+- `azaharizaman/nexus-currency` - Multi-currency support
+- `azaharizaman/nexus-finance` - Accounting integration
+- `azaharizaman/nexus-sequencing` - Auto-numbering
+- `azaharizaman/nexus-period` - Fiscal period management
+- `azaharizaman/nexus-audit-logger` - Audit trail
+- `azaharizaman/nexus-inventory` - Stock management (for InventoryStockReservation)
+- `azaharizaman/nexus-receivable` - Accounts receivable (for credit checking and invoicing)
 
 ## Architecture
 

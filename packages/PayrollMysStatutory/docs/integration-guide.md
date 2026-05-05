@@ -18,7 +18,7 @@ This guide shows how to integrate the Nexus Reporting package into Laravel and S
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/reporting:"*@dev"
+composer require azaharizaman/nexus-reporting:"*@dev"
 ```
 
 ### Step 2: Create Database Migrations
@@ -578,7 +578,7 @@ Route::middleware('auth:sanctum')->prefix('reports')->group(function () {
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/reporting:"*@dev"
+composer require azaharizaman/nexus-reporting:"*@dev"
 ```
 
 ### Step 2: Create Doctrine Entity

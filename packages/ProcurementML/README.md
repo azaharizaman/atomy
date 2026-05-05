@@ -1,10 +1,10 @@
 # Nexus Procurement-ML Adapter
 
-**Package:** `nexus/procurement-ml`
+**Package:** `azaharizaman/nexus-procurement-ml`
 
 ## Overview
 
-This package provides Machine Learning (ML) feature extraction capabilities for the `nexus/procurement` package. It is designed as an optional adapter, allowing consumers to leverage ML-powered analytics for procurement processes without forcing the dependency on applications that do not require it.
+This package provides Machine Learning (ML) feature extraction capabilities for the `azaharizaman/nexus-procurement` package. It is designed as an optional adapter, allowing consumers to leverage ML-powered analytics for procurement processes without forcing the dependency on applications that do not require it.
 
 This adheres to the Nexus philosophy of package atomicity and framework agnosticism.
 
@@ -24,12 +24,12 @@ This adheres to the Nexus philosophy of package atomicity and framework agnostic
 ## Installation
 
 ```bash
-composer require nexus/procurement-ml:"*@dev"
+composer require azaharizaman/nexus-procurement-ml:"*@dev"
 ```
 
 ## Core Concepts
 
-This package acts as a bridge between the `nexus/procurement` package and the `nexus/machine-learning` package. The extractors in this package are designed to be used by the services in `nexus/machine-learning`.
+This package acts as a bridge between the `azaharizaman/nexus-procurement` package and the `azaharizaman/nexus-machine-learning` package. The extractors in this package are designed to be used by the services in `azaharizaman/nexus-machine-learning`.
 
 ### Available Extractors
 

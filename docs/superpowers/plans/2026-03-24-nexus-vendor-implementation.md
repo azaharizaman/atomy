@@ -22,7 +22,7 @@
 
 ```json
 {
-    "name": "nexus/vendor",
+    "name": "azaharizaman/nexus-vendor",
     "description": "Nexus Vendor Domain Package",
     "type": "library",
     "license": "MIT",
@@ -101,7 +101,7 @@ git commit -m "feat(vendor): scaffold Layer 1 package"
 
 ```json
 {
-    "name": "nexus/vendor-laravel-adapter",
+    "name": "azaharizaman/nexus-vendor-laravel-adapter",
     "autoload": { "psr-4": { "Nexus\\Adapter\\Laravel\\Vendor\\": "src/" } },
     "extra": { "laravel": { "providers": [ "Nexus\\Adapter\\Laravel\\Vendor\\VendorServiceProvider" ] } }
 }

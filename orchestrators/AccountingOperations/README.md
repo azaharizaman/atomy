@@ -17,7 +17,7 @@ As an orchestrator, this package:
 ## Installation
 
 ```bash
-composer require nexus/accounting-operations
+composer require azaharizaman/nexus-accounting-operations
 ```
 
 ## Orchestrator Responsibilities

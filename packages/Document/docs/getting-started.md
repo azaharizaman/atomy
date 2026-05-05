@@ -12,7 +12,7 @@
 ## Installation
 
 ```bash
-composer require nexus/document:"*@dev"
+composer require azaharizaman/nexus-document:"*@dev"
 ```
 
 ## When to Use This Package

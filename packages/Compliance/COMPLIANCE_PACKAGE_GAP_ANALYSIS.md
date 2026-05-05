@@ -1062,10 +1062,10 @@ packages/Compliance/
   "require": {
     "php": "^8.3",
     "psr/log": "^3.0",
-    "nexus/party": "^1.0",
-    "nexus/audit-logger": "^1.0",
-    "nexus/crypto": "^1.0",
-    "nexus/document": "^1.0"
+    "azaharizaman/nexus-party": "^1.0",
+    "azaharizaman/nexus-audit-logger": "^1.0",
+    "azaharizaman/nexus-crypto": "^1.0",
+    "azaharizaman/nexus-document": "^1.0"
   }
 }
 ```

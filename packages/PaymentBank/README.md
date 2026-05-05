@@ -3,7 +3,7 @@
 **Version:** 0.1.0
 **Status:** In Progress (see IMPLEMENTATION_SUMMARY.md for details)
 **PHP:** ^8.3
-**Extends:** `nexus/payment`
+**Extends:** `azaharizaman/nexus-payment`
 
 ## Overview
 
@@ -14,7 +14,7 @@ It provides a unified abstraction layer over various banking providers, handling
 ## Installation
 
 ```bash
-composer require nexus/payment-bank
+composer require azaharizaman/nexus-payment-bank
 ```
 
 ## Features

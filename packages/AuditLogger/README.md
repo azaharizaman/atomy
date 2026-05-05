@@ -20,7 +20,7 @@ A framework-agnostic audit logging package for tracking CRUD operations, system 
 ## Installation
 
 ```bash
-composer require nexus/audit-logger:"*@dev"
+composer require azaharizaman/nexus-audit-logger:"*@dev"
 ```
 
 ## Architecture

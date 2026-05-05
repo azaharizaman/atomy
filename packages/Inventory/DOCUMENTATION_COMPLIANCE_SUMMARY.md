@@ -474,7 +474,7 @@ The Nexus\Inventory package has been brought into **full compliance** with manda
 
 ### 3. Consider Event Sourcing Integration Guide
 
-**Rationale:** Progressive disclosure doc could help users understand when to use `nexus/event-stream`
+**Rationale:** Progressive disclosure doc could help users understand when to use `azaharizaman/nexus-event-stream`
 
 **Action Items:**
 - Create `docs/event-sourcing-integration.md`

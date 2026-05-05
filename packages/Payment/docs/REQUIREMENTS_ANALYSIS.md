@@ -223,8 +223,8 @@ PAY-082: Extensions may implement fraud check before payment execution
 ```
 
 **Dependency Rules:**
-- ✅ All extensions depend on `nexus/payment ^0.1`
-- ✅ `PaymentRecurring` depends on `nexus/payment` (for executors)
+- ✅ All extensions depend on `azaharizaman/nexus-payment ^0.1`
+- ✅ `PaymentRecurring` depends on `azaharizaman/nexus-payment` (for executors)
 - ✅ No circular dependencies
 - ✅ No cross-dependencies between extensions
 

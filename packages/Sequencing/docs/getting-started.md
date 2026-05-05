@@ -12,7 +12,7 @@ Nexus\Sequencing delivers framework-agnostic, atomic sequence generation for ERP
 ## Installation
 
 ```bash
-composer require nexus/sequencing:"*@dev"
+composer require azaharizaman/nexus-sequencing:"*@dev"
 ```
 
 ## When to Use This Package

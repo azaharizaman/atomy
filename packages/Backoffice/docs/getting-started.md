@@ -9,7 +9,7 @@
 ## Installation
 
 ```bash
-composer require nexus/backoffice:"*@dev"
+composer require azaharizaman/nexus-backoffice:"*@dev"
 ```
 
 ## When to Use This Package

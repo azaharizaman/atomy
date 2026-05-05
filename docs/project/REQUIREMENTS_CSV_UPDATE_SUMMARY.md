@@ -87,7 +87,7 @@ All 9 integration requirements completed:
 
 ### Reason for Deferral
 These requirements represent **future enhancements** that depend on:
-1. Country-specific adapter packages (e.g., `nexus/statutory-payroll-mys`, `nexus/statutory-accounting-ssm`)
+1. Country-specific adapter packages (e.g., `azaharizaman/nexus-statutory-payroll-mys`, `azaharizaman/nexus-statutory-accounting-ssm`)
 2. Additional package implementations (Hrm, Payroll, full Accounting)
 3. Functional, performance, security, and integration enhancements
 4. User story implementations (UI/UX features)

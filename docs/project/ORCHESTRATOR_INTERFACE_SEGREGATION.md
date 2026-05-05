@@ -174,7 +174,7 @@ final readonly class RmaWorkflow
 
 ```json
 {
-    "name": "nexus/supply-chain-operations",
+    "name": "azaharizaman/nexus-supply-chain-operations",
     "require": {
         "php": "^8.3",
         "psr/log": "^3.0",

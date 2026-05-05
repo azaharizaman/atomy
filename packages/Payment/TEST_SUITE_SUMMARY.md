@@ -1,6 +1,6 @@
 # Nexus\Payment Test Suite Summary
 
-**Package:** `nexus/payment`  
+**Package:** `azaharizaman/nexus-payment`  
 **Version:** 0.1.0  
 **Last Run:** December 18, 2025  
 **Status:** 🟢 Completed

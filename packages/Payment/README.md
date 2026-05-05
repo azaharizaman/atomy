@@ -11,7 +11,7 @@
 ## Installation
 
 ```bash
-composer require nexus/payment
+composer require azaharizaman/nexus-payment
 ```
 
 ## Features
@@ -53,11 +53,11 @@ For advanced functionality, see these extension packages:
 
 | Package | Purpose |
 |---------|---------|
-| `nexus/payment-rails` | ACH, Wire, Check, RTGS payment rails |
-| `nexus/payment-gateway` | Stripe, PayPal, Square integrations |
-| `nexus/payment-bank` | NACHA, SWIFT, ISO 20022 bank files |
-| `nexus/payment-wallet` | Digital wallets (GrabPay, DuitNow) |
-| `nexus/payment-recurring` | Subscriptions and standing orders |
+| `azaharizaman/nexus-payment-rails` | ACH, Wire, Check, RTGS payment rails |
+| `azaharizaman/nexus-payment-gateway` | Stripe, PayPal, Square integrations |
+| `azaharizaman/nexus-payment-bank` | NACHA, SWIFT, ISO 20022 bank files |
+| `azaharizaman/nexus-payment-wallet` | Digital wallets (GrabPay, DuitNow) |
+| `azaharizaman/nexus-payment-recurring` | Subscriptions and standing orders |
 
 ## Documentation
 

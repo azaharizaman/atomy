@@ -346,7 +346,7 @@ Extend existing package when:
 - **PascalCase** - Package directory names (e.g., `Inventory`, `AuditLogger`)
 - **Singular nouns** - Preferred over plural (e.g., `Product` not `Products`)
 - **Domain-focused** - Name reflects business domain, not technical implementation
-- **Composer name** - kebab-case (e.g., `nexus/audit-logger`)
+- **Composer name** - kebab-case (e.g., `azaharizaman/nexus-audit-logger`)
 - **Namespace** - `Nexus\PackageName`
 
 ---

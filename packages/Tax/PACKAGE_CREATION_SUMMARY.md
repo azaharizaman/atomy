@@ -472,7 +472,7 @@ Add to repositories array:
 
 Run:
 ```bash
-composer require nexus/tax:"*@dev"
+composer require azaharizaman/nexus-tax:"*@dev"
 ```
 
 ### Update Sales Package
@@ -482,7 +482,7 @@ Mark `SimpleTaxCalculator` as deprecated:
 ```php
 /**
  * @deprecated since version X.X, use Nexus\Tax\Contracts\TaxCalculatorInterface instead
- * @see https://github.com/nexus/tax for migration guide
+ * @see https://github.com/azaharizaman/nexus-tax for migration guide
  */
 final class SimpleTaxCalculator implements TaxCalculatorInterface
 {

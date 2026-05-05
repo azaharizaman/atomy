@@ -25,8 +25,8 @@ Implemented comprehensive geospatial and route optimization capabilities for the
 {
   "geocoder-php/geocoder": "^4.0",
   "league/geotools": "^2.0",
-  "nexus/party": "*@dev",
-  "nexus/connector": "*@dev",
+  "azaharizaman/nexus-party": "*@dev",
+  "azaharizaman/nexus-connector": "*@dev",
   "psr/log": "^3.0"
 }
 ```
@@ -105,7 +105,7 @@ packages/Geo/
 ### External Dependencies
 ```json
 {
-  "nexus/geo": "*@dev",
+  "azaharizaman/nexus-geo": "*@dev",
   "psr/log": "^3.0"
 }
 ```

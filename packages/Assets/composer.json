@@ -9,22 +9,22 @@
         }
     },
     "require": {
-        "azaharizaman/nexus-period": "*@dev",
-        "azaharizaman/nexus-setting": "*@dev",
+        "azaharizaman/nexus-period": "dev-main",
+        "azaharizaman/nexus-setting": "dev-main",
         "php": "^8.3",
         "psr/log": "^3.0"
     },
     "suggest": {
-        "azaharizaman/nexus-accounting": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-audit": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-audit-logger": "Comprehensive audit trail for asset changes and transfers",
-        "azaharizaman/nexus-document": "Attach purchase orders, invoices, photos, and maintenance records to assets",
-        "azaharizaman/nexus-event-stream": "Event sourcing for asset lifecycle replay (recommended for audited environments)",
-        "azaharizaman/nexus-inventory": "LocationInterface for advanced asset tracking (Tier 2/3)",
-        "azaharizaman/nexus-product": "For barcode/QR code asset tag generation (Tier 3)",
-        "azaharizaman/nexus-sequencing": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-uom": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-workflow": "Multi-level approval workflows for asset disposal and revaluation"
+        "azaharizaman/nexus-accounting": "dev-main",
+        "azaharizaman/nexus-audit": "dev-main",
+        "azaharizaman/nexus-audit-logger": "dev-main",
+        "azaharizaman/nexus-document": "dev-main",
+        "azaharizaman/nexus-event-stream": "dev-main",
+        "azaharizaman/nexus-inventory": "dev-main",
+        "azaharizaman/nexus-product": "dev-main",
+        "azaharizaman/nexus-sequencing": "dev-main",
+        "azaharizaman/nexus-uom": "dev-main",
+        "azaharizaman/nexus-workflow": "dev-main"
     },
     "minimum-stability": "dev",
     "prefer-stable": true

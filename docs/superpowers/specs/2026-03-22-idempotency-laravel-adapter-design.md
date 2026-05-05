@@ -1,7 +1,7 @@
 # Idempotency Laravel Adapter - Design Specification
 
 **Date:** 2026-03-22  
-**Package:** `nexus/laravel-idempotency-adapter`  
+**Package:** `azaharizaman/nexus-laravel-idempotency-adapter`  
 **Layer:** 3 (Adapter)  
 **Status:** Draft
 
@@ -205,7 +205,7 @@ return [
 ### 6.1 Installation
 
 ```bash
-composer require nexus/laravel-idempotency-adapter
+composer require azaharizaman/nexus-laravel-idempotency-adapter
 php artisan migrate
 php artisan vendor:publish --provider="Nexus\Laravel\Idempotency\Providers\IdempotencyAdapterServiceProvider"
 ```
@@ -320,7 +320,7 @@ Redis keys automatically expire based on `expires_at` timestamp:
         "php": "^8.3",
         "illuminate/support": "^11.0|^12.0",
         "illuminate/database": "^11.0|^12.0",
-        "nexus/idempotency": "*@dev",
+        "azaharizaman/nexus-idempotency": "*@dev",
         "psr/log": "^3.0"
     },
     "require-dev": {

@@ -11,7 +11,7 @@
 ## Installation
 
 ```bash
-composer require nexus/accounting:"*@dev"
+composer require azaharizaman/nexus-accounting:"*@dev"
 ```
 
 ## When to Use This Package

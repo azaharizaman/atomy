@@ -10,7 +10,7 @@
 ## Installation
 
 ```bash
-composer require nexus/payable:"*@dev"
+composer require azaharizaman/nexus-payable:"*@dev"
 ```
 
 ## When to Use This Package

@@ -14,14 +14,14 @@ This section will be updated when version 1.0 is released.
    ```json
    {
        "require": {
-           "nexus/payment-rails": "^1.0"
+           "azaharizaman/nexus-payment-rails": "^1.0"
        }
    }
    ```
 
 2. Run composer update:
    ```bash
-   composer update nexus/payment-rails
+   composer update azaharizaman/nexus-payment-rails
    ```
 
 3. Review and update any custom rail implementations.

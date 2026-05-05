@@ -64,7 +64,7 @@ The Manufacturing package provides enterprise-grade production management capabi
 ## 📦 Installation
 
 ```bash
-composer require nexus/manufacturing
+composer require azaharizaman/nexus-manufacturing
 ```
 
 ---
@@ -326,10 +326,10 @@ class MlForecastAdapter implements ForecastProviderInterface
 - `psr/log` ^3.0
 
 ### Suggested Dependencies
-- `nexus/inventory` - For stock integration
-- `nexus/product` - For product data
-- `nexus/machine-learning` - For demand forecasting
-- `nexus/event-stream` - For event sourcing
+- `azaharizaman/nexus-inventory` - For stock integration
+- `azaharizaman/nexus-product` - For product data
+- `azaharizaman/nexus-machine-learning` - For demand forecasting
+- `azaharizaman/nexus-event-stream` - For event sourcing
 
 ---
 

@@ -5,27 +5,11 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "azaharizaman/nexus-common": "*@dev",
-        "azaharizaman/nexus-workflow": "*@dev",
-        "azaharizaman/nexus-policy-engine": "*@dev",
+        "azaharizaman/nexus-common": "dev-main",
+        "azaharizaman/nexus-workflow": "dev-main",
+        "azaharizaman/nexus-policy-engine": "dev-main",
         "psr/log": "^3.0"
     },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../../packages/*",
-            "options": {
-                "symlink": true
-            }
-        },
-        {
-            "type": "path",
-            "url": "../../orchestrators/*",
-            "options": {
-                "symlink": true
-            }
-        }
-    ],
     "require-dev": {
         "phpunit/phpunit": "^11.0"
     },

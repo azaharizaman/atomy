@@ -5,11 +5,11 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "azaharizaman/nexus-chart-of-account": "*@dev",
-        "azaharizaman/nexus-journal-entry": "*@dev",
-        "azaharizaman/nexus-period": "*@dev",
-        "azaharizaman/nexus-budget": "*@dev",
-        "azaharizaman/nexus-currency": "*@dev",
+        "azaharizaman/nexus-chart-of-account": "dev-main",
+        "azaharizaman/nexus-journal-entry": "dev-main",
+        "azaharizaman/nexus-period": "dev-main",
+        "azaharizaman/nexus-budget": "dev-main",
+        "azaharizaman/nexus-currency": "dev-main",
         "psr/log": "^3.0"
     },
     "autoload": {

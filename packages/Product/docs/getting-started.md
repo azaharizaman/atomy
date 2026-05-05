@@ -8,7 +8,7 @@
 ## Installation
 
 ```bash
-composer require nexus/product:"*@dev"
+composer require azaharizaman/nexus-product:"*@dev"
 ```
 
 ## Basic Configuration

@@ -1022,9 +1022,9 @@ packages/Export/
 ### consuming application Dependencies (for full functionality)
 - `barryvdh/laravel-dompdf` (PDF generation)
 - `phpoffice/phpspreadsheet` (Excel generation)
-- `nexus/storage` (file storage)
-- `nexus/notifier` (email delivery)
-- `nexus/connector` (webhook delivery, circuit breaker, rate limiting)
+- `azaharizaman/nexus-storage` (file storage)
+- `azaharizaman/nexus-notifier` (email delivery)
+- `azaharizaman/nexus-connector` (webhook delivery, circuit breaker, rate limiting)
 
 ---
 

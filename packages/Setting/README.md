@@ -60,7 +60,7 @@ This package is designed for use within the Nexus monorepo. Add it to your appli
 ```json
 {
     "require": {
-        "nexus/setting": "*@dev"
+        "azaharizaman/nexus-setting": "*@dev"
     },
     "repositories": [
         {
@@ -74,7 +74,7 @@ This package is designed for use within the Nexus monorepo. Add it to your appli
 Then run:
 
 ```bash
-composer require nexus/setting:"*@dev"
+composer require azaharizaman/nexus-setting:"*@dev"
 ```
 
 ## Usage

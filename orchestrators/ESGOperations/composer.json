@@ -15,11 +15,11 @@
     },
     "require": {
         "php": ">=8.3",
-        "azaharizaman/nexus-esg": "*@dev",
-        "azaharizaman/nexus-sustainability-data": "*@dev",
-        "azaharizaman/nexus-esg-regulatory": "*@dev",
-        "azaharizaman/nexus-document": "*@dev",
-        "azaharizaman/nexus-machine-learning": "*@dev"
+        "azaharizaman/nexus-esg": "dev-main",
+        "azaharizaman/nexus-sustainability-data": "dev-main",
+        "azaharizaman/nexus-esg-regulatory": "dev-main",
+        "azaharizaman/nexus-document": "dev-main",
+        "azaharizaman/nexus-machine-learning": "dev-main"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.0"

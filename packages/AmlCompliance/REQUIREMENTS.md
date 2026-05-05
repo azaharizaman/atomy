@@ -1,6 +1,6 @@
 # Nexus\AmlCompliance - Package Requirements
 
-**Package**: nexus/aml-compliance  
+**Package**: azaharizaman/nexus-aml-compliance  
 **Version**: 1.0.0  
 **Status**: 🔵 In Development  
 **Domain**: Anti-Money Laundering (AML) Risk Assessment
@@ -15,7 +15,7 @@
 | **Atomic Domain** | AML Risk Assessment (ONE domain) |
 | **Framework Agnostic** | ✅ Pure PHP 8.3+ |
 | **Target LOC** | ~900 lines |
-| **Dependencies** | nexus/party, nexus/sanctions, psr/log |
+| **Dependencies** | azaharizaman/nexus-party, azaharizaman/nexus-sanctions, psr/log |
 
 ---
 
@@ -114,8 +114,8 @@
 | Package | Version | Purpose |
 |---------|---------|---------|
 | **php** | ^8.3 | Language requirement |
-| **nexus/party** | ^1.0 | Party identity management |
-| **nexus/sanctions** | ^1.0 | Sanctions screening results |
+| **azaharizaman/nexus-party** | ^1.0 | Party identity management |
+| **azaharizaman/nexus-sanctions** | ^1.0 | Sanctions screening results |
 | **psr/log** | ^3.0 | PSR-3 logging |
 
 ---
@@ -126,9 +126,9 @@
 
 | Package | Integration Type | Purpose |
 |---------|-----------------|---------|
-| **nexus/party** | Query | Get party business type, jurisdiction |
-| **nexus/sanctions** | Query | Get sanctions screening results for risk scoring |
-| **nexus/party-compliance** | Called By | Orchestrates full compliance check including AML |
+| **azaharizaman/nexus-party** | Query | Get party business type, jurisdiction |
+| **azaharizaman/nexus-sanctions** | Query | Get sanctions screening results for risk scoring |
+| **azaharizaman/nexus-party-compliance** | Called By | Orchestrates full compliance check including AML |
 
 ### Consumer Implementation
 

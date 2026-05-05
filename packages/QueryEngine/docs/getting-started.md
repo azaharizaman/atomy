@@ -34,13 +34,13 @@ Before using the Nexus Analytics package, ensure you have:
 In your Nexus monorepo or consuming application:
 
 ```bash
-composer require nexus/query-engine:"*@dev"
+composer require azaharizaman/nexus-query-engine:"*@dev"
 ```
 
 ### Step 2: Verify Installation
 
 ```bash
-composer show nexus/query-engine
+composer show azaharizaman/nexus-query-engine
 ```
 
 You should see package details confirming successful installation.

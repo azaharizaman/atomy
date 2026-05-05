@@ -16,34 +16,25 @@
     ],
     "require": {
         "php": "^8.3",
-        "azaharizaman/nexus-procurement": "*@dev",
-        "azaharizaman/nexus-payable": "*@dev",
-        "azaharizaman/nexus-inventory": "*@dev",
-        "azaharizaman/nexus-journal-entry": "*@dev",
-        "azaharizaman/nexus-budget": "*@dev",
-        "azaharizaman/nexus-workflow": "*@dev",
-        "azaharizaman/nexus-party": "*@dev",
-        "azaharizaman/nexus-period": "*@dev",
-        "azaharizaman/nexus-currency": "*@dev",
-        "azaharizaman/nexus-notifier": "*@dev",
-        "azaharizaman/nexus-audit-logger": "*@dev",
-        "azaharizaman/nexus-setting": "*@dev",
-        "azaharizaman/nexus-tax": "*@dev",
-        "azaharizaman/nexus-compliance": "*@dev",
-        "azaharizaman/nexus-document": "*@dev",
-        "azaharizaman/nexus-crypto": "*@dev",
+        "azaharizaman/nexus-procurement": "dev-main",
+        "azaharizaman/nexus-payable": "dev-main",
+        "azaharizaman/nexus-inventory": "dev-main",
+        "azaharizaman/nexus-journal-entry": "dev-main",
+        "azaharizaman/nexus-budget": "dev-main",
+        "azaharizaman/nexus-workflow": "dev-main",
+        "azaharizaman/nexus-party": "dev-main",
+        "azaharizaman/nexus-period": "dev-main",
+        "azaharizaman/nexus-currency": "dev-main",
+        "azaharizaman/nexus-notifier": "dev-main",
+        "azaharizaman/nexus-audit-logger": "dev-main",
+        "azaharizaman/nexus-setting": "dev-main",
+        "azaharizaman/nexus-tax": "dev-main",
+        "azaharizaman/nexus-compliance": "dev-main",
+        "azaharizaman/nexus-document": "dev-main",
+        "azaharizaman/nexus-crypto": "dev-main",
         "psr/log": "^3.0",
         "psr/event-dispatcher": "^1.0"
     },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../../packages/Crypto",
-            "options": {
-                "symlink": true
-            }
-        }
-    ],
     "autoload": {
         "psr-4": {
             "Nexus\\ProcurementOperations\\": "src/"

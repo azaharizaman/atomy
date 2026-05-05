@@ -125,7 +125,7 @@
 
 ### Production Dependencies
 - `php: ^8.3`
-- `nexus/common: ^1.0`
+- `azaharizaman/nexus-common: ^1.0`
 
 ### Development Dependencies
 - `phpunit/phpunit: ^11.0`

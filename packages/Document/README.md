@@ -478,20 +478,20 @@ class DocumentServiceProvider extends ServiceProvider
 
 This package requires:
 
-- **`nexus/storage`** (MANDATORY): File operations and temporary URL generation
-- **`nexus/crypto`** (MANDATORY): SHA-256 checksum calculation via HasherInterface
-- **`nexus/audit-logger`** (RECOMMENDED): Complete audit trail for all document operations
-- **`nexus/tenant`** (RECOMMENDED): Multi-tenancy isolation and context
+- **`azaharizaman/nexus-storage`** (MANDATORY): File operations and temporary URL generation
+- **`azaharizaman/nexus-crypto`** (MANDATORY): SHA-256 checksum calculation via HasherInterface
+- **`azaharizaman/nexus-audit-logger`** (RECOMMENDED): Complete audit trail for all document operations
+- **`azaharizaman/nexus-tenant`** (RECOMMENDED): Multi-tenancy isolation and context
 - **`psr/log`** (MANDATORY): Logging interface for error/debug logging
 
 ## Installation
 
 ```bash
 # In the monorepo root
-composer require nexus/document:"*@dev"
+composer require azaharizaman/nexus-document:"*@dev"
 
 # In apps/Atomy
-composer require nexus/document:"*@dev"
+composer require azaharizaman/nexus-document:"*@dev"
 ```
 
 ## Requirements Coverage

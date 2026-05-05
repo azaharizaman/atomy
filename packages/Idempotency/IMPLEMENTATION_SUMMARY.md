@@ -21,7 +21,7 @@
 
 ## Layer 3
 
-- **`nexus/laravel-idempotency-adapter`** (`adapters/Laravel/Idempotency/`): `DatabaseIdempotencyStore`, `IdempotencyMiddleware`, cleanup command, `ReplayResponseFactoryInterface`. Consumed by Atomy-Q API with `ReplayResponseFactoryInterface` bound to `App\Http\Idempotency\IdempotencyReplayResponseFactory`.
+- **`azaharizaman/nexus-laravel-idempotency-adapter`** (`adapters/Laravel/Idempotency/`): `DatabaseIdempotencyStore`, `IdempotencyMiddleware`, cleanup command, `ReplayResponseFactoryInterface`. Consumed by Atomy-Q API with `ReplayResponseFactoryInterface` bound to `App\Http\Idempotency\IdempotencyReplayResponseFactory`.
 
 ## Verification
 

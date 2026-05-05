@@ -1,6 +1,6 @@
 # Nexus\PaymentGateway Requirements Specification
 
-**Package:** `nexus/payment-gateway`  
+**Package:** `azaharizaman/nexus-payment-gateway`  
 **Version:** 0.1.0  
 **Status:** Draft  
 **Last Updated:** December 18, 2025  
@@ -335,16 +335,16 @@ DeclineCode
 
 | Package | Purpose |
 |---------|---------|
-| `nexus/payment` | Core payment interfaces |
-| `nexus/common` | Money VO, common interfaces |
-| `nexus/connector` | HTTP client, circuit breaker |
+| `azaharizaman/nexus-payment` | Core payment interfaces |
+| `azaharizaman/nexus-common` | Money VO, common interfaces |
+| `azaharizaman/nexus-connector` | HTTP client, circuit breaker |
 | `psr/http-client` | HTTP abstraction |
 
 ### 6.2 Optional Dependencies
 
 | Package | Purpose |
 |---------|---------|
-| `nexus/crypto` | API key encryption |
+| `azaharizaman/nexus-crypto` | API key encryption |
 
 ---
 

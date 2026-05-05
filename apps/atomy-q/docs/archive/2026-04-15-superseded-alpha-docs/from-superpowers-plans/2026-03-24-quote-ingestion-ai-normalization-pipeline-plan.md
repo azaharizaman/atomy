@@ -301,12 +301,12 @@ public function register(): void
 
 ```json
 {
-    "name": "nexus/quote-ingestion",
+    "name": "azaharizaman/nexus-quote-ingestion",
     "description": "Quote ingestion orchestration - extraction, normalization, persistence",
     "type": "library",
     "require": {
         "php": "^8.3",
-        "nexus/machine-learning": "^1.0",
+        "azaharizaman/nexus-machine-learning": "^1.0",
         "laravel/framework": "^11.0"
     },
     "require-dev": {

@@ -36,7 +36,7 @@
 ## 🚀 Installation
 
 ```bash
-composer require nexus/messaging:"*@dev"
+composer require azaharizaman/nexus-messaging:"*@dev"
 ```
 
 ---

@@ -19,7 +19,7 @@ The Statutory package provides a framework-agnostic engine for generating statut
 ## Installation
 
 ```bash
-composer require nexus/statutory
+composer require azaharizaman/nexus-statutory
 ```
 
 ## Architecture
@@ -240,8 +240,8 @@ statutory_rate_tables (id, country_code, deduction_type, effective_from, effecti
 ## Dependencies
 
 - **PHP**: ^8.3
-- **nexus/finance**: *@dev (for financial data extraction)
-- **nexus/period**: *@dev (for period management)
+- **azaharizaman/nexus-finance**: *@dev (for financial data extraction)
+- **azaharizaman/nexus-period**: *@dev (for period management)
 - **psr/log**: ^3.0 (for logging interface)
 
 ## Development

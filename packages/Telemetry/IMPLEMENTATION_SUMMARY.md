@@ -285,7 +285,7 @@ All application-specific implementations are the responsibility of consuming app
 
 ### Dependencies
 - **External Dependencies:** 1 (PSR-3: psr/log)
-- **Internal Package Dependencies:** 1 optional (nexus/tenant for multi-tenancy)
+- **Internal Package Dependencies:** 1 optional (azaharizaman/nexus-tenant for multi-tenancy)
 - **Dev Dependencies:** 1 (phpunit/phpunit ^11.0)
 
 ### Development Effort

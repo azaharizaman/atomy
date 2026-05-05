@@ -1,6 +1,6 @@
 # REQUIREMENTS: Nexus\FeatureFlags Package
 
-**Package:** `nexus/feature-flags`  
+**Package:** `azaharizaman/nexus-feature-flags`  
 **Version:** 1.0.0  
 **Status:** Production-Ready  
 **Last Updated:** November 23, 2025

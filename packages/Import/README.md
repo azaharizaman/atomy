@@ -49,7 +49,7 @@ The `Nexus\Import` package provides a high-integrity, modular import system for 
 ## Installation
 
 ```bash
-composer require nexus/import
+composer require azaharizaman/nexus-import
 ```
 
 ## Quick Start

@@ -1,6 +1,6 @@
 # Nexus\PaymentRecurring Implementation Summary
 
-**Package:** `nexus/payment-recurring`  
+**Package:** `azaharizaman/nexus-payment-recurring`  
 **Version:** 0.1.0  
 **Status:** 🔴 Not Started  
 **Last Updated:** December 18, 2025

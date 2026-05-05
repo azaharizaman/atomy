@@ -5,7 +5,7 @@ This adapter provides Laravel-specific implementations for the AuditLogger packa
 ## Installation
 
 ```bash
-composer require nexus/laravel-auditlogger-adapter
+composer require azaharizaman/nexus-laravel-auditlogger-adapter
 ```
 
 ## Adapters Provided

@@ -62,14 +62,14 @@ Run:
 php tools/package-publishing/rewrite-composer-package-names.php --write
 ```
 
-Expected: Layer 1 package names and direct dependencies are rewritten from `nexus/*` to `azaharizaman/nexus-*`.
+Expected: Layer 1 package names and direct dependencies are rewritten from `azaharizaman/nexus-*` to `azaharizaman/nexus-*`.
 
 - [ ] **Step 3: Check remaining old direct package references**
 
 Run:
 
 ```bash
-rg -n '"nexus/' -g composer.json
+rg -n '"azaharizaman/nexus-' -g composer.json
 ```
 
 Expected: only non-Layer-1 package names, non-Layer-1 dependencies, or intentionally unresolved historical references remain.

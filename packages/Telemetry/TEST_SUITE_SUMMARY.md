@@ -1,6 +1,6 @@
 # Nexus\Telemetry Test Suite Summary
 
-**Package:** `nexus/telemetry`  
+**Package:** `azaharizaman/nexus-telemetry`  
 **Last Updated:** January 2025  
 **PHPUnit Version:** 11.5.44  
 **PHP Version:** 8.3.27

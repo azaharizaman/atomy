@@ -1,6 +1,6 @@
 # Nexus\GeneralLedger Package - Implementation Summary
 
-**Package:** `nexus/general-ledger`  
+**Package:** `azaharizaman/nexus-general-ledger`  
 **Feature Branch:** `feature/general-ledger-package`  
 **Status:** ✅ Core Package Complete (Integrated and Validated) | 🧪 Test Coverage: 86%  
 **Created:** 2026-02-24  
@@ -127,7 +127,7 @@ packages/GeneralLedger/
 ## Integration Strategy
 
 ### Dependencies
-- `nexus/common` - Money, value object interfaces.
+- `azaharizaman/nexus-common` - Money, value object interfaces.
 - `brick/math` - Precise decimal arithmetic for impact calculation.
 
 ### Framework Agnosticism

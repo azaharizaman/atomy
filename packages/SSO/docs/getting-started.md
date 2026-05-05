@@ -3,5 +3,5 @@
 ## Installation
 
 ```bash
-composer require nexus/s-s-o:"*@dev"
+composer require azaharizaman/nexus-s-s-o:"*@dev"
 ```

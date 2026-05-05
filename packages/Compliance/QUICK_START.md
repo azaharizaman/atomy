@@ -193,7 +193,7 @@ cat .github/prompts/compliance-statutory-implementation.prompt.md
 {
   "require": {
     "php": "^8.3",
-    "nexus/finance": "^1.0"
+    "azaharizaman/nexus-finance": "^1.0"
   }
 }
 

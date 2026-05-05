@@ -9,7 +9,7 @@ This guide shows how to integrate the Procurement package into your application.
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/procurement:"*@dev"
+composer require azaharizaman/nexus-procurement:"*@dev"
 ```
 
 ### Step 2: Create Database Migrations
@@ -820,7 +820,7 @@ class RequisitionController extends Controller
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/procurement:"*@dev"
+composer require azaharizaman/nexus-procurement:"*@dev"
 ```
 
 ### Step 2: Create Doctrine Entities

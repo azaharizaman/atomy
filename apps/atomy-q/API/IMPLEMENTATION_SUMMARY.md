@@ -225,7 +225,7 @@ PASS (19 tests, 98 assertions).
 ### SSO (`POST /api/v1/auth/sso`) and full Identity coordinator
 
 - `AuthController` now injects `UserAuthenticationCoordinatorInterface` directly and uses it for both login and SSO; the controller no longer lazy-resolves the coordinator from the container.
-- `nexus/laravel-identity-adapter` registers `IdentityAdapterServiceProvider`, which wires `OidcSsoProviderAdapter`, `IdentityOperationsAdapter`, `LaravelPasswordHasher`, and the repository-backed RBAC query layer.
+- `azaharizaman/nexus-laravel-identity-adapter` registers `IdentityAdapterServiceProvider`, which wires `OidcSsoProviderAdapter`, `IdentityOperationsAdapter`, `LaravelPasswordHasher`, and the repository-backed RBAC query layer.
 - **Atomy-Q bindings** (see `App\Providers\AppServiceProvider` and `App\Services\Identity\*`):
   - **Eloquent-backed**: `UserPersistInterface`, `UserQueryInterface`, `PasswordHasherInterface`, `UserAuthenticatorInterface`, `SessionManagerInterface`, `PermissionQueryInterface`, and `RoleQueryInterface`.
   - **App-backed adapters**: `TokenManagerInterface` and `MfaEnrollmentServiceInterface` are still alpha stubs, while `MfaVerificationServiceInterface` and `AuditLogRepositoryInterface` are runtime implementations. Gap 7’s MFA extension persists `challenge_id`-backed login challenges and audit rows for login success/failure, MFA challenge issuance/verification, and logout.
@@ -318,31 +318,31 @@ All **203 endpoints** from `API_ENDPOINTS.md` are registered. The quote lifecycl
 ## Nexus Packages Integrated
 
 ### L1 Packages (via composer path repos)
-- `nexus/common`, `nexus/identity`, `nexus/sso`, `nexus/crypto`
-- `nexus/tenant`, `nexus/setting`, `nexus/feature-flags`
-- `nexus/procurement`, `nexus/party`
-- `nexus/document`, `nexus/storage`
-- `nexus/notifier`, `nexus/audit-logger`, `nexus/event-stream`
-- `nexus/sequencing`, `nexus/currency`, `nexus/uom`
-- `nexus/sanctions`, `nexus/aml-compliance`, `nexus/compliance`
-- `nexus/reporting`, `nexus/query-engine`, `nexus/export`
-- `nexus/connector`, `nexus/scheduler`
-- `nexus/machine-learning`, `nexus/workflow`, `nexus/messaging`
+- `azaharizaman/nexus-common`, `azaharizaman/nexus-identity`, `azaharizaman/nexus-sso`, `azaharizaman/nexus-crypto`
+- `azaharizaman/nexus-tenant`, `azaharizaman/nexus-setting`, `azaharizaman/nexus-feature-flags`
+- `azaharizaman/nexus-procurement`, `azaharizaman/nexus-party`
+- `azaharizaman/nexus-document`, `azaharizaman/nexus-storage`
+- `azaharizaman/nexus-notifier`, `azaharizaman/nexus-audit-logger`, `azaharizaman/nexus-event-stream`
+- `azaharizaman/nexus-sequencing`, `azaharizaman/nexus-currency`, `azaharizaman/nexus-uom`
+- `azaharizaman/nexus-sanctions`, `azaharizaman/nexus-aml-compliance`, `azaharizaman/nexus-compliance`
+- `azaharizaman/nexus-reporting`, `azaharizaman/nexus-query-engine`, `azaharizaman/nexus-export`
+- `azaharizaman/nexus-connector`, `azaharizaman/nexus-scheduler`
+- `azaharizaman/nexus-machine-learning`, `azaharizaman/nexus-workflow`, `azaharizaman/nexus-messaging`
 
 ### L2 Orchestrators
-- `nexus/quotation-intelligence`
-- `nexus/identity-operations`, `nexus/tenant-operations`
-- `nexus/settings-management`
-- `nexus/procurement-operations`
-- `nexus/compliance-operations`
-- `nexus/connectivity-operations`
-- `nexus/data-exchange-operations`
-- `nexus/insight-operations`
+- `azaharizaman/nexus-quotation-intelligence`
+- `azaharizaman/nexus-identity-operations`, `azaharizaman/nexus-tenant-operations`
+- `azaharizaman/nexus-settings-management`
+- `azaharizaman/nexus-procurement-operations`
+- `azaharizaman/nexus-compliance-operations`
+- `azaharizaman/nexus-connectivity-operations`
+- `azaharizaman/nexus-data-exchange-operations`
+- `azaharizaman/nexus-insight-operations`
 
 ### L3 Adapters
-- `nexus/laravel-identity-adapter`
-- `nexus/laravel-tenant-adapter`
-- `nexus/laravel-setting-adapter`
+- `azaharizaman/nexus-laravel-identity-adapter`
+- `azaharizaman/nexus-laravel-tenant-adapter`
+- `azaharizaman/nexus-laravel-setting-adapter`
 
 ## Database Tables (26)
 

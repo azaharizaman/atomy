@@ -42,7 +42,7 @@ This package defines **WHAT** a product is (master data), not **WHERE** it's sto
 This package is part of the Nexus monorepo. Install it in your Laravel application:
 
 ```bash
-composer require nexus/product:"*@dev"
+composer require azaharizaman/nexus-product:"*@dev"
 ```
 
 ## Architecture

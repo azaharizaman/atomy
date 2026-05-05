@@ -13,7 +13,7 @@ The Tenant package is an atomic package that must remain independently publishab
 ## Installation
 
 ```bash
-composer require nexus/laravel-tenant-adapter
+composer require azaharizaman/nexus-laravel-tenant-adapter
 ```
 
 ## Adapters Provided
@@ -56,7 +56,7 @@ This follows the Nexus Three-Layer Architecture:
 
 ## Dependencies
 
-- `nexus/tenant` - The atomic Tenant package
+- `azaharizaman/nexus-tenant` - The atomic Tenant package
 - `illuminate/support` - Laravel framework components
 - `illuminate/database` - Laravel database components
 - `psr/log` - PSR-3 logging interface

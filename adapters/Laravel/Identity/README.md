@@ -9,7 +9,7 @@ The Identity package is an atomic package. This adapter provides Laravel integra
 ## Installation
 
 ```bash
-composer require nexus/laravel-identity-adapter
+composer require azaharizaman/nexus-laravel-identity-adapter
 ```
 
 ## Adapters Provided
@@ -28,6 +28,6 @@ The `IdentityAdapterServiceProvider` automatically binds the Identity interfaces
 
 ## Dependencies
 
-- `nexus/identity` - The atomic Identity package
+- `azaharizaman/nexus-identity` - The atomic Identity package
 - `illuminate/support` - Laravel framework components
 - `illuminate/auth` - Laravel authentication components

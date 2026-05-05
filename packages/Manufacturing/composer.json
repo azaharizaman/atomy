@@ -17,13 +17,13 @@
         "phpunit/phpunit": "^11.0"
     },
     "suggest": {
-        "azaharizaman/nexus-event-stream": "Event sourcing for production state replay and audit trail",
-        "azaharizaman/nexus-inventory": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-machine-learning": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-product": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-uom": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-warehouse": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-workflow": "Advanced work order approval workflows and state machine extensions"
+        "azaharizaman/nexus-event-stream": "dev-main",
+        "azaharizaman/nexus-inventory": "dev-main",
+        "azaharizaman/nexus-machine-learning": "dev-main",
+        "azaharizaman/nexus-product": "dev-main",
+        "azaharizaman/nexus-uom": "dev-main",
+        "azaharizaman/nexus-warehouse": "dev-main",
+        "azaharizaman/nexus-workflow": "dev-main"
     },
     "autoload": {
         "psr-4": {

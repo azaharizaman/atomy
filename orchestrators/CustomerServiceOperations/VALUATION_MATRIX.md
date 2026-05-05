@@ -1,6 +1,6 @@
 # Nexus CustomerServiceOperations Orchestrator - Valuation Matrix
 
-**Package:** `nexus/customer-service-operations`
+**Package:** `azaharizaman/nexus-customer-service-operations`
 **Version:** 0.1.0-alpha
 **Last Updated:** 2026-02-18
 

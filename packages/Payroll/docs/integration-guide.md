@@ -20,10 +20,10 @@ This guide provides comprehensive examples for integrating the `Nexus\Payroll` p
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/payroll:"*@dev"
+composer require azaharizaman/nexus-payroll:"*@dev"
 
 # For Malaysia statutory calculations
-composer require nexus/payroll-mys-statutory:"*@dev"
+composer require azaharizaman/nexus-payroll-mys-statutory:"*@dev"
 ```
 
 ### Step 2: Create Database Migrations
@@ -576,8 +576,8 @@ class PayrollController extends Controller
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/payroll:"*@dev"
-composer require nexus/payroll-mys-statutory:"*@dev"
+composer require azaharizaman/nexus-payroll:"*@dev"
+composer require azaharizaman/nexus-payroll-mys-statutory:"*@dev"
 ```
 
 ### Step 2: Create Doctrine Entity
@@ -1104,7 +1104,7 @@ Target interface [Nexus\Payroll\Contracts\StatutoryCalculatorInterface] is not i
 ```
 
 **Solution:**
-1. Install country package: `composer require nexus/payroll-mys-statutory`
+1. Install country package: `composer require azaharizaman/nexus-payroll-mys-statutory`
 2. Bind in service provider (see Step 5 above)
 
 ### Issue: CQRS interface conflict

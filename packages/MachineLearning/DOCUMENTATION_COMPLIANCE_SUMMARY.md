@@ -87,7 +87,7 @@ The Nexus\MachineLearning package has been fully updated to meet the **15 mandat
 
 ### Technical Details
 
-- **Package Name:** `nexus/machinelearning`
+- **Package Name:** `azaharizaman/nexus-machinelearning`
 - **Namespace:** `Nexus\MachineLearning`
 - **Version:** 2.0.0 (breaking changes from v1.x)
 - **PHP Version:** 8.3+

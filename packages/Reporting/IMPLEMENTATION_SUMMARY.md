@@ -222,7 +222,7 @@ If report distribution fails, the generated PDF/Excel file is preserved for manu
 
 ### Dependencies
 - **External Dependencies:** 2 (psr/log ^3.0, symfony/uid ^7.0)
-- **Internal Package Dependencies:** 6 (nexus/query-engine, nexus/export, nexus/scheduler, nexus/notifier, nexus/storage, nexus/audit-logger)
+- **Internal Package Dependencies:** 6 (azaharizaman/nexus-query-engine, azaharizaman/nexus-export, azaharizaman/nexus-scheduler, azaharizaman/nexus-notifier, azaharizaman/nexus-storage, azaharizaman/nexus-audit-logger)
 
 ---
 

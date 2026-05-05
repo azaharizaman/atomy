@@ -17,7 +17,7 @@ Welcome to **Nexus\Export**, a framework-agnostic export engine that converts st
 ### Step 1: Install via Composer
 
 ```bash
-composer require nexus/export:"*@dev"
+composer require azaharizaman/nexus-export:"*@dev"
 ```
 
 ### Step 2: Verify Installation
@@ -25,12 +25,12 @@ composer require nexus/export:"*@dev"
 Check that the package is installed:
 
 ```bash
-composer show nexus/export
+composer show azaharizaman/nexus-export
 ```
 
 Expected output:
 ```
-name     : nexus/export
+name     : azaharizaman/nexus-export
 descrip. : Framework-agnostic export engine with intermediate representation
 versions : * dev-main
 type     : library

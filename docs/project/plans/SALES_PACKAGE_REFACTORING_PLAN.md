@@ -888,13 +888,13 @@ public function test_credit_rejected_when_exceeds_limit(): void
 
 | Package | Minimum Version | Purpose |
 |---------|-----------------|---------|
-| `nexus/receivable` | 1.0.0 | Credit checks, invoice generation |
-| `nexus/inventory` | 1.0.0 | Stock reservation |
-| `nexus/party` | 1.0.0 | Customer data |
-| `nexus/workflow` | 1.0.0 | Approval workflows |
-| `nexus/currency` | 1.0.0 | Exchange rate locking |
-| `nexus/sequencing` | 1.0.0 | Order number generation |
-| `nexus/audit-logger` | 1.0.0 | Audit trail |
+| `azaharizaman/nexus-receivable` | 1.0.0 | Credit checks, invoice generation |
+| `azaharizaman/nexus-inventory` | 1.0.0 | Stock reservation |
+| `azaharizaman/nexus-party` | 1.0.0 | Customer data |
+| `azaharizaman/nexus-workflow` | 1.0.0 | Approval workflows |
+| `azaharizaman/nexus-currency` | 1.0.0 | Exchange rate locking |
+| `azaharizaman/nexus-sequencing` | 1.0.0 | Order number generation |
+| `azaharizaman/nexus-audit-logger` | 1.0.0 | Audit trail |
 
 ---
 

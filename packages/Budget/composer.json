@@ -11,16 +11,16 @@
         }
     ],
     "require": {
-        "azaharizaman/nexus-audit-logger": "*@dev",
-        "azaharizaman/nexus-common": "*@dev",
-        "azaharizaman/nexus-currency": "*@dev",
-        "azaharizaman/nexus-machine-learning": "*@dev",
-        "azaharizaman/nexus-notifier": "*@dev",
-        "azaharizaman/nexus-period": "*@dev",
-        "azaharizaman/nexus-procurement": "*@dev",
-        "azaharizaman/nexus-setting": "*@dev",
-        "azaharizaman/nexus-uom": "*@dev",
-        "azaharizaman/nexus-workflow": "*@dev",
+        "azaharizaman/nexus-audit-logger": "dev-main",
+        "azaharizaman/nexus-common": "dev-main",
+        "azaharizaman/nexus-currency": "dev-main",
+        "azaharizaman/nexus-machine-learning": "dev-main",
+        "azaharizaman/nexus-notifier": "dev-main",
+        "azaharizaman/nexus-period": "dev-main",
+        "azaharizaman/nexus-procurement": "dev-main",
+        "azaharizaman/nexus-setting": "dev-main",
+        "azaharizaman/nexus-uom": "dev-main",
+        "azaharizaman/nexus-workflow": "dev-main",
         "php": "^8.3",
         "psr/event-dispatcher": "^1.0",
         "psr/log": "^3.0"
@@ -33,7 +33,7 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "suggest": {
-        "azaharizaman/nexus-accounting": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-party": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-accounting": "dev-main",
+        "azaharizaman/nexus-party": "dev-main"
     }
 }

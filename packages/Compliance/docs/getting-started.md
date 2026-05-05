@@ -13,7 +13,7 @@ This guide will help you quickly integrate the Nexus\Compliance package into you
 Install the package via Composer:
 
 ```bash
-composer require nexus/compliance:"*@dev"
+composer require azaharizaman/nexus-compliance:"*@dev"
 ```
 
 ## Basic Configuration

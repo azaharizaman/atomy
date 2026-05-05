@@ -14,7 +14,7 @@ This package is **framework-agnostic** and contains no database access, no HTTP 
 ## Installation
 
 ```bash
-composer require nexus/account-period-close
+composer require azaharizaman/nexus-account-period-close
 ```
 
 ## Package Responsibilities

@@ -24,20 +24,20 @@ The Tax package requires these Nexus packages:
 ```json
 {
   "require": {
-    "nexus/finance": "*@dev",
-    "nexus/currency": "*@dev",
-    "nexus/geo": "*@dev",
-    "nexus/party": "*@dev",
-    "nexus/product": "*@dev",
-    "nexus/tenant": "*@dev"
+    "azaharizaman/nexus-finance": "*@dev",
+    "azaharizaman/nexus-currency": "*@dev",
+    "azaharizaman/nexus-geo": "*@dev",
+    "azaharizaman/nexus-party": "*@dev",
+    "azaharizaman/nexus-product": "*@dev",
+    "azaharizaman/nexus-tenant": "*@dev"
   }
 }
 ```
 
 **Optional Dependencies** (for enhanced features):
-- `nexus/audit-logger` - Audit trail logging
-- `nexus/telemetry` - Telemetry and metrics
-- `nexus/storage` - Exemption certificate PDF storage
+- `azaharizaman/nexus-audit-logger` - Audit trail logging
+- `azaharizaman/nexus-telemetry` - Telemetry and metrics
+- `azaharizaman/nexus-storage` - Exemption certificate PDF storage
 
 ---
 
@@ -46,7 +46,7 @@ The Tax package requires these Nexus packages:
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/tax:"*@dev"
+composer require azaharizaman/nexus-tax:"*@dev"
 ```
 
 ### Step 2: Verify BCMath Extension

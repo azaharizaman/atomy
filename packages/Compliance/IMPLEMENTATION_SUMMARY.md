@@ -107,11 +107,11 @@ The Nexus\Compliance package provides a comprehensive operational compliance fra
 - [ ] Real-time compliance monitoring
 
 ### Phase 6: Premium Compliance Schemes (Planned)
-- [ ] Create separate `nexus/compliance-iso14001` package
-- [ ] Create separate `nexus/compliance-sox` package
-- [ ] Create separate `nexus/compliance-gdpr` package
-- [ ] Create separate `nexus/compliance-hipaa` package
-- [ ] Create separate `nexus/compliance-pci-dss` package
+- [ ] Create separate `azaharizaman/nexus-compliance-iso14001` package
+- [ ] Create separate `azaharizaman/nexus-compliance-sox` package
+- [ ] Create separate `azaharizaman/nexus-compliance-gdpr` package
+- [ ] Create separate `azaharizaman/nexus-compliance-hipaa` package
+- [ ] Create separate `azaharizaman/nexus-compliance-pci-dss` package
 
 ---
 

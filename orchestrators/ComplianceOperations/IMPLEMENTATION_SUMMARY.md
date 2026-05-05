@@ -259,11 +259,11 @@ Unit tests should be created for:
 {
     "require": {
         "php": "^8.3",
-        "nexus/compliance": "*@dev",
-        "nexus/kyc-verification": "*@dev",
-        "nexus/party": "*@dev",
-        "nexus/audit": "*@dev",
-        "nexus/workflow": "*@dev",
+        "azaharizaman/nexus-compliance": "*@dev",
+        "azaharizaman/nexus-kyc-verification": "*@dev",
+        "azaharizaman/nexus-party": "*@dev",
+        "azaharizaman/nexus-audit": "*@dev",
+        "azaharizaman/nexus-workflow": "*@dev",
         "psr/log": "^3.0",
         "psr/event-dispatcher": "^1.0"
     }

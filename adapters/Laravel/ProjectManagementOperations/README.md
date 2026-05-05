@@ -49,7 +49,7 @@ For **testing**, you can use in-memory or fake implementations of the L1 and app
 
    ```json
    "require": {
-     "nexus/laravel-project-management-operations": "*@dev"
+     "azaharizaman/nexus-laravel-project-management-operations": "*@dev"
    }
    ```
 

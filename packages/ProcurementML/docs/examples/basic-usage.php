@@ -6,7 +6,7 @@ declare(strict_types=1);
  * Basic Usage Example: Procurement-ML
  *
  * This example demonstrates how to use a feature extractor from this package
- * in conjunction with a service from the `nexus/machine-learning` package.
+ * in conjunction with a service from the `azaharizaman/nexus-machine-learning` package.
  *
  * This assumes you have already set up your dependency injection container
  * to bind the repository interfaces to your concrete implementations.

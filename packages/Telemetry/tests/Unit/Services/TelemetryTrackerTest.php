@@ -21,7 +21,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 /**
- * Stub interface for TenantContextInterface (not yet importing nexus/tenant).
+ * Stub interface for TenantContextInterface (not yet importing azaharizaman/nexus-tenant).
  */
 interface TenantContextInterface
 {

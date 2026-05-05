@@ -1,6 +1,6 @@
 # Getting Started with Nexus Attendance
 
-**Package:** `nexus/attendance-management`  
+**Package:** `azaharizaman/nexus-attendance-management`  
 **Namespace:** `Nexus\Attendance`  
 **Version:** 1.0.0  
 **PHP:** 8.3+
@@ -46,13 +46,13 @@ Before you begin, ensure you have:
 ### Step 1: Install Package via Composer
 
 ```bash
-composer require nexus/attendance-management
+composer require azaharizaman/nexus-attendance-management
 ```
 
 ### Step 2: Verify Installation
 
 ```bash
-composer show nexus/attendance-management
+composer show azaharizaman/nexus-attendance-management
 ```
 
 You should see package information including version and dependencies.
@@ -62,13 +62,13 @@ You should see package information including version and dependencies.
 If using Laravel:
 
 ```bash
-composer require nexus/attendance-laravel-adapter
+composer require azaharizaman/nexus-attendance-laravel-adapter
 ```
 
 If using Symfony:
 
 ```bash
-composer require nexus/attendance-symfony-adapter
+composer require azaharizaman/nexus-attendance-symfony-adapter
 ```
 
 **Note:** The core package is framework-agnostic. Adapters provide concrete implementations (Eloquent models, Doctrine entities, migrations).
@@ -498,7 +498,7 @@ Class 'Nexus\Attendance\Contracts\AttendanceQueryInterface' not found
 ```
 
 **Solution:**
-1. Verify package is installed: `composer show nexus/attendance-management`
+1. Verify package is installed: `composer show azaharizaman/nexus-attendance-management`
 2. Run `composer dump-autoload`
 3. Check PSR-4 autoloading is configured correctly
 
@@ -600,7 +600,7 @@ $records = $this->attendanceQuery->findByEmployee($employeeId);
 
 ## Getting Help
 
-- **GitHub Issues:** https://github.com/nexus/attendance-management/issues
+- **GitHub Issues:** https://github.com/azaharizaman/nexus-attendance-management/issues
 - **Documentation:** `/docs` folder in package root
 - **Stack Overflow:** Tag questions with `nexus-attendance`
 - **Community Forum:** https://community.nexus-framework.org

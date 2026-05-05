@@ -11,7 +11,7 @@
 ## Installation
 
 ```bash
-composer require nexus/payment
+composer require azaharizaman/nexus-payment
 ```
 
 ## Architecture

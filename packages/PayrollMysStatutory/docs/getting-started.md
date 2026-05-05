@@ -3,5 +3,5 @@
 ## Installation
 
 ```bash
-composer require nexus/payroll-mys-statutory:"*@dev"
+composer require azaharizaman/nexus-payroll-mys-statutory:"*@dev"
 ```

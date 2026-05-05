@@ -10,7 +10,7 @@
 ## Installation
 
 ```bash
-composer require nexus/currency:"*@dev"
+composer require azaharizaman/nexus-currency:"*@dev"
 ```
 
 ## When to Use This Package

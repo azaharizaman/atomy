@@ -47,7 +47,7 @@ adapters/Laravel/Idempotency/
 
 ## Dependencies
 
-The adapter depends on these Layer 1 interfaces from `nexus/idempotency`:
+The adapter depends on these Layer 1 interfaces from `azaharizaman/nexus-idempotency`:
 - `Nexus\Idempotency\Contracts\IdempotencyStoreInterface` (extends Query + Persist)
 - `Nexus\Idempotency\Contracts\IdempotencyClockInterface`
 - `Nexus\Idempotency\Contracts\IdempotencyServiceInterface`
@@ -67,7 +67,7 @@ The adapter depends on these Layer 1 interfaces from `nexus/idempotency`:
 
 ```json
 {
-    "name": "nexus/laravel-idempotency-adapter",
+    "name": "azaharizaman/nexus-laravel-idempotency-adapter",
     "description": "Laravel adapter for Idempotency package",
     "type": "library",
     "license": "MIT",
@@ -75,7 +75,7 @@ The adapter depends on these Layer 1 interfaces from `nexus/idempotency`:
         "php": "^8.3",
         "illuminate/support": "^11.0|^12.0",
         "illuminate/database": "^11.0|^12.0",
-        "nexus/idempotency": "*@dev",
+        "azaharizaman/nexus-idempotency": "*@dev",
         "psr/log": "^3.0"
     },
     "require-dev": {

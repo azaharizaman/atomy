@@ -13,7 +13,7 @@ declare(strict_types=1);
  *
  * Prerequisites:
  * - Repository interfaces bound in your DI container
- * - Statutory calculator installed (e.g., nexus/payroll-mys-statutory)
+ * - Statutory calculator installed (e.g., azaharizaman/nexus-payroll-mys-statutory)
  * - Employee data available in your system
  */
 

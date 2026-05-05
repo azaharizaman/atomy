@@ -18,7 +18,7 @@
 - `CertificationValidator`: Provides temporal validation of sustainability certificates.
 
 ## Dependencies
-- `nexus/common`: For serializable interfaces and base exceptions.
+- `azaharizaman/nexus-common`: For serializable interfaces and base exceptions.
 
 ## Compliance
 - **ISO 20400**: Provides the mathematical foundation for "Best Value" evaluation.

@@ -57,7 +57,7 @@
 ## Installation
 
 ```bash
-composer require nexus/reporting:*@dev
+composer require azaharizaman/nexus-reporting:*@dev
 ```
 
 ## Usage

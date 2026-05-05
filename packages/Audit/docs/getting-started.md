@@ -10,7 +10,7 @@
 ## Installation
 
 ```bash
-composer require nexus/audit:"*@dev"
+composer require azaharizaman/nexus-audit:"*@dev"
 ```
 
 ## When to Use This Package

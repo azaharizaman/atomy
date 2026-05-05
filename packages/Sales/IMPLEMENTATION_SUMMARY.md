@@ -1,6 +1,6 @@
 # Nexus\Sales Implementation Summary
 
-**Package:** `nexus/sales`  
+**Package:** `azaharizaman/nexus-sales`  
 **Status:** ✅ **V1 Complete - Production Ready**  
 **Date:** November 20, 2025  
 **Branch:** `feature-sales`
@@ -343,14 +343,14 @@ The Sales package requires the following Nexus packages:
 
 | Package | Purpose |
 |---------|---------|
-| `nexus/party` | Customer entity management |
-| `nexus/product` | Product catalog and variants |
-| `nexus/uom` | Unit of measurement and Quantity VO |
-| `nexus/currency` | Multi-currency support and exchange rates |
-| `nexus/finance` | Accounting integration (GL posting) |
-| `nexus/sequencing` | Auto-numbering (quote numbers, order numbers) |
-| `nexus/period` | Fiscal period management |
-| `nexus/audit-logger` | Audit trail for all state changes |
+| `azaharizaman/nexus-party` | Customer entity management |
+| `azaharizaman/nexus-product` | Product catalog and variants |
+| `azaharizaman/nexus-uom` | Unit of measurement and Quantity VO |
+| `azaharizaman/nexus-currency` | Multi-currency support and exchange rates |
+| `azaharizaman/nexus-finance` | Accounting integration (GL posting) |
+| `azaharizaman/nexus-sequencing` | Auto-numbering (quote numbers, order numbers) |
+| `azaharizaman/nexus-period` | Fiscal period management |
+| `azaharizaman/nexus-audit-logger` | Audit trail for all state changes |
 
 ---
 
@@ -448,7 +448,7 @@ $salesOrderManager->confirmOrder(
 
 ### Receivable Integration
 
-**Install:** `composer require nexus/receivable`
+**Install:** `composer require azaharizaman/nexus-receivable`
 
 **Rebind in AppServiceProvider:**
 ```php
@@ -460,7 +460,7 @@ $this->app->singleton(CreditLimitCheckerInterface::class, ReceivableCreditLimitC
 
 ### Inventory Integration
 
-**Install:** `composer require nexus/inventory`
+**Install:** `composer require azaharizaman/nexus-inventory`
 
 **Rebind in AppServiceProvider:**
 ```php

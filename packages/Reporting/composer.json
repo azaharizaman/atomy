@@ -11,12 +11,12 @@
     ],
     "require": {
         "php": "^8.3",
-        "azaharizaman/nexus-query-engine": "*@dev",
-        "azaharizaman/nexus-export": "*@dev",
-        "azaharizaman/nexus-scheduler": "*@dev",
-        "azaharizaman/nexus-notifier": "*@dev",
-        "azaharizaman/nexus-storage": "*@dev",
-        "azaharizaman/nexus-audit-logger": "*@dev",
+        "azaharizaman/nexus-query-engine": "dev-main",
+        "azaharizaman/nexus-export": "dev-main",
+        "azaharizaman/nexus-scheduler": "dev-main",
+        "azaharizaman/nexus-notifier": "dev-main",
+        "azaharizaman/nexus-storage": "dev-main",
+        "azaharizaman/nexus-audit-logger": "dev-main",
         "psr/log": "^3.0",
         "symfony/uid": "^7.0"
     },

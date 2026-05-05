@@ -716,9 +716,9 @@ try {
 
 ## Package Dependencies
 
-- **`nexus/routing`** - TSP algorithm implementation
-- **`nexus/geo`** - Coordinates value object
-- **`nexus/tenant`** - Multi-tenancy context
+- **`azaharizaman/nexus-routing`** - TSP algorithm implementation
+- **`azaharizaman/nexus-geo`** - Coordinates value object
+- **`azaharizaman/nexus-tenant`** - Multi-tenancy context
 - **`psr/log`** - Logging interface
 
 ---

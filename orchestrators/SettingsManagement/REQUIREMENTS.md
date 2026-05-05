@@ -206,13 +206,13 @@ Other orchestrators MUST be able to validate:
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `nexus/setting` | *@dev | Application settings management |
-| `nexus/feature-flags` | *@dev | Feature flag management |
-| `nexus/period` | *@dev | Fiscal period management |
-| `nexus/backoffice` | *@dev | Organizational settings |
-| `nexus/audit-logger` | *@dev | Audit trail logging |
-| `nexus/identity` | *@dev | User authentication/authorization |
-| `nexus/common` | *@dev | Shared utilities |
+| `azaharizaman/nexus-setting` | *@dev | Application settings management |
+| `azaharizaman/nexus-feature-flags` | *@dev | Feature flag management |
+| `azaharizaman/nexus-period` | *@dev | Fiscal period management |
+| `azaharizaman/nexus-backoffice` | *@dev | Organizational settings |
+| `azaharizaman/nexus-audit-logger` | *@dev | Audit trail logging |
+| `azaharizaman/nexus-identity` | *@dev | User authentication/authorization |
+| `azaharizaman/nexus-common` | *@dev | Shared utilities |
 
 ### 4.2 Dependency Flow
 

@@ -11,7 +11,7 @@
 ## Installation
 
 ```bash
-composer require nexus/budget:"*@dev"
+composer require azaharizaman/nexus-budget:"*@dev"
 ```
 
 ## When to Use This Package

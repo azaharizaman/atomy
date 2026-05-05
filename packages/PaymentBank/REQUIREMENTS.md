@@ -1,6 +1,6 @@
 # Nexus\PaymentBank Requirements Specification
 
-**Package:** `nexus/payment-bank`  
+**Package:** `azaharizaman/nexus-payment-bank`  
 **Version:** 0.1.0  
 **Status:** Draft  
 **Last Updated:** December 18, 2025  
@@ -310,16 +310,16 @@ PlaidProduct
 
 | Package | Purpose |
 |---------|---------|
-| `nexus/payment` | Core payment interfaces |
-| `nexus/common` | Money VO, common interfaces |
-| `nexus/connector` | HTTP client, OAuth handling |
+| `azaharizaman/nexus-payment` | Core payment interfaces |
+| `azaharizaman/nexus-common` | Money VO, common interfaces |
+| `azaharizaman/nexus-connector` | HTTP client, OAuth handling |
 
 ### 6.2 Optional Dependencies
 
 | Package | Purpose |
 |---------|---------|
-| `nexus/payment-rails` | ACH/Wire file generation from bank data |
-| `nexus/crypto` | Consent token encryption |
+| `azaharizaman/nexus-payment-rails` | ACH/Wire file generation from bank data |
+| `azaharizaman/nexus-crypto` | Consent token encryption |
 
 ---
 

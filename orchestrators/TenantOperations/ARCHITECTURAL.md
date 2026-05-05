@@ -603,14 +603,14 @@ class TenantOperationsServiceProvider extends ServiceProvider
 ## Appendix A: Package Dependencies
 
 ```
-nexus/tenant-operations
-├── nexus/common (^1.0)
-├── nexus/tenant (^1.0)
-├── nexus/setting (^1.0)
-├── nexus/feature-flags (^1.0)
-├── nexus/backoffice (^1.0)
-├── nexus/audit-logger (^1.0)
-├── nexus/identity (^1.0)
+azaharizaman/nexus-tenant-operations
+├── azaharizaman/nexus-common (^1.0)
+├── azaharizaman/nexus-tenant (^1.0)
+├── azaharizaman/nexus-setting (^1.0)
+├── azaharizaman/nexus-feature-flags (^1.0)
+├── azaharizaman/nexus-backoffice (^1.0)
+├── azaharizaman/nexus-audit-logger (^1.0)
+├── azaharizaman/nexus-identity (^1.0)
 ├── psr/log (^3.0)
 └── psr/event-dispatcher (^3.0)
 ```

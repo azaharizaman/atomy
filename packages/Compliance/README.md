@@ -18,7 +18,7 @@ The Compliance package provides a framework-agnostic engine for managing complia
 ## Installation
 
 ```bash
-composer require nexus/compliance
+composer require azaharizaman/nexus-compliance
 ```
 
 ## Architecture

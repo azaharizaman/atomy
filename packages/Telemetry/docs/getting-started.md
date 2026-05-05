@@ -15,7 +15,7 @@
 Install the package via Composer:
 
 ```bash
-composer require nexus/telemetry:"*@dev"
+composer require azaharizaman/nexus-telemetry:"*@dev"
 ```
 
 ---
@@ -25,7 +25,7 @@ composer require nexus/telemetry:"*@dev"
 ### Step 1: Install Dependencies
 
 ```bash
-composer require nexus/telemetry monolog/monolog
+composer require azaharizaman/nexus-telemetry monolog/monolog
 ```
 
 ### Step 2: Create a Simple Implementation
@@ -339,7 +339,7 @@ try {
 
 ## Multi-Tenancy Support
 
-If you're using `nexus/tenant`, the package automatically tags metrics with `tenant_id`:
+If you're using `azaharizaman/nexus-tenant`, the package automatically tags metrics with `tenant_id`:
 
 ```php
 <?php

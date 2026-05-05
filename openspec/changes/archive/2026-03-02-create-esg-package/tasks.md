@@ -1,7 +1,7 @@
 ## 1. Scaffold ESG Package
 
 - [x] 1.1 Create `packages/ESG` directory structure (src, tests, docs).
-- [x] 1.2 Create `composer.json` for `nexus/esg` with `nexus/common` dependency.
+- [x] 1.2 Create `composer.json` for `azaharizaman/nexus-esg` with `azaharizaman/nexus-common` dependency.
 - [x] 1.3 Create `README.md` and `IMPLEMENTATION_SUMMARY.md`.
 - [x] 1.4 Register package in root `composer.json` and run `composer dump-autoload`.
 

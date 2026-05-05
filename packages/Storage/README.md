@@ -16,7 +16,7 @@
 ## Installation
 
 ```bash
-composer require nexus/storage
+composer require azaharizaman/nexus-storage
 ```
 
 ## Core Contracts

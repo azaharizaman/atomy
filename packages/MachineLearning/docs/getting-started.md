@@ -1,7 +1,7 @@
 # Getting Started with Nexus MachineLearning
 
 **Version:** 2.0.0  
-**Package:** `nexus/machinelearning`  
+**Package:** `azaharizaman/nexus-machinelearning`  
 **Formerly Known As:** `Nexus\Intelligence` (v1.x)
 
 ---
@@ -43,13 +43,13 @@ The **Nexus MachineLearning** package provides a framework-agnostic machine lear
 For development (monorepo):
 
 ```bash
-composer require nexus/machinelearning:"*@dev"
+composer require azaharizaman/nexus-machinelearning:"*@dev"
 ```
 
 For production (published package):
 
 ```bash
-composer require nexus/machinelearning:^2.0
+composer require azaharizaman/nexus-machinelearning:^2.0
 ```
 
 ### Step 2: Configure Provider Strategy

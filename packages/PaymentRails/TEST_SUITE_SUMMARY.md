@@ -1,6 +1,6 @@
 # Nexus\PaymentRails Test Suite Summary
 
-**Package:** `nexus/payment-rails`  
+**Package:** `azaharizaman/nexus-payment-rails`  
 **Version:** 0.1.0  
 **Last Run:** N/A  
 **Status:** 🔴 Not Started

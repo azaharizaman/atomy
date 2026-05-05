@@ -782,17 +782,17 @@ Budget::create([
 
 ```json
 {
-    "nexus/period": "*@dev",
-    "nexus/finance": "*@dev",
-    "nexus/procurement": "*@dev",
-    "nexus/party": "*@dev",
-    "nexus/workflow": "*@dev",
-    "nexus/currency": "*@dev",
-    "nexus/uom": "*@dev",
-    "nexus/intelligence": "*@dev",
-    "nexus/audit-logger": "*@dev",
-    "nexus/notifier": "*@dev",
-    "nexus/setting": "*@dev",
+    "azaharizaman/nexus-period": "*@dev",
+    "azaharizaman/nexus-finance": "*@dev",
+    "azaharizaman/nexus-procurement": "*@dev",
+    "azaharizaman/nexus-party": "*@dev",
+    "azaharizaman/nexus-workflow": "*@dev",
+    "azaharizaman/nexus-currency": "*@dev",
+    "azaharizaman/nexus-uom": "*@dev",
+    "azaharizaman/nexus-intelligence": "*@dev",
+    "azaharizaman/nexus-audit-logger": "*@dev",
+    "azaharizaman/nexus-notifier": "*@dev",
+    "azaharizaman/nexus-setting": "*@dev",
     "psr/log": "^3.0",
     "psr/event-dispatcher": "^1.0"
 }

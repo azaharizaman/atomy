@@ -21,9 +21,9 @@
 
 ```json
 {
-    "name": "nexus/sourcing-operations",
+    "name": "azaharizaman/nexus-sourcing-operations",
     "autoload": { "psr-4": { "Nexus\\SourcingOperations\\": "src/" } },
-    "require": { "php": "^8.3", "nexus/sourcing": "*", "nexus/procurement": "*" }
+    "require": { "php": "^8.3", "azaharizaman/nexus-sourcing": "*", "azaharizaman/nexus-procurement": "*" }
 }
 ```
 

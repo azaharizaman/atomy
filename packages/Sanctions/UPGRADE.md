@@ -1,6 +1,6 @@
 # Upgrade Guide
 
-This document provides instructions for upgrading between major versions of `nexus/sanctions`.
+This document provides instructions for upgrading between major versions of `azaharizaman/nexus-sanctions`.
 
 ## Table of Contents
 
@@ -26,7 +26,7 @@ When upgrading to a new major version:
 
 2. **Update composer.json:**
    ```bash
-   composer require nexus/sanctions:^2.0  # Example for v2.x
+   composer require azaharizaman/nexus-sanctions:^2.0  # Example for v2.x
    ```
 
 3. **Run tests:**

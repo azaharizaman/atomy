@@ -195,7 +195,7 @@
 ### 📦 Package Registration
 ```bash
 # Add to root composer.json
-composer require nexus/statutory:"*@dev"
+composer require azaharizaman/nexus-statutory:"*@dev"
 ```
 
 ### 🔗 Integration

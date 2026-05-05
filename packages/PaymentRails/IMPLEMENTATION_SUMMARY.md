@@ -1,6 +1,6 @@
 # Nexus\PaymentRails Implementation Summary
 
-**Package:** `nexus/payment-rails`  
+**Package:** `azaharizaman/nexus-payment-rails`  
 **Version:** 1.0.0  
 **Status:** 🟢 Completed  
 **Last Updated:** December 18, 2025

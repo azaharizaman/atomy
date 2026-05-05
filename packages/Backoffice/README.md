@@ -57,7 +57,7 @@ As of **v1.1.0**, this package has been refactored to achieve **95%+ architectur
 ## Installation
 
 ```bash
-composer require nexus/backoffice:"*@dev"
+composer require azaharizaman/nexus-backoffice:"*@dev"
 ```
 
 ## Key Features

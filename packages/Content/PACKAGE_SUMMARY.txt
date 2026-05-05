@@ -5,7 +5,7 @@
 
 📦 PACKAGE INFORMATION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Name:           nexus/content
+Name:           azaharizaman/nexus-content
 Version:        1.0.0
 Type:           library
 License:        MIT
@@ -103,7 +103,7 @@ Optional Integrations:
 
 🚀 GETTING STARTED
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. Install:     composer require nexus/content:"*@dev"
+1. Install:     composer require azaharizaman/nexus-content:"*@dev"
 2. Implement:   ContentRepositoryInterface
 3. Implement:   ContentSearchInterface
 4. Register:    Bind implementations in DI container

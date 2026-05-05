@@ -15,7 +15,7 @@
         "illuminate/database": "^11.0|^12.0",
         "illuminate/http": "^11.0|^12.0",
         "illuminate/console": "^11.0|^12.0",
-        "azaharizaman/nexus-idempotency": "*@dev",
+        "azaharizaman/nexus-idempotency": "dev-main",
         "psr/log": "^3.0"
     },
     "require-dev": {

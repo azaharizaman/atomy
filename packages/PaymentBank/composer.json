@@ -19,8 +19,8 @@
         }
     ],
     "require": {
-        "azaharizaman/nexus-common": "*@dev",
-        "azaharizaman/nexus-crypto": "*@dev",
+        "azaharizaman/nexus-common": "dev-main",
+        "azaharizaman/nexus-crypto": "dev-main",
         "php": "^8.3",
         "psr/log": "^3.0"
     },
@@ -30,9 +30,9 @@
         "friendsofphp/php-cs-fixer": "^3.0"
     },
     "suggest": {
-        "azaharizaman/nexus-connector": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-payment": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-payment-rails": "For ACH/Wire transmission via bank rails"
+        "azaharizaman/nexus-connector": "dev-main",
+        "azaharizaman/nexus-payment": "dev-main",
+        "azaharizaman/nexus-payment-rails": "dev-main"
     },
     "autoload": {
         "psr-4": {

@@ -68,7 +68,7 @@ ExportDestination (DOWNLOAD/EMAIL/STORAGE/WEBHOOK/PRINTER)
 ## Installation
 
 ```bash
-composer require nexus/export:"*@dev"
+composer require azaharizaman/nexus-export:"*@dev"
 ```
 
 ## Usage Examples

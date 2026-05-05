@@ -42,7 +42,7 @@ The **Nexus\Assets** package provides comprehensive fixed asset lifecycle manage
 ### 1. Install Package
 
 ```bash
-composer require nexus/assets:*@dev
+composer require azaharizaman/nexus-assets:*@dev
 ```
 
 ### 2. Configure Tier

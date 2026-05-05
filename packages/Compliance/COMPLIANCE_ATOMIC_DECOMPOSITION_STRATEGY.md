@@ -83,7 +83,7 @@ COMPLIANCE DOMAIN ECOSYSTEM
 │  • Sanctions hit workflow (freeze, investigate, report)    │
 │  ────────────────────────────────────────────────────────── │
 │  Size: ~1,800 LOC | Status: 🔵 NEW                         │
-│  Dependencies: nexus/party, nexus/audit-logger, psr/log    │
+│  Dependencies: azaharizaman/nexus-party, azaharizaman/nexus-audit-logger, psr/log    │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
@@ -99,7 +99,7 @@ COMPLIANCE DOMAIN ECOSYSTEM
 │  • SAR (Suspicious Activity Report) generation             │
 │  ────────────────────────────────────────────────────────── │
 │  Size: ~900 LOC | Status: 🔵 NEW                           │
-│  Dependencies: nexus/party, nexus/sanctions, psr/log       │
+│  Dependencies: azaharizaman/nexus-party, azaharizaman/nexus-sanctions, psr/log       │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
@@ -115,7 +115,7 @@ COMPLIANCE DOMAIN ECOSYSTEM
 │  • Enhanced due diligence (EDD) for high-risk parties      │
 │  ────────────────────────────────────────────────────────── │
 │  Size: ~600 LOC | Status: 🔵 NEW                           │
-│  Dependencies: nexus/party, nexus/document, nexus/identity │
+│  Dependencies: azaharizaman/nexus-party, azaharizaman/nexus-document, azaharizaman/nexus-identity │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
@@ -131,7 +131,7 @@ COMPLIANCE DOMAIN ECOSYSTEM
 │  • Right to rectification & restriction                    │
 │  ────────────────────────────────────────────────────────── │
 │  Size: ~1,300 LOC | Status: 🔵 NEW                         │
-│  Dependencies: nexus/party, nexus/audit-logger, psr/log    │
+│  Dependencies: azaharizaman/nexus-party, azaharizaman/nexus-audit-logger, psr/log    │
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────┐
@@ -183,24 +183,24 @@ Nexus\Compliance (1,935 LOC)
 └── psr/log
 
 Nexus\Sanctions (1,800 LOC)
-├── nexus/party
-├── nexus/audit-logger
+├── azaharizaman/nexus-party
+├── azaharizaman/nexus-audit-logger
 └── psr/log
 
 Nexus\AmlCompliance (900 LOC)
-├── nexus/party
-├── nexus/sanctions    # Uses PEP status in risk scoring
+├── azaharizaman/nexus-party
+├── azaharizaman/nexus-sanctions    # Uses PEP status in risk scoring
 └── psr/log
 
 Nexus\KycVerification (600 LOC)
-├── nexus/party
-├── nexus/document     # Document verification
-├── nexus/identity     # User verification
+├── azaharizaman/nexus-party
+├── azaharizaman/nexus-document     # Document verification
+├── azaharizaman/nexus-identity     # User verification
 └── psr/log
 
 Nexus\DataPrivacy (1,300 LOC)
-├── nexus/party
-├── nexus/audit-logger # Audit erasure/access requests
+├── azaharizaman/nexus-party
+├── azaharizaman/nexus-audit-logger # Audit erasure/access requests
 └── psr/log
 
 Nexus\Crypto (existing + 400 LOC)
@@ -216,10 +216,10 @@ Nexus\Crypto (existing + 400 LOC)
 ```json
 {
   "require": {
-    "nexus/party": "^1.0",
-    "nexus/sanctions": "^1.0",
-    "nexus/kyc-verification": "^1.0",
-    "nexus/compliance": "^1.0"
+    "azaharizaman/nexus-party": "^1.0",
+    "azaharizaman/nexus-sanctions": "^1.0",
+    "azaharizaman/nexus-kyc-verification": "^1.0",
+    "azaharizaman/nexus-compliance": "^1.0"
   }
 }
 ```
@@ -237,9 +237,9 @@ Nexus\Crypto (existing + 400 LOC)
 ```json
 {
   "require": {
-    "nexus/party": "^1.0",
-    "nexus/data-privacy": "^1.0",
-    "nexus/marketing": "^1.0"
+    "azaharizaman/nexus-party": "^1.0",
+    "azaharizaman/nexus-data-privacy": "^1.0",
+    "azaharizaman/nexus-marketing": "^1.0"
   }
 }
 ```
@@ -256,13 +256,13 @@ Nexus\Crypto (existing + 400 LOC)
 ```json
 {
   "require": {
-    "nexus/party": "^1.0",
-    "nexus/sanctions": "^1.0",
-    "nexus/aml-compliance": "^1.0",
-    "nexus/kyc-verification": "^1.0",
-    "nexus/data-privacy": "^1.0",
-    "nexus/compliance": "^1.0",
-    "nexus/audit-logger": "^1.0"
+    "azaharizaman/nexus-party": "^1.0",
+    "azaharizaman/nexus-sanctions": "^1.0",
+    "azaharizaman/nexus-aml-compliance": "^1.0",
+    "azaharizaman/nexus-kyc-verification": "^1.0",
+    "azaharizaman/nexus-data-privacy": "^1.0",
+    "azaharizaman/nexus-compliance": "^1.0",
+    "azaharizaman/nexus-audit-logger": "^1.0"
   }
 }
 ```
@@ -283,9 +283,9 @@ Nexus\Crypto (existing + 400 LOC)
 ```json
 {
   "require": {
-    "nexus/party": "^1.0",
-    "nexus/sanctions": "^1.0",
-    "nexus/crypto": "^1.0"
+    "azaharizaman/nexus-party": "^1.0",
+    "azaharizaman/nexus-sanctions": "^1.0",
+    "azaharizaman/nexus-crypto": "^1.0"
   }
 }
 ```
@@ -390,17 +390,17 @@ Packages can be versioned independently without forcing upgrades:
 // Small business ERP (only needs SOD)
 {
   "require": {
-    "nexus/compliance": "^1.0"  // Stay on v1.0 forever
+    "azaharizaman/nexus-compliance": "^1.0"  // Stay on v1.0 forever
   }
 }
 
 // Financial institution (needs all compliance features)
 {
   "require": {
-    "nexus/compliance": "^1.0",
-    "nexus/sanctions": "^2.0",     // Upgrade for new OFAC format
-    "nexus/aml-compliance": "^1.0", // No upgrade needed
-    "nexus/kyc-verification": "^1.0" // No upgrade needed
+    "azaharizaman/nexus-compliance": "^1.0",
+    "azaharizaman/nexus-sanctions": "^2.0",     // Upgrade for new OFAC format
+    "azaharizaman/nexus-aml-compliance": "^1.0", // No upgrade needed
+    "azaharizaman/nexus-kyc-verification": "^1.0" // No upgrade needed
   }
 }
 ```
@@ -471,11 +471,11 @@ Each package can be published independently to Packagist:
 
 ```bash
 # Consumers can mix and match based on compliance needs
-composer require nexus/compliance:^1.0      # Operational compliance
-composer require nexus/sanctions:^1.0       # Regulatory screening
-composer require nexus/aml-compliance:^1.0  # Financial crime prevention
-composer require nexus/kyc-verification:^1.0 # Identity verification
-composer require nexus/data-privacy:^1.0    # GDPR compliance
+composer require azaharizaman/nexus-compliance:^1.0      # Operational compliance
+composer require azaharizaman/nexus-sanctions:^1.0       # Regulatory screening
+composer require azaharizaman/nexus-aml-compliance:^1.0  # Financial crime prevention
+composer require azaharizaman/nexus-kyc-verification:^1.0 # Identity verification
+composer require azaharizaman/nexus-data-privacy:^1.0    # GDPR compliance
 ```
 
 **Publication Strategy:**
@@ -483,10 +483,10 @@ composer require nexus/data-privacy:^1.0    # GDPR compliance
 | Package | Target Market | Release Cadence | Dependencies |
 |---------|---------------|-----------------|--------------|
 | Compliance | All ERP systems | Quarterly | psr/log |
-| Sanctions | Financial services, exports | Monthly | nexus/party, nexus/audit-logger |
-| AmlCompliance | Banks, fintech | Quarterly | nexus/party, nexus/sanctions |
-| KycVerification | Banks, fintech, crypto | Quarterly | nexus/party, nexus/document |
-| DataPrivacy | EU market, GDPR-compliant | Yearly (GDPR updates) | nexus/party, nexus/audit-logger |
+| Sanctions | Financial services, exports | Monthly | azaharizaman/nexus-party, azaharizaman/nexus-audit-logger |
+| AmlCompliance | Banks, fintech | Quarterly | azaharizaman/nexus-party, azaharizaman/nexus-sanctions |
+| KycVerification | Banks, fintech, crypto | Quarterly | azaharizaman/nexus-party, azaharizaman/nexus-document |
+| DataPrivacy | EU market, GDPR-compliant | Yearly (GDPR updates) | azaharizaman/nexus-party, azaharizaman/nexus-audit-logger |
 
 **✅ Result:** Each package follows its natural release cycle without coupling
 

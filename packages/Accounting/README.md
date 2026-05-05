@@ -84,7 +84,7 @@ The Accounting package provides comprehensive financial reporting capabilities i
 This package is part of the Nexus monorepo. Add it to your application's `composer.json`:
 
 ```bash
-composer require nexus/accounting:"*@dev"
+composer require azaharizaman/nexus-accounting:"*@dev"
 ```
 
 ## Architecture

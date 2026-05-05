@@ -46,7 +46,7 @@ Add to your application's `composer.json`:
 ```json
 {
     "require": {
-        "nexus/receivable": "*@dev"
+        "azaharizaman/nexus-receivable": "*@dev"
     }
 }
 ```
@@ -54,20 +54,20 @@ Add to your application's `composer.json`:
 Install dependencies:
 
 ```bash
-composer require nexus/receivable
+composer require azaharizaman/nexus-receivable
 ```
 
 ### Required Dependencies
 
 This package requires the following Nexus packages:
 
-- `nexus/finance` - General Ledger integration
-- `nexus/party` - Customer entity management
-- `nexus/sales` - Sales order integration
-- `nexus/currency` - Multi-currency support
-- `nexus/period` - Accounting period validation
-- `nexus/sequencing` - Invoice number generation
-- `nexus/audit-logger` - Audit trail tracking
+- `azaharizaman/nexus-finance` - General Ledger integration
+- `azaharizaman/nexus-party` - Customer entity management
+- `azaharizaman/nexus-sales` - Sales order integration
+- `azaharizaman/nexus-currency` - Multi-currency support
+- `azaharizaman/nexus-period` - Accounting period validation
+- `azaharizaman/nexus-sequencing` - Invoice number generation
+- `azaharizaman/nexus-audit-logger` - Audit trail tracking
 
 ## Core Concepts
 

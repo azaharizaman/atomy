@@ -31,7 +31,7 @@ The **Nexus\DataProcessor** package provides **interface contracts** for documen
 ### 1. Install the Package
 
 ```bash
-composer require nexus/data-processor:"*@dev"
+composer require azaharizaman/nexus-data-processor:"*@dev"
 ```
 
 ### 2. Understand the Architecture

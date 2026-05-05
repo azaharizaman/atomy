@@ -9,7 +9,7 @@ This guide shows how to integrate the CashManagement package into your applicati
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/cash-management:"*@dev"
+composer require azaharizaman/nexus-cash-management:"*@dev"
 ```
 
 ### Step 2: Create Database Migrations
@@ -565,7 +565,7 @@ Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/cash-management:"*@dev"
+composer require azaharizaman/nexus-cash-management:"*@dev"
 ```
 
 ### Step 2: Create Doctrine Entities

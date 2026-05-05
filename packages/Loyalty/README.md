@@ -34,7 +34,7 @@ The **Nexus\Loyalty** package provides a highly granular, atomic loyalty engine 
 ## Installation
 
 ```bash
-composer require nexus/loyalty
+composer require azaharizaman/nexus-loyalty
 ```
 
 ## License

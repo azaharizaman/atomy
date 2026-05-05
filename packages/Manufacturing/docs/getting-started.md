@@ -7,7 +7,7 @@ This guide will help you quickly integrate the Manufacturing package into your a
 ## Installation
 
 ```bash
-composer require nexus/manufacturing
+composer require azaharizaman/nexus-manufacturing
 ```
 
 ---

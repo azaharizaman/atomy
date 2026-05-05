@@ -12,8 +12,8 @@
     "require": {
         "php": "^8.3",
         "psr/log": "^3.0",
-        "azaharizaman/nexus-uom": "*@dev",
-        "azaharizaman/nexus-sequencing": "*@dev"
+        "azaharizaman/nexus-uom": "dev-main",
+        "azaharizaman/nexus-sequencing": "dev-main"
     },
     "autoload": {
         "psr-4": {

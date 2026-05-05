@@ -97,10 +97,10 @@ Phase 1 must be validated in production environments to ensure TSP optimization 
 ### External Dependencies
 | Package | Purpose | Used By |
 |---------|---------|---------|
-| `nexus/routing` | TSP algorithm (`TspOptimizerInterface`) | `PickingOptimizer` |
-| `nexus/geo` | Coordinates value object | `BinLocationInterface` |
-| `nexus/tenant` | Multi-tenancy context | `WarehouseManager` |
-| `nexus/inventory` | Stock levels (optional) | Integration patterns |
+| `azaharizaman/nexus-routing` | TSP algorithm (`TspOptimizerInterface`) | `PickingOptimizer` |
+| `azaharizaman/nexus-geo` | Coordinates value object | `BinLocationInterface` |
+| `azaharizaman/nexus-tenant` | Multi-tenancy context | `WarehouseManager` |
+| `azaharizaman/nexus-inventory` | Stock levels (optional) | Integration patterns |
 
 ---
 

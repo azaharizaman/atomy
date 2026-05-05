@@ -171,15 +171,15 @@ src/
 ## Installation
 
 ```bash
-composer require nexus/identity-operations
+composer require azaharizaman/nexus-identity-operations
 ```
 
 ### Dependencies
 
-- `nexus/identity` - Core user management
-- `nexus/tenant` - Tenant context
-- `nexus/audit-logger` - Audit trail logging
-- `nexus/common` - Common utilities
+- `azaharizaman/nexus-identity` - Core user management
+- `azaharizaman/nexus-tenant` - Tenant context
+- `azaharizaman/nexus-audit-logger` - Audit trail logging
+- `azaharizaman/nexus-common` - Common utilities
 
 ---
 

@@ -1,7 +1,7 @@
 ## 1. Scaffold QuotationIntelligence Orchestrator
 
 - [x] 1.1 Create `orchestrators/QuotationIntelligence` directory structure (src, tests, docs).
-- [x] 1.2 Create `composer.json` for `nexus/quotation-intelligence` with dependencies (`nexus/procurement`, `nexus/machine-learning`, `nexus/document`, `nexus/uom`, `nexus/currency`).
+- [x] 1.2 Create `composer.json` for `azaharizaman/nexus-quotation-intelligence` with dependencies (`azaharizaman/nexus-procurement`, `azaharizaman/nexus-machine-learning`, `azaharizaman/nexus-document`, `azaharizaman/nexus-uom`, `azaharizaman/nexus-currency`).
 - [x] 1.3 Create `README.md` and `IMPLEMENTATION_SUMMARY.md`.
 - [x] 1.4 Register new orchestrator in root `composer.json` and run `composer dump-autoload`.
 

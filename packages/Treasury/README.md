@@ -17,13 +17,13 @@ The Treasury package provides a comprehensive domain model and service layer for
 ## Installation
 
 ```bash
-composer require nexus/treasury
+composer require azaharizaman/nexus-treasury
 ```
 
 ### Requirements
 
 - PHP ^8.3
-- nexus/common ^1.0
+- azaharizaman/nexus-common ^1.0
 
 ## Usage
 

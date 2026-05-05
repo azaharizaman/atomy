@@ -3,7 +3,7 @@
 **Version:** 0.1.0  
 **Status:** In Development  
 **PHP:** ^8.3  
-**Extends:** `nexus/payment`
+**Extends:** `azaharizaman/nexus-payment`
 
 ## Overview
 
@@ -12,7 +12,7 @@
 ## Installation
 
 ```bash
-composer require nexus/payment-recurring
+composer require azaharizaman/nexus-payment-recurring
 ```
 
 ## Features

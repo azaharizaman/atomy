@@ -1,7 +1,7 @@
 # Getting Started with Nexus Party
 
 **Version:** 1.0.0  
-**Package:** `nexus/party`
+**Package:** `azaharizaman/nexus-party`
 
 ---
 
@@ -17,7 +17,7 @@
 ## Installation
 
 ```bash
-composer require nexus/party:"*@dev"
+composer require azaharizaman/nexus-party:"*@dev"
 ```
 
 ---

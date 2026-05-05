@@ -1,6 +1,6 @@
 # Nexus\Payment Requirements Specification
 
-**Package:** `nexus/payment`  
+**Package:** `azaharizaman/nexus-payment`  
 **Version:** 0.1.0  
 **Status:** 🟢 Implemented (100% Complete)  
 **Last Updated:** December 18, 2025  
@@ -359,7 +359,7 @@ AllocationMethod ✅
 
 | Package | Purpose | Status |
 |---------|---------|--------|
-| `nexus/common` | Money VO, common interfaces | ✅ |
+| `azaharizaman/nexus-common` | Money VO, common interfaces | ✅ |
 | `psr/log` | Logging interface | ✅ |
 | `psr/event-dispatcher` | Event dispatching | ✅ |
 

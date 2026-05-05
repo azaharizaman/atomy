@@ -25,13 +25,13 @@ This package follows the **Progressive Disclosure Pattern** - it serves as the c
 ## Installation
 
 ```bash
-composer require nexus/data-privacy
+composer require azaharizaman/nexus-data-privacy
 ```
 
 ## Installation
 
 ```bash
-composer require nexus/data-privacy
+composer require azaharizaman/nexus-data-privacy
 ```
 
 ## Architecture
@@ -516,7 +516,7 @@ composer test:coverage
 {
     "require": {
         "php": "^8.3",
-        "nexus/common": "^1.0"
+        "azaharizaman/nexus-common": "^1.0"
     }
 }
 ```

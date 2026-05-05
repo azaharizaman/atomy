@@ -7,10 +7,10 @@
         "php": "^8.3",
         "illuminate/support": "^11.0|^12.0",
         "illuminate/cache": "^11.0|^12.0",
-        "nexus/intelligence-operations": "*@dev",
-        "azaharizaman/nexus-machine-learning": "*@dev",
-        "azaharizaman/nexus-query-engine": "*@dev",
-        "azaharizaman/nexus-telemetry": "*@dev",
+        "azaharizaman/nexus-intelligence-operations": "dev-main",
+        "azaharizaman/nexus-machine-learning": "dev-main",
+        "azaharizaman/nexus-query-engine": "dev-main",
+        "azaharizaman/nexus-telemetry": "dev-main",
         "psr/log": "^3.0"
     },
     "autoload": {

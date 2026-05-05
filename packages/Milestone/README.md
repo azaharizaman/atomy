@@ -29,7 +29,7 @@ The **Nexus\Milestone** package is a Layer 1 atomic package that owns milestone 
 ## Installation
 
 ```bash
-composer require nexus/milestone
+composer require azaharizaman/nexus-milestone
 ```
 
 ## License

@@ -13,7 +13,7 @@ Job posting, applicant tracking, interviews, and hiring decision engine for tale
 ## Installation
 
 ```bash
-composer require nexus/recruitment
+composer require azaharizaman/nexus-recruitment
 ```
 
 ## Usage

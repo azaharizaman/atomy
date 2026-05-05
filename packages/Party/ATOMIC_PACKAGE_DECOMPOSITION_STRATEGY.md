@@ -117,7 +117,7 @@ Instead of one monolithic package, we create a **constellation of specialized, a
 #### Package Structure:
 ```
 packages/VendorManagement/
-├── composer.json                      # Requires: nexus/party, nexus/compliance
+├── composer.json                      # Requires: azaharizaman/nexus-party, azaharizaman/nexus-compliance
 ├── README.md
 ├── REQUIREMENTS.md
 ├── IMPLEMENTATION_SUMMARY.md
@@ -553,10 +553,10 @@ Each package has ONE clear purpose:
 // Different packages can evolve independently
 {
   "require": {
-    "nexus/party": "^1.0",              // Stable, rarely changes
-    "nexus/vendor-management": "^2.1",  // Evolving with procurement needs
-    "nexus/customer-management": "^1.5", // Evolving with CRM needs
-    "nexus/bank-account": "^1.0"        // Stable
+    "azaharizaman/nexus-party": "^1.0",              // Stable, rarely changes
+    "azaharizaman/nexus-vendor-management": "^2.1",  // Evolving with procurement needs
+    "azaharizaman/nexus-customer-management": "^1.5", // Evolving with CRM needs
+    "azaharizaman/nexus-bank-account": "^1.0"        // Stable
   }
 }
 ```
@@ -567,9 +567,9 @@ Consumers only install what they need:
 // Procurement system only needs:
 {
   "require": {
-    "nexus/party": "^1.0",
-    "nexus/vendor-management": "^2.1",
-    "nexus/bank-account": "^1.0"
+    "azaharizaman/nexus-party": "^1.0",
+    "azaharizaman/nexus-vendor-management": "^2.1",
+    "azaharizaman/nexus-bank-account": "^1.0"
     // NO customer-management or employee-profile
   }
 }
@@ -577,9 +577,9 @@ Consumers only install what they need:
 // CRM system only needs:
 {
   "require": {
-    "nexus/party": "^1.0",
-    "nexus/customer-management": "^1.5",
-    "nexus/party-analytics": "^1.0"
+    "azaharizaman/nexus-party": "^1.0",
+    "azaharizaman/nexus-customer-management": "^1.5",
+    "azaharizaman/nexus-party-analytics": "^1.0"
     // NO vendor-management or employee-profile
   }
 }

@@ -8,7 +8,7 @@
 ## Installation
 
 ```bash
-composer require nexus/import:"*@dev"
+composer require azaharizaman/nexus-import:"*@dev"
 ```
 
 ## Basic Configuration

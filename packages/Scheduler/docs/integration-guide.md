@@ -9,7 +9,7 @@ This guide demonstrates how to integrate the Scheduler package into Laravel and 
 ### 1. Install Package & Publish Config (optional)
 
 ```bash
-composer require nexus/scheduler:"*@dev"
+composer require azaharizaman/nexus-scheduler:"*@dev"
 ```
 
 ### 2. Create Database Tables
@@ -128,7 +128,7 @@ Ensure Laravel Horizon or `php artisan queue:work` is running so dispatched jobs
 ### 1. Install Package
 
 ```bash
-composer require nexus/scheduler:"*@dev"
+composer require azaharizaman/nexus-scheduler:"*@dev"
 ```
 
 ### 2. Define Doctrine Entities or Tables

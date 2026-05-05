@@ -114,8 +114,8 @@
 | PHP 8.3+ | Language | Low | Standard requirement |
 | geocoder-php/google-maps-provider | Library | Medium | Fallback to Nominatim |
 | geocoder-php/nominatim-provider | Library | Low | Free, open-source |
-| nexus/party | Internal | Low | Stable package |
-| nexus/connector | Internal | Low | Circuit breaker abstraction |
+| azaharizaman/nexus-party | Internal | Low | Stable package |
+| azaharizaman/nexus-connector | Internal | Low | Circuit breaker abstraction |
 | psr/log | Library | Low | PSR standard |
 
 ### Internal Package Dependencies

@@ -1,6 +1,6 @@
 # Nexus\PaymentGateway Test Suite Summary
 
-**Package:** `nexus/payment-gateway`  
+**Package:** `azaharizaman/nexus-payment-gateway`  
 **Version:** 0.1.0  
 **Last Run:** N/A  
 **Status:** 🔴 Not Started

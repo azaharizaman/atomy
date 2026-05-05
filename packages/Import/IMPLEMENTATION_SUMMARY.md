@@ -2,7 +2,7 @@
 
 **Status**: ✅ **COMPLETE** (Package Foundation + Core Engine + Parsers + Services)  
 **Created**: 2024  
-**Package**: `nexus/import`
+**Package**: `azaharizaman/nexus-import`
 
 ---
 

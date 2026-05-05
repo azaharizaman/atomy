@@ -11,14 +11,14 @@ The package achieves **15-30% reduction in picking distances** by optimizing the
 - **PHP 8.3 or higher**
 - **Composer** for dependency management
 - **Required Nexus Packages:**
-  - `nexus/routing` - TSP-based route optimization
-  - `nexus/geo` - Coordinate handling and geospatial operations
-  - `nexus/tenant` - Multi-tenancy context management
+  - `azaharizaman/nexus-routing` - TSP-based route optimization
+  - `azaharizaman/nexus-geo` - Coordinate handling and geospatial operations
+  - `azaharizaman/nexus-tenant` - Multi-tenancy context management
 
 ## Installation
 
 ```bash
-composer require nexus/warehouse:"*@dev"
+composer require azaharizaman/nexus-warehouse:"*@dev"
 ```
 
 ## When to Use This Package

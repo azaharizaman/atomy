@@ -1589,7 +1589,7 @@ graph LR
 
 ```json
 {
-    "name": "nexus/crm",
+    "name": "azaharizaman/nexus-crm",
     "description": "Framework-agnostic CRM package for lead management, opportunity tracking, and pipeline analytics",
     "type": "library",
     "license": "MIT",
@@ -1601,16 +1601,16 @@ graph LR
     ],
     "require": {
         "php": "^8.3",
-        "nexus/party": "*@dev",
-        "nexus/query-engine": "*@dev",
-        "nexus/workflow": "*@dev",
-        "nexus/notifier": "*@dev",
-        "nexus/sequencing": "*@dev",
-        "nexus/period": "*@dev",
+        "azaharizaman/nexus-party": "*@dev",
+        "azaharizaman/nexus-query-engine": "*@dev",
+        "azaharizaman/nexus-workflow": "*@dev",
+        "azaharizaman/nexus-notifier": "*@dev",
+        "azaharizaman/nexus-sequencing": "*@dev",
+        "azaharizaman/nexus-period": "*@dev",
         "psr/log": "^3.0"
     },
     "suggest": {
-        "nexus/sales": "For opportunity to quotation/order conversion"
+        "azaharizaman/nexus-sales": "For opportunity to quotation/order conversion"
     },
     "autoload": {
         "psr-4": {

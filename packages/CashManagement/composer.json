@@ -10,14 +10,14 @@
         }
     ],
     "require": {
-        "nexus/finance": "*@dev",
+        "azaharizaman/nexus-accounting": "dev-main",
         "php": "^8.3",
         "psr/log": "^3.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^11.0",
-        "azaharizaman/nexus-machine-learning": "*@dev",
-        "azaharizaman/nexus-query-engine": "*@dev"
+        "azaharizaman/nexus-machine-learning": "dev-main",
+        "azaharizaman/nexus-query-engine": "dev-main"
     },
     "autoload": {
         "psr-4": {
@@ -32,13 +32,13 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "suggest": {
-        "azaharizaman/nexus-currency": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-import": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-payable": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-period": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-receivable": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-sequencing": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-setting": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-workflow": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-currency": "dev-main",
+        "azaharizaman/nexus-import": "dev-main",
+        "azaharizaman/nexus-payable": "dev-main",
+        "azaharizaman/nexus-period": "dev-main",
+        "azaharizaman/nexus-receivable": "dev-main",
+        "azaharizaman/nexus-sequencing": "dev-main",
+        "azaharizaman/nexus-setting": "dev-main",
+        "azaharizaman/nexus-workflow": "dev-main"
     }
 }

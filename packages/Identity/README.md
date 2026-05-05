@@ -24,7 +24,7 @@ The Identity package provides a comprehensive, pure PHP solution for authenticat
 ## Installation
 
 ```bash
-composer require nexus/identity:"*@dev"
+composer require azaharizaman/nexus-identity:"*@dev"
 ```
 
 ## Architecture

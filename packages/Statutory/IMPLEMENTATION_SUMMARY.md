@@ -46,7 +46,7 @@ The Statutory package provides a **framework-agnostic statutory reporting framew
 - [x] **FUN-STT-8236-8237:** Extensible output formats and adapter system
 
 ### Future Enhancements (Planned)
-- [ ] **Country-Specific Packages:** nexus/statutory-accounting-ssm (Malaysian Company Act), nexus/statutory-payroll-mys (EPF/SOCSO/PCB)
+- [ ] **Country-Specific Packages:** azaharizaman/nexus-statutory-accounting-ssm (Malaysian Company Act), azaharizaman/nexus-statutory-payroll-mys (EPF/SOCSO/PCB)
 - [ ] **Enhanced XBRL:** Full XBRL validation with instance document generation
 - [ ] **API Integration:** Direct submission to government portals
 - [ ] **Advanced Validation:** Business rule validation beyond schema compliance
@@ -96,18 +96,18 @@ The Statutory package provides a **framework-agnostic statutory reporting framew
 
 ### Country-Specific Packages (Separate Repositories)
 
-1. **nexus/statutory-accounting-ssm** (Malaysian Company Act)
+1. **azaharizaman/nexus-statutory-accounting-ssm** (Malaysian Company Act)
    - XBRL taxonomy for SSM FS format
    - Audited financial statements generator
    - Directors' report integration
 
-2. **nexus/statutory-payroll-mys** (Malaysian Payroll Statutory)
+2. **azaharizaman/nexus-statutory-payroll-mys** (Malaysian Payroll Statutory)
    - EPF (Employee Provident Fund) calculations
    - SOCSO (Social Security Organization) calculations
    - PCB (Monthly Tax Deduction) calculations
    - CP39/CP39A/CP38 filing formats
 
-3. **nexus/statutory-accounting-mys-prop** (Malaysian Proprietorship/Partnership)
+3. **azaharizaman/nexus-statutory-accounting-mys-prop** (Malaysian Proprietorship/Partnership)
    - Simplified financial statements (P&L, Balance Sheet)
    - PDF-only output (no XBRL requirement)
    - Free/open-source for small businesses
@@ -127,9 +127,9 @@ The Statutory package provides a **framework-agnostic statutory reporting framew
 **Reason:** By design, country-specific implementations are separate packages to maintain licensing flexibility. Core framework provides adapter interfaces and default safe implementations.
 
 **Examples:**
-- Malaysian SSM XBRL taxonomy → `nexus/statutory-accounting-ssm` (commercial)
-- Malaysian payroll statutory → `nexus/statutory-payroll-mys` (commercial)
-- Proprietorship reporting → `nexus/statutory-accounting-mys-prop` (open-source)
+- Malaysian SSM XBRL taxonomy → `azaharizaman/nexus-statutory-accounting-ssm` (commercial)
+- Malaysian payroll statutory → `azaharizaman/nexus-statutory-payroll-mys` (commercial)
+- Proprietorship reporting → `azaharizaman/nexus-statutory-accounting-mys-prop` (open-source)
 
 ### Direct Government Portal Integration
 **Reason:** Deferred to Phase 2. Current implementation generates compliant reports; manual submission still required. API integration to be added when government portals support programmatic access.
@@ -154,7 +154,7 @@ The Statutory package provides a **framework-agnostic statutory reporting framew
 $this->app->singleton(
     TaxonomyReportGeneratorInterface::class,
     fn() => match ($this->getTenantCountry()) {
-        'MY' => app(SSMTaxonomyGenerator::class),  // nexus/statutory-accounting-ssm
+        'MY' => app(SSMTaxonomyGenerator::class),  // azaharizaman/nexus-statutory-accounting-ssm
         default => app(DefaultAccountingAdapter::class) // Core package
     }
 );
@@ -217,7 +217,7 @@ $this->app->singleton(
 **Note:** Test implementation deferred; package structure and architecture validated through integration with Nexus\Finance and Nexus\Payroll packages.
 
 ### Dependencies
-- **External Dependencies:** 3 (nexus/finance, nexus/period, psr/log)
+- **External Dependencies:** 3 (azaharizaman/nexus-finance, azaharizaman/nexus-period, psr/log)
 - **Internal Package Dependencies:** 2 (Nexus\Finance for GL data, Nexus\Period for period validation)
 
 ### Requirements Coverage

@@ -9,7 +9,7 @@ Complete guide for integrating Nexus\Crypto into Laravel and Symfony application
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/crypto:"*@dev"
+composer require azaharizaman/nexus-crypto:"*@dev"
 ```
 
 ### Step 2: Create Migration
@@ -349,7 +349,7 @@ final readonly class EmployeeService
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/crypto:"*@dev"
+composer require azaharizaman/nexus-crypto:"*@dev"
 ```
 
 ### Step 2: Create Doctrine Entities

@@ -9,7 +9,7 @@ This guide shows how to integrate the Budget package into your application.
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/budget:"*@dev"
+composer require azaharizaman/nexus-budget:"*@dev"
 ```
 
 ### Step 2: Create Database Migration
@@ -232,7 +232,7 @@ class BudgetController extends Controller
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/budget:"*@dev"
+composer require azaharizaman/nexus-budget:"*@dev"
 ```
 
 ### Step 2: Create Doctrine Entity

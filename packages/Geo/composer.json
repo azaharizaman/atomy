@@ -26,7 +26,7 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "suggest": {
-        "azaharizaman/nexus-connector": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-party": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-connector": "dev-main",
+        "azaharizaman/nexus-party": "dev-main"
     }
 }

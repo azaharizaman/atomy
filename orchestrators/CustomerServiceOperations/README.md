@@ -133,7 +133,7 @@ src/
 ## Installation
 
 ```bash
-composer require nexus/customer-service-operations
+composer require azaharizaman/nexus-customer-service-operations
 ```
 
 ### Required Dependencies (via Adapters)

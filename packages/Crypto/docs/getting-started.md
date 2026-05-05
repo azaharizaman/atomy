@@ -16,7 +16,7 @@ php -m | grep -E "(sodium|openssl)"
 ## Installation
 
 ```bash
-composer require nexus/crypto
+composer require azaharizaman/nexus-crypto
 ```
 
 ## When to Use This Package

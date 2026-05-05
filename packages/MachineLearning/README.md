@@ -114,7 +114,7 @@ packages/MachineLearning/
 ## Installation
 
 ```bash
-composer require nexus/machinelearning:"^2.0"
+composer require azaharizaman/nexus-machinelearning:"^2.0"
 ```
 
 **Requirements:**
@@ -383,7 +383,7 @@ $settings->set('machinelearning.feature_schema.v1', [
 
 **Summary of Breaking Changes:**
 - Package namespace: `Nexus\Intelligence` → `Nexus\MachineLearning`
-- Composer package: `nexus/intelligence` → `nexus/machinelearning`
+- Composer package: `azaharizaman/nexus-intelligence` → `azaharizaman/nexus-machinelearning`
 - Service names: `IntelligenceManager` → `MLModelManager`, `SchemaVersionManager` → `FeatureVersionManager`
 - Configuration keys: `intelligence.schema.*` → `machinelearning.feature_schema.*`
 

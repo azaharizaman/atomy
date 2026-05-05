@@ -32,9 +32,9 @@ Expected: build/lint fail + RFQ lifecycle test fails with `SourcingOperationsCoo
 
 Run:
 ```bash
-cd apps/atomy-q/API && composer update nexus/sourcing-operations
+cd apps/atomy-q/API && composer update azaharizaman/nexus-sourcing-operations
 ```
-Expected: `composer.lock` includes `nexus/sourcing-operations`.
+Expected: `composer.lock` includes `azaharizaman/nexus-sourcing-operations`.
 
 - [x] **Step 3: Fix WEB type-check compile break**
 

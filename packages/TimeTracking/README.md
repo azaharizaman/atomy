@@ -30,7 +30,7 @@ The **Nexus\TimeTracking** package is a Layer 1 atomic package that owns timeshe
 ## Installation
 
 ```bash
-composer require nexus/time-tracking
+composer require azaharizaman/nexus-time-tracking
 ```
 
 ## License

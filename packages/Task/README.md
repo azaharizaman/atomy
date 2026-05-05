@@ -30,7 +30,7 @@ The **Nexus\Task** package is a Layer 1 atomic package that owns task CRUD, assi
 ## Installation
 
 ```bash
-composer require nexus/task
+composer require azaharizaman/nexus-task
 ```
 
 ## License

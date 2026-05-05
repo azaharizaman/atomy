@@ -15,7 +15,7 @@ A framework-agnostic PHP package providing a standardized, central gateway for e
 ## Installation
 
 ```bash
-composer require nexus/connector
+composer require azaharizaman/nexus-connector
 ```
 
 ## Architecture

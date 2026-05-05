@@ -154,7 +154,7 @@ $escalationService->processEscalations();
 ## Installation
 
 ```bash
-composer require nexus/workflow:"*@dev"
+composer require azaharizaman/nexus-workflow:"*@dev"
 ```
 
 ---

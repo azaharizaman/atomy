@@ -184,11 +184,11 @@
 - `ProcessQuoteUploadListener`: Hand-off point for background processing.
 
 ## Dependencies
-- `nexus/procurement`
-- `nexus/machine-learning`
-- `nexus/document`
-- `nexus/uom`
-- `nexus/currency`
+- `azaharizaman/nexus-procurement`
+- `azaharizaman/nexus-machine-learning`
+- `azaharizaman/nexus-document`
+- `azaharizaman/nexus-uom`
+- `azaharizaman/nexus-currency`
 
 ## Compliance
 - **ISO 20400**: Supports "Best Value" evaluation beyond just lowest price.

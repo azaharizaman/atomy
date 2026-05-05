@@ -23,7 +23,7 @@
 
 ```json
 {
-    "name": "nexus/vendor-laravel-adapter",
+    "name": "azaharizaman/nexus-vendor-laravel-adapter",
     "autoload": { "psr-4": { "Nexus\\Adapter\\Laravel\\Vendor\\": "src/" } },
     "extra": { "laravel": { "providers": [ "Nexus\\Adapter\\Laravel\\Vendor\\VendorServiceProvider" ] } }
 }

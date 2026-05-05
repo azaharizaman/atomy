@@ -1,4 +1,4 @@
-# Nexus Sourcing (`nexus/sourcing`)
+# Nexus Sourcing (`azaharizaman/nexus-sourcing`)
 
 ## Scope
 
@@ -34,8 +34,8 @@ Layer 1 domain contracts for quotations, sourcing events, normalization payloads
 
 ## Dependencies
 
-- `nexus/vendor` (Composer) for alignment with the vendor domain; this package now includes a local path repository entry so `composer install` works from `packages/Sourcing` in the worktree.
+- `azaharizaman/nexus-vendor` (Composer) for alignment with the vendor domain; this package now includes a local path repository entry so `composer install` works from `packages/Sourcing` in the worktree.
 
 ## Laravel adapter
 
-See `adapters/Laravel/Sourcing` (`nexus/laravel-sourcing-adapter`): Eloquent models, migrations `nexus_quotations` and `nexus_sourcing_awards`, `EloquentQuotationRepository` binding `QuotationQueryInterface`.
+See `adapters/Laravel/Sourcing` (`azaharizaman/nexus-laravel-sourcing-adapter`): Eloquent models, migrations `nexus_quotations` and `nexus_sourcing_awards`, `EloquentQuotationRepository` binding `QuotationQueryInterface`.

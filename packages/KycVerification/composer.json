@@ -23,7 +23,7 @@
     ],
     "require": {
         "php": "^8.3",
-        "azaharizaman/nexus-common": "*@dev",
+        "azaharizaman/nexus-common": "dev-main",
         "psr/log": "^3.0"
     },
     "require-dev": {

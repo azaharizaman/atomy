@@ -1,7 +1,7 @@
 # Nexus\Product Implementation Summary
 
 **Status:** ✅ PRODUCTION READY  
-**Package:** `nexus/product`  
+**Package:** `azaharizaman/nexus-product`  
 **Version:** 1.0.0  
 **Implementation Date:** November 20, 2025  
 **Integration:** consuming application, Procurement
@@ -100,7 +100,7 @@
 
 ```
 packages/Product/
-├── composer.json                 # Package definition (depends on nexus/uom, nexus/sequencing)
+├── composer.json                 # Package definition (depends on azaharizaman/nexus-uom, azaharizaman/nexus-sequencing)
 ├── LICENSE                       # MIT license
 ├── README.md                     # Comprehensive package documentation
 └── src/

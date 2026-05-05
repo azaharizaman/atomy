@@ -12,11 +12,11 @@
     ],
     "require": {
         "php": "^8.3",
-        "azaharizaman/nexus-machine-learning": "*@dev",
-        "azaharizaman/nexus-scheduler": "*@dev"
+        "azaharizaman/nexus-machine-learning": "dev-main",
+        "azaharizaman/nexus-scheduler": "dev-main"
     },
     "suggest": {
-        "azaharizaman/nexus-procurement": "Required for type definitions (PurchaseOrderInterface, RequisitionInterface, etc.)"
+        "azaharizaman/nexus-procurement": "dev-main"
     },
     "autoload": {
         "psr-4": {

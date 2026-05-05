@@ -1,6 +1,6 @@
 # Nexus\Payment Valuation Matrix
 
-**Package:** `nexus/payment`  
+**Package:** `azaharizaman/nexus-payment`  
 **Version:** 0.1.0  
 **Assessment Date:** December 18, 2025
 
@@ -36,7 +36,7 @@ This document assesses the value and priority of the Nexus\Payment package.
 
 | Package | Criticality |
 |---------|-------------|
-| `nexus/common` | Required (Money VO, base interfaces) |
+| `azaharizaman/nexus-common` | Required (Money VO, base interfaces) |
 | `psr/log` | Required (logging abstraction) |
 | `psr/event-dispatcher` | Required (event publishing) |
 
@@ -44,13 +44,13 @@ This document assesses the value and priority of the Nexus\Payment package.
 
 | Package | Relationship |
 |---------|--------------|
-| `nexus/receivable` | Will depend for payment handling |
-| `nexus/payable` | Will depend for payment handling |
-| `nexus/payment-rails` | Extension package |
-| `nexus/payment-gateway` | Extension package |
-| `nexus/payment-bank` | Extension package |
-| `nexus/payment-wallet` | Extension package |
-| `nexus/payment-recurring` | Extension package |
+| `azaharizaman/nexus-receivable` | Will depend for payment handling |
+| `azaharizaman/nexus-payable` | Will depend for payment handling |
+| `azaharizaman/nexus-payment-rails` | Extension package |
+| `azaharizaman/nexus-payment-gateway` | Extension package |
+| `azaharizaman/nexus-payment-bank` | Extension package |
+| `azaharizaman/nexus-payment-wallet` | Extension package |
+| `azaharizaman/nexus-payment-recurring` | Extension package |
 
 ## ROI Analysis
 

@@ -54,7 +54,7 @@ packages/Compliance/
 ### Nexus\Statutory (120 Requirements Satisfied)
 ```
 packages/Statutory/
-├── composer.json          # Depends on nexus/finance, nexus/period, psr/log
+├── composer.json          # Depends on azaharizaman/nexus-finance, azaharizaman/nexus-period, psr/log
 ├── README.md
 ├── LICENSE
 └── src/

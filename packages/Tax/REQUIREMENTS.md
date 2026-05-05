@@ -152,15 +152,15 @@
 
 | Package | Purpose | Required Interfaces |
 |---------|---------|-------------------|
-| `nexus/finance` | GL account integration | GeneralLedgerManagerInterface |
-| `nexus/currency` | Multi-currency support | CurrencyManagerInterface, CurrencyConverterInterface |
-| `nexus/geo` | Geocoding for jurisdiction | GeocoderInterface |
-| `nexus/party` | Customer/vendor data | PartyRepositoryInterface |
-| `nexus/product` | Product tax categories | ProductRepositoryInterface |
-| `nexus/tenant` | Multi-tenancy context | TenantContextInterface |
-| `nexus/audit-logger` | Optional audit trails | AuditLogManagerInterface |
-| `nexus/telemetry` | Optional telemetry | TelemetryTrackerInterface |
-| `nexus/storage` | Optional file storage | StorageInterface |
+| `azaharizaman/nexus-finance` | GL account integration | GeneralLedgerManagerInterface |
+| `azaharizaman/nexus-currency` | Multi-currency support | CurrencyManagerInterface, CurrencyConverterInterface |
+| `azaharizaman/nexus-geo` | Geocoding for jurisdiction | GeocoderInterface |
+| `azaharizaman/nexus-party` | Customer/vendor data | PartyRepositoryInterface |
+| `azaharizaman/nexus-product` | Product tax categories | ProductRepositoryInterface |
+| `azaharizaman/nexus-tenant` | Multi-tenancy context | TenantContextInterface |
+| `azaharizaman/nexus-audit-logger` | Optional audit trails | AuditLogManagerInterface |
+| `azaharizaman/nexus-telemetry` | Optional telemetry | TelemetryTrackerInterface |
+| `azaharizaman/nexus-storage` | Optional file storage | StorageInterface |
 
 ### PSR Interfaces
 

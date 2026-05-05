@@ -159,7 +159,7 @@ This allows the package to work with **any PHP framework** or **no framework at 
 Add the package to your project:
 
 ```bash
-composer require nexus/uom:"*@dev"
+composer require azaharizaman/nexus-uom:"*@dev"
 ```
 
 ### Step 2: Verify PHP Version

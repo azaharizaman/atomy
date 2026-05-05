@@ -1,6 +1,6 @@
 # Integration Guide: Procurement-ML
 
-This guide shows how to integrate the `nexus/procurement-ml` package into your application.
+This guide shows how to integrate the `azaharizaman/nexus-procurement-ml` package into your application.
 
 ---
 
@@ -77,9 +77,9 @@ Add your new service provider to the `providers` array in `config/app.php`.
 ],
 ```
 
-### Step 4: Usage with `nexus/machine-learning`
+### Step 4: Usage with `azaharizaman/nexus-machine-learning`
 
-The feature extractors from this package can now be used by the services in `nexus/machine-learning`. When you call a service like `AnomalyDetectionServiceInterface`, it will automatically resolve the correct extractor and its repository dependencies.
+The feature extractors from this package can now be used by the services in `azaharizaman/nexus-machine-learning`. When you call a service like `AnomalyDetectionServiceInterface`, it will automatically resolve the correct extractor and its repository dependencies.
 
 ```php
 // In a service or controller
@@ -166,6 +166,6 @@ services:
     # ... and so on for all other interfaces
 ```
 
-### Step 3: Usage with `nexus/machine-learning`
+### Step 3: Usage with `azaharizaman/nexus-machine-learning`
 
-The usage pattern is the same as in Laravel. Symfony's dependency injection container will automatically inject the correct dependencies when a service from `nexus/machine-learning` is requested.
+The usage pattern is the same as in Laravel. Symfony's dependency injection container will automatically inject the correct dependencies when a service from `azaharizaman/nexus-machine-learning` is requested.

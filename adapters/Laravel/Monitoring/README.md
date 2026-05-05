@@ -5,7 +5,7 @@ This adapter provides Laravel-specific implementations for the Monitoring packag
 ## Installation
 
 ```bash
-composer require nexus/laravel-monitoring-adapter
+composer require azaharizaman/nexus-laravel-monitoring-adapter
 ```
 
 ## Adapters Provided

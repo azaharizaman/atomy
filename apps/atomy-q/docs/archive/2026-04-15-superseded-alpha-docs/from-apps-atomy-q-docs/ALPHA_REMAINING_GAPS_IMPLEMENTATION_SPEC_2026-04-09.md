@@ -51,7 +51,7 @@ Verification evidence used:
 ## 4) Evidence snapshot (what changed in confidence)
 
 1. WEB build and lint hard gates were red and are now passing after Phase 1 fixes (type mismatch + lint scope/test typing cleanup).
-2. API RFQ lifecycle regression caused by missing `nexus/sourcing-operations` lock/vendor installation is now resolved; targeted lifecycle tests pass.
+2. API RFQ lifecycle regression caused by missing `azaharizaman/nexus-sourcing-operations` lock/vendor installation is now resolved; targeted lifecycle tests pass.
 3. Live-mode RFQ list no longer silently falls back to seed data on API failure (`use-rfqs` fail-loud behavior + tests).
 5. Awards API and tests are substantially live; however award creation is not wired end-to-end from final comparison flow in UI journey.
 6. Vendor endpoints in `VendorController` now return tenant-scoped persisted vendor rows, computed performance metrics, compliance metadata, and award history with feature-test coverage.
@@ -107,7 +107,7 @@ Closure evidence:
 Gap 3 required outcomes (reopened):
 
 1. Restore RFQ lifecycle orchestrator runtime wiring in API app.
-2. Ensure `nexus/sourcing-operations` is present in lock/vendor and resolvable in container.
+2. Ensure `azaharizaman/nexus-sourcing-operations` is present in lock/vendor and resolvable in container.
 3. Make `RfqLifecycleMutationTest` green again.
 
 Gap 4 required outcomes:
@@ -250,15 +250,15 @@ This spec should be used together with:
    - 12 errors, 8 warnings.
 4. `cd apps/atomy-q/API && php artisan test --filter "...selected gap tests..."` -> **Partial pass**
    - RegisterCompany / Awards / IdentityGap7 / QuoteIngestion tests pass.
-   - RFQ lifecycle mutation tests fail due missing `nexus/sourcing-operations` runtime package wiring.
+   - RFQ lifecycle mutation tests fail due missing `azaharizaman/nexus-sourcing-operations` runtime package wiring.
 5. Composer lock parity check (`composer.json` vs `composer.lock`) -> **Mismatch**
-   - `nexus/sourcing-operations` required but not present in lock/vendor.
+   - `azaharizaman/nexus-sourcing-operations` required but not present in lock/vendor.
 
 ## 10) Execution checkpoint (2026-04-09, later pass)
 
 Completed in this session:
 
-1. `cd apps/atomy-q/API && composer update nexus/sourcing-operations` -> lock/vendor repaired.
+1. `cd apps/atomy-q/API && composer update azaharizaman/nexus-sourcing-operations` -> lock/vendor repaired.
 2. `cd apps/atomy-q/API && php artisan test --filter "RfqLifecycleMutationTest|AwardWorkflowTest|IdentityGap7Test"` -> **Pass**.
 3. `cd apps/atomy-q/API && php artisan test --filter "VendorWorkflowTest|RfqLifecycleMutationTest|AwardWorkflowTest|IdentityGap7Test"` -> **Pass**.
 4. `cd apps/atomy-q/WEB && npm run build` -> **Pass**.

@@ -19,7 +19,7 @@ This guide will help you quickly integrate the Nexus\Tenant package into your ap
 Install via Composer:
 
 ```bash
-composer require nexus/tenant:"*@dev"
+composer require azaharizaman/nexus-tenant:"*@dev"
 ```
 
 ---

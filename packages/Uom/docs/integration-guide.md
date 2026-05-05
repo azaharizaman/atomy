@@ -20,7 +20,7 @@ Complete integration examples for Laravel and Symfony frameworks with database p
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/uom:"*@dev"
+composer require azaharizaman/nexus-uom:"*@dev"
 ```
 
 ### Step 2: Create Database Migrations
@@ -953,7 +953,7 @@ Route::prefix('uom')->group(function () {
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/uom:"*@dev"
+composer require azaharizaman/nexus-uom:"*@dev"
 ```
 
 ### Step 2: Create Doctrine Entities

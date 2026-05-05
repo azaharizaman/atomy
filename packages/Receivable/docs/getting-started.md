@@ -8,7 +8,7 @@
 ## Installation
 
 ```bash
-composer require nexus/receivable:"*@dev"
+composer require azaharizaman/nexus-receivable:"*@dev"
 ```
 
 ## Basic Configuration

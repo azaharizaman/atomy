@@ -1,6 +1,6 @@
 # VALUATION MATRIX - Nexus Manufacturing Package
 
-**Package:** `nexus/manufacturing`  
+**Package:** `azaharizaman/nexus-manufacturing`  
 **Version:** 1.0.0  
 **Assessment Date:** 2024-01-XX  
 **Assessor:** Nexus Architecture Team

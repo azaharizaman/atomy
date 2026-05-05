@@ -7,10 +7,10 @@
         "php": "^8.3",
         "illuminate/support": "^11.0|^12.0",
         "illuminate/cache": "^11.0|^12.0",
-        "nexus/data-exchange-operations": "^1.0@dev",
-        "azaharizaman/nexus-import": "^1.0@dev",
-        "azaharizaman/nexus-export": "^1.0@dev",
-        "azaharizaman/nexus-storage": "^1.0@dev",
+        "azaharizaman/nexus-data-exchange-operations": "dev-main",
+        "azaharizaman/nexus-import": "dev-main",
+        "azaharizaman/nexus-export": "dev-main",
+        "azaharizaman/nexus-storage": "dev-main",
         "psr/log": "^3.0"
     },
     "autoload": {

@@ -18,20 +18,20 @@ A comprehensive, framework-agnostic PHP package for managing KYC verification pr
 ## Installation
 
 ```bash
-composer require nexus/kyc-verification
+composer require azaharizaman/nexus-kyc-verification
 ```
 
 ## Requirements
 
 - PHP 8.3+
-- `nexus/common` package (for shared value objects)
+- `azaharizaman/nexus-common` package (for shared value objects)
 - `psr/log` (for logging interface)
 
 ## Architecture
 
 This package follows the **Atomic Package Pattern**:
 
-- **No external package dependencies** beyond `nexus/common`
+- **No external package dependencies** beyond `azaharizaman/nexus-common`
 - **Provider interfaces** for external integrations (Party, Document, Screening)
 - **Framework-agnostic** - works with Laravel, Symfony, or any PHP framework
 - **Orchestrator layer implements** the provider interfaces
@@ -373,9 +373,9 @@ MIT License. See [LICENSE](LICENSE) for details.
 
 ## Related Packages
 
-- **nexus/aml-compliance** - AML risk assessment and compliance
-- **nexus/sanctions** - Sanctions and PEP screening
-- **nexus/compliance** - General compliance management
+- **azaharizaman/nexus-aml-compliance** - AML risk assessment and compliance
+- **azaharizaman/nexus-sanctions** - Sanctions and PEP screening
+- **azaharizaman/nexus-compliance** - General compliance management
 
 ---
 

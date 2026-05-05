@@ -1,6 +1,6 @@
 # Nexus\Audit Package - Implementation Summary
 
-**Package:** `nexus/audit`  
+**Package:** `azaharizaman/nexus-audit`  
 **Feature Branch:** `feature/audit-identity-split`  
 **Status:** ✅ Core Package Complete (consuming application Integration Pending)  
 **Created:** 2025-11-21

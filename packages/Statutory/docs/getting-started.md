@@ -10,7 +10,7 @@
 ## Installation
 
 ```bash
-composer require nexus/statutory:"*@dev"
+composer require azaharizaman/nexus-statutory:"*@dev"
 ```
 
 ## When to Use This Package
@@ -61,9 +61,9 @@ The core Statutory package provides the **framework**; country-specific logic li
 3. **Extensibility:** New countries added without modifying core
 
 **Example Adapter Packages:**
-- `nexus/statutory-accounting-ssm` (Malaysian Company Act - Commercial)
-- `nexus/statutory-payroll-mys` (EPF/SOCSO/PCB - Commercial)
-- `nexus/statutory-accounting-mys-prop` (Proprietorship - Open-source)
+- `azaharizaman/nexus-statutory-accounting-ssm` (Malaysian Company Act - Commercial)
+- `azaharizaman/nexus-statutory-payroll-mys` (EPF/SOCSO/PCB - Commercial)
+- `azaharizaman/nexus-statutory-accounting-mys-prop` (Proprietorship - Open-source)
 
 **Default Adapters (Included in Core):**
 - `DefaultAccountingAdapter`: Basic P&L and Balance Sheet (no taxonomy tags)
@@ -498,7 +498,7 @@ Target interface [Nexus\Statutory\Contracts\StatutoryReportRepositoryInterface] 
 
 **Solution:**
 1. Check `getTenantCountry()` method returns correct country code
-2. Verify country-specific adapter package is installed (`nexus/statutory-accounting-ssm`)
+2. Verify country-specific adapter package is installed (`azaharizaman/nexus-statutory-accounting-ssm`)
 3. Add debug logging to service provider binding:
 ```php
 \Log::info('Country detected: ' . $country);
@@ -532,7 +532,7 @@ VALUES ('01HZQ...', 'tenant-123', '1000', 'Assets.CurrentAssets.CashAndCashEquiv
 **Cause:** Using `DefaultPayrollStatutoryAdapter` (safe fallback).
 
 **Solution:**
-1. Install country-specific payroll package: `nexus/statutory-payroll-mys`
+1. Install country-specific payroll package: `azaharizaman/nexus-statutory-payroll-mys`
 2. Bind `PayrollStatutoryInterface` to country-specific adapter in service provider
 3. Verify tenant country code is correctly detected
 

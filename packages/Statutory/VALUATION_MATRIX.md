@@ -116,8 +116,8 @@
 | Dependency | Type | Risk Level | Mitigation |
 |------------|------|------------|------------|
 | PHP 8.3+ | Language | Low | Standard requirement |
-| nexus/finance | Internal Package | Medium | Core dependency for GL data extraction |
-| nexus/period | Internal Package | Low | Period validation for report date ranges |
+| azaharizaman/nexus-finance | Internal Package | Medium | Core dependency for GL data extraction |
+| azaharizaman/nexus-period | Internal Package | Low | Period validation for report date ranges |
 | psr/log | PSR Interface | Low | Standard logging interface |
 
 ### Internal Package Dependencies
@@ -204,9 +204,9 @@ ESTIMATED PACKAGE VALUE: $76,875
 
 ### Planned Enhancements
 - **Country-Specific Packages:** Expected value add: $50,000 (3 packages @ $15K-20K each)
-  - nexus/statutory-accounting-ssm (Malaysian Company Act) - $20,000
-  - nexus/statutory-payroll-mys (EPF/SOCSO/PCB) - $20,000
-  - nexus/statutory-accounting-mys-prop (Proprietorship) - $10,000 (open-source)
+  - azaharizaman/nexus-statutory-accounting-ssm (Malaysian Company Act) - $20,000
+  - azaharizaman/nexus-statutory-payroll-mys (EPF/SOCSO/PCB) - $20,000
+  - azaharizaman/nexus-statutory-accounting-mys-prop (Proprietorship) - $10,000 (open-source)
 - **Direct API Submission:** Expected value add: $15,000 (integration with SSM e-Filing, LHDN e-Filing)
 - **Advanced XBRL:** Expected value add: $10,000 (instance document generation with inline XBRL)
 

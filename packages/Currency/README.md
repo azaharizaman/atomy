@@ -73,7 +73,7 @@ The consuming application (`Nexus\Atomy`) must provide:
 ## Installation
 
 ```bash
-composer require nexus/currency:"*@dev"
+composer require azaharizaman/nexus-currency:"*@dev"
 ```
 
 ## Requirements

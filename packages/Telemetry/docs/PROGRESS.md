@@ -1,6 +1,6 @@
 # Nexus\Telemetry Implementation Progress
 
-**Package:** `nexus/telemetry`  
+**Package:** `azaharizaman/nexus-telemetry`  
 **Started:** November 23, 2025  
 **Status:** 🚧 In Progress
 
@@ -44,7 +44,7 @@
 - [ ] SLOConfigurationInterface
 - [ ] MetricExporterInterface
 - [ ] SamplingStrategyInterface
-- [ ] TenantContextInterface (from nexus/tenant)
+- [ ] TenantContextInterface (from azaharizaman/nexus-tenant)
 
 ### 🔲 Phase 4: Service Implementations (Completed: 0%)
 - [ ] TelemetryTracker service

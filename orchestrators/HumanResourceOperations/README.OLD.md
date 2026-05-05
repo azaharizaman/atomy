@@ -203,12 +203,12 @@ Each layer is independently testable:
 Each domain package is a standalone composer package:
 
 ```
-composer require nexus/leave-management
-composer require nexus/attendance-management
-composer require nexus/payroll-core
-composer require nexus/employee-profile
-composer require nexus/shift-management
-composer require nexus/human-resource-operations
+composer require azaharizaman/nexus-leave-management
+composer require azaharizaman/nexus-attendance-management
+composer require azaharizaman/nexus-payroll-core
+composer require azaharizaman/nexus-employee-profile
+composer require azaharizaman/nexus-shift-management
+composer require azaharizaman/nexus-human-resource-operations
 ```
 
 Then bind repositories & adapters inside your ERP’s DI container.

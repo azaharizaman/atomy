@@ -9,7 +9,7 @@
 ## Installation
 
 ```bash
-composer require nexus/leave-management:"*@dev"
+composer require azaharizaman/nexus-leave-management:"*@dev"
 ```
 
 ## When to Use This Package

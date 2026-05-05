@@ -38,7 +38,7 @@ The **Nexus\Crypto** package provides a complete cryptographic primitive library
 ## Installation
 
 ```bash
-composer require nexus/crypto
+composer require azaharizaman/nexus-crypto
 ```
 
 ### Required PHP Extensions

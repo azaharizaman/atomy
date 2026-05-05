@@ -13,7 +13,7 @@ Employee misconduct reporting, case management, warnings, sanctions, and policy 
 ## Installation
 
 ```bash
-composer require nexus/disciplinary
+composer require azaharizaman/nexus-disciplinary
 ```
 
 ## Usage

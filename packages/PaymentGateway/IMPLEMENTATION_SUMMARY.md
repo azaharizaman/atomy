@@ -1,6 +1,6 @@
 # Nexus\PaymentGateway Implementation Summary
 
-**Package:** `nexus/payment-gateway`  
+**Package:** `azaharizaman/nexus-payment-gateway`  
 **Version:** 0.1.0  
 **Status:** � Core Complete  
 **Last Updated:** December 19, 2025
@@ -138,7 +138,7 @@ The PaymentGateway package provides a unified, provider-agnostic interface for p
 | Adyen | 🔴 Planned | P2 | |
 | Braintree | 🔴 Planned | P3 | |
 
-> **Note:** Concrete gateway implementations should be created as separate packages (e.g., `nexus/payment-gateway-stripe`) following the progressive disclosure pattern.
+> **Note:** Concrete gateway implementations should be created as separate packages (e.g., `azaharizaman/nexus-payment-gateway-stripe`) following the progressive disclosure pattern.
 
 ---
 
@@ -237,9 +237,9 @@ $payload = $processor->process(
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `nexus/payment` | ^0.1 | Core payment package |
-| `nexus/common` | ^0.1 | Common value objects |
-| `nexus/tenant` | ^0.1 | Multi-tenancy support |
+| `azaharizaman/nexus-payment` | ^0.1 | Core payment package |
+| `azaharizaman/nexus-common` | ^0.1 | Common value objects |
+| `azaharizaman/nexus-tenant` | ^0.1 | Multi-tenancy support |
 | `psr/log` | ^3.0 | Logging abstraction |
 | `psr/event-dispatcher` | ^1.0 | Event dispatching |
 

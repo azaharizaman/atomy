@@ -18,7 +18,7 @@ This guide demonstrates how to integrate `Nexus\Geo` into Laravel and Symfony ap
 ### Step 1: Install Dependencies
 
 ```bash
-composer require nexus/geo:"*@dev"
+composer require azaharizaman/nexus-geo:"*@dev"
 composer require geocoder-php/google-maps-provider
 composer require geocoder-php/nominatim-provider
 composer require php-http/guzzle7-adapter
@@ -559,7 +559,7 @@ class DeliveryController extends Controller
 ### Step 1: Install Dependencies
 
 ```bash
-composer require nexus/geo:"*@dev"
+composer require azaharizaman/nexus-geo:"*@dev"
 composer require geocoder-php/google-maps-provider
 composer require geocoder-php/nominatim-provider
 composer require php-http/guzzle7-adapter

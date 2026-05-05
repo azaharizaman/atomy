@@ -339,8 +339,8 @@ cd adapters/Laravel/Finance
 
 # Initialize composer
 composer init
-# Name: nexus/laravel-finance-adapter
-# Require: nexus/finance, illuminate/database, illuminate/support
+# Name: azaharizaman/nexus-laravel-finance-adapter
+# Require: azaharizaman/nexus-finance, illuminate/database, illuminate/support
 
 # Create folder structure
 mkdir -p src/{Providers,Models,Repositories,Database/{Migrations,Seeders,Factories},Http/{Controllers,Requests,Resources},Jobs,Console/Commands,Exceptions}
@@ -515,8 +515,8 @@ Applications → depend on → Adapters AND Packages/Orchestrators
 ```
 
 **Example:**
-- ✅ `adapters/Laravel/Finance` requires `nexus/finance` ✅
-- ❌ `nexus/finance` CANNOT require `nexus/laravel-finance-adapter` ❌
+- ✅ `adapters/Laravel/Finance` requires `azaharizaman/nexus-finance` ✅
+- ❌ `azaharizaman/nexus-finance` CANNOT require `azaharizaman/nexus-laravel-finance-adapter` ❌
 
 ---
 

@@ -22,13 +22,13 @@ The **Nexus\GeneralLedger** package is a Layer-1 atomic package that serves as t
 ## Installation
 
 ```bash
-composer require nexus/general-ledger
+composer require azaharizaman/nexus-general-ledger
 ```
 
 ### Requirements
 
 - PHP ^8.3
-- nexus/common ^1.0
+- azaharizaman/nexus-common ^1.0
 - brick/math ^0.12
 
 ## Usage

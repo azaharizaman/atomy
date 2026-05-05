@@ -9,7 +9,7 @@
 ## Installation
 
 ```bash
-composer require nexus/connector:"*@dev"
+composer require azaharizaman/nexus-connector:"*@dev"
 ```
 
 ## When to Use This Package

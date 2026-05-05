@@ -11,7 +11,7 @@
     ],
     "require": {
         "brick/math": "^0.12",
-        "azaharizaman/nexus-common": "^1.0",
+        "azaharizaman/nexus-common": "dev-main",
         "php": "^8.3"
     },
     "require-dev": {
@@ -30,8 +30,8 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "suggest": {
-        "azaharizaman/nexus-chart-of-account": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-journal-entry": "Optional integration dependency; currently not referenced by package src.",
-        "azaharizaman/nexus-period": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-chart-of-account": "dev-main",
+        "azaharizaman/nexus-journal-entry": "dev-main",
+        "azaharizaman/nexus-period": "dev-main"
     }
 }

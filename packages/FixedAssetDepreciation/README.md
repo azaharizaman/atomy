@@ -152,7 +152,7 @@ src/
 ### 2. Install Package
 
 ```bash
-composer require nexus/fixed-asset-depreciation:"*@dev"
+composer require azaharizaman/nexus-fixed-asset-depreciation:"*@dev"
 ```
 
 ### 3. Register Service Provider (Laravel)

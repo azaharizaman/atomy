@@ -20,7 +20,7 @@ The Procurement package provides a comprehensive, pure PHP solution for purchase
 ## Installation
 
 ```bash
-composer require nexus/procurement:"*@dev"
+composer require azaharizaman/nexus-procurement:"*@dev"
 ```
 
 ## Architecture

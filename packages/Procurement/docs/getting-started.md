@@ -128,7 +128,7 @@ Default tolerances:
 ## Installation
 
 ```bash
-composer require nexus/procurement:"*@dev"
+composer require azaharizaman/nexus-procurement:"*@dev"
 ```
 
 ---

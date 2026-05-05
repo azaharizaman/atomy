@@ -989,7 +989,7 @@ class AppServiceProvider extends ServiceProvider
             SourcingOperationsCoordinator::class,
         );
 
-        // Nexus Identity (L3): required by nexus/laravel-identity-adapter for SSO + coordinator resolution.
+        // Nexus Identity (L3): required by azaharizaman/nexus-laravel-identity-adapter for SSO + coordinator resolution.
         $this->app->singleton(
             IdentityUserQueryInterface::class,
             AtomyUserQuery::class,

@@ -9,7 +9,7 @@ This guide shows how to integrate the AuditLogger package into your application.
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/audit-logger:"*@dev"
+composer require azaharizaman/nexus-audit-logger:"*@dev"
 ```
 
 ### Step 2: Create Database Migration
@@ -557,7 +557,7 @@ protected function schedule(Schedule $schedule)
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/audit-logger:"*@dev"
+composer require azaharizaman/nexus-audit-logger:"*@dev"
 ```
 
 ### Step 2: Create Doctrine Entity

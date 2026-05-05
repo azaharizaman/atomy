@@ -9,7 +9,7 @@ This guide shows how to integrate the Workflow package into your application.
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/workflow:"*@dev"
+composer require azaharizaman/nexus-workflow:"*@dev"
 ```
 
 ### Step 2: Create Database Migrations
@@ -684,7 +684,7 @@ class PurchaseOrderController extends Controller
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/workflow:"*@dev"
+composer require azaharizaman/nexus-workflow:"*@dev"
 ```
 
 ### Step 2: Create Doctrine Entities

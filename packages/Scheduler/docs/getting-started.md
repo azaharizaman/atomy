@@ -13,7 +13,7 @@ The Scheduler package coordinates **when** work should run without coupling to *
 ## Installation
 
 ```bash
-composer require nexus/scheduler:"*@dev"
+composer require azaharizaman/nexus-scheduler:"*@dev"
 
 # Optional cron helper
 composer require dragonmantank/cron-expression

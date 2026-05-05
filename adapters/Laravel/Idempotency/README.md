@@ -1,13 +1,13 @@
-# nexus/laravel-idempotency-adapter
+# azaharizaman/nexus-laravel-idempotency-adapter
 
-Layer 3 Laravel adapter for [`nexus/idempotency`](../../packages/Idempotency): database store, middleware (`idempotency`), cleanup command, fingerprint helper, and `ReplayResponseFactoryInterface` hook for HTTP replay.
+Layer 3 Laravel adapter for [`azaharizaman/nexus-idempotency`](../../packages/Idempotency): database store, middleware (`idempotency`), cleanup command, fingerprint helper, and `ReplayResponseFactoryInterface` hook for HTTP replay.
 
 ## Install (monorepo / path repo)
 
 Require from the consuming Laravel app:
 
 ```json
-"nexus/laravel-idempotency-adapter": "*@dev"
+"azaharizaman/nexus-laravel-idempotency-adapter": "*@dev"
 ```
 
 The package auto-registers `Nexus\Laravel\Idempotency\Providers\IdempotencyAdapterServiceProvider`.

@@ -1,6 +1,6 @@
 # Nexus\Sanctions - Package Requirements
 
-**Package**: nexus/sanctions  
+**Package**: azaharizaman/nexus-sanctions  
 **Version**: 1.0.0  
 **Status**: 🔵 In Development  
 **Domain**: Regulatory Screening (Sanctions & PEP)
@@ -15,7 +15,7 @@
 | **Atomic Domain** | Regulatory Screening (ONE domain) |
 | **Framework Agnostic** | ✅ Pure PHP 8.3+ |
 | **Target LOC** | ~1,800 lines |
-| **Dependencies** | nexus/party, nexus/audit-logger, psr/log |
+| **Dependencies** | azaharizaman/nexus-party, azaharizaman/nexus-audit-logger, psr/log |
 
 ---
 
@@ -128,8 +128,8 @@
 | Package | Version | Purpose |
 |---------|---------|---------|
 | **php** | ^8.3 | Language requirement |
-| **nexus/party** | ^1.0 | Party identity management |
-| **nexus/audit-logger** | ^1.0 | Screening audit trail |
+| **azaharizaman/nexus-party** | ^1.0 | Party identity management |
+| **azaharizaman/nexus-audit-logger** | ^1.0 | Screening audit trail |
 | **psr/log** | ^3.0 | PSR-3 logging |
 
 ---
@@ -140,9 +140,9 @@
 
 | Package | Integration Type | Purpose |
 |---------|-----------------|---------|
-| **nexus/party** | Query | Get party details for screening |
-| **nexus/audit-logger** | Event | Log all screening activities |
-| **nexus/aml-compliance** | Called By | AML risk scoring uses sanctions results |
+| **azaharizaman/nexus-party** | Query | Get party details for screening |
+| **azaharizaman/nexus-audit-logger** | Event | Log all screening activities |
+| **azaharizaman/nexus-aml-compliance** | Called By | AML risk scoring uses sanctions results |
 
 ### Consumer Implementation
 

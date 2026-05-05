@@ -9,7 +9,7 @@ This guide shows how to integrate Nexus Monitoring into your application with co
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/telemetry:"*@dev"
+composer require azaharizaman/nexus-telemetry:"*@dev"
 ```
 
 ### Step 2: Publish Configuration (Optional)
@@ -599,7 +599,7 @@ final class OrderController extends Controller
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/telemetry:"*@dev"
+composer require azaharizaman/nexus-telemetry:"*@dev"
 ```
 
 ### Step 2: Create Doctrine Entity
@@ -820,7 +820,7 @@ For projects without a framework:
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/telemetry:"*@dev" monolog/monolog
+composer require azaharizaman/nexus-telemetry:"*@dev" monolog/monolog
 ```
 
 ### Step 2: Create Bootstrap File

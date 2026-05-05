@@ -1,6 +1,6 @@
 # Nexus\Notifier Implementation Summary
 
-**Package:** `nexus/notifier`  
+**Package:** `azaharizaman/nexus-notifier`  
 **Feature Branch:** `feature/notifier-package`  
 **Pull Request:** #13  
 **Status:** ✅ Implementation Complete

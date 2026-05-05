@@ -1,6 +1,6 @@
 # Nexus\PaymentWallet Valuation Matrix
 
-**Package:** `nexus/payment-wallet`  
+**Package:** `azaharizaman/nexus-payment-wallet`  
 **Version:** 0.1.0  
 **Assessment Date:** December 18, 2025
 
@@ -22,7 +22,7 @@
 
 | Package | Criticality |
 |---------|-------------|
-| `nexus/payment` | Required |
+| `azaharizaman/nexus-payment` | Required |
 
 ### Depended Upon By
 

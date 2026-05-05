@@ -60,7 +60,7 @@ Nexus\Sanctions is a truly atomic, framework-agnostic PHP package that provides 
 ### Architecture
 - ✅ **Framework agnostic** - Pure PHP 8.3+, works with Laravel, Symfony, or any framework
 - ✅ **Interface-based** - Define contracts, consumers provide implementations
-- ✅ **Zero circular dependencies** - Only depends on `nexus/common` and PSR interfaces
+- ✅ **Zero circular dependencies** - Only depends on `azaharizaman/nexus-common` and PSR interfaces
 - ✅ **Immutable value objects** - Type-safe, validated domain objects
 - ✅ **Comprehensive logging** - PSR-3 compatible logging
 
@@ -69,12 +69,12 @@ Nexus\Sanctions is a truly atomic, framework-agnostic PHP package that provides 
 ## Installation
 
 ```bash
-composer require nexus/sanctions
+composer require azaharizaman/nexus-sanctions
 ```
 
 **Requirements:**
 - PHP 8.3 or higher
-- `nexus/common` ^1.0
+- `azaharizaman/nexus-common` ^1.0
 - `psr/log` ^3.0
 
 ---
@@ -962,7 +962,7 @@ packages/Sanctions/
 
 ### Atomic Architecture Principles
 
-- **Zero Circular Dependencies**: Only depends on `nexus/common` and PSR interfaces
+- **Zero Circular Dependencies**: Only depends on `azaharizaman/nexus-common` and PSR interfaces
 - **Interface-Based**: Package provides contracts, consuming applications implement
 - **Independently Testable**: Can be unit tested without database or framework
 - **Framework Agnostic**: Pure PHP 8.3+, works with any framework

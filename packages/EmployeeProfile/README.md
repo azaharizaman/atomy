@@ -13,7 +13,7 @@
 ## Installation
 
 ```bash
-composer require nexus/employee-profile
+composer require azaharizaman/nexus-employee-profile
 ```
 
 ## Architecture

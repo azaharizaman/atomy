@@ -1,6 +1,6 @@
 # Nexus\Payment Implementation Summary
 
-**Package:** `nexus/payment`  
+**Package:** `azaharizaman/nexus-payment`  
 **Version:** 0.1.0  
 **Status:** 🟢 Feature Complete  
 **Last Updated:** December 18, 2025

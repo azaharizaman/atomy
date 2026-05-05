@@ -83,7 +83,7 @@ All mandatory documentation requirements have been met according to the Nexus pa
 ## 📦 Package Information
 
 ### Package Details
-- **Name:** `nexus/document`
+- **Name:** `azaharizaman/nexus-document`
 - **Namespace:** `Nexus\Document`
 - **PHP Version:** ^8.3
 - **Status:** Production Ready

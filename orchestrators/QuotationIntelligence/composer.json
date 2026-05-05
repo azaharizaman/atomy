@@ -11,16 +11,16 @@
     "autoload-dev": {
         "psr-4": {
             "Nexus\\QuotationIntelligence\\Tests\\": "tests/",
-            "Nexus\\Finance\\": "tests/Stubs/Nexus/Finance/"
+            "Nexus\\Finance\\": "tests/Stubs/azaharizaman/nexus-Finance/"
         }
     },
     "require": {
         "php": ">=8.3",
-        "azaharizaman/nexus-procurement": "*",
-        "azaharizaman/nexus-machine-learning": "*",
-        "azaharizaman/nexus-document": "*",
-        "azaharizaman/nexus-uom": "*",
-        "azaharizaman/nexus-currency": "*"
+        "azaharizaman/nexus-procurement": "dev-main",
+        "azaharizaman/nexus-machine-learning": "dev-main",
+        "azaharizaman/nexus-document": "dev-main",
+        "azaharizaman/nexus-uom": "dev-main",
+        "azaharizaman/nexus-currency": "dev-main"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.0"

@@ -8,7 +8,7 @@ This guide demonstrates how to wire Nexus\\Sequencing into common frameworks whi
 
 ### 1. Install and Publish Dependencies
 ```bash
-composer require nexus/sequencing:"*@dev"
+composer require azaharizaman/nexus-sequencing:"*@dev"
 ```
 
 ### 2. Database Schema (Example)
@@ -148,7 +148,7 @@ final class InvoiceController
 
 ### 1. Install Package
 ```bash
-composer require nexus/sequencing:"*@dev"
+composer require azaharizaman/nexus-sequencing:"*@dev"
 ```
 
 ### 2. Doctrine Entity (Example)

@@ -38,7 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✅ PSR-3 compliant logging throughout
 
 ### Architecture
-- ✅ True atomicity: Only depends on `nexus/common` and `psr/log`
+- ✅ True atomicity: Only depends on `azaharizaman/nexus-common` and `psr/log`
 - ✅ No circular dependencies with other atomic packages
 - ✅ Interface-based design for orchestrator integration
 - ✅ Independently testable without external package dependencies
@@ -61,5 +61,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TEST_SUITE_SUMMARY with coverage details
 - VALUATION_MATRIX with quality scores
 
-[Unreleased]: https://github.com/nexus/sanctions/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/nexus/sanctions/releases/tag/v1.0.0
+[Unreleased]: https://github.com/azaharizaman/nexus-sanctions/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/azaharizaman/nexus-sanctions/releases/tag/v1.0.0

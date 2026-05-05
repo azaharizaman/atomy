@@ -79,12 +79,12 @@ Framework-agnostic inventory and stock management package for Nexus ERP. Provide
 ## Installation
 
 ```bash
-composer require nexus/inventory:"*@dev"
+composer require azaharizaman/nexus-inventory:"*@dev"
 ```
 
 ### Requirements
 - PHP 8.3 or higher
-- `nexus/uom` package (unit of measurement support)
+- `azaharizaman/nexus-uom` package (unit of measurement support)
 - PSR-3 logger implementation
 
 ---
@@ -324,7 +324,7 @@ This package has **optional dependencies** for advanced features:
 ### Event Sourcing (Recommended for Large Enterprises)
 
 ```bash
-composer require nexus/event-stream:"*@dev"
+composer require azaharizaman/nexus-event-stream:"*@dev"
 ```
 
 **Benefits:**
@@ -335,7 +335,7 @@ composer require nexus/event-stream:"*@dev"
 ### Machine Learning Forecasting
 
 ```bash
-composer require nexus/machine-learning:"*@dev"
+composer require azaharizaman/nexus-machine-learning:"*@dev"
 ```
 
 **Benefits:**

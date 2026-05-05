@@ -171,25 +171,25 @@ $featureManager->isEnabled('multi_currency_banking')
 
 ## Dependencies
 
-- `nexus/finance` - GL integration
-- `nexus/receivable` - Payment application
-- `nexus/payable` - Payment matching
-- `nexus/period` - Period validation
-- `nexus/currency` - Exchange rates
-- `nexus/sequencing` - Auto-numbering
-- `nexus/import` - Statement parsing
-- `nexus/setting` - Configuration
-- `nexus/workflow` - Approval processes
+- `azaharizaman/nexus-finance` - GL integration
+- `azaharizaman/nexus-receivable` - Payment application
+- `azaharizaman/nexus-payable` - Payment matching
+- `azaharizaman/nexus-period` - Period validation
+- `azaharizaman/nexus-currency` - Exchange rates
+- `azaharizaman/nexus-sequencing` - Auto-numbering
+- `azaharizaman/nexus-import` - Statement parsing
+- `azaharizaman/nexus-setting` - Configuration
+- `azaharizaman/nexus-workflow` - Approval processes
 
 ## Optional Dependencies
 
-- `nexus/intelligence` - AI classification/forecasting
-- `nexus/query-engine` - KPI calculation
+- `azaharizaman/nexus-intelligence` - AI classification/forecasting
+- `azaharizaman/nexus-query-engine` - KPI calculation
 
 ## Installation
 
 ```bash
-composer require nexus/cash-management:"*@dev"
+composer require azaharizaman/nexus-cash-management:"*@dev"
 ```
 
 ## 📖 Documentation

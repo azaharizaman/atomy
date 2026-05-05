@@ -33,7 +33,7 @@ Expected after full implementation: PHPUnit **PASS**, **0** risky coverage gaps 
 
 **Files:**
 
-- Create: `packages/Idempotency/composer.json` (name `nexus/idempotency`, `php ^8.3`, autoload `Nexus\Idempotency\` → `src/`, dev autoload `Nexus\Idempotency\Tests\` → `tests/`)
+- Create: `packages/Idempotency/composer.json` (name `azaharizaman/nexus-idempotency`, `php ^8.3`, autoload `Nexus\Idempotency\` → `src/`, dev autoload `Nexus\Idempotency\Tests\` → `tests/`)
 - Create: `packages/Idempotency/phpunit.xml` (copy structure from `packages/PolicyEngine/phpunit.xml`; adjust test suite name; bootstrap `../../vendor/autoload.php`)
 - Create: `packages/Idempotency/.gitignore` (align with PolicyEngine: `.phpunit.cache`, `build/` if coverage generated)
 - Create: `packages/Idempotency/LICENSE` (MIT, match PolicyEngine if identical)

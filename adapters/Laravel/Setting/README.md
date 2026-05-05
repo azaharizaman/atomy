@@ -12,7 +12,7 @@ The Setting package is an atomic package that must remain independently publisha
 ## Installation
 
 ```bash
-composer require nexus/laravel-setting-adapter
+composer require azaharizaman/nexus-laravel-setting-adapter
 ```
 
 ## Adapters Provided
@@ -45,7 +45,7 @@ This follows the Nexus Three-Layer Architecture:
 
 ## Dependencies
 
-- `nexus/setting` - The atomic Setting package
+- `azaharizaman/nexus-setting` - The atomic Setting package
 - `illuminate/support` - Laravel framework components
 - `illuminate/database` - Laravel database components
 - `psr/log` - PSR-3 logging interface

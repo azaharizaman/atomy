@@ -21,7 +21,7 @@ This guide demonstrates how to integrate the Nexus\Import package into different
 ### 1. Install Package
 
 ```bash
-composer require nexus/import:"*@dev"
+composer require azaharizaman/nexus-import:"*@dev"
 ```
 
 ### 2. Create Transaction Manager

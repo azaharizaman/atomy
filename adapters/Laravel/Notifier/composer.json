@@ -1,12 +1,12 @@
 {
     "name": "azaharizaman/nexus-laravel-notifier-adapter",
-    "description": "Laravel adapter for nexus/notifier (Postmark email via queue).",
+    "description": "Laravel adapter for azaharizaman/nexus-notifier (Postmark email via queue).",
     "type": "library",
     "license": "MIT",
     "require": {
         "php": "^8.3",
         "laravel/framework": "^12.0",
-        "azaharizaman/nexus-notifier": "*@dev"
+        "azaharizaman/nexus-notifier": "dev-main"
     },
     "autoload": {
         "psr-4": {

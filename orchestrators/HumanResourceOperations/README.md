@@ -190,17 +190,17 @@ public function boot(): void
 ## Installation
 
 ```bash
-composer require nexus/human-resource-operations
+composer require azaharizaman/nexus-human-resource-operations
 ```
 
 Dependencies:
-- `nexus/hrm` - Employee management
-- `nexus/identity` - User accounts and authorization
-- `nexus/party` - Party records
-- `nexus/org-structure` - Organizational hierarchy
-- `nexus/leave` - Leave management
-- `nexus/notifier` - Notifications
-- `nexus/audit-logger` - Audit trails
+- `azaharizaman/nexus-hrm` - Employee management
+- `azaharizaman/nexus-identity` - User accounts and authorization
+- `azaharizaman/nexus-party` - Party records
+- `azaharizaman/nexus-org-structure` - Organizational hierarchy
+- `azaharizaman/nexus-leave` - Leave management
+- `azaharizaman/nexus-notifier` - Notifications
+- `azaharizaman/nexus-audit-logger` - Audit trails
 
 ---
 

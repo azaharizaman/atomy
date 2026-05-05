@@ -9,7 +9,7 @@ This guide demonstrates how to integrate the `Nexus\Leave` package into Laravel 
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/leave-management:"*@dev"
+composer require azaharizaman/nexus-leave-management:"*@dev"
 ```
 
 ### Step 2: Create Migration
@@ -566,7 +566,7 @@ class LeaveController extends Controller
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/leave-management:"*@dev"
+composer require azaharizaman/nexus-leave-management:"*@dev"
 ```
 
 ### Step 2: Create Doctrine Entities

@@ -6,10 +6,10 @@
 
 ## Context
 
-- `nexus/laravel-identity-adapter` registers `IdentityAdapterServiceProvider`, which wires `UserAuthenticationCoordinator`, `OidcSsoProviderAdapter`, and `IdentityOperationsAdapter`.
+- `azaharizaman/nexus-laravel-identity-adapter` registers `IdentityAdapterServiceProvider`, which wires `UserAuthenticationCoordinator`, `OidcSsoProviderAdapter`, and `IdentityOperationsAdapter`.
 - **App-owned contracts** (no default implementation in the adapter): `UserPersistInterface`, `UserQueryInterface`, and several others required by `IdentityOperationsAdapter`’s constructor.
 - Laravel builds the **full** coordinator graph when `app(UserAuthenticationCoordinatorInterface::class)` runs: `UserAuthenticationService` requires `AuthenticatorInterface`, which is aliased to `IdentityOperationsAdapter`. So **SSO init/callback still forces resolution of the entire adapter**, not only `OidcSsoProviderAdapter`.
-- Atomy-Q already depends on `nexus/laravel-notifier-adapter` (likely binds `NotificationManagerInterface`). It depends on `nexus/audit-logger` (L1) but **may not** include `nexus/laravel-auditlogger-adapter` — verify `AuditLogRepositoryInterface` is bound at runtime.
+- Atomy-Q already depends on `azaharizaman/nexus-laravel-notifier-adapter` (likely binds `NotificationManagerInterface`). It depends on `azaharizaman/nexus-audit-logger` (L1) but **may not** include `azaharizaman/nexus-laravel-auditlogger-adapter` — verify `AuditLogRepositoryInterface` is bound at runtime.
 - `CacheRepositoryInterface` and `TransactionManagerInterface` are registered by the Identity adapter provider. `Queue` is Laravel core.
 
 ## Non-goals (for first slice)
@@ -29,7 +29,7 @@ Implement Eloquent-backed (or dedicated repository) classes for **every** constr
 ### B — Phased: “SSO graph green” (recommended first)
 
 1. **Inventory** — List every interface Laravel must resolve to instantiate `IdentityOperationsAdapter` (see adapter constructor). For each, mark: already bound by a discovered package vs missing.
-2. **Add missing Laravel adapters** — e.g. require `nexus/laravel-auditlogger-adapter` if `AuditLogRepositoryInterface` is unbound (resolve package name mismatch with `nexus/audit-logger` if any).
+2. **Add missing Laravel adapters** — e.g. require `azaharizaman/nexus-laravel-auditlogger-adapter` if `AuditLogRepositoryInterface` is unbound (resolve package name mismatch with `azaharizaman/nexus-audit-logger` if any).
 3. **Implement L3 in `apps/atomy-q/API`** (Layer 3 only):
    - `AtomyUserQuery` → `UserQueryInterface` (map `App\Models\User` to `UserInterface` / DTOs expected by callers; tenant-scoped queries).
    - `AtomyUserPersist` → `UserPersistInterface` (persist updates aligned with `users` table; role/permission methods no-op or map to future tables with clear `RuntimeException` if invoked before schema exists).

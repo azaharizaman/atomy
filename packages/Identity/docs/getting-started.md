@@ -133,7 +133,7 @@ You can add custom MFA methods by implementing `MfaVerifierInterface`.
 ## Installation
 
 ```bash
-composer require nexus/identity:"*@dev"
+composer require azaharizaman/nexus-identity:"*@dev"
 ```
 
 ---

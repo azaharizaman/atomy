@@ -9,7 +9,7 @@
 ## Installation
 
 ```bash
-composer require nexus/audit-logger:"*@dev"
+composer require azaharizaman/nexus-audit-logger:"*@dev"
 ```
 
 ## When to Use This Package

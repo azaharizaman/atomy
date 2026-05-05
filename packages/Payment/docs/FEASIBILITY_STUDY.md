@@ -488,7 +488,7 @@ interface BankFileTransmitterInterface
 
 ```
 Nexus\Payment (Core)
-├── nexus/common (Money VO, TenantId VO)
+├── azaharizaman/nexus-common (Money VO, TenantId VO)
 ├── psr/log
 └── psr/event-dispatcher
 ```
@@ -497,27 +497,27 @@ Nexus\Payment (Core)
 
 ```
 Nexus\PaymentRails
-├── nexus/payment (core)
-└── nexus/common
+├── azaharizaman/nexus-payment (core)
+└── azaharizaman/nexus-common
 
 Nexus\PaymentGateway
-├── nexus/payment (core)
-├── nexus/connector (for gateway adapters)
-└── nexus/crypto (for tokenization)
+├── azaharizaman/nexus-payment (core)
+├── azaharizaman/nexus-connector (for gateway adapters)
+└── azaharizaman/nexus-crypto (for tokenization)
 
 Nexus\PaymentBank
-├── nexus/payment (core)
-├── nexus/common
-└── nexus/crypto (for file encryption)
+├── azaharizaman/nexus-payment (core)
+├── azaharizaman/nexus-common
+└── azaharizaman/nexus-crypto (for file encryption)
 
 Nexus\PaymentWallet
-├── nexus/payment (core)
-└── nexus/connector
+├── azaharizaman/nexus-payment (core)
+└── azaharizaman/nexus-connector
 
 Nexus\PaymentRecurring
-├── nexus/payment (core)
-├── nexus/scheduler
-└── nexus/notifier (for dunning)
+├── azaharizaman/nexus-payment (core)
+├── azaharizaman/nexus-scheduler
+└── azaharizaman/nexus-notifier (for dunning)
 ```
 
 ### 4.3 Packages That Will Depend on Payment

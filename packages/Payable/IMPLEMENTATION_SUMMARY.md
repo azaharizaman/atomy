@@ -27,7 +27,7 @@ Complete implementation of **Nexus\Payable** - a framework-agnostic Accounts Pay
 
 ```
 packages/Payable/
-├── composer.json                    # Dependencies: nexus/finance, nexus/period, etc.
+├── composer.json                    # Dependencies: azaharizaman/nexus-finance, azaharizaman/nexus-period, etc.
 ├── LICENSE                          # MIT License
 ├── README.md                        # Comprehensive documentation (400+ lines)
 ├── src/
@@ -633,15 +633,15 @@ return [
 ## Dependencies
 
 ### Nexus Packages
-- `nexus/finance` - GL posting, journal management
-- `nexus/period` - Fiscal period validation
-- `nexus/uom` - Unit of measure support
-- `nexus/currency` - Multi-currency exchange rates
-- `nexus/audit-logger` - Audit trail logging
+- `azaharizaman/nexus-finance` - GL posting, journal management
+- `azaharizaman/nexus-period` - Fiscal period validation
+- `azaharizaman/nexus-uom` - Unit of measure support
+- `azaharizaman/nexus-currency` - Multi-currency exchange rates
+- `azaharizaman/nexus-audit-logger` - Audit trail logging
 
 ### External (via Procurement/Inventory)
-- `nexus/procurement` - Purchase order matching
-- `nexus/inventory` - GRN matching
+- `azaharizaman/nexus-procurement` - Purchase order matching
+- `azaharizaman/nexus-inventory` - GRN matching
 
 ### PHP/Laravel
 - PHP 8.3+

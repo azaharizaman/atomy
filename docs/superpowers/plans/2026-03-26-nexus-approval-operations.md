@@ -5,7 +5,7 @@
 
 **Architecture:** Treat the current merge as the baseline. The orchestrator, controller, routes, persistence scaffolding, and tenant-scoped exception mapping already exist; this plan only covers the missing runtime behavior and the unplanned follow-up capabilities. Keep the Layer 2 orchestrator-first shape, keep Laravel code in L3 adapters/API, and do not reintroduce RFQ-specific approval logic into the generic approval engine.
 
-**Tech Stack:** PHP 8.3, PHPUnit 11, Laravel 12 API, `nexus/approval-operations`, `nexus/laravel-approval-operations-adapter`, `nexus/workflow`, `nexus/policy-engine`, `nexus/storage`, `nexus/idempotency`.
+**Tech Stack:** PHP 8.3, PHPUnit 11, Laravel 12 API, `azaharizaman/nexus-approval-operations`, `azaharizaman/nexus-laravel-approval-operations-adapter`, `azaharizaman/nexus-workflow`, `azaharizaman/nexus-policy-engine`, `azaharizaman/nexus-storage`, `azaharizaman/nexus-idempotency`.
 
 **Related skills:** @superpowers:subagent-driven-development, @superpowers:executing-plans, @superpowers:verification-before-completion, @superpowers:test-driven-development.
 

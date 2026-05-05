@@ -62,7 +62,7 @@ We actively welcome your pull requests:
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/nexus/sanctions.git
+   git clone https://github.com/azaharizaman/nexus-sanctions.git
    cd sanctions
    ```
 

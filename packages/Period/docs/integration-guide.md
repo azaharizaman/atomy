@@ -19,7 +19,7 @@ This guide provides comprehensive examples for integrating the Nexus Period pack
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/period:"*@dev"
+composer require azaharizaman/nexus-period:"*@dev"
 ```
 
 ---
@@ -647,7 +647,7 @@ Route::middleware('auth:sanctum')->prefix('periods')->group(function () {
 ### Step 1: Install Package
 
 ```bash
-composer require nexus/period:"*@dev"
+composer require azaharizaman/nexus-period:"*@dev"
 ```
 
 ---

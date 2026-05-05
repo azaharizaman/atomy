@@ -187,13 +187,13 @@ The system MUST provide dashboard data:
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `nexus/telemetry` | *@dev | Health checks, metrics, alerts |
-| `nexus/audit-logger` | *@dev | Audit trail logging |
-| `nexus/compliance` | *@dev | Compliance rules and reporting |
-| `nexus/notifier` | *@dev | Multi-channel notifications |
-| `nexus/identity` | *@dev | User authentication/authorization |
-| `nexus/tenant` | *@dev | Multi-tenancy context |
-| `nexus/common` | *@dev | Shared utilities |
+| `azaharizaman/nexus-telemetry` | *@dev | Health checks, metrics, alerts |
+| `azaharizaman/nexus-audit-logger` | *@dev | Audit trail logging |
+| `azaharizaman/nexus-compliance` | *@dev | Compliance rules and reporting |
+| `azaharizaman/nexus-notifier` | *@dev | Multi-channel notifications |
+| `azaharizaman/nexus-identity` | *@dev | User authentication/authorization |
+| `azaharizaman/nexus-tenant` | *@dev | Multi-tenancy context |
+| `azaharizaman/nexus-common` | *@dev | Shared utilities |
 
 ### 4.2 Dependency Flow
 

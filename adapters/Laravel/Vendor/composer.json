@@ -3,20 +3,11 @@
     "description": "Laravel adapter for Nexus Vendor (Layer 3): Eloquent models and repository.",
     "type": "library",
     "license": "MIT",
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../../../packages/Vendor",
-            "options": {
-                "symlink": true
-            }
-        }
-    ],
     "require": {
         "php": "^8.3",
         "illuminate/database": "^12.0",
         "illuminate/support": "^12.0",
-        "azaharizaman/nexus-vendor": "*@dev"
+        "azaharizaman/nexus-vendor": "dev-main"
     },
     "require-dev": {
         "orchestra/testbench": "^10.0",

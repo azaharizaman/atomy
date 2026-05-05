@@ -62,7 +62,7 @@ print_r($features);
 // ============================================
 
 // In a real scenario, these features would be sent to a prediction service
-// from the nexus/machine-learning package.
+// from the azaharizaman/nexus-machine-learning package.
 
 $predictionService = new class {
     public function predict(array $features): object {

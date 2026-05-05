@@ -1,6 +1,6 @@
 # Nexus SalesOperations Orchestrator - Valuation Matrix
 
-**Package:** `nexus/sales-operations-orchestrator`
+**Package:** `azaharizaman/nexus-sales-operations-orchestrator`
 **Version:** 1.0.0
 **Last Updated:** 2026-02-18
 

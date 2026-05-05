@@ -13,9 +13,9 @@
         "psr/log": "^3.0"
     },
     "suggest": {
-        "azaharizaman/nexus-event-stream": "Event sourcing for stock replay and temporal queries (recommended for large enterprises)",
-        "azaharizaman/nexus-machine-learning": "Demand forecasting and stock optimization (requires minimum 90 days of historical data)",
-        "azaharizaman/nexus-uom": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-event-stream": "dev-main",
+        "azaharizaman/nexus-machine-learning": "dev-main",
+        "azaharizaman/nexus-uom": "dev-main"
     },
     "minimum-stability": "dev",
     "prefer-stable": true

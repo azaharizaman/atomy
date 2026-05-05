@@ -24,6 +24,6 @@ Sustainability and Environmental, Social, and Governance (ESG) compliance are ra
 ## Impact
 
 *   **New Package**: `packages/ESG`
-*   **Dependencies**: Adds `nexus/esg` as a dependency for future orchestrators.
+*   **Dependencies**: Adds `azaharizaman/nexus-esg` as a dependency for future orchestrators.
 *   **Compliance**: Provides the technical backbone for ISO 20400, EU CSRD, and GAAP sustainability reporting.
 *   **Data Models**: Establishes schemas for `sustainability_metrics`, `esg_ratings`, and `carbon_emissions`.

@@ -24,12 +24,12 @@
 
 ```json
 {
-    "name": "nexus/sourcing",
+    "name": "azaharizaman/nexus-sourcing",
     "description": "Nexus Sourcing Domain Package",
     "type": "library",
     "license": "MIT",
     "autoload": { "psr-4": { "Nexus\\Sourcing\\": "src/" } },
-    "require": { "php": "^8.3", "nexus/vendor": "*" }
+    "require": { "php": "^8.3", "azaharizaman/nexus-vendor": "*" }
 }
 ```
 
@@ -113,7 +113,7 @@ git commit -m "feat(sourcing): scaffold Layer 1 package"
 
 ```json
 {
-    "name": "nexus/sourcing-laravel-adapter",
+    "name": "azaharizaman/nexus-sourcing-laravel-adapter",
     "autoload": { "psr-4": { "Nexus\\Adapter\\Laravel\\Sourcing\\": "src/" } },
     "extra": { "laravel": { "providers": [ "Nexus\\Adapter\\Laravel\\Sourcing\\SourcingServiceProvider" ] } }
 }

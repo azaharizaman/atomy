@@ -56,7 +56,7 @@ The `Nexus\Audit` package provides an enterprise-grade, immutable audit trail wi
 ## Installation
 
 ```bash
-composer require nexus/audit:"*@dev"
+composer require azaharizaman/nexus-audit:"*@dev"
 ```
 
 ## Usage

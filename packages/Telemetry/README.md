@@ -124,7 +124,7 @@ The package provides 15 interfaces for complete flexibility and framework agnost
 ### Install via Composer
 
 ```bash
-composer require nexus/telemetry:"*@dev"
+composer require azaharizaman/nexus-telemetry:"*@dev"
 ```
 
 *Note: Package is currently in development. Use `@dev` stability flag.*

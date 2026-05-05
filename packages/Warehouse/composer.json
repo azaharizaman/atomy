@@ -9,13 +9,13 @@
         }
     },
     "require": {
-        "azaharizaman/nexus-routing": "*@dev",
+        "azaharizaman/nexus-routing": "dev-main",
         "php": "^8.3",
         "psr/log": "^3.0"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
     "suggest": {
-        "azaharizaman/nexus-inventory": "Optional integration dependency; currently not referenced by package src."
+        "azaharizaman/nexus-inventory": "dev-main"
     }
 }

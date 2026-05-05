@@ -30,7 +30,7 @@ Assess AML risk and detect suspicious financial activity:
 ## Installation
 
 ```bash
-composer require nexus/aml-compliance
+composer require azaharizaman/nexus-aml-compliance
 ```
 
 ## Quick Start
@@ -249,8 +249,8 @@ AML Risk Score =
 
 ## Dependencies
 
-- **nexus/party** - Party identity management
-- **nexus/sanctions** - Sanctions screening results for risk scoring
+- **azaharizaman/nexus-party** - Party identity management
+- **azaharizaman/nexus-sanctions** - Sanctions screening results for risk scoring
 - **psr/log** - PSR-3 logging interface
 
 ## Testing
@@ -297,9 +297,9 @@ $this->app->singleton(AmlRiskAssessorInterface::class, function ($app) {
 
 ## Related Packages
 
-- **nexus/sanctions** - Regulatory screening (used for risk scoring)
-- **nexus/kyc-verification** - Identity verification
-- **nexus/party-compliance** - Comprehensive party compliance orchestration
+- **azaharizaman/nexus-sanctions** - Regulatory screening (used for risk scoring)
+- **azaharizaman/nexus-kyc-verification** - Identity verification
+- **azaharizaman/nexus-party-compliance** - Comprehensive party compliance orchestration
 
 ## License
 

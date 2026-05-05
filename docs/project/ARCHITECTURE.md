@@ -1020,11 +1020,11 @@ final readonly class OcrWorkflowCoordinator
 ```
 packages/Finance/
 └── composer.json
-    └── requires: nexus/accounting
+    └── requires: azaharizaman/nexus-accounting
 
 packages/Accounting/
 └── composer.json  
-    └── requires: nexus/finance
+    └── requires: azaharizaman/nexus-finance
 
 ❌ CIRCULAR DEPENDENCY!
 ```
@@ -1041,11 +1041,11 @@ packages/Common/
 
 packages/Finance/
 └── composer.json
-    └── requires: nexus/common
+    └── requires: azaharizaman/nexus-common
 
 packages/Accounting/
 └── composer.json
-    └── requires: nexus/common (NOT finance!)
+    └── requires: azaharizaman/nexus-common (NOT finance!)
 
 ✅ NO CIRCULAR DEPENDENCY!
 ```

@@ -12,7 +12,7 @@ The Sales package is an atomic package that must remain independently publishabl
 ## Installation
 
 ```bash
-composer require nexus/laravel-sales
+composer require azaharizaman/nexus-laravel-sales
 ```
 
 ## Adapters Provided
@@ -43,8 +43,8 @@ This follows the Nexus Three-Layer Architecture:
 
 ## Dependencies
 
-- `nexus/sales` - The atomic Sales package
-- `nexus/receivable` - For credit checking and invoice generation
-- `nexus/inventory` - For stock reservation
+- `azaharizaman/nexus-sales` - The atomic Sales package
+- `azaharizaman/nexus-receivable` - For credit checking and invoice generation
+- `azaharizaman/nexus-inventory` - For stock reservation
 - `illuminate/support` - Laravel framework components
 - `illuminate/database` - Laravel database components

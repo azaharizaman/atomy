@@ -539,7 +539,7 @@ Per user directive (2024-11-24), the following items are deferred until after 10
 6. **UI Components or Admin Panels**
    - **Rationale:** Package is backend calculation engine only
    - **Decision:** No UI dependencies or HTML generation
-   - **Future:** Separate `nexus/tax-ui` package may be created for Laravel/Filament integration
+   - **Future:** Separate `azaharizaman/nexus-tax-ui` package may be created for Laravel/Filament integration
 
 7. **Tax Filing Automation**
    - **Rationale:** Out of scope for calculation engine (belongs in Nexus\Statutory)
@@ -712,15 +712,15 @@ Per user directive (2024-11-24), the following items are deferred until after 10
 
 - **External PHP Package Dependencies:** 9 Nexus packages + 2 PSR interfaces
 - **Internal Package Dependencies:** 9
-  - `nexus/finance` - GL integration
-  - `nexus/currency` - Multi-currency
-  - `nexus/geo` - Geocoding
-  - `nexus/party` - Customer/vendor data
-  - `nexus/product` - Product tax categories
-  - `nexus/tenant` - Multi-tenancy
-  - `nexus/audit-logger` - Optional audit trails
-  - `nexus/telemetry` - Optional telemetry
-  - `nexus/storage` - Optional file storage
+  - `azaharizaman/nexus-finance` - GL integration
+  - `azaharizaman/nexus-currency` - Multi-currency
+  - `azaharizaman/nexus-geo` - Geocoding
+  - `azaharizaman/nexus-party` - Customer/vendor data
+  - `azaharizaman/nexus-product` - Product tax categories
+  - `azaharizaman/nexus-tenant` - Multi-tenancy
+  - `azaharizaman/nexus-audit-logger` - Optional audit trails
+  - `azaharizaman/nexus-telemetry` - Optional telemetry
+  - `azaharizaman/nexus-storage` - Optional file storage
 
 ---
 

@@ -71,7 +71,7 @@ The architecture enforces strict decoupling:
 ### Project Structure
 
 ```
-nexus/
+azaharizaman/nexus-
 ├── packages/              # 44+ atomic, publishable PHP packages
 │   ├── Tenant/           # Multi-tenancy engine
 │   ├── Finance/          # General ledger, journal entries
@@ -114,7 +114,7 @@ nexus/
 **Structure:**
 ```
 packages/Finance/
-├── composer.json          # Defines nexus/finance
+├── composer.json          # Defines azaharizaman/nexus-finance
 ├── README.md
 ├── LICENSE
 └── src/
@@ -962,7 +962,7 @@ cd packages/MyPackage
 **Step 2: Initialize Composer**
 ```bash
 composer init
-# Name: nexus/my-package
+# Name: azaharizaman/nexus-my-package
 # PSR-4: Nexus\MyPackage\: src/
 ```
 
@@ -1017,7 +1017,7 @@ final readonly class MyManager
 **Step 6: Install in consuming application**
 ```bash
 cd apps/consuming application
-composer require nexus/my-package:"*@dev"
+composer require azaharizaman/nexus-my-package:"*@dev"
 ```
 
 **Step 7: Implement in consuming application**

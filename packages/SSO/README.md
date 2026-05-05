@@ -22,7 +22,7 @@ Framework-agnostic Single Sign-On (SSO) package for Nexus ERP monorepo. Supports
 ## 📦 Installation & Dependencies
 
 ```bash
-composer require nexus/sso
+composer require azaharizaman/nexus-sso
 ```
 
 ### Runtime Dependencies

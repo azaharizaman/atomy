@@ -84,7 +84,7 @@ This package contains **pure PHP logic** and is completely framework-agnostic:
 ### 2. Install Package
 
 ```bash
-composer require nexus/budget:"*@dev"
+composer require azaharizaman/nexus-budget:"*@dev"
 ```
 
 ### 3. Register Service Provider (Laravel)

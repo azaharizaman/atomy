@@ -1,6 +1,6 @@
 # Nexus\Notifier Package - Complete Implementation Documentation
 
-**Package:** `nexus/notifier`  
+**Package:** `azaharizaman/nexus-notifier`  
 **Feature Branch:** `feature/notifier-package` (PR #13)  
 **Status:** ✅ Production Ready  
 **Created:** 2025-01-19
