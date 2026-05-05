@@ -1,0 +1,30 @@
+{
+    "name": "azaharizaman/nexus-metric-engine",
+    "description": "Deterministic Layer 1 metric calculation engine for Nexus packages.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Nexus Architecture Team",
+            "email": "architecture@nexus.dev"
+        }
+    ],
+    "require": {
+        "php": "^8.3"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nexus\\MetricEngine\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Nexus\\MetricEngine\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

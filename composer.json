@@ -43,7 +43,8 @@
         "azaharizaman/nexus-vendor": "*@dev",
         "azaharizaman/nexus-sourcing": "*@dev",
         "azaharizaman/nexus-sourcing-scoring": "*@dev",
-        "azaharizaman/nexus-sourcing-operations": "*@dev",
+            "azaharizaman/nexus-sourcing-operations": "*@dev",
+        "azaharizaman/nexus-metric-engine": "*@dev",
         "azaharizaman/nexus-approval-operations": "*@dev",
         "azaharizaman/nexus-laravel-approval-operations-adapter": "*@dev",
         "predis/predis": "^3.4"
@@ -201,7 +202,9 @@
             "Nexus\\Sourcing\\Tests\\": "packages/Sourcing/tests/",
             "Nexus\\SourcingScoring\\Tests\\": "packages/SourcingScoring/tests/",
             "Nexus\\SourcingOperations\\Tests\\": "orchestrators/SourcingOperations/tests/",
-            "Nexus\\ApprovalOperations\\Tests\\": "orchestrators/ApprovalOperations/tests/"
+            "Nexus\\ApprovalOperations\\Tests\\": "orchestrators/ApprovalOperations/tests/",
+        "Nexus\\MetricEngine\\": "packages/MetricEngine/src/",
+        "Nexus\\MetricEngine\\Tests\\": "packages/MetricEngine/tests/"
         }
     }
 }
