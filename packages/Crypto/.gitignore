@@ -2,6 +2,5 @@
 composer.lock
 .phpunit.result.cache
 .DS_Store
-coverage-html/
-coverage.xml
-coverage.txt
+/*.md
+!/README.md

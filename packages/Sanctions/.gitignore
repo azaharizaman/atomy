@@ -1,22 +1,6 @@
-# Composer dependencies
 /vendor/
 composer.lock
-
-# PHPUnit
-/phpunit.xml
-/.phpunit.result.cache
-
-# IDE files
-/.idea/
-/.vscode/
-*.swp
-*.swo
-*~
-
-# OS files
+.phpunit.result.cache
 .DS_Store
-Thumbs.db
-
-# Build artifacts
-/build/
-/dist/
+/*.md
+!/README.md

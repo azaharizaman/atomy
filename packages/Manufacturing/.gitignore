@@ -1,10 +1,6 @@
 /vendor/
 composer.lock
 .phpunit.result.cache
-.phpunit.cache/
-coverage/
 .DS_Store
-*.swp
-*.swo
-.idea/
-.vscode/
+/*.md
+!/README.md

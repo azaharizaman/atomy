@@ -1,8 +1,6 @@
 /vendor/
-/coverage/
-/.phpunit.cache/
 composer.lock
+.phpunit.result.cache
 .DS_Store
-*.swp
-*.swo
-*~
+/*.md
+!/README.md
