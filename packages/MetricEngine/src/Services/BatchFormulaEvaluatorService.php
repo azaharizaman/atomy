@@ -15,8 +15,8 @@ class BatchFormulaEvaluatorService
 {
     public function __construct(
         private readonly FormulaEvaluatorService $formulaEvaluator,
-        private readonly FormulaGraphService $graphService = new FormulaGraphService(),
-        private readonly MetricStatusInferenceService $statusInference = new MetricStatusInferenceService()
+        private readonly FormulaGraphService $graphService,
+        private readonly MetricStatusInferenceService $statusInference
     ) {}
 
     /**
