@@ -55,4 +55,40 @@ class FormulaGraphServiceTest extends TestCase
             new FormulaDefinition('metric.b', AggregationType::SUM, [new FormulaReference('metric.a')], PrecisionPolicy::default()),
         ]));
     }
+
+    public function test_formula_with_no_dependencies(): void
+    {
+        $catalog = new FormulaCatalog([
+            new FormulaDefinition('metric.simple', AggregationType::SUM, ['revenue'], PrecisionPolicy::default()),
+        ]);
+
+        $graph = $this->service->build($catalog);
+
+        $this->assertSame(['metric.simple'], $graph->orderedFormulaIds());
+        $this->assertSame([], $graph->dependenciesFor('metric.simple'));
+    }
+
+    public function test_empty_catalog(): void
+    {
+        $catalog = new FormulaCatalog([]);
+
+        $graph = $this->service->build($catalog);
+
+        $this->assertSame([], $graph->orderedFormulaIds());
+    }
+
+    public function test_three_plus_formula_chain(): void
+    {
+        $catalog = new FormulaCatalog([
+            new FormulaDefinition('metric.c', AggregationType::SUM, [new FormulaReference('metric.b')], PrecisionPolicy::default()),
+            new FormulaDefinition('metric.a', AggregationType::SUM, ['revenue'], PrecisionPolicy::default()),
+            new FormulaDefinition('metric.b', AggregationType::SUM, [new FormulaReference('metric.a')], PrecisionPolicy::default()),
+        ]);
+
+        $graph = $this->service->build($catalog);
+
+        $this->assertSame(['metric.a', 'metric.b', 'metric.c'], $graph->orderedFormulaIds());
+        $this->assertSame(['metric.a'], $graph->dependenciesFor('metric.b'));
+        $this->assertSame(['metric.b'], $graph->dependenciesFor('metric.c'));
+    }
 }

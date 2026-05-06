@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Nexus\MetricEngine\Services;
 
+use Nexus\MetricEngine\Contracts\FormulaGraphServiceInterface;
 use Nexus\MetricEngine\Contracts\FormulaInterface;
 use Nexus\MetricEngine\Exceptions\FormulaDependencyException;
 use Nexus\MetricEngine\ValueObjects\FormulaCatalog;
 use Nexus\MetricEngine\ValueObjects\FormulaGraph;
 use Nexus\MetricEngine\ValueObjects\FormulaReference;
 
-class FormulaGraphService
+class FormulaGraphService implements FormulaGraphServiceInterface
 {
     public function build(FormulaCatalog $catalog): FormulaGraph
     {
@@ -32,18 +33,17 @@ class FormulaGraphService
     /** @return list<string> */
     private function extractDependencies(FormulaInterface $formula): array
     {
-        $dependencies = [];
-        $this->collectReferences($formula->operands(), $dependencies);
-
-        return array_values(array_unique($dependencies));
+        return $this->collectReferences($formula->operands());
     }
 
     /**
      * @param list<mixed> $operands
-     * @param list<string> $dependencies
+     * @return list<string>
      */
-    private function collectReferences(array $operands, array &$dependencies): void
+    private function collectReferences(array $operands): array
     {
+        $dependencies = [];
+
         foreach ($operands as $operand) {
             if ($operand instanceof FormulaReference) {
                 $dependencies[] = $operand->identifier;
@@ -51,9 +51,12 @@ class FormulaGraphService
             }
 
             if (is_array($operand)) {
-                $this->collectReferences($operand, $dependencies);
+                $nested = $this->collectReferences($operand);
+                $dependencies = array_merge($dependencies, $nested);
             }
         }
+
+        return array_values(array_unique($dependencies));
     }
 
     /**
