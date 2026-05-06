@@ -20,4 +20,5 @@ enum AggregationType: string
     case ROLLING_AVG = 'rolling_avg';
     case ROLLING_SUM = 'rolling_sum';
     case PERIOD_COMPARE = 'period_compare';
+    case BANDED_SCORE = 'banded_score';
 }

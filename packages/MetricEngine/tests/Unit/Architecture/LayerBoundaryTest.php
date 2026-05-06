@@ -25,6 +25,11 @@ class LayerBoundaryTest extends TestCase
             'banded_health_score',
             'vendor health',
             'gross margin',
+            'ServiceProvider',
+            'healthy',
+            'risk',
+            'preferred vendor',
+            'vendor quality',
         ];
 
         foreach ($files as $file) {
