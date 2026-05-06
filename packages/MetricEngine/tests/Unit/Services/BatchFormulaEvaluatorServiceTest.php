@@ -92,4 +92,30 @@ class BatchFormulaEvaluatorServiceTest extends TestCase
         $this->assertSame(MetricResultStatus::NOT_AVAILABLE, $result->get('metric.delta')->status);
         $this->assertSame(MetricResultStatus::NOT_AVAILABLE, $result->get('metric.ratio')->status);
     }
+
+    public function test_batch_evaluation_can_include_audit_trace(): void
+    {
+        $catalog = new \Nexus\MetricEngine\ValueObjects\FormulaCatalog([
+            new \Nexus\MetricEngine\ValueObjects\FormulaDefinition(
+                'metric.total',
+                \Nexus\MetricEngine\Enums\AggregationType::SUM,
+                ['a', 'b'],
+                \Nexus\MetricEngine\ValueObjects\PrecisionPolicy::default()
+            ),
+        ]);
+
+        $result = $this->service->evaluate($catalog, [
+            'a' => new \Nexus\MetricEngine\ValueObjects\MetricInput('a', 10),
+            'b' => new \Nexus\MetricEngine\ValueObjects\MetricInput('b', 5),
+        ], \Nexus\MetricEngine\ValueObjects\MetricEvaluationOptions::withAuditTrace());
+
+        $trace = $result->get('metric.total')->auditTrace;
+
+        $this->assertNotNull($trace);
+        $this->assertSame('metric.total', $trace->formulaIdentifier);
+        $this->assertSame('sum', $trace->operation);
+        $this->assertSame(['a', 'b'], $trace->operands);
+        $this->assertSame(15.0, $trace->resultValue);
+        $this->assertSame('available', $trace->status);
+    }
 }

@@ -6,7 +6,9 @@ namespace Nexus\MetricEngine\Services;
 
 use Nexus\MetricEngine\Enums\MetricResultStatus;
 use Nexus\MetricEngine\ValueObjects\FormulaCatalog;
+use Nexus\MetricEngine\ValueObjects\MetricAuditTrace;
 use Nexus\MetricEngine\ValueObjects\MetricEvaluationBatchResult;
+use Nexus\MetricEngine\ValueObjects\MetricEvaluationOptions;
 use Nexus\MetricEngine\ValueObjects\MetricEvaluationOutcome;
 use Nexus\MetricEngine\ValueObjects\MetricInput;
 use Nexus\MetricEngine\ValueObjects\MetricSeries;
@@ -22,7 +24,7 @@ class BatchFormulaEvaluatorService
     /**
      * @param array<string, MetricInput|MetricSeries> $inputs
      */
-    public function evaluate(FormulaCatalog $catalog, array $inputs): MetricEvaluationBatchResult
+    public function evaluate(FormulaCatalog $catalog, array $inputs, MetricEvaluationOptions $options = new MetricEvaluationOptions()): MetricEvaluationBatchResult
     {
         $graph = $this->graphService->build($catalog);
         $outcomes = [];
@@ -32,7 +34,22 @@ class BatchFormulaEvaluatorService
             $unavailableDependency = $this->firstUnavailableDependency($graph->dependenciesFor($formulaIdentifier), $outcomes);
 
             if ($unavailableDependency !== null) {
-                $outcomes[$formulaIdentifier] = MetricEvaluationOutcome::dependencyUnavailable($formulaIdentifier, $unavailableDependency);
+                $outcomes[$formulaIdentifier] = MetricEvaluationOutcome::dependencyUnavailable(
+                    $formulaIdentifier,
+                    $unavailableDependency,
+                    $options->includeAuditTrace ? new MetricAuditTrace(
+                        formulaIdentifier: $formulaIdentifier,
+                        operation: $catalog->get($formulaIdentifier)->operation()->value,
+                        operands: $catalog->get($formulaIdentifier)->operands(),
+                        inputs: array_keys($inputs),
+                        dependencyResults: [],
+                        excludedValues: [],
+                        resultValue: null,
+                        status: MetricResultStatus::NOT_AVAILABLE->value,
+                        reasonCode: 'dependency_not_available',
+                        message: "Formula [{$formulaIdentifier}] depends on unavailable formula [{$unavailableDependency}]."
+                    ) : null
+                );
                 continue;
             }
 
@@ -40,7 +57,21 @@ class BatchFormulaEvaluatorService
 
             try {
                 $result = $this->formulaEvaluator->evaluate($formula, $runtimeInputs);
-                $outcomes[$formulaIdentifier] = MetricEvaluationOutcome::available($result);
+                $outcomes[$formulaIdentifier] = MetricEvaluationOutcome::available(
+                    $result,
+                    $options->includeAuditTrace ? new MetricAuditTrace(
+                        formulaIdentifier: $formulaIdentifier,
+                        operation: $formula->operation()->value,
+                        operands: $formula->operands(),
+                        inputs: array_keys($inputs),
+                        dependencyResults: $this->dependencyResults($graph->dependenciesFor($formulaIdentifier), $outcomes),
+                        excludedValues: [],
+                        resultValue: $result->value(),
+                        status: MetricResultStatus::AVAILABLE->value,
+                        reasonCode: null,
+                        message: null
+                    ) : null
+                );
 
                 if (! is_int($result->value()) && ! is_float($result->value()) && ! is_string($result->value())) {
                     continue;
@@ -48,10 +79,24 @@ class BatchFormulaEvaluatorService
 
                 $runtimeInputs[$formulaIdentifier] = new MetricInput($formulaIdentifier, $result->value(), $result->unit());
             } catch (\Throwable $error) {
+                $status = $this->statusInference->infer($error);
+
                 $outcomes[$formulaIdentifier] = MetricEvaluationOutcome::unavailable(
                     $formulaIdentifier,
-                    $this->statusInference->infer($error),
-                    $error
+                    $status,
+                    $error,
+                    $options->includeAuditTrace ? new MetricAuditTrace(
+                        formulaIdentifier: $formulaIdentifier,
+                        operation: $formula->operation()->value,
+                        operands: $formula->operands(),
+                        inputs: array_keys($inputs),
+                        dependencyResults: $this->dependencyResults($graph->dependenciesFor($formulaIdentifier), $outcomes),
+                        excludedValues: [],
+                        resultValue: null,
+                        status: $status->value,
+                        reasonCode: $error instanceof \Nexus\MetricEngine\Exceptions\MetricEngineException ? $error->errorCode() : 'unexpected_error',
+                        message: $error->getMessage()
+                    ) : null
                 );
             }
         }
@@ -72,5 +117,23 @@ class BatchFormulaEvaluatorService
         }
 
         return null;
+    }
+
+    /**
+     * @param list<string> $dependencies
+     * @param array<string, MetricEvaluationOutcome> $outcomes
+     * @return array<string, mixed>
+     */
+    private function dependencyResults(array $dependencies, array $outcomes): array
+    {
+        $results = [];
+
+        foreach ($dependencies as $dependency) {
+            if (isset($outcomes[$dependency]) && $outcomes[$dependency]->result !== null) {
+                $results[$dependency] = $outcomes[$dependency]->result->value();
+            }
+        }
+
+        return $results;
     }
 }

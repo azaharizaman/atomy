@@ -22,25 +22,27 @@ final readonly class MetricEvaluationOutcome
         return new self($result->formulaIdentifier(), MetricResultStatus::AVAILABLE, $result, null, null, $auditTrace);
     }
 
-    public static function unavailable(string $formulaIdentifier, MetricResultStatus $status, \Throwable $error): self
+    public static function unavailable(string $formulaIdentifier, MetricResultStatus $status, \Throwable $error, ?MetricAuditTrace $auditTrace = null): self
     {
         return new self(
             formulaIdentifier: $formulaIdentifier,
             status: $status,
             result: null,
             reasonCode: $error instanceof \Nexus\MetricEngine\Exceptions\MetricEngineException ? $error->errorCode() : 'unexpected_error',
-            message: $error->getMessage()
+            message: $error->getMessage(),
+            auditTrace: $auditTrace
         );
     }
 
-    public static function dependencyUnavailable(string $formulaIdentifier, string $dependencyIdentifier): self
+    public static function dependencyUnavailable(string $formulaIdentifier, string $dependencyIdentifier, ?MetricAuditTrace $auditTrace = null): self
     {
         return new self(
             formulaIdentifier: $formulaIdentifier,
             status: MetricResultStatus::NOT_AVAILABLE,
             result: null,
             reasonCode: 'dependency_not_available',
-            message: "Formula [{$formulaIdentifier}] depends on unavailable formula [{$dependencyIdentifier}]."
+            message: "Formula [{$formulaIdentifier}] depends on unavailable formula [{$dependencyIdentifier}].",
+            auditTrace: $auditTrace
         );
     }
 }
