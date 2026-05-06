@@ -37,7 +37,11 @@ class FormulaEvaluatorServiceTest extends TestCase
 
         $this->evaluator = new FormulaEvaluatorService(
             new ScalarMetricCalculatorService($numericService),
-            new TimeSeriesMetricCalculatorService($numericService, new WindowResolverService(new PeriodComparatorService()))
+            new TimeSeriesMetricCalculatorService(
+                $numericService,
+                new WindowResolverService(new PeriodComparatorService()),
+                new \Nexus\MetricEngine\Services\ComparisonService($numericService)
+            )
         );
     }
 

@@ -22,7 +22,7 @@ class FormulaEvaluatorService implements FormulaEvaluatorInterface
 {
     public function __construct(
         private readonly ScalarMetricCalculatorService $calculator,
-        private readonly ?TimeSeriesMetricCalculatorService $timeSeriesCalculator = null
+        private readonly TimeSeriesMetricCalculatorService $timeSeriesCalculator
     ) {}
 
     /** @param array<string, MetricInput|MetricSeries> $inputs */
@@ -182,9 +182,9 @@ class FormulaEvaluatorService implements FormulaEvaluatorInterface
         }
 
         $value = match ($formula->operation()) {
-            AggregationType::ROLLING_SUM => $this->resolveTimeSeriesCalculator()
+            AggregationType::ROLLING_SUM => $this->timeSeriesCalculator
                 ->rollingSum($series, $window, $formula->precisionPolicy()),
-            AggregationType::ROLLING_AVG => $this->resolveTimeSeriesCalculator()
+            AggregationType::ROLLING_AVG => $this->timeSeriesCalculator
                 ->rollingAvg($series, $window, $formula->precisionPolicy()),
             default => throw new FormulaValidationException(
                 "Unsupported time-series aggregation type [{$formula->operation()->value}]."
@@ -214,7 +214,7 @@ class FormulaEvaluatorService implements FormulaEvaluatorInterface
             throw new FormulaValidationException('Operation [period_compare] requires a previous-period comparison definition.');
         }
 
-        $result = $this->resolveTimeSeriesCalculator()
+        $result = $this->timeSeriesCalculator
             ->periodCompare($currentValue, $previousValue, $formula->precisionPolicy());
 
         return new MetricResult(
@@ -335,9 +335,4 @@ class FormulaEvaluatorService implements FormulaEvaluatorInterface
         return null;
     }
 
-    private function resolveTimeSeriesCalculator(): TimeSeriesMetricCalculatorService
-    {
-        return $this->timeSeriesCalculator
-            ?? new TimeSeriesMetricCalculatorService(new NumericValueService(), new WindowResolverService());
-    }
 }
