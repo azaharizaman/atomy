@@ -78,6 +78,10 @@ class ScalarMetricCalculatorService
     /** @param list<int|float|string> $values */
     public function count(array $values, PrecisionPolicy $policy): float
     {
+        if ($values === []) {
+            throw new InsufficientDataException('Count requires at least one value.');
+        }
+
         return $this->numericService->round((float) count($values), $policy);
     }
 

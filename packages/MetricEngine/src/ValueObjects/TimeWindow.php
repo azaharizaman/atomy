@@ -31,6 +31,10 @@ final readonly class TimeWindow
             throw new InvalidWindowException('Explicit window range requires start and end periods.');
         }
 
+        if ($startPeriod > $endPeriod) {
+            throw new InvalidWindowException('Explicit window start period must be before or equal to end period.');
+        }
+
         return new self(WindowType::EXPLICIT_RANGE, null, $startPeriod, $endPeriod);
     }
 }

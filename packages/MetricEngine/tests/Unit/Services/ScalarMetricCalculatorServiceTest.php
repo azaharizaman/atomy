@@ -40,6 +40,13 @@ class ScalarMetricCalculatorServiceTest extends TestCase
         $this->calculator->sum([], PrecisionPolicy::default());
     }
 
+    public function test_count_with_empty_array_throws(): void
+    {
+        $this->expectException(InsufficientDataException::class);
+
+        $this->calculator->count([], PrecisionPolicy::default());
+    }
+
     public function test_ratio_and_pct_change_fail_on_zero_denominator(): void
     {
         $this->expectException(DivideByZeroMetricException::class);
@@ -109,5 +116,19 @@ class ScalarMetricCalculatorServiceTest extends TestCase
         $this->expectException(FormulaValidationException::class);
 
         $this->calculator->weightedAvg([80, 90], [0.5], PrecisionPolicy::default());
+    }
+
+    public function test_weighted_avg_rejects_zero_total_weight(): void
+    {
+        $this->expectException(DivideByZeroMetricException::class);
+
+        $this->calculator->weightedAvg([80, 90], [1, -1], PrecisionPolicy::default());
+    }
+
+    public function test_weighted_avg_accepts_negative_values_when_weights_are_valid(): void
+    {
+        $result = $this->calculator->weightedAvg([-10, 20], [0.25, 0.75], PrecisionPolicy::default());
+
+        $this->assertSame(12.5, $result);
     }
 }

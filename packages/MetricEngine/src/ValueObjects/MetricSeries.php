@@ -6,6 +6,7 @@ namespace Nexus\MetricEngine\ValueObjects;
 
 use Nexus\MetricEngine\Exceptions\FormulaValidationException;
 use Nexus\MetricEngine\Exceptions\InsufficientDataException;
+use Nexus\MetricEngine\Exceptions\InvalidWindowException;
 
 final readonly class MetricSeries
 {
@@ -21,6 +22,22 @@ final readonly class MetricSeries
 
         if ($points === []) {
             throw new InsufficientDataException('Metric series requires at least one point.');
+        }
+
+        $previousPeriodKey = null;
+        $periodKeys = [];
+
+        foreach ($points as $point) {
+            if (in_array($point->periodKey, $periodKeys, true)) {
+                throw new InvalidWindowException('Metric series period keys must be unique.');
+            }
+
+            if ($previousPeriodKey !== null && $point->periodKey < $previousPeriodKey) {
+                throw new InvalidWindowException('Metric series period keys must be sorted in ascending order.');
+            }
+
+            $periodKeys[] = $point->periodKey;
+            $previousPeriodKey = $point->periodKey;
         }
     }
 }

@@ -3,6 +3,14 @@
     "description": "Deterministic Layer 1 metric calculation engine for Nexus packages.",
     "type": "library",
     "license": "MIT",
+    "keywords": [
+        "metrics",
+        "calculation",
+        "formula",
+        "time-series",
+        "nexus"
+    ],
+    "homepage": "https://github.com/azaharizaman/nexus-metric-engine",
     "authors": [
         {
             "name": "Nexus Architecture Team",
@@ -24,6 +32,10 @@
         "psr-4": {
             "Nexus\\MetricEngine\\Tests\\": "tests/"
         }
+    },
+    "support": {
+        "issues": "https://github.com/azaharizaman/nexus-metric-engine/issues",
+        "source": "https://github.com/azaharizaman/nexus-metric-engine"
     },
     "minimum-stability": "stable",
     "prefer-stable": true

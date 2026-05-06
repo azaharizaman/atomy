@@ -41,6 +41,14 @@ class TimeWindowTest extends TestCase
         TimeWindow::explicitRange('2026-01', '');
     }
 
+    public function test_explicit_range_rejects_start_after_end(): void
+    {
+        $this->expectException(InvalidWindowException::class);
+        $this->expectExceptionMessage('Explicit window start period must be before or equal to end period.');
+
+        TimeWindow::explicitRange('2026-03', '2026-01');
+    }
+
     public function test_explicit_range_accepts_valid_periods(): void
     {
         $window = TimeWindow::explicitRange('2026-01', '2026-03');

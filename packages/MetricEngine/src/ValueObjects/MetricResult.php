@@ -16,7 +16,9 @@ final readonly class MetricResult implements MetricResultInterface
         private ValueType $valueType,
         private InputMode $inputMode,
         private PrecisionPolicy $precisionPolicy,
-        private ?string $unit = null
+        private ?string $unit = null,
+        private ?TimeWindow $window = null,
+        private ?ComparisonDefinition $comparison = null
     ) {}
 
     public function value(): int|float|string|array
@@ -47,5 +49,15 @@ final readonly class MetricResult implements MetricResultInterface
     public function unit(): ?string
     {
         return $this->unit;
+    }
+
+    public function window(): ?TimeWindow
+    {
+        return $this->window;
+    }
+
+    public function comparison(): ?ComparisonDefinition
+    {
+        return $this->comparison;
     }
 }
