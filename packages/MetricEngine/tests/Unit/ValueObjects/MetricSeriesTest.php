@@ -54,4 +54,15 @@ class MetricSeriesTest extends TestCase
             new TimeSeriesPoint('2026-01', 10),
         ]);
     }
+
+    public function test_rejects_mixed_granularity_in_series(): void
+    {
+        $this->expectException(InvalidWindowException::class);
+        $this->expectExceptionMessage('Metric series period keys must use one granularity.');
+
+        new MetricSeries('sales', [
+            new TimeSeriesPoint('2026-01', 10),
+            new TimeSeriesPoint('2026-Q2', 20),
+        ]);
+    }
 }

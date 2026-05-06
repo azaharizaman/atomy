@@ -26,22 +26,4 @@ class PeriodComparatorServiceTest extends TestCase
         $this->assertFalse($this->service->lessThanOrEqual('2026-Q4', '2026-Q2'));
     }
 
-    public function test_rejects_mixed_granularity_in_series(): void
-    {
-        $this->expectException(InvalidWindowException::class);
-        $this->expectExceptionMessage('Metric series period keys must use one granularity.');
-
-        new MetricSeries('sales', [
-            new TimeSeriesPoint('2026-01', 10),
-            new TimeSeriesPoint('2026-Q2', 20),
-        ]);
-    }
-
-    public function test_rejects_mixed_granularity_window(): void
-    {
-        $this->expectException(InvalidWindowException::class);
-        $this->expectExceptionMessage('Explicit window periods must use one granularity.');
-
-        TimeWindow::explicitRange('2026-01', '2026-Q2');
-    }
 }

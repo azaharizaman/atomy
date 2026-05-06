@@ -57,4 +57,12 @@ class TimeWindowTest extends TestCase
         $this->assertSame('2026-01', $window->startPeriod);
         $this->assertSame('2026-03', $window->endPeriod);
     }
+
+    public function test_rejects_mixed_granularity_window(): void
+    {
+        $this->expectException(InvalidWindowException::class);
+        $this->expectExceptionMessage('Explicit window periods must use one granularity.');
+
+        TimeWindow::explicitRange('2026-01', '2026-Q2');
+    }
 }
