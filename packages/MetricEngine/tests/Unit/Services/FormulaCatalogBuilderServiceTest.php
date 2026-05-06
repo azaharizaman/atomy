@@ -25,4 +25,15 @@ class FormulaCatalogBuilderServiceTest extends TestCase
 
         $this->assertSame('metric.one', $catalog->get('metric.one')->identifier());
     }
+
+    public function test_builds_catalog_from_formula_objects(): void
+    {
+        $builder = new FormulaCatalogBuilderService(new FormulaDefinitionSerializerService());
+
+        $catalog = $builder->fromFormulas([
+            new \Nexus\MetricEngine\ValueObjects\FormulaDefinition('metric.one', \Nexus\MetricEngine\Enums\AggregationType::SUM, [1], \Nexus\MetricEngine\ValueObjects\PrecisionPolicy::default()),
+        ]);
+
+        $this->assertSame('metric.one', $catalog->get('metric.one')->identifier());
+    }
 }

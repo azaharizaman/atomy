@@ -43,4 +43,25 @@ class FormulaCatalogTest extends TestCase
 
         (new FormulaCatalog([]))->get('metric.missing');
     }
+
+    public function test_has_returns_true_for_existing_formula(): void
+    {
+        $catalog = new FormulaCatalog([
+            new FormulaDefinition('metric.one', AggregationType::SUM, [1], PrecisionPolicy::default()),
+        ]);
+
+        $this->assertTrue($catalog->has('metric.one'));
+        $this->assertFalse($catalog->has('metric.missing'));
+    }
+
+    public function test_all_returns_identifier_mapped_to_formula(): void
+    {
+        $formula = new FormulaDefinition('metric.one', AggregationType::SUM, [1], PrecisionPolicy::default());
+
+        $catalog = new FormulaCatalog([$formula]);
+        $all = $catalog->all();
+
+        $this->assertCount(1, $all);
+        $this->assertSame($formula, $all['metric.one']);
+    }
 }

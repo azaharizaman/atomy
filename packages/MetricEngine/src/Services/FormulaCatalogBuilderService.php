@@ -7,10 +7,10 @@ namespace Nexus\MetricEngine\Services;
 use Nexus\MetricEngine\Contracts\FormulaInterface;
 use Nexus\MetricEngine\ValueObjects\FormulaCatalog;
 
-class FormulaCatalogBuilderService
+final readonly class FormulaCatalogBuilderService
 {
     public function __construct(
-        private readonly FormulaDefinitionSerializerService $serializer = new FormulaDefinitionSerializerService()
+        private readonly FormulaDefinitionSerializerService $serializer
     ) {}
 
     /** @param list<FormulaInterface> $formulas */
