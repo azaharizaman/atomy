@@ -77,4 +77,45 @@ class FormulaDefinitionSerializerServiceTest extends TestCase
             'precision' => ['scale' => 2, 'rounding_mode' => 'half_up'],
         ]);
     }
+
+    public function test_rejects_invalid_rounding_mode(): void
+    {
+        $this->expectException(FormulaSerializationException::class);
+        $this->expectExceptionMessage("Unsupported rounding mode [invalid].");
+
+        $this->serializer->fromArray([
+            'identifier' => 'metric.test',
+            'operation' => 'sum',
+            'operands' => [1, 2],
+            'precision' => ['scale' => 2, 'rounding_mode' => 'invalid'],
+        ]);
+    }
+
+    public function test_rejects_invalid_window_type(): void
+    {
+        $this->expectException(FormulaSerializationException::class);
+        $this->expectExceptionMessage("Unsupported window type [invalid].");
+
+        $this->serializer->fromArray([
+            'identifier' => 'metric.test',
+            'operation' => 'sum',
+            'operands' => [1, 2],
+            'precision' => ['scale' => 2, 'rounding_mode' => 'half_up'],
+            'window' => ['type' => 'invalid'],
+        ]);
+    }
+
+    public function test_rejects_invalid_comparison_type(): void
+    {
+        $this->expectException(FormulaSerializationException::class);
+        $this->expectExceptionMessage("Unsupported comparison type [invalid].");
+
+        $this->serializer->fromArray([
+            'identifier' => 'metric.test',
+            'operation' => 'sum',
+            'operands' => [1, 2],
+            'precision' => ['scale' => 2, 'rounding_mode' => 'half_up'],
+            'comparison' => ['type' => 'invalid'],
+        ]);
+    }
 }
