@@ -6,6 +6,7 @@ namespace Nexus\MetricEngine\ValueObjects;
 
 use Nexus\MetricEngine\Enums\WindowType;
 use Nexus\MetricEngine\Exceptions\InvalidWindowException;
+use Nexus\MetricEngine\ValueObjects\PeriodKey;
 
 final readonly class TimeWindow
 {
@@ -31,7 +32,14 @@ final readonly class TimeWindow
             throw new InvalidWindowException('Explicit window range requires start and end periods.');
         }
 
-        if ($startPeriod > $endPeriod) {
+        $start = PeriodKey::fromString($startPeriod);
+        $end = PeriodKey::fromString($endPeriod);
+
+        if ($start->granularity !== $end->granularity) {
+            throw new InvalidWindowException('Explicit window periods must use one granularity.');
+        }
+
+        if ($start->sortKey > $end->sortKey) {
             throw new InvalidWindowException('Explicit window start period must be before or equal to end period.');
         }
 

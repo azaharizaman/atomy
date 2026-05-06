@@ -11,6 +11,10 @@ use Nexus\MetricEngine\ValueObjects\TimeWindow;
 
 class WindowResolverService implements WindowResolverInterface
 {
+    public function __construct(
+        private readonly PeriodComparatorService $periodComparator = new PeriodComparatorService()
+    ) {}
+
     public function resolve(MetricSeries $series, TimeWindow $window): MetricSeries
     {
         $filteredPoints = match ($window->type) {
@@ -38,7 +42,8 @@ class WindowResolverService implements WindowResolverInterface
     {
         $filtered = array_values(array_filter(
             $series->points,
-            static fn ($point) => $point->periodKey >= $window->startPeriod && $point->periodKey <= $window->endPeriod
+            fn ($point) => $this->periodComparator->greaterThanOrEqual($point->periodKey, $window->startPeriod)
+                && $this->periodComparator->lessThanOrEqual($point->periodKey, $window->endPeriod)
         ));
 
         if ($filtered === []) {
