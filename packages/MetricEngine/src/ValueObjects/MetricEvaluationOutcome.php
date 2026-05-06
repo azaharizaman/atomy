@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nexus\MetricEngine\ValueObjects;
 
 use Nexus\MetricEngine\Enums\MetricResultStatus;
+use Nexus\MetricEngine\Exceptions\MetricEngineException;
 
 final readonly class MetricEvaluationOutcome
 {
@@ -28,7 +29,7 @@ final readonly class MetricEvaluationOutcome
             formulaIdentifier: $formulaIdentifier,
             status: $status,
             result: null,
-            reasonCode: $error instanceof \Nexus\MetricEngine\Exceptions\MetricEngineException ? $error->errorCode() : 'unexpected_error',
+            reasonCode: $error instanceof MetricEngineException ? $error->errorCode() : 'unexpected_error',
             message: $error->getMessage(),
             auditTrace: $auditTrace
         );

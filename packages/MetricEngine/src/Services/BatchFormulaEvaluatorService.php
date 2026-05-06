@@ -12,6 +12,7 @@ use Nexus\MetricEngine\ValueObjects\MetricEvaluationOptions;
 use Nexus\MetricEngine\ValueObjects\MetricEvaluationOutcome;
 use Nexus\MetricEngine\ValueObjects\MetricInput;
 use Nexus\MetricEngine\ValueObjects\MetricSeries;
+use Nexus\MetricEngine\Exceptions\MetricEngineException;
 
 class BatchFormulaEvaluatorService
 {
@@ -37,17 +38,16 @@ class BatchFormulaEvaluatorService
                 $outcomes[$formulaIdentifier] = MetricEvaluationOutcome::dependencyUnavailable(
                     $formulaIdentifier,
                     $unavailableDependency,
-                    $options->includeAuditTrace ? new MetricAuditTrace(
-                        formulaIdentifier: $formulaIdentifier,
-                        operation: $catalog->get($formulaIdentifier)->operation()->value,
-                        operands: $catalog->get($formulaIdentifier)->operands(),
-                        inputs: array_keys($inputs),
-                        dependencyResults: [],
-                        excludedValues: [],
-                        resultValue: null,
-                        status: MetricResultStatus::NOT_AVAILABLE->value,
-                        reasonCode: 'dependency_not_available',
-                        message: "Formula [{$formulaIdentifier}] depends on unavailable formula [{$unavailableDependency}]."
+                    $options->includeAuditTrace ? $this->createAuditTrace(
+                        $formulaIdentifier,
+                        $catalog->get($formulaIdentifier)->operation()->value,
+                        $catalog->get($formulaIdentifier)->operands(),
+                        $inputs,
+                        [],
+                        null,
+                        MetricResultStatus::NOT_AVAILABLE->value,
+                        'dependency_not_available',
+                        "Formula [{$formulaIdentifier}] depends on unavailable formula [{$unavailableDependency}]."
                     ) : null
                 );
                 continue;
@@ -59,17 +59,16 @@ class BatchFormulaEvaluatorService
                 $result = $this->formulaEvaluator->evaluate($formula, $runtimeInputs);
                 $outcomes[$formulaIdentifier] = MetricEvaluationOutcome::available(
                     $result,
-                    $options->includeAuditTrace ? new MetricAuditTrace(
-                        formulaIdentifier: $formulaIdentifier,
-                        operation: $formula->operation()->value,
-                        operands: $formula->operands(),
-                        inputs: array_keys($inputs),
-                        dependencyResults: $this->dependencyResults($graph->dependenciesFor($formulaIdentifier), $outcomes),
-                        excludedValues: [],
-                        resultValue: $result->value(),
-                        status: MetricResultStatus::AVAILABLE->value,
-                        reasonCode: null,
-                        message: null
+                    $options->includeAuditTrace ? $this->createAuditTrace(
+                        $formulaIdentifier,
+                        $formula->operation()->value,
+                        $formula->operands(),
+                        $inputs,
+                        $this->dependencyResults($graph->dependenciesFor($formulaIdentifier), $outcomes),
+                        $result->value(),
+                        MetricResultStatus::AVAILABLE->value,
+                        null,
+                        null
                     ) : null
                 );
 
@@ -85,17 +84,16 @@ class BatchFormulaEvaluatorService
                     $formulaIdentifier,
                     $status,
                     $error,
-                    $options->includeAuditTrace ? new MetricAuditTrace(
-                        formulaIdentifier: $formulaIdentifier,
-                        operation: $formula->operation()->value,
-                        operands: $formula->operands(),
-                        inputs: array_keys($inputs),
-                        dependencyResults: $this->dependencyResults($graph->dependenciesFor($formulaIdentifier), $outcomes),
-                        excludedValues: [],
-                        resultValue: null,
-                        status: $status->value,
-                        reasonCode: $error instanceof \Nexus\MetricEngine\Exceptions\MetricEngineException ? $error->errorCode() : 'unexpected_error',
-                        message: $error->getMessage()
+                    $options->includeAuditTrace ? $this->createAuditTrace(
+                        $formulaIdentifier,
+                        $formula->operation()->value,
+                        $formula->operands(),
+                        $inputs,
+                        $this->dependencyResults($graph->dependenciesFor($formulaIdentifier), $outcomes),
+                        null,
+                        $status->value,
+                        $error instanceof MetricEngineException ? $error->errorCode() : 'unexpected_error',
+                        $error->getMessage()
                     ) : null
                 );
             }
@@ -135,5 +133,35 @@ class BatchFormulaEvaluatorService
         }
 
         return $results;
+    }
+
+    /**
+     * @param list<mixed> $operands
+     * @param array<string, mixed> $inputs
+     * @param array<string, mixed> $dependencyResults
+     */
+    private function createAuditTrace(
+        string $formulaIdentifier,
+        string $operation,
+        array $operands,
+        array $inputs,
+        array $dependencyResults,
+        mixed $resultValue,
+        string $status,
+        ?string $reasonCode = null,
+        ?string $message = null
+    ): MetricAuditTrace {
+        return new MetricAuditTrace(
+            formulaIdentifier: $formulaIdentifier,
+            operation: $operation,
+            operands: $operands,
+            inputs: array_keys($inputs),
+            dependencyResults: $dependencyResults,
+            excludedValues: [],
+            resultValue: $resultValue,
+            status: $status,
+            reasonCode: $reasonCode,
+            message: $message
+        );
     }
 }

@@ -15,6 +15,7 @@ use Nexus\MetricEngine\Services\ScalarMetricCalculatorService;
 use Nexus\MetricEngine\ValueObjects\FormulaCatalog;
 use Nexus\MetricEngine\ValueObjects\FormulaDefinition;
 use Nexus\MetricEngine\ValueObjects\FormulaReference;
+use Nexus\MetricEngine\ValueObjects\MetricEvaluationOptions;
 use Nexus\MetricEngine\ValueObjects\MetricInput;
 use Nexus\MetricEngine\ValueObjects\PrecisionPolicy;
 use PHPUnit\Framework\TestCase;
@@ -95,19 +96,19 @@ class BatchFormulaEvaluatorServiceTest extends TestCase
 
     public function test_batch_evaluation_can_include_audit_trace(): void
     {
-        $catalog = new \Nexus\MetricEngine\ValueObjects\FormulaCatalog([
-            new \Nexus\MetricEngine\ValueObjects\FormulaDefinition(
+        $catalog = new FormulaCatalog([
+            new FormulaDefinition(
                 'metric.total',
-                \Nexus\MetricEngine\Enums\AggregationType::SUM,
+                AggregationType::SUM,
                 ['a', 'b'],
-                \Nexus\MetricEngine\ValueObjects\PrecisionPolicy::default()
+                PrecisionPolicy::default()
             ),
         ]);
 
         $result = $this->service->evaluate($catalog, [
-            'a' => new \Nexus\MetricEngine\ValueObjects\MetricInput('a', 10),
-            'b' => new \Nexus\MetricEngine\ValueObjects\MetricInput('b', 5),
-        ], \Nexus\MetricEngine\ValueObjects\MetricEvaluationOptions::withAuditTrace());
+            'a' => new MetricInput('a', 10),
+            'b' => new MetricInput('b', 5),
+        ], MetricEvaluationOptions::withAuditTrace());
 
         $trace = $result->get('metric.total')->auditTrace;
 
