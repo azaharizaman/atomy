@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Nexus\MetricEngine\Services;
 
 use Nexus\MetricEngine\Exceptions\FormulaValidationException;
+use Nexus\MetricEngine\Services\NumericValueService;
 use Nexus\MetricEngine\ValueObjects\BandDefinition;
 use Nexus\MetricEngine\ValueObjects\BandedScore;
 
 class BandedScoreService
 {
     public function __construct(
-        private readonly NumericValueService $numericValueService = new NumericValueService()
+        private readonly NumericValueService $numericValueService
     ) {}
 
     /** @param list<BandDefinition> $bands */
