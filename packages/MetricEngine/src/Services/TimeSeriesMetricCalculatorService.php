@@ -14,7 +14,8 @@ class TimeSeriesMetricCalculatorService
 {
     public function __construct(
         private readonly NumericValueService $numericService,
-        private readonly WindowResolverService $windowResolver
+        private readonly WindowResolverService $windowResolver,
+        private readonly ComparisonService $comparisonService
     ) {}
 
     public function rollingSum(MetricSeries $series, TimeWindow $window, PrecisionPolicy $policy): float
@@ -54,8 +55,6 @@ class TimeSeriesMetricCalculatorService
         int|float|string $previousValue,
         PrecisionPolicy $policy
     ): ComparisonResult {
-        $comparisonService = new ComparisonService($this->numericService);
-
-        return $comparisonService->previousPeriod($currentValue, $previousValue, $policy);
+        return $this->comparisonService->previousPeriod($currentValue, $previousValue, $policy);
     }
 }
