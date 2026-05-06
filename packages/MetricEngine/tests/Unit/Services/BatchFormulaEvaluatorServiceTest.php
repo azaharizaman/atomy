@@ -29,7 +29,14 @@ class BatchFormulaEvaluatorServiceTest extends TestCase
         $numeric = new NumericValueService();
 
         $this->service = new BatchFormulaEvaluatorService(
-            new FormulaEvaluatorService(new ScalarMetricCalculatorService($numeric)),
+            new FormulaEvaluatorService(
+                new ScalarMetricCalculatorService($numeric),
+                new \Nexus\MetricEngine\Services\TimeSeriesMetricCalculatorService(
+                    $numeric,
+                    new \Nexus\MetricEngine\Services\WindowResolverService(new \Nexus\MetricEngine\Services\PeriodComparatorService()),
+                    new \Nexus\MetricEngine\Services\ComparisonService($numeric)
+                )
+            ),
             new FormulaGraphService(),
             new MetricStatusInferenceService()
         );

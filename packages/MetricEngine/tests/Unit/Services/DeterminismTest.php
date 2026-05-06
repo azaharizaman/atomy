@@ -17,7 +17,15 @@ class DeterminismTest extends TestCase
 {
     public function test_identical_inputs_produce_identical_results_without_runtime_timestamp(): void
     {
-        $evaluator = new FormulaEvaluatorService(new ScalarMetricCalculatorService(new NumericValueService()));
+        $numeric = new NumericValueService();
+        $evaluator = new FormulaEvaluatorService(
+            new ScalarMetricCalculatorService($numeric),
+            new \Nexus\MetricEngine\Services\TimeSeriesMetricCalculatorService(
+                $numeric,
+                new \Nexus\MetricEngine\Services\WindowResolverService(new \Nexus\MetricEngine\Services\PeriodComparatorService()),
+                new \Nexus\MetricEngine\Services\ComparisonService($numeric)
+            )
+        );
         $formula = new FormulaDefinition('metric.ratio', AggregationType::RATIO, ['actual', 'target'], PrecisionPolicy::default());
         $inputs = [
             'actual' => new MetricInput('actual', 75),
