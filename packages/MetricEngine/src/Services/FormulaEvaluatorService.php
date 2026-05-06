@@ -13,6 +13,7 @@ use Nexus\MetricEngine\Enums\ValueType;
 use Nexus\MetricEngine\Exceptions\FormulaValidationException;
 use Nexus\MetricEngine\Exceptions\MissingInputException;
 use Nexus\MetricEngine\Exceptions\TypeMismatchException;
+use Nexus\MetricEngine\ValueObjects\FormulaReference;
 use Nexus\MetricEngine\ValueObjects\MetricInput;
 use Nexus\MetricEngine\ValueObjects\MetricResult;
 use Nexus\MetricEngine\ValueObjects\MetricSeries;
@@ -77,6 +78,20 @@ class FormulaEvaluatorService implements FormulaEvaluatorInterface
     {
         if ($operand instanceof FormulaInterface) {
             return $this->evaluate($operand, $inputs)->value();
+        }
+
+        if ($operand instanceof FormulaReference) {
+            if (! isset($inputs[$operand->identifier])) {
+                throw new MissingInputException($operand->identifier);
+            }
+
+            $input = $inputs[$operand->identifier];
+
+            if ($input instanceof MetricSeries) {
+                return $input;
+            }
+
+            return $input->value;
         }
 
         if (is_array($operand)) {
