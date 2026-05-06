@@ -12,7 +12,7 @@ use Nexus\MetricEngine\ValueObjects\MetricSeries;
 class MetricRunFingerprintService
 {
     public function __construct(
-        private readonly FormulaDefinitionSerializerService $serializer = new FormulaDefinitionSerializerService()
+        private readonly FormulaDefinitionSerializerService $serializer
     ) {}
 
     /**
@@ -54,18 +54,23 @@ class MetricRunFingerprintService
                 continue;
             }
 
-            $normalized[$key] = [
-                'name' => $input->name,
-                'unit' => $input->unit,
-                'points' => array_map(
-                    static fn ($point) => [
-                        'period_key' => $point->periodKey,
-                        'value' => $point->value,
-                        'metadata' => $point->metadata,
-                    ],
-                    $input->points
-                ),
-            ];
+            if ($input instanceof MetricSeries) {
+                $normalized[$key] = [
+                    'name' => $input->name,
+                    'unit' => $input->unit,
+                    'points' => array_map(
+                        static fn ($point) => [
+                            'period_key' => $point->periodKey,
+                            'value' => $point->value,
+                            'metadata' => $point->metadata,
+                        ],
+                        $input->points
+                    ),
+                ];
+                continue;
+            }
+
+            throw new \InvalidArgumentException('Input must be MetricInput or MetricSeries, got ' . get_class($input));
         }
 
         return $normalized;
