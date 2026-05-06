@@ -58,6 +58,19 @@ class BatchFormulaEvaluatorServiceTest extends TestCase
         $this->assertSame(15.0, $outcome->result?->value());
     }
 
+    public function test_accepts_formula_list_without_requiring_catalog_wrapping(): void
+    {
+        $result = $this->service->evaluate([
+            new FormulaDefinition('metric.total', AggregationType::SUM, ['a', 'b'], PrecisionPolicy::default()),
+        ], [
+            'a' => new MetricInput('a', 10),
+            'b' => new MetricInput('b', 5),
+        ]);
+
+        $this->assertSame(MetricResultStatus::AVAILABLE, $result->get('metric.total')->status);
+        $this->assertSame(15.0, $result->get('metric.total')->result?->value());
+    }
+
     public function test_evaluates_formula_dependencies(): void
     {
         $catalog = new FormulaCatalog([
@@ -125,5 +138,31 @@ class BatchFormulaEvaluatorServiceTest extends TestCase
         $this->assertSame(['a', 'b'], $trace->operands);
         $this->assertSame(15.0, $trace->resultValue);
         $this->assertSame('available', $trace->status);
+    }
+
+    public function test_audit_trace_records_resolved_operands_and_only_used_input_values(): void
+    {
+        $catalog = new FormulaCatalog([
+            new FormulaDefinition('metric.delta', AggregationType::DELTA, ['revenue', 'cost'], PrecisionPolicy::default()),
+            new FormulaDefinition(
+                'metric.ratio',
+                AggregationType::RATIO,
+                [new FormulaReference('metric.delta'), 'revenue'],
+                PrecisionPolicy::default()
+            ),
+        ]);
+
+        $result = $this->service->evaluate($catalog, [
+            'revenue' => new MetricInput('revenue', 100),
+            'cost' => new MetricInput('cost', 60),
+            'unused' => new MetricInput('unused', 999),
+        ], MetricEvaluationOptions::withAuditTrace());
+
+        $trace = $result->get('metric.ratio')->auditTrace;
+
+        $this->assertNotNull($trace);
+        $this->assertSame([40.0, 100], $trace->resolvedOperands);
+        $this->assertSame(['revenue' => ['value' => 100, 'unit' => null]], $trace->inputs);
+        $this->assertSame(['metric.delta' => 40.0], $trace->dependencyResults);
     }
 }

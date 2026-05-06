@@ -22,16 +22,25 @@ composer require azaharizaman/nexus-metric-engine
 declare(strict_types=1);
 
 use Nexus\MetricEngine\Enums\AggregationType;
+use Nexus\MetricEngine\Services\ComparisonService;
 use Nexus\MetricEngine\Services\FormulaEvaluatorService;
 use Nexus\MetricEngine\Services\NumericValueService;
+use Nexus\MetricEngine\Services\PeriodComparatorService;
 use Nexus\MetricEngine\Services\ScalarMetricCalculatorService;
+use Nexus\MetricEngine\Services\TimeSeriesMetricCalculatorService;
+use Nexus\MetricEngine\Services\WindowResolverService;
 use Nexus\MetricEngine\ValueObjects\FormulaDefinition;
 use Nexus\MetricEngine\ValueObjects\MetricInput;
 use Nexus\MetricEngine\ValueObjects\PrecisionPolicy;
 
 $numeric = new NumericValueService();
 $evaluator = new FormulaEvaluatorService(
-    new ScalarMetricCalculatorService($numeric)
+    new ScalarMetricCalculatorService($numeric),
+    new TimeSeriesMetricCalculatorService(
+        $numeric,
+        new WindowResolverService(new PeriodComparatorService()),
+        new ComparisonService($numeric)
+    )
 );
 
 $formula = new FormulaDefinition(
@@ -93,6 +102,45 @@ $batch = $batchEvaluator->evaluate($catalog, [
 ]);
 
 $batch->get('metric.ratio')->status; // MetricResultStatus::AVAILABLE
+```
+
+The batch evaluator also accepts a formula list directly:
+
+```php
+$batch = $batchEvaluator->evaluate([
+    new FormulaDefinition('metric.total', AggregationType::SUM, ['revenue', 'cost'], PrecisionPolicy::default()),
+], [
+    'revenue' => new MetricInput('revenue', 100),
+    'cost' => new MetricInput('cost', 60),
+]);
+```
+
+Enable audit traces when callers need deterministic calculation evidence. Traces include original operands, resolved operands, used input values, dependency results, status, result values, and failure details when present.
+
+```php
+$batch = $batchEvaluator->evaluate(
+    $catalog,
+    [
+        'revenue' => new MetricInput('revenue', 100),
+        'cost' => new MetricInput('cost', 60),
+    ],
+    MetricEvaluationOptions::withAuditTrace()
+);
+
+$batch->get('metric.ratio')->auditTrace?->resolvedOperands; // [40.0, 100]
+```
+
+## Fingerprints
+
+`MetricRunFingerprintService` returns stable hashes for reproducible runs. The hash is based on canonical serialized formulas, prepared inputs, caller metadata, and the formula dependency graph.
+
+```php
+$fingerprint = $fingerprintService->fingerprint($catalog, [
+    'revenue' => new MetricInput('revenue', 100),
+    'cost' => new MetricInput('cost', 60),
+]);
+
+$fingerprint->algorithm; // sha256
 ```
 
 ## Boundaries

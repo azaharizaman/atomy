@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace Nexus\MetricEngine\Services;
 
+use Nexus\MetricEngine\Contracts\FormulaInterface;
 use Nexus\MetricEngine\Enums\MetricResultStatus;
+use Nexus\MetricEngine\Exceptions\MetricEngineException;
 use Nexus\MetricEngine\ValueObjects\FormulaCatalog;
+use Nexus\MetricEngine\ValueObjects\FormulaDefinition;
+use Nexus\MetricEngine\ValueObjects\FormulaReference;
 use Nexus\MetricEngine\ValueObjects\MetricAuditTrace;
 use Nexus\MetricEngine\ValueObjects\MetricEvaluationBatchResult;
 use Nexus\MetricEngine\ValueObjects\MetricEvaluationOptions;
 use Nexus\MetricEngine\ValueObjects\MetricEvaluationOutcome;
 use Nexus\MetricEngine\ValueObjects\MetricInput;
 use Nexus\MetricEngine\ValueObjects\MetricSeries;
-use Nexus\MetricEngine\Exceptions\MetricEngineException;
 
 class BatchFormulaEvaluatorService
 {
@@ -23,10 +26,12 @@ class BatchFormulaEvaluatorService
     ) {}
 
     /**
+     * @param FormulaCatalog|list<FormulaInterface> $formulas
      * @param array<string, MetricInput|MetricSeries> $inputs
      */
-    public function evaluate(FormulaCatalog $catalog, array $inputs, MetricEvaluationOptions $options = new MetricEvaluationOptions()): MetricEvaluationBatchResult
+    public function evaluate(FormulaCatalog|array $formulas, array $inputs, MetricEvaluationOptions $options = new MetricEvaluationOptions()): MetricEvaluationBatchResult
     {
+        $catalog = $formulas instanceof FormulaCatalog ? $formulas : new FormulaCatalog($formulas);
         $graph = $this->graphService->build($catalog);
         $outcomes = [];
         $runtimeInputs = $inputs;
@@ -43,6 +48,7 @@ class BatchFormulaEvaluatorService
                         $catalog->get($formulaIdentifier)->operation()->value,
                         $catalog->get($formulaIdentifier)->operands(),
                         $inputs,
+                        [],
                         [],
                         null,
                         MetricResultStatus::NOT_AVAILABLE->value,
@@ -65,6 +71,11 @@ class BatchFormulaEvaluatorService
                         $formula->operands(),
                         $inputs,
                         $this->dependencyResults($graph->dependenciesFor($formulaIdentifier), $outcomes),
+                        $this->resolveAuditOperands(
+                            $formula->operands(),
+                            $inputs,
+                            $this->dependencyResults($graph->dependenciesFor($formulaIdentifier), $outcomes)
+                        ),
                         $result->value(),
                         MetricResultStatus::AVAILABLE->value,
                         null,
@@ -90,6 +101,11 @@ class BatchFormulaEvaluatorService
                         $formula->operands(),
                         $inputs,
                         $this->dependencyResults($graph->dependenciesFor($formulaIdentifier), $outcomes),
+                        $this->resolveAuditOperands(
+                            $formula->operands(),
+                            $inputs,
+                            $this->dependencyResults($graph->dependenciesFor($formulaIdentifier), $outcomes)
+                        ),
                         null,
                         $status->value,
                         $error instanceof MetricEngineException ? $error->errorCode() : 'unexpected_error',
@@ -137,8 +153,9 @@ class BatchFormulaEvaluatorService
 
     /**
      * @param list<mixed> $operands
-     * @param array<string, mixed> $inputs
+     * @param array<string, MetricInput|MetricSeries> $inputs
      * @param array<string, mixed> $dependencyResults
+     * @param list<mixed> $resolvedOperands
      */
     private function createAuditTrace(
         string $formulaIdentifier,
@@ -146,6 +163,7 @@ class BatchFormulaEvaluatorService
         array $operands,
         array $inputs,
         array $dependencyResults,
+        array $resolvedOperands,
         mixed $resultValue,
         string $status,
         ?string $reasonCode = null,
@@ -155,7 +173,8 @@ class BatchFormulaEvaluatorService
             formulaIdentifier: $formulaIdentifier,
             operation: $operation,
             operands: $operands,
-            inputs: array_keys($inputs),
+            resolvedOperands: $resolvedOperands,
+            inputs: $this->usedInputValues($operands, $inputs),
             dependencyResults: $dependencyResults,
             excludedValues: [],
             resultValue: $resultValue,
@@ -163,5 +182,111 @@ class BatchFormulaEvaluatorService
             reasonCode: $reasonCode,
             message: $message
         );
+    }
+
+    /**
+     * @param list<mixed> $operands
+     * @param array<string, MetricInput|MetricSeries> $inputs
+     * @return array<string, mixed>
+     */
+    private function usedInputValues(array $operands, array $inputs): array
+    {
+        $used = [];
+
+        foreach ($this->collectInputNames($operands) as $name) {
+            if (! isset($inputs[$name])) {
+                continue;
+            }
+
+            $input = $inputs[$name];
+
+            $used[$name] = $input instanceof MetricInput
+                ? ['value' => $input->value, 'unit' => $input->unit]
+                : [
+                    'unit' => $input->unit,
+                    'points' => array_map(
+                        static fn ($point): array => [
+                            'period_key' => $point->periodKey,
+                            'value' => $point->value,
+                            'metadata' => $point->metadata,
+                        ],
+                        $input->points
+                    ),
+                ];
+        }
+
+        return $used;
+    }
+
+    /**
+     * @param list<mixed> $operands
+     * @return list<string>
+     */
+    private function collectInputNames(array $operands): array
+    {
+        $names = [];
+
+        foreach ($operands as $operand) {
+            if (is_string($operand)) {
+                $names[] = $operand;
+                continue;
+            }
+
+            if ($operand instanceof FormulaReference) {
+                continue;
+            }
+
+            if ($operand instanceof FormulaDefinition) {
+                $names = array_merge($names, $this->collectInputNames($operand->operands()));
+                continue;
+            }
+
+            if (is_array($operand)) {
+                $names = array_merge($names, $this->collectInputNames($operand));
+            }
+        }
+
+        return array_values(array_unique($names));
+    }
+
+    /**
+     * @param list<mixed> $operands
+     * @param array<string, MetricInput|MetricSeries> $inputs
+     * @param array<string, mixed> $dependencyResults
+     * @return list<mixed>
+     */
+    private function resolveAuditOperands(array $operands, array $inputs, array $dependencyResults): array
+    {
+        return array_map(
+            fn (mixed $operand): mixed => $this->resolveAuditOperand($operand, $inputs, $dependencyResults),
+            $operands
+        );
+    }
+
+    /** @param array<string, MetricInput|MetricSeries> $inputs */
+    private function resolveAuditOperand(mixed $operand, array $inputs, array $dependencyResults): mixed
+    {
+        if ($operand instanceof FormulaReference) {
+            return $dependencyResults[$operand->identifier] ?? null;
+        }
+
+        if ($operand instanceof FormulaDefinition) {
+            return $this->formulaEvaluator->evaluate($operand, $inputs)->value();
+        }
+
+        if (is_array($operand)) {
+            return array_map(
+                fn (mixed $nestedOperand): mixed => $this->resolveAuditOperand($nestedOperand, $inputs, $dependencyResults),
+                $operand
+            );
+        }
+
+        if (! is_string($operand) || ! isset($inputs[$operand])) {
+            return $operand;
+        }
+
+        $input = $inputs[$operand];
+
+        return $input instanceof MetricInput ? $input->value : $input;
     }
 }

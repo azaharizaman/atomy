@@ -53,6 +53,42 @@ class FormulaDefinitionSerializerServiceTest extends TestCase
         $this->assertSame(RoundingMode::HALF_EVEN, $roundTripped->precisionPolicy()->roundingMode);
     }
 
+    public function test_round_trips_nested_formula_operands_as_config_arrays(): void
+    {
+        $formula = new FormulaDefinition(
+            identifier: 'metric.weighted_total',
+            operation: AggregationType::SUM,
+            operands: [
+                new FormulaDefinition(
+                    identifier: 'metric.adjustment',
+                    operation: AggregationType::DELTA,
+                    operands: ['gross', 'discount'],
+                    precisionPolicy: new PrecisionPolicy(2, RoundingMode::HALF_DOWN),
+                    unit: 'amount',
+                    metadata: ['source' => 'nested']
+                ),
+                'tax',
+            ],
+            precisionPolicy: PrecisionPolicy::default(),
+        );
+
+        $array = $this->serializer->toArray($formula);
+
+        $this->assertIsArray($array['operands'][0]);
+        $this->assertArrayHasKey('identifier', $array['operands'][0]);
+        $this->assertArrayHasKey('operation', $array['operands'][0]);
+        foreach ($array['operands'] as $operand) {
+            $this->assertNotInstanceOf(FormulaDefinition::class, $operand);
+        }
+
+        $roundTripped = $this->serializer->fromArray($array);
+
+        $this->assertInstanceOf(FormulaDefinition::class, $roundTripped->operands()[0]);
+        $this->assertSame('metric.adjustment', $roundTripped->operands()[0]->identifier());
+        $this->assertSame(RoundingMode::HALF_DOWN, $roundTripped->operands()[0]->precisionPolicy()->roundingMode);
+        $this->assertSame(['source' => 'nested'], $roundTripped->operands()[0]->metadata());
+    }
+
     public function test_rejects_missing_identifier(): void
     {
         $this->expectException(FormulaSerializationException::class);

@@ -63,6 +63,10 @@ class FormulaDefinitionSerializerService
 
     private function serializeOperand(mixed $operand): mixed
     {
+        if ($operand instanceof FormulaDefinition) {
+            return $this->toArray($operand);
+        }
+
         if ($operand instanceof FormulaReference) {
             return ['formula' => $operand->identifier];
         }
@@ -76,6 +80,10 @@ class FormulaDefinitionSerializerService
 
     private function deserializeOperand(mixed $operand): mixed
     {
+        if (is_array($operand) && $this->isFormulaPayload($operand)) {
+            return $this->fromArray($operand);
+        }
+
         if (is_array($operand) && array_key_exists('formula', $operand)) {
             if (! is_string($operand['formula'])) {
                 throw new FormulaSerializationException('Formula reference must contain a string identifier.');
@@ -89,6 +97,14 @@ class FormulaDefinitionSerializerService
         }
 
         return $operand;
+    }
+
+    /** @param array<mixed> $payload */
+    private function isFormulaPayload(array $payload): bool
+    {
+        return array_key_exists('identifier', $payload)
+            && array_key_exists('operation', $payload)
+            && array_key_exists('operands', $payload);
     }
 
     /** @param array<string, mixed>|mixed $payload */

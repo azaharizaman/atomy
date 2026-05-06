@@ -8,6 +8,7 @@ final readonly class MetricAuditTrace
 {
     /**
      * @param list<mixed> $operands
+     * @param list<mixed> $resolvedOperands
      * @param array<string, mixed> $inputs
      * @param array<string, mixed> $dependencyResults
      * @param list<array<string, mixed>> $excludedValues
@@ -16,6 +17,7 @@ final readonly class MetricAuditTrace
         public string $formulaIdentifier,
         public string $operation,
         public array $operands,
+        public array $resolvedOperands,
         public array $inputs,
         public array $dependencyResults,
         public array $excludedValues,

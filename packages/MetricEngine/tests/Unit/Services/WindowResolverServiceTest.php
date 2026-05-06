@@ -21,6 +21,19 @@ class WindowResolverServiceTest extends TestCase
         $this->resolver = new WindowResolverService(new PeriodComparatorService());
     }
 
+    public function test_service_can_be_constructed_with_default_period_comparator(): void
+    {
+        $resolver = new WindowResolverService();
+        $series = new MetricSeries('sales', [
+            new TimeSeriesPoint('2026-01', 10),
+            new TimeSeriesPoint('2026-02', 20),
+        ]);
+
+        $resolved = $resolver->resolve($series, TimeWindow::fixedRolling(1));
+
+        $this->assertSame('2026-02', $resolved->points[0]->periodKey);
+    }
+
     public function test_fixed_rolling_window_returns_last_n_points(): void
     {
         $series = new MetricSeries('sales', [

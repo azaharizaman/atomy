@@ -12,7 +12,7 @@ use Nexus\MetricEngine\ValueObjects\TimeWindow;
 class WindowResolverService implements WindowResolverInterface
 {
     public function __construct(
-        private readonly PeriodComparatorService $periodComparator
+        private readonly PeriodComparatorService $periodComparator = new PeriodComparatorService()
     ) {}
 
     public function resolve(MetricSeries $series, TimeWindow $window): MetricSeries
