@@ -134,7 +134,7 @@ These packages own accounting, financial reporting, budget, cost, cash, tax, tre
 | `Nexus\AccountConsolidation` | Multi-entity consolidation package. | Ownership resolution, currency translation, intercompany eliminations, goodwill, and NCI calculations. | Not single-entity ledger posting; use `GeneralLedger`. | You need group consolidation across entities. |
 | `Nexus\AccountVarianceAnalysis` | Financial account variance and trend analysis package. | Variance calculation, attribution, significance evaluation, trend analysis, and rolling forecast comparison. | Not financial ratio calculation; use `FinancialRatios`. Not generic BI queries; use `QueryEngine`. | You need analyze actual-vs-budget or forecast variances. |
 | `Nexus\FinancialRatios` | Financial ratio calculation package. | Liquidity, profitability, leverage, efficiency, market, and cash-flow ratio calculations. | Not financial statement building; use `FinancialStatements`. | You need compute financial ratios from accounting data. |
-| `Nexus\MetricEngine` | Deterministic Layer 1 metric calculation engine. | Prepared scalar/time-series input evaluation, neutral formula composition, v1 primitive calculations, strict numeric operand validation, ordered unique period series, window resolution, comparison results, and typed deterministic metric results. | Not a data/query/reporting platform; use `QueryEngine` for query execution, `Reporting` for report composition, and domain packages for formula meaning and thresholds. Not observability metrics; use `Telemetry`. | You need reusable metric calculation mechanics without domain interpretation. |
+| `Nexus\MetricEngine` | Deterministic Layer 1 metric calculation engine. | Prepared scalar/time-series input evaluation, formula catalogs, array-backed formula definitions, dependency graph evaluation, batch outcomes, strict numeric operand validation, ordered typed period series, window resolution, comparison results, audit traces, fingerprints, neutral banded scores, and typed deterministic metric results. | Not Laravel bindings; keep framework integration in adapters or applications. Not currency semantics; use finance/accounting packages for money rules. | You need reusable metric calculation mechanics without domain interpretation. |
 | `Nexus\Budget` | Budget management and control plane. | Budget entities, approvals, forecasts, analytics repositories, and budget manager contracts. | Not project-specific milestone billing; use `Milestone` plus orchestrators. Not ledger postings; use `GeneralLedger`. | You need planned vs actual budget management or approval. |
 | `Nexus\CostAccounting` | Cost accounting and allocation package. | Cost centers, cost pools, product costing, activity rates, cost allocations, and audit. | Not general ledger source of truth; use `GeneralLedger`. Not asset depreciation; use `FixedAssetDepreciation`. | You need allocate or analyze operational/product costs. |
 | `Nexus\Assets` | Fixed asset management package. | Asset records, categories, verification, depreciation records, maintenance analysis, and asset repositories. | Not depreciation calculation engine itself; use `FixedAssetDepreciation`. | You need manage fixed asset lifecycle and records. |
@@ -301,6 +301,10 @@ Layer 2 orchestrators coordinate Layer 1 packages and own workflow-level applica
 This reference covers **104** first-party package directories under `packages/` as of 2026-04-22, including the deprecated `packages/Projects` marker directory.
 
 ## Changelog
+
+### 2026-05-06
+
+- Updated `Nexus\MetricEngine` entry: added formula catalogs, array-backed formula definitions, dependency graph evaluation, batch outcomes, audit traces, fingerprints, neutral banded scores, and typed deterministic metric results. Clarified boundaries: no Laravel bindings in package; currency semantics belong in finance/accounting packages.
 
 ### 2026-04-22
 

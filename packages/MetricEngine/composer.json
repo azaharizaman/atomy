@@ -8,7 +8,12 @@
         "calculation",
         "formula",
         "time-series",
-        "nexus"
+        "nexus",
+        "batch",
+        "catalog",
+        "audit",
+        "fingerprint",
+        "banded-scores"
     ],
     "homepage": "https://github.com/azaharizaman/nexus-metric-engine",
     "authors": [

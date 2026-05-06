@@ -77,6 +77,30 @@ MetricEngine fails loudly with package-specific exceptions for invalid formula s
 
 It does not return fallback values or synthetic zeros unless a caller-defined formula explicitly models that behavior.
 
+## Batch Evaluation
+
+Use `FormulaCatalog` and `BatchFormulaEvaluatorService` when an application needs status-aware metric runs.
+
+```php
+$catalog = new FormulaCatalog([
+    new FormulaDefinition('metric.delta', AggregationType::DELTA, ['revenue', 'cost'], PrecisionPolicy::default()),
+    new FormulaDefinition('metric.ratio', AggregationType::RATIO, [new FormulaReference('metric.delta'), 'revenue'], PrecisionPolicy::default()),
+]);
+
+$batch = $batchEvaluator->evaluate($catalog, [
+    'revenue' => new MetricInput('revenue', 100),
+    'cost' => new MetricInput('cost', 60),
+]);
+
+$batch->get('metric.ratio')->status; // MetricResultStatus::AVAILABLE
+```
+
+## Boundaries
+
+MetricEngine is framework-agnostic. Laravel service providers belong in Laravel adapters or applications.
+
+MetricEngine supports neutral units and precision policies, but currency-specific rules and money value objects belong in finance or accounting packages.
+
 ## Development
 
 ```bash

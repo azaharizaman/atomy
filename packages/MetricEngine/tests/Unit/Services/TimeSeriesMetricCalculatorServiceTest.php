@@ -6,6 +6,7 @@ namespace Nexus\MetricEngine\Tests\Unit\Services;
 
 use Nexus\MetricEngine\Services\NumericValueService;
 use Nexus\MetricEngine\Services\TimeSeriesMetricCalculatorService;
+use Nexus\MetricEngine\Services\PeriodComparatorService;
 use Nexus\MetricEngine\Services\WindowResolverService;
 use Nexus\MetricEngine\ValueObjects\MetricSeries;
 use Nexus\MetricEngine\ValueObjects\PrecisionPolicy;
@@ -21,7 +22,7 @@ class TimeSeriesMetricCalculatorServiceTest extends TestCase
     {
         $this->calculator = new TimeSeriesMetricCalculatorService(
             new NumericValueService(),
-            new WindowResolverService()
+            new WindowResolverService(new PeriodComparatorService())
         );
     }
 

@@ -16,6 +16,7 @@ use Nexus\MetricEngine\Services\FormulaEvaluatorService;
 use Nexus\MetricEngine\Services\NumericValueService;
 use Nexus\MetricEngine\Services\ScalarMetricCalculatorService;
 use Nexus\MetricEngine\Services\TimeSeriesMetricCalculatorService;
+use Nexus\MetricEngine\Services\PeriodComparatorService;
 use Nexus\MetricEngine\Services\WindowResolverService;
 use Nexus\MetricEngine\ValueObjects\ComparisonDefinition;
 use Nexus\MetricEngine\ValueObjects\FormulaDefinition;
@@ -36,7 +37,7 @@ class FormulaEvaluatorServiceTest extends TestCase
 
         $this->evaluator = new FormulaEvaluatorService(
             new ScalarMetricCalculatorService($numericService),
-            new TimeSeriesMetricCalculatorService($numericService, new WindowResolverService())
+            new TimeSeriesMetricCalculatorService($numericService, new WindowResolverService(new PeriodComparatorService()))
         );
     }
 
